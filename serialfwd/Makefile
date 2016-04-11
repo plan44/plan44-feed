@@ -15,6 +15,9 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
+PKG_FIXUP:=autoreconf
+
+
 define Package/$(PKG_NAME)
 	SECTION:=plan44
 	CATEGORY:=plan44
