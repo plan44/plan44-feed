@@ -22,8 +22,9 @@ include $(INCLUDE_DIR)/package.mk
 $(call include_mk, python-package.mk)
 
 define Package/$(PKG_NAME)
-	SECTION:=utils
-	CATEGORY:=Utilities
+	SECTION:=plan44
+	CATEGORY:=plan44
+	SUBMENU:=Utilities
 	TITLE:=serial protocol testing and forwarding tool
 	URL:=http://plan44.ch/opensource.php
 	MAINTAINER:=luz@plan44.ch
