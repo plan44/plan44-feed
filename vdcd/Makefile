@@ -18,6 +18,10 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
+PKG_FIXUP:=autoreconf
+
+include $(INCLUDE_DIR)/package.mk
+
 define Package/$(PKG_NAME)
   DEPENDS:=+boost +libjson-c +libprotobuf-c +libsqlite3 $(CXX_DEPENDS)
 	SECTION:=plan44
