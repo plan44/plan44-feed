@@ -38,6 +38,10 @@ define Package/$(PKG_NAME)/description
  virtual devices into a digitalSTROM system.
 endef
 
+define Build/Configure
+  $(call Build/Configure/Default,--enable-p44buildow)
+endef
+
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
