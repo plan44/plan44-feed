@@ -4,8 +4,11 @@
 
 include $(TOPDIR)/rules.mk
 
+# name
 PKG_NAME:=serialfwd
+# version of what we are downloading
 PKG_VERSION:=1.0
+# version of this makefile
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
@@ -33,23 +36,6 @@ define Package/$(PKG_NAME)/description
  and can also act as a proxy to access a serial connection on a (embedded) target host
  via TCP/IP from a remote (development) host.
 endef
-
-# Defaults to just configure - use the following to pass extra args to make
-# define Build/Configure
-#   $(call Build/Configure/Default,--enable-p44buildow)
-# endef
-
-# Defaults to just make - use the following to pass extra args to make
-# define Build/Compile
-#   $(call Build/Compile/Default,FOO=bar)
-# endef
-
-# Installation of compiled result (note this is different from package install)
-# Defaults to just make install - use the following to pass extra args to make (need to specify the "install" target!)
-# define Build/Install
-#   $(call Build/Install/Default,install install-foo)
-# endef
-
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
