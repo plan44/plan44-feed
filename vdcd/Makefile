@@ -23,7 +23,7 @@ PKG_FIXUP:=autoreconf
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+boost +libjson-c +libprotobuf-c +libsqlite3 $(CXX_DEPENDS)
+  DEPENDS:=+boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=digitalstrom
