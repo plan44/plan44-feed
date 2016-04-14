@@ -20,6 +20,9 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_FIXUP:=autoreconf
 
+# MIPS16 support leads to strange "{standard input}: Assembler messages:", so we turn it off (not needed anyway)
+PKG_USE_MIPS16:=0
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
