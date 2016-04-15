@@ -1,0 +1,49 @@
+# Copyright (c) 2016 plan44.ch / Lukas Zeller, Zurich, Switzerland
+#
+# Author: Lukas Zeller <luz@plan44.ch>
+
+include $(TOPDIR)/rules.mk
+
+# name
+PKG_NAME:=mg44
+# version of what we are downloading
+PKG_VERSION:=0.1
+# version of this makefile
+PKG_RELEASE:=1
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_VERSION:=ow_testing
+PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/mg44.git
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
+PKG_FIXUP:=autoreconf
+
+# MIPS16 support leads to strange "{standard input}: Assembler messages:", so we turn it off (not needed anyway)
+PKG_USE_MIPS16:=0
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+  DEPENDS:=+libjson-c +libopenssl $(CXX_DEPENDS)
+	SECTION:=plan44
+	CATEGORY:=plan44
+	SUBMENU:=digitalstrom
+	TITLE:=mg44 minimal mongoose based webserver
+	URL:=https://github.com/plan44/mg44
+	MAINTAINER:=luz@plan44.ch
+endef
+
+define Package/$(PKG_NAME)/description
+ mg44 is a simple webserver based on libmongoose (which in turn is based on mongoose)
+ with a built-in JSON proxy for accessing TCP socket based JSON APIs and JSON-processing
+ command line tools.
+endef
+
+define Package/$(PKG_NAME)/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
+endef
+
+$(eval $(call BuildPackage,$(PKG_NAME)))
