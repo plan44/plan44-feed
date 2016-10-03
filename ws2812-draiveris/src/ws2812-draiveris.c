@@ -1,4 +1,4 @@
-/*  
+/*
  *  ws2812-draiveris.c - A bitbang kernel module for ws2812
  *
  *  Copyright (C) 2006-2012 OpenWrt.org
@@ -7,9 +7,9 @@
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.
- * 
- * parameters: 
- *	gpio_number=20		# set base number. 
+ *
+ * parameters:
+ *	gpio_number=20		# set base number.
  *	gpio_count=3		# default: 1, enable multiple outputs, counting from gpio_number.
  *	gpios=20,21,22		# explicitly specify where the led_strips are connected.
  *      leds_per_gpio		# length of the led strips.
@@ -107,7 +107,7 @@ void led_bits_m_inverted(u_int32_t gpio_early_mask)
     //  best: 3L12H (shortest, with one safety each)
 
     // Tested with LED_STRIPS_SEQUENTIAL
-    // good: 3/9/4 3/8/4 
+    // good: 3/9/4 3/8/4
     // almost: 3/7/4	sporadic flicker at led 70..90 of first chain.
     // almost: 3/8/3	sporadic flicker at led 50..90 of all chains.
     SET_GPIOS_L(gpio_bit_mask);
@@ -208,7 +208,7 @@ void update_leds(const char *buff, size_t len)
 	    led_bits_m_inverted(low_gpios);
 	    color_bit_mask >>= 1;
 	  }
-#else 
+#else
         unsigned char c = buff[i];
 
         if (c & 0x80) led_bits_m_inverted(0); else led_bits_m_inverted(gpio_bit_mask);
@@ -253,7 +253,7 @@ void update_leds(const char *buff, size_t len)
 	    led_bits_m(low_gpios);
 	    color_bit_mask >>= 1;
 	  }
-#else 
+#else
         unsigned char c = buff[i];
 
         if (c & 0x80) led_bits_m(0); else led_bits_m(gpio_bit_mask);
@@ -272,7 +272,7 @@ void update_leds(const char *buff, size_t len)
 }
 
 
-/*  
+/*
  *  Prototypes - this would normally go in a .h file
  */
 int init_module(void);
@@ -286,11 +286,11 @@ static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
 #define DEVICE_NAME "ws2812" /* Dev name as it appears in /proc/ws2812   */
 #define BUF_LEN 900    /* Max length of the message from the device = 300 LED'S*/
 
-/* 
- * Global variables are declared as static, so are global within the file. 
+/*
+ * Global variables are declared as static, so are global within the file.
  */
 
-static int Device_Open = 0; /* Is device open?  
+static int Device_Open = 0; /* Is device open?
          * Used to prevent multiple access to device */
 static char msg[BUF_LEN]; /* The msg the device will give when asked */
 static char *msg_Ptr;
@@ -302,12 +302,12 @@ static struct file_operations fops = {
   .release = device_release
 };
 
-// we must create *and remove* device classes properly, otherwise we get horrible 
+// we must create *and remove* device classes properly, otherwise we get horrible
 // kernel stack backtraces.
 static struct class *ws2812_class;
 
 int init_module(void)
-{ 
+{
   int r;
   if ((r = register_chrdev(WS2812_MAJOR, DEVICE_NAME, &fops)))
     {
@@ -365,7 +365,7 @@ int init_module(void)
         }
     }
 
-  printk(KERN_INFO DEVICE_NAME": Build: %s %s\n", __DATE__, __TIME__);
+  // printk(KERN_INFO DEVICE_NAME": Build: %s %s\n", __DATE__, __TIME__); // do not use __DATE__/__TIME__ -> prevents reproducible builds
   printk(KERN_INFO DEVICE_NAME": Major=%d  device=/dev/%s\n", WS2812_MAJOR, DEVICE_NAME);
   if (gpios) printk(KERN_INFO "ws2812: gpios='%s'\n", gpios);
   printk(KERN_INFO DEVICE_NAME": Base GPIO number: %d, gpio_count=%d\n", gpio_number, gpio_count);
@@ -387,8 +387,8 @@ int init_module(void)
  * This function is called when the module is unloaded
  */
 void cleanup_module(void)
-{  
-  // if we don't survive this, sysfs remains in a broken state. 
+{
+  // if we don't survive this, sysfs remains in a broken state.
   // You will see later: sysfs: cannot create duplicate filename '/class/ws2812'
   device_destroy(ws2812_class, MKDEV(WS2812_MAJOR,0));
   class_destroy(ws2812_class);
@@ -405,7 +405,7 @@ void cleanup_module(void)
  * Methods
  */
 
-/* 
+/*
  * Called when a process tries to open the device file, like
  * "cat /dev/mycharfile"
  */
@@ -424,23 +424,23 @@ static int device_open(struct inode *inode, struct file *file)
   return SUCCESS;
 }
 
-/* 
+/*
  * Called when a process closes the device file.
  */
 static int device_release(struct inode *inode, struct file *file)
 {
   Device_Open--;    /* We're now ready for our next caller */
 
-  /* 
+  /*
    * Decrement the usage count, or else once you opened the file, you'll
-   * never get get rid of the module. 
+   * never get get rid of the module.
    */
   module_put(THIS_MODULE);
 
   return 0;
 }
 
-/* 
+/*
  * Called when a process, which already opened the dev file, attempts to
  * read from it.
  */
@@ -450,27 +450,27 @@ static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
          loff_t * offset)
 {
   /*
-   * Number of bytes actually written to the buffer 
+   * Number of bytes actually written to the buffer
    */
   int bytes_read = 0;
 
   /*
-   * If we're at the end of the message, 
-   * return 0 signifying end of file 
+   * If we're at the end of the message,
+   * return 0 signifying end of file
    */
   if (*msg_Ptr == 0)
     return 0;
 
-  /* 
-   * Actually put the data into the buffer 
+  /*
+   * Actually put the data into the buffer
    */
   while (length && *msg_Ptr) {
 
-    /* 
-     * The buffer is in the user data segment, not the kernel 
-     * segment so "*" assignment won't work.  We have to use 
+    /*
+     * The buffer is in the user data segment, not the kernel
+     * segment so "*" assignment won't work.  We have to use
      * put_user which copies data from the kernel data segment to
-     * the user data segment. 
+     * the user data segment.
      */
     put_user(*(msg_Ptr++), buffer++);
 
@@ -478,7 +478,7 @@ static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
     bytes_read++;
   }
 
-  /* 
+  /*
    * Most read functions return the number of bytes put into the buffer
    */
   return bytes_read;
