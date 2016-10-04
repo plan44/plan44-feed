@@ -9,16 +9,16 @@
  *  See /LICENSE for more information.
  *
  * parameters:
- *	gpio_number=20		# set base number.
- *	gpio_count=3		# default: 1, enable multiple outputs, counting from gpio_number.
- *	gpios=20,21,22		# explicitly specify where the led_strips are connected.
- *      leds_per_gpio		# length of the led strips.
- *	inverted=0		# have inverting line drivers at the GPIOs
+ *      gpio_number=20          # set base number.
+ *      gpio_count=3            # default: 1, enable multiple outputs, counting from gpio_number.
+ *      gpios=20,21,22          # explicitly specify where the led_strips are connected.
+ *      leds_per_gpio           # length of the led strips.
+ *      inverted=0              # have inverting line drivers at the GPIOs
  *
  */
 #include <linux/init.h>
-#include <linux/module.h>	/* Needed by all modules */
-#include <linux/kernel.h>	/* Needed for KERN_INFO */
+#include <linux/module.h>       /* Needed by all modules */
+#include <linux/kernel.h>       /* Needed for KERN_INFO */
 #include <linux/moduleparam.h>
 #include <linux/stat.h>
 
@@ -32,26 +32,26 @@
 #include <asm/uaccess.h>  /* for put_user */
 #include <linux/fs.h>
 
-#define LED_STRIPS_SEQUENTIAL	1	/* 0: PARALLEL: one set of values for all outputs */
-#define WS2812_MAJOR		152	/* use a LOCAL/EXPERIMENTAL major for now */
+#define LED_STRIPS_SEQUENTIAL   1       /* 0: PARALLEL: one set of values for all outputs */
+#define WS2812_MAJOR            152     /* use a LOCAL/EXPERIMENTAL major for now */
 
-#define sysRegRead(phys) 	 (*(volatile u32 *)KSEG1ADDR(phys))
-#define sysRegWrite(phys, val)	((*(volatile u32 *)KSEG1ADDR(phys)) = (val))
+#define sysRegRead(phys)         (*(volatile u32 *)KSEG1ADDR(phys))
+#define sysRegWrite(phys, val)  ((*(volatile u32 *)KSEG1ADDR(phys)) = (val))
 
 // FROM http://www.eeboard.com/wp-content/uploads/downloads/2013/08/AR9331.pdf p65, p77
-#define SYS_REG_GPIO_OE		0x18040000L
-#define SYS_REG_GPIO_IN		0x18040004L
-#define SYS_REG_GPIO_OUT	0x18040008L
-#define SYS_REG_GPIO_SET	0x1804000CL
-#define SYS_REG_GPIO_CLEAR	0x18040010L
-#define SYS_REG_GPIO_INT	0x18040014L
-#define SYS_REG_GPIO_INT_TYPE	0x18040018L
-#define SYS_REG_GPIO_INT_POLARITY	0x1804001CL
-#define SYS_REG_GPIO_INT_PENDING	0x18040020L
-#define SYS_REG_GPIO_INT_MASK		0x18040024L
-#define SYS_REG_GPIO_INT_FUNCTION_1	0x18040028L
-#define SYS_REG_GPIO_IN_ETH_SWITCH_KED	0x1804002CL
-#define SYS_REG_GPIO_INT_FUNCTION_2	0x18040030L
+#define SYS_REG_GPIO_OE         0x18040000L
+#define SYS_REG_GPIO_IN         0x18040004L
+#define SYS_REG_GPIO_OUT        0x18040008L
+#define SYS_REG_GPIO_SET        0x1804000CL
+#define SYS_REG_GPIO_CLEAR      0x18040010L
+#define SYS_REG_GPIO_INT        0x18040014L
+#define SYS_REG_GPIO_INT_TYPE   0x18040018L
+#define SYS_REG_GPIO_INT_POLARITY       0x1804001CL
+#define SYS_REG_GPIO_INT_PENDING        0x18040020L
+#define SYS_REG_GPIO_INT_MASK           0x18040024L
+#define SYS_REG_GPIO_INT_FUNCTION_1     0x18040028L
+#define SYS_REG_GPIO_IN_ETH_SWITCH_KED  0x1804002CL
+#define SYS_REG_GPIO_INT_FUNCTION_2     0x18040030L
 
 #define SYS_REG_RST_WATCHDOG_TIMER 0x1806000CL
 
@@ -70,6 +70,10 @@ static int inverted = 0; // default is 0 == normal. 1 == inverted is good for 74
 module_param(inverted, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(inverted, "drive inverted outputs");
 
+static int rgbw = 0; // default is 0 == WS21812. 1 == SK6812 RGBW LEDs
+module_param(rgbw, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+MODULE_PARM_DESC(rgbw, "RGBW LEDs (SK6812)");
+
 static int gpio_count = 1; // default is 3 == the board, I currently have.
 module_param(gpio_count, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(gpio_count, "use additional GPIOs if > 1.");
@@ -82,10 +86,10 @@ static char *gpios = NULL;
 module_param(gpios, charp, 0);
 MODULE_PARM_DESC(gpios, "Comma separated list of GPIO numbers. Either use this, or 'gpio_number= gpio_count='.");
 
-#define SET_GPIOS_H(gpio_bits)	sysRegWrite(SYS_REG_GPIO_SET, gpio_bits)
-#define SET_GPIOS_L(gpio_bits)	sysRegWrite(SYS_REG_GPIO_CLEAR, gpio_bits)
+#define SET_GPIOS_H(gpio_bits)  sysRegWrite(SYS_REG_GPIO_SET, gpio_bits)
+#define SET_GPIOS_L(gpio_bits)  sysRegWrite(SYS_REG_GPIO_CLEAR, gpio_bits)
 
-#define GPIO_LIST_MAX	8	// not sure what a realistic limit is.
+#define GPIO_LIST_MAX   8       // not sure what a realistic limit is.
 static u_int32_t gpio_list[GPIO_LIST_MAX];
 static u_int32_t gpio_bit[GPIO_LIST_MAX];
 static int gpio_bit_mask;
@@ -108,8 +112,8 @@ void led_bits_m_inverted(u_int32_t gpio_early_mask)
 
     // Tested with LED_STRIPS_SEQUENTIAL
     // good: 3/9/4 3/8/4
-    // almost: 3/7/4	sporadic flicker at led 70..90 of first chain.
-    // almost: 3/8/3	sporadic flicker at led 50..90 of all chains.
+    // almost: 3/7/4    sporadic flicker at led 70..90 of first chain.
+    // almost: 3/8/3    sporadic flicker at led 50..90 of all chains.
     SET_GPIOS_L(gpio_bit_mask);
     SET_GPIOS_L(gpio_bit_mask);
     SET_GPIOS_L(gpio_bit_mask);
@@ -161,11 +165,25 @@ void update_leds(const char *buff, size_t len)
   unsigned long flags;
   long int i = 0;
   int gpio_used = gpio_count;
-  int stride = 3 * leds_per_gpio;
-  static int grb_increment[3] = { -1, 2, 2 };		// swap red and green: r g b -> g r b
-  int grb_idx = 0;					// counting: 1 0 2  4 3 5  7 6 8  ...
+  int stride = 0;
+  static int grb_increment[3+1] = { -1, 2, 2, /* start */ 1 };        // swap red and green: r g b -> g r b, starting at offset 1
+  static int grbw_increment[4+1] = { -1, 2, 1, 2, /* start */ 1 };    // swap red and green: r g b w -> g r b w, starting at offset 1
+  int component_idx = 0;                                // component index within single LED
+  int numComponents = 0;
+  int *incrementTable = NULL;
 
   static DEFINE_SPINLOCK(critical);
+
+  // derive mode dependent parameters
+  if (rgbw) {
+    numComponents = 4;
+    incrementTable = grbw_increment;
+  }
+  else {
+    numComponents = 3;
+    incrementTable = grb_increment;
+  }
+  stride = numComponents * leds_per_gpio;
 
   if (stride > len) stride = len;
   if (len < gpio_used * stride) gpio_used = (int)(len/stride)+1;
@@ -174,40 +192,38 @@ void update_leds(const char *buff, size_t len)
   // http://www.eeboard.com/wp-content/uploads/downloads/2013/08/AR9331.pdf
   // p65: SYS_REG_GPIO_OE 0: Enables the driver to be used as input mechanism; 1: Enables the output driver
   i = sysRegRead(SYS_REG_GPIO_OE);
-  sysRegWrite(SYS_REG_GPIO_OE, i|gpio_bit_mask); 	// output enable to PIN20
+  sysRegWrite(SYS_REG_GPIO_OE, i|gpio_bit_mask);        // output enable to PIN20
 
-
-  if (inverted)
-    {
+  if (inverted) {
 
       // wait 65uS
       for(i=0;i<1000;i++)
       {
-	volatile int j = i;
-	SET_GPIOS_H(gpio_bit_mask);
+        volatile int j = i;
+        SET_GPIOS_H(gpio_bit_mask);
       }
 
 
       spin_lock_irqsave(&critical, flags);
-      for (i = 1; i < stride; i += grb_increment[grb_idx++])
+      for (i = incrementTable[numComponents]; i < stride; i += incrementTable[component_idx++])
       {
 #if LED_STRIPS_SEQUENTIAL
         int color_bit;
-	int color_bit_mask = 0x80;
+        int color_bit_mask = 0x80;
 
-	for (color_bit = 8; color_bit > 0; color_bit--)
-	  {
-	    u_int32_t low_gpios = 0;
-	    int idx;
-	    int pos = i;
-	    for (idx = 0; idx < gpio_used; idx++)
-	      {
-		if (pos >= len || !(buff[pos] & color_bit_mask)) low_gpios |= gpio_bit[idx];
-		pos += stride;
-	      }
-	    led_bits_m_inverted(low_gpios);
-	    color_bit_mask >>= 1;
-	  }
+        for (color_bit = 8; color_bit > 0; color_bit--)
+          {
+            u_int32_t low_gpios = 0;
+            int idx;
+            int pos = i;
+            for (idx = 0; idx < gpio_used; idx++)
+              {
+                if (pos >= len || !(buff[pos] & color_bit_mask)) low_gpios |= gpio_bit[idx];
+                pos += stride;
+              }
+            led_bits_m_inverted(low_gpios);
+            color_bit_mask >>= 1;
+          }
 #else
         unsigned char c = buff[i];
 
@@ -220,39 +236,39 @@ void update_leds(const char *buff, size_t len)
         if (c & 0x02) led_bits_m_inverted(0); else led_bits_m_inverted(gpio_bit_mask);
         if (c & 0x01) led_bits_m_inverted(0); else led_bits_m_inverted(gpio_bit_mask);
 #endif
-        if (grb_idx >= 3) grb_idx = 0;
+        if (component_idx >= numComponents) component_idx = 0;
       }
       spin_unlock_irqrestore(&critical, flags);
     }
-  else	// not inverted
+  else  // not inverted
     {
       // wait 65uS
       for(i=0;i<1000;i++)
       {
-	volatile int j = i;
-	SET_GPIOS_L(gpio_bit_mask);
+        volatile int j = i;
+        SET_GPIOS_L(gpio_bit_mask);
       }
 
       spin_lock_irqsave(&critical, flags);
-      for (i = 1; i < stride; i += grb_increment[grb_idx++])
+      for (i = incrementTable[numComponents]; i < stride; i += incrementTable[component_idx++])
       {
 #if LED_STRIPS_SEQUENTIAL
         int color_bit;
-	int color_bit_mask = 0x80;
+        int color_bit_mask = 0x80;
 
-	for (color_bit = 8; color_bit > 0; color_bit--)
-	  {
-	    u_int32_t low_gpios = 0;
-	    int idx;
-	    int pos = i;
-	    for (idx = 0; idx < gpio_used; idx++)
-	      {
-		if (pos >= len || !(buff[pos] & color_bit_mask)) low_gpios |= gpio_bit[idx];
-		pos += stride;
-	      }
-	    led_bits_m(low_gpios);
-	    color_bit_mask >>= 1;
-	  }
+        for (color_bit = 8; color_bit > 0; color_bit--)
+          {
+            u_int32_t low_gpios = 0;
+            int idx;
+            int pos = i;
+            for (idx = 0; idx < gpio_used; idx++)
+              {
+                if (pos >= len || !(buff[pos] & color_bit_mask)) low_gpios |= gpio_bit[idx];
+                pos += stride;
+              }
+            led_bits_m(low_gpios);
+            color_bit_mask >>= 1;
+          }
 #else
         unsigned char c = buff[i];
 
@@ -265,7 +281,7 @@ void update_leds(const char *buff, size_t len)
         if (c & 0x02) led_bits_m(0); else led_bits_m(gpio_bit_mask);
         if (c & 0x01) led_bits_m(0); else led_bits_m(gpio_bit_mask);
 #endif
-        if (grb_idx >= 3) grb_idx = 0;
+        if (component_idx >= numComponents) component_idx = 0;
       }
       spin_unlock_irqrestore(&critical, flags);
     }
@@ -284,7 +300,6 @@ static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
 
 #define SUCCESS 0
 #define DEVICE_NAME "ws2812" /* Dev name as it appears in /proc/ws2812   */
-#define BUF_LEN 900    /* Max length of the message from the device = 300 LED'S*/
 
 /*
  * Global variables are declared as static, so are global within the file.
@@ -292,6 +307,7 @@ static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
 
 static int Device_Open = 0; /* Is device open?
          * Used to prevent multiple access to device */
+#define BUF_LEN 100    /* Max length of the message from the device = hello message */
 static char msg[BUF_LEN]; /* The msg the device will give when asked */
 static char *msg_Ptr;
 
@@ -336,14 +352,14 @@ int init_module(void)
       while (*p)
         {
           int n = 0;
-	  while (*p && (*p < '0' || *p > '9')) p++;
+          while (*p && (*p < '0' || *p > '9')) p++;
           if (!*p) break;
-	  while (*p >= '0' && *p <= '9') n = 10*n + *p++ - '0';
+          while (*p >= '0' && *p <= '9') n = 10*n + *p++ - '0';
           gpio_list[idx] = n;
           gpio_bit[idx]  = 1<<n;
           gpio_bit_mask |= 1<<n;
-	  idx++;
-	}
+          idx++;
+        }
       gpio_number = gpio_list[0];
       gpio_count = idx;
       if (!gpio_count)
@@ -371,12 +387,13 @@ int init_module(void)
   printk(KERN_INFO DEVICE_NAME": Base GPIO number: %d, gpio_count=%d\n", gpio_number, gpio_count);
   printk(KERN_INFO DEVICE_NAME": Leds per chain: %d\n", leds_per_gpio);
   printk(KERN_INFO DEVICE_NAME": Inverted: %d\n", inverted);
+  printk(KERN_INFO DEVICE_NAME": RGBW LEDs: %d\n", rgbw);
 
   ws2812_class = class_create(THIS_MODULE, DEVICE_NAME);
   if (!device_create(ws2812_class, NULL, MKDEV(WS2812_MAJOR, 0), NULL, DEVICE_NAME ))
     {
       printk(KERN_ALERT DEVICE_NAME": device_create failed. Try 'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, WS2812_MAJOR);
-      // return -ENXIO;		// better continue anyway...
+      // return -ENXIO;         // better continue anyway...
     }
 
   return SUCCESS;
@@ -485,7 +502,7 @@ static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
 }
 
 
-// To reach all connected leds send: len = gpio_count * leds_per_gpio * 3 bytes
+// To reach all connected leds send: len = gpio_count * leds_per_gpio * 3 bytes (4 bytes in rgbw mode)
 static ssize_t device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
 {
   update_leds(buff, len);
