@@ -278,6 +278,9 @@ bool swapXY = false;
 //   animation itself is not affected
 bool mirrorText = false;
 
+// if set, assume SK6812 RGBW LEDs
+bool rgbw = false;
+
 // variables
 
 p44_ws2812 *leds = NULL;
@@ -613,7 +616,7 @@ void calcNextColors()
   for (int i=0; i<numLeds; i++) {
     if (i>=textStart && i<textEnd && textLayer[i-textStart]>0) {
       // overlay with text color
-      leds->setColorDimmed(i, red_text, green_text, blue_text, (brightness*textLayer[i-textStart])>>8);
+      leds->setColorDimmed(i, red_text, green_text, blue_text, 0, (brightness*textLayer[i-textStart])>>8);
     }
     else {
       int ei; // index into energy calculation buffer
@@ -624,7 +627,7 @@ void calcNextColors()
       uint16_t e = nextEnergy[ei];
       currentEnergy[ei] = e;
       if (e>250)
-        leds->setColorDimmed(i, 170, 170, e, brightness); // blueish extra-bright spark
+        leds->setColorDimmed(i, 170, 170, e, 0, brightness); // blueish extra-bright spark
       else {
         if (e>0) {
           // energy to brightness is non-linear
@@ -635,11 +638,11 @@ void calcNextColors()
           increase(r, (eb*red_energy)>>8);
           increase(g, (eb*green_energy)>>8);
           increase(b, (eb*blue_energy)>>8);
-          leds->setColorDimmed(i, r, g, b, brightness);
+          leds->setColorDimmed(i, r, g, b, 0, brightness);
         }
         else {
           // background, no energy
-          leds->setColorDimmed(i, red_bg, green_bg, blue_bg, brightness);
+          leds->setColorDimmed(i, red_bg, green_bg, blue_bg, 0, brightness);
         }
       }
     }
@@ -925,6 +928,7 @@ static void usage(char *name)
   fprintf(stderr, "    -a : change X after every level\n");
   fprintf(stderr, "    -s : swap X and Y direction\n");
   fprintf(stderr, "    -m : mirror text\n");
+  fprintf(stderr, "    -w : rgbW LEDs (SK6812) instead of rgb (WS2812)\n");
   fprintf(stderr, "    -h : show this help\n");
 }
 
@@ -940,7 +944,7 @@ int main(int argc, char *argv[])
     swapXY = false;
     mirrorText = false;
   }
-  while ((c = getopt(argc, argv, "hP:W:H:rasm")) != -1) {
+  while ((c = getopt(argc, argv, "hP:W:H:rasmw")) != -1) {
     switch (c) {
       case 'h':
         usage(argv[0]);
@@ -966,6 +970,9 @@ int main(int argc, char *argv[])
       case 'm':
         mirrorText = true;
         break;
+      case 'w':
+        rgbw = true;
+        break;
       default:
         fprintf(stderr, "Error: Unknown option %c\n", c);
         usage(argv[0]);
@@ -979,7 +986,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
   // create LED driver class
-  leds = new p44_ws2812(numLeds, swapXY ? levels : ledsPerLevel, reversedX, alternatingX, swapXY); // create WS2812 driver
+  leds = new p44_ws2812(rgbw ? p44_ws2812::ledtype_sk6812 : p44_ws2812::ledtype_ws2812, numLeds, swapXY ? levels : ledsPerLevel, reversedX, alternatingX, swapXY); // create WS2812/SK6812 driver
   if (!leds) {
     fprintf(stderr, "Error: cannot allocate LED driver\n");
     exit(-1);
@@ -1025,7 +1032,7 @@ int main(int argc, char *argv[])
       case mode_off: {
         // off
         for(int i=0; i<leds->getNumLeds(); i++) {
-          leds->setColor(i, 0, 0, 0);
+          leds->setColor(i, 0, 0, 0, 0);
         }
         break;
       }
@@ -1033,10 +1040,10 @@ int main(int argc, char *argv[])
         // just single color lamp + text display
         for (int i=0; i<leds->getNumLeds(); i++) {
           if (i>=textStart && i<textEnd && textLayer[i-textStart]>0) {
-            leds->setColorDimmed(i, red_text, green_text, blue_text, (textLayer[i-textStart]*brightness)>>8);
+            leds->setColorDimmed(i, red_text, green_text, blue_text, 0, (textLayer[i-textStart]*brightness)>>8);
           }
           else {
-            leds->setColorDimmed(i, lamp_red, lamp_green, lamp_blue, brightness);
+            leds->setColorDimmed(i, lamp_red, lamp_green, lamp_blue, 0, brightness);
           }
         }
         break;
@@ -1055,10 +1062,10 @@ int main(int argc, char *argv[])
         for(int i=0; i<leds->getNumLeds(); i++) {
           wheel(((i * 256 / leds->getNumLeds()) + cnt) & 255, r, g, b);
           if (i>=textStart && i<textEnd && textLayer[i-textStart]>0) {
-            leds->setColorDimmed(i, r, g, b, (textLayer[i-textStart]*brightness)>>8);
+            leds->setColorDimmed(i, r, g, b, 0, (textLayer[i-textStart]*brightness)>>8);
           }
           else {
-            leds->setColorDimmed(i, r, g, b, brightness>>1); // only half brightness for full area color
+            leds->setColorDimmed(i, r, g, b, 0, brightness>>1); // only half brightness for full area color
           }
         }
         break;

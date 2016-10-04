@@ -8,10 +8,15 @@
 
 #define WS2812_DEVICENAME "/dev/ws2812" // we use the ws2812-draiveris kernel driver to talk to the WS2812 chain(s)
 
-p44_ws2812::p44_ws2812(uint16_t aNumLeds, uint16_t aLedsPerRow, bool aXReversed, bool aAlternating, bool aSwapXY) :
+
+p44_ws2812::p44_ws2812(LedType aLedType, uint16_t aNumLeds, uint16_t aLedsPerRow, bool aXReversed, bool aAlternating, bool aSwapXY) :
   initialized(false)
 
 {
+  // type
+  ledType = aLedType;
+  numColorComponents = ledType==ledtype_sk6812 ? 4 : 3;
+  // number of LEDs
   numLeds = aNumLeds;
   if (aLedsPerRow==0) {
     ledsPerRow = aNumLeds; // single row
@@ -58,7 +63,7 @@ uint16_t p44_ws2812::getSizeY()
 bool p44_ws2812::begin()
 {
   if (!initialized) {
-    ledbuffer = new uint8_t[3*numLeds];
+    ledbuffer = new uint8_t[numColorComponents*numLeds];
     ledFd = open(WS2812_DEVICENAME, O_RDWR);
     if (ledFd>=0) {
       initialized = true;
@@ -130,6 +135,15 @@ const uint8_t brightnesstable[256] = {
 };
 
 
+uint8_t p44_ws2812::getMinVisibleColorIntensity()
+{
+  // return highest brightness that still produces lowest non-zero output.
+  // (which is: lowest brightness that produces 2, minus 1)
+  // we take the upper limit so the chance of seeing something even for not pure r,g,b combinations is better
+  return brightnesstable[2]-1;
+}
+
+
 uint16_t p44_ws2812::ledIndexFromXY(uint16_t aX, uint16_t aY)
 {
   if (swapXY) { uint16_t tmp=aY; aY=aX; aX=tmp; }
@@ -148,51 +162,57 @@ uint16_t p44_ws2812::ledIndexFromXY(uint16_t aX, uint16_t aY)
 }
 
 
-void p44_ws2812::setColorXY(uint16_t aX, uint16_t aY, uint8_t aRed, uint8_t aGreen, uint8_t aBlue)
+void p44_ws2812::setColorXY(uint16_t aX, uint16_t aY, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aWhite)
 {
   uint16_t ledindex = ledIndexFromXY(aX,aY);
   if (ledindex>=numLeds) return;
-  ledbuffer[3*ledindex] = pwmtable[aRed];
-  ledbuffer[3*ledindex+1] = pwmtable[aGreen];
-  ledbuffer[3*ledindex+2] = pwmtable[aBlue];
+  ledbuffer[numColorComponents*ledindex] = pwmtable[aRed];
+  ledbuffer[numColorComponents*ledindex+1] = pwmtable[aGreen];
+  ledbuffer[numColorComponents*ledindex+2] = pwmtable[aBlue];
+  if (numColorComponents>3) {
+    ledbuffer[numColorComponents*ledindex+3] = pwmtable[aWhite];
+  }
 }
 
 
-void p44_ws2812::setColor(uint16_t aLedNumber, uint8_t aRed, uint8_t aGreen, uint8_t aBlue)
+void p44_ws2812::setColor(uint16_t aLedNumber, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aWhite)
 {
   int y = aLedNumber / getSizeX();
   int x = aLedNumber % getSizeX();
-  setColorXY(x, y, aRed, aGreen, aBlue);
+  setColorXY(x, y, aRed, aGreen, aBlue, aWhite);
 }
 
 
-void p44_ws2812::setColorDimmedXY(uint16_t aX, uint16_t aY, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aBrightness)
+void p44_ws2812::setColorDimmedXY(uint16_t aX, uint16_t aY, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aWhite, uint8_t aBrightness)
 {
-  setColorXY(aX, aY, (aRed*aBrightness)>>8, (aGreen*aBrightness)>>8, (aBlue*aBrightness)>>8);
+  setColorXY(aX, aY, (aRed*aBrightness)>>8, (aGreen*aBrightness)>>8, (aBlue*aBrightness)>>8, (aWhite*aBrightness)>>8);
 }
 
 
-void p44_ws2812::setColorDimmed(uint16_t aLedNumber, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aBrightness)
-{
-  int y = aLedNumber / getSizeX();
-  int x = aLedNumber % getSizeX();
-  setColorDimmedXY(x, y, aRed, aGreen, aBlue, aBrightness);
-}
-
-
-void p44_ws2812::getColor(uint16_t aLedNumber, uint8_t &aRed, uint8_t &aGreen, uint8_t &aBlue)
+void p44_ws2812::setColorDimmed(uint16_t aLedNumber, uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint8_t aWhite, uint8_t aBrightness)
 {
   int y = aLedNumber / getSizeX();
   int x = aLedNumber % getSizeX();
-  getColorXY(x, y, aRed, aGreen, aBlue);
+  setColorDimmedXY(x, y, aRed, aGreen, aBlue, aWhite, aBrightness);
 }
 
 
-void p44_ws2812::getColorXY(uint16_t aX, uint16_t aY, uint8_t &aRed, uint8_t &aGreen, uint8_t &aBlue)
+void p44_ws2812::getColor(uint16_t aLedNumber, uint8_t &aRed, uint8_t &aGreen, uint8_t &aBlue, uint8_t &aWhite)
+{
+  int y = aLedNumber / getSizeX();
+  int x = aLedNumber % getSizeX();
+  getColorXY(x, y, aRed, aGreen, aBlue, aWhite);
+}
+
+
+void p44_ws2812::getColorXY(uint16_t aX, uint16_t aY, uint8_t &aRed, uint8_t &aGreen, uint8_t &aBlue, uint8_t &aWhite)
 {
   uint16_t ledindex = ledIndexFromXY(aX,aY);
   if (ledindex>=numLeds) return;
-  aRed = brightnesstable[ledbuffer[3*ledindex]];
-  aGreen = brightnesstable[ledbuffer[3*ledindex+1]];
-  aBlue = brightnesstable[ledbuffer[3*ledindex+2]];
+  aRed = brightnesstable[ledbuffer[numColorComponents*ledindex]];
+  aGreen = brightnesstable[ledbuffer[numColorComponents*ledindex+1]];
+  aBlue = brightnesstable[ledbuffer[numColorComponents*ledindex+2]];
+  if (numColorComponents>3) {
+    aWhite = brightnesstable[ledbuffer[numColorComponents*ledindex+3]];
+  }
 }
