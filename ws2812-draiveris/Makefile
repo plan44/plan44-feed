@@ -1,40 +1,22 @@
 # Copyright (C) 2012 Žilvinas Valinskas, Saulius Lukšė
 # Copyright (C) 2014 Jürgen Weigert <jw@owncloud.com>
+# Copyright (C) 2016 Lukas Zeller <luz@plan44.ch> (RGBW support)
 # See LICENSE for more information.
 #
-# Forked from https://github.com/Lukse/carambola2_ws2812_driver
+# Forked from https://github.com/jnweiger/ws2812_sprites
+# which was forked from https://github.com/Lukse/carambola2_ws2812_driver
 #
 # References: http://www.adafruit.com/datasheets/WS2812.pdf
+# References: https://cdn-shop.adafruit.com/product-files/1138/SK6812+LED+datasheet+.pdf
 #
-## PC Build single package
-# cd /home/test/carambola2/
-# clear; make package/ws2812-draiveris/clean
-# clear; make package/ws2812-draiveris/compile V=99
 
-# PC: Carambola picocom
-# sudo picocom -b 115200 /dev/ttyUSB0
-
-# Carambola: get packet
-## rmmod ws2812-draiveris;
-## rm /lib/modules/3.7.9/ws2812-draiveris.ko;
-## cd /tmp; rm kmod-ws2812-draiveris*;
-## wget http://192.168.0.63:8000/packages/kmod-ws2812-draiveris_3.7.9-5_ar71xx.ipk;
-## opkg install kmod-ws2812-draiveris_3.7.9-5_ar71xx.ipk --force-reinstall;
-## insmod /lib/modules/3.7.9/ws2812-draiveris.ko gpio_number=20 inverted=1
-## mknod /dev/ws2812 c 253 0
+## === example module load for WS2812:
+## insmod ws2812-draiveris gpio_number=20 inverted=1
 ## echo -en '\x00\x00\x40' > /dev/ws2812
 
-# test.py
-##dev = os.open("/dev/ws2812", os.O_RDWR)
-##data = [0x0, 0x60, 0x00]
-##os.write(dev, bytearray(data))
-
-# upgrade firmware
-## cd /tmp; wget http://192.168.0.63:8000/openwrt-ar71xx-generic-carambola2-squashfs-sysupgrade.bin; sysupgrade -v -n openwrt-ar71xx-generic-carambola2-squashfs-sysupgrade.bin
-
-# carambola install python
-## opkg update
-## opkg install python
+## === example module load for SK6812:
+## insmod ws2812-draiveris gpio_number=20 inverted=1 rgbw=1
+## echo -en '\x00\x00\x40\x20' > /dev/ws2812
 
 # Copyright (C) 2006-2012 OpenWrt.org
 #
@@ -65,7 +47,7 @@ define KernelPackage/$(PKG_NAME)
 endef
 
 define KernelPackage/$(PKG_NAME)/description
-	This package contains ws2812-draiveris drivers for WS2812 LED chains
+	This package contains ws2812-draiveris drivers for WS2812/SK6812 LED chains
 endef
 
 define Build/Prepare

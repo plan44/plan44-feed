@@ -4,6 +4,7 @@
  *  Copyright (C) 2006-2012 OpenWrt.org
  *  Copyright (C) 2012 Žilvinas Valinskas, Saulius Lukšė
  *  Copyright (C) 2014 Jürgen Weigert <jw@owncloud.com>
+ *  Copyright (C) 2016 Lukas Zeller <luz@plan44.ch> (RGBW support)
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.
@@ -14,6 +15,7 @@
  *      gpios=20,21,22          # explicitly specify where the led_strips are connected.
  *      leds_per_gpio           # length of the led strips.
  *      inverted=0              # have inverting line drivers at the GPIOs
+ *      rgbw=0                  # set 1 for quad-channel RGBW LEDs (SK6812)
  *
  */
 #include <linux/init.h>
