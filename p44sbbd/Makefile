@@ -42,6 +42,14 @@ define Package/$(PKG_NAME)/description
  using GPIOs to control line drivers.
 endef
 
+
+define Build/Prepare
+	$(Build/Prepare/Default)
+	mkdir -p $(PKG_BUILD_DIR)/etc
+	$(CP) ./files/* $(PKG_BUILD_DIR)/
+endef
+
+
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
