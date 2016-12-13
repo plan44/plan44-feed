@@ -13,7 +13,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=ow_testing
-PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/vdcd.git
+PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/vdsm.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -26,7 +26,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libjson-c +libprotobuf-c +libsqlite3 +libopenssl +librt
+  DEPENDS:=+libprotobuf-c +libsqlite3 +libopenssl +librt
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=digitalstrom
@@ -46,7 +46,7 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/vdSM $(1)/usr/bin/$(PKG_NAME)
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
