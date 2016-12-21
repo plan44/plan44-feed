@@ -26,7 +26,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp  +libpthread +librt +boost +libjson-c +libopenssl +libsqlite3 $(CXX_DEPENDS)
+  DEPENDS:=+libstdcpp +libpthread +librt +boost +libjson-c +libopenssl +libsqlite3 +p44-i2c-tools $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=toys
