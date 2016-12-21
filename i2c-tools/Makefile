@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=p44-i2c-tools
+PKG_NAME:=i2c-tools
 PKG_VERSION:=3.0.3
 PKG_RELEASE:=1
 
@@ -16,16 +16,16 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://dl.lm-sensors.org/i2c-tools/releases
 #PKG_MD5SUM:=f15019e559e378c6e9d5d6299a00df21
 
-PKG_BUILD_DEPENDS:=PACKAGE_python-smbus:python
-
 include $(INCLUDE_DIR)/package.mk
 $(call include_mk, python-package.mk)
 
 define Package/$(PKG_NAME)
-	SECTION:=utils
-	CATEGORY:=Utilities
+	SECTION:=plan44
+	CATEGORY:=plan44
+	SUBMENU:=Utilities
 	TITLE:=I2C tools for Linux
-	URL:=http://www.lm-sensors.org/wiki/I2CTools
+	URL:=https://github.com/plan44/i2c-tools
+	MAINTAINER:=luz@plan44.ch
 endef
 
 define Package/$(PKG_NAME)/description
@@ -43,7 +43,7 @@ define Package/$(PKG_NAME)/description
  when the toolchain /usr/include also contains a i2c-dev.h.
 
  Note also that the originally included python-smbus package has
- been removed from p44-i2c-tools
+ been removed from p44 version of i2c-tools
 endef
 
 TARGET_CPPFLAGS += -I$(LINUX_DIR)/include
