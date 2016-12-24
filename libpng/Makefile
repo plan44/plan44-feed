@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libpng
-PKG_VERSION:=1.6.26
+PKG_VERSION:=1.6.2
 PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@SF/libpng
-PKG_MD5SUM:=faed9bb495d2e12dd0c9ec561ca60cd8
+PKG_MD5SUM:=9d838f6fca9948a9f360a0cc1b516d5f
 PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
 
 PKG_LICENSE:=Libpng GPL-2.0+ BSD-3-Clause
@@ -49,11 +49,11 @@ define Build/InstallDev
 		$(1)/usr/bin/libpng{,16}-config
 	$(INSTALL_DIR) $(1)/usr/include
 	$(CP) $(PKG_INSTALL_DIR)/usr/include/png{,conf}.h $(1)/usr/include/
-	$(CP) $(PKG_INSTALL_DIR)/usr/include/libpng12 $(1)/usr/include/
+	$(CP) $(PKG_INSTALL_DIR)/usr/include/libpng16 $(1)/usr/include/
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpng{,12}.{a,la,so*} $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpng{,16}.{a,la,so*} $(1)/usr/lib/
 	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libpng{,12}.pc $(1)/usr/lib/pkgconfig/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libpng{,16}.pc $(1)/usr/lib/pkgconfig/
 	$(INSTALL_DIR) $(2)/bin
 	for f in libpng{,16}-config; do \
 		$(LN) ../../usr/bin/$$$$f $(2)/bin/ ; \
@@ -62,7 +62,7 @@ endef
 
 define Package/libpng/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpng{,16}.so.* $(1)/usr/lib/
+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libpng{,16}.so* $(1)/usr/lib/
 endef
 
 $(eval $(call HostBuild))
