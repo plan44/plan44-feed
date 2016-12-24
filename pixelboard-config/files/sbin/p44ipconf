@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# query or set p44-dsb-e IP settings
+if [[ $# -eq 2 ]]; then
+  # modify a IP setting
+  key=$1
+  val=$2
+  # dhcp
+  if [[ "${key}" == "dhcp" ]]; then
+    if [[ ${val} -eq 0 ]]; then
+      # disable dhcp, enable static
+      uci -q set network.lan.proto=static
+    else
+      # enable dhcp
+      uci -q set network.lan.proto=dhcp
+    fi
+  elif [[ "${key}" == "ipaddr" ]]; then
+    uci -q set network.lan.ipaddr=${val}
+  elif [[ "${key}" == "netmask" ]]; then
+    uci -q set network.lan.netmask=${val}
+  elif [[ "${key}" == "gatewayip" ]]; then
+    uci -q set network.lan.gateway=${val}
+  elif [[ "${key}" == "dnsip" ]]; then
+    uci -q delete network.lan.dns
+    uci -q add_list network.lan.dns=${val}
+  elif [[ "${key}" == "dnsip2" ]]; then
+    first=$(uci -q get network.lan.dns | sed -n -r -e 's/(^[0-9.]+).*/\1/p')
+    uci -q delete network.lan.dns
+    uci -q add_list network.lan.dns=${first}
+    if [[ ! "${val}" == "0.0.0.0" ]]; then
+      uci -q add_list network.lan.dns=${val}
+    fi
+  elif [[ "${key}" == "commit" ]]; then
+    # commit changes
+    uci -q commit network
+  else
+    echo "unknown ip settings value $1";
+    exit 1
+  fi
+# settings
+elif [[ $# -eq 0 ]]; then
+  # just query
+  # - dhcp
+  proto=$(uci -q get network.lan.proto)
+  if [[ "${proto}" == "dhcp" ]]; then
+    echo "dhcp=on"
+  else
+    echo "dhcp=off"
+  fi
+  # - ip settings
+  echo "ipaddr=$(uci -q get network.lan.ipaddr)"
+  echo "netmask=$(uci -q get network.lan.netmask)"
+  echo "gatewayip=$(uci -q get network.lan.gateway)"
+  first=$(uci -q get network.lan.dns | sed -n -r -e 's/(^[0-9.]+).*/\1/p')
+  second=$(uci -q get network.lan.dns | sed -n -r -e 's/^[0-9.]+ +([0-9.]+)/\1/p')
+  echo "dnsip=${first}"
+  echo "dnsip2=${second}"
+  echo "currentip=STATUS_IPV4"
+else
+  echo "usage $0 [dhcp 0|1 | ipaddr <ip> | netmask <netmask> | gatewayip <gateway> | dnsip <dns> | dnsip2 <dns>]";
+  exit 1
+fi
+

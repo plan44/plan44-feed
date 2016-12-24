@@ -1,0 +1,27 @@
+# p44dsb-config configuration
+menu "p44dsb configuration"
+  depends on PACKAGE_p44dsb-config
+
+  config P44_PRODUCT_IDENTIFIER
+    string
+    prompt "plan44 product identifier"
+    default "unknown"
+    help
+      Specify plan44 product identifier (used to choose appropriate runtime config)
+
+  config P44_FEED_NAME
+    string
+    prompt "plan44 feed name"
+    default "testing"
+    help
+      Specify plan44 feed name
+
+  config P44_PRODUCER_IDENTIFIER
+    string
+    prompt "producer identifier"
+    default "plan44"
+    help
+      Specify producer name to be embedded into image
+
+
+endmenu

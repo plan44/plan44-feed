@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+# default features
+EXECUTABLE=pixelboardd
+LOGLEVEL=5
+EXTRAOPTS=
+
+# Allow overriding options
+# - override from flash
+if [ -e /flash/pixelboardd_debug ]; then
+  source /flash/pixelboardd_debug
+fi
+# - override from tmp
+if [ -e /tmp/pixelboardd_debug ]; then
+  source /tmp/pixelboardd_debug
+fi
+
+
+# load the LED chain kernel module
+insmod ws2812-draiveris gpios=${PLATFORM_LEDCHAIN_GPIONO} leds_per_gpio=${PLATFORM_LEDCHAIN_NUMLEDS}
+
+# load the i2c module
+insmod i2c-gpio-custom bus0=0,21,20,50,10,0,0,1
+
+# configure GPIOs for i2c switch, reset, change sense for touch boards
+
+# GPIO6 = /TOUCH_RST (0=Reset, 1=run)
+# GPIO7 = TOUCH_SEL (1=far end P4 touch board SCL enabled, 0=near end P3 touch board enabled)
+# GPIO15 = /TOUCH_CHG (0=change detected)
+echo 6 >/sys/class/gpio/export
+echo 7 >/sys/class/gpio/export
+echo 15 >/sys/class/gpio/export
+# keep reset
+echo out >/sys/class/gpio/gpio6/direction
+echo 0 >/sys/class/gpio/gpio6/value
+# select near end
+echo out >/sys/class/gpio/gpio7/direction
+# release reset
+echo 1 >/sys/class/gpio/gpio6/value
+
+# configure touch key parameters
+# - disable keys 5 and 6 (Averaging factor 0)
+i2cset -y 0 0x1B 44 0
+i2cset -y 0 0x1B 45 0
+# - disable adjacent key group (Bits 0..2, by default, all keys are in group 1, 0=none)
+#   and set averaging factor (Bits 3..7, by default==8)
+i2cset -y 0 0x1B 39 0x20
+i2cset -y 0 0x1B 40 0x20
+i2cset -y 0 0x1B 41 0x20
+i2cset -y 0 0x1B 42 0x20
+i2cset -y 0 0x1B 43 0x20
+# - lower threshold, default = 20
+i2cset -y 0 0x1B 32 10
+i2cset -y 0 0x1B 33 10
+i2cset -y 0 0x1B 34 10
+i2cset -y 0 0x1B 35 10
+i2cset -y 0 0x1B 36 10
+# - integrators, default = 4
+i2cset -y 0 0x1B 46 2
+i2cset -y 0 0x1B 47 5
+i2cset -y 0 0x1B 48 5
+i2cset -y 0 0x1B 49 5
+i2cset -y 0 0x1B 50 5
+
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
+  --jsonapiport 8090 \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null

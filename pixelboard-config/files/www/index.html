@@ -1,0 +1,3891 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+
+    <title id="html_title_model">DSB</title>
+
+    <style type="text/css"><!--
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      .devinfo p { }
+      .infovalue { font-weight: bold; }
+
+      tr.focusdevice { background-color: #a9deff; }
+
+      tr.vdcrow { background-color: #e1e1e1; }
+
+      td.vdccell { font-weight: bold; }
+
+      td.actioncell { text-align: right; }
+
+      td.dsuid { font-weight: bold; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      table.inputsInfoTable { border: 1px; border-color: transparent; width: 100%; }
+      .inputsInfoTable * th { padding:8px; vertical-align:middle; background-color: gray; }
+      .inputsInfoTable * td { padding:8px; vertical-align:middle; background-color: #666666; }
+      .inputsTableDesc { text-align: left; }
+      .inputsTableAge { text-align: left; }
+      th.inputsTableValue { text-align: left; }
+      td.inputsTableValue { text-align: right; font-weight: bold; }
+      td.inputsTableError { text-align: right; }
+
+      table.daliMatrix { border: 1px; border-color: transparent; width: 100%; }
+      .daliMatrix td { width: 30px; height: 30px; padding: 3px; vertical-align: middle; text-align: center; background-color: #666666; }
+      .daliMatrix td.device   { background-color: #00cf6c; }
+      .daliMatrix td.conflict { background-color: #ffb700; }
+      .daliMatrix td.error    { background-color: #ff0000; }
+      .daliMatrix td:hover { background-color: #999999; }
+      .daliMatrix td:active { background-color: #ffe600; }
+      span.device   { background-color: #00cf6c; }
+      span.conflict { background-color: #ffb700; }
+      span.error    { background-color: #ff0000; }
+
+      span.errortext { color: #e80000; }
+      span.warningtext { color: #ff9e00; }
+
+
+      #deviceList * td { padding-top:0; padding-bottom:0; vertical-align:middle; }
+
+      #deviceInfoTable td { padding-bottom: 8px; }
+
+      .deviceDialogIcon { display: inline; margin-right: 15px; }
+      .deviceDialogTitle { display: inline-block; }
+
+      #vdcInfoTable td { padding-bottom: 8px; }
+      #vdcInfoIcon { display: inline; margin-right: 15px; }
+      #vdcInfoTitle { display: inline-block; }
+
+      .evaluatorDefs th { background-color: #5c5c5c; padding: 4px 8px; text-align: left; }
+      .evaluatorDefs td { background-color: #707070; padding: 4px 8px; }
+      .evaluatorDefs input { font-size: 14px; }
+      .evaluatorDefs a { text-decoration: none; text-shadow:none; color:#7ecaff; margin-left: 10px; }
+      .evaluatorDefs a:hover { font-weight: bold; color:#ff6161; }
+
+      .evaluatorCheckResult { font-size: smaller; color: #00D007; }
+      .evaluatorCheckError { color: #ff4500; }
+
+      #channelInfoIcon { display: inline; margin-right: 15px; }
+      #channelInfoTitle { display: inline-block; }
+
+      #inputInfoIcon { display: inline; margin-right: 15px; }
+      #inputInfoTitle { display: inline-block; }
+
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+      #diyWarning em { color:red; }
+
+      #restoreCompatWarnings { color:#e80000; }
+
+      .ui-table-columntoggle-btn { display: none !important; }
+
+      .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
+      .p44-mini-input-end { clear: right; }
+
+
+
+      /* channel ID 2 is hue */
+      #channel_slider_2 + .ui-slider-track  {
+        background-image: linear-gradient(
+          to right,
+          rgb(255 ,0, 0) 0%,
+          rgb(255 ,255, 0) 16%,
+          rgb(0 ,255, 0) 33%,
+          rgb(0 ,255, 255) 50%,
+          rgb(0 ,0, 255) 66%,
+          rgb(255 ,0, 255) 83%,
+          rgb(255 ,0, 0) 100%
+        );
+        background-position: initial initial;
+        background-repeat: initial initial;
+      }
+
+      /* channel ID 1 is brightness */
+      #channel_slider_1 + .ui-slider-track  {
+        background-image: linear-gradient(to right, #000 0%, #fff7a8 82.78%);
+        background-position: initial initial;
+        background-repeat: initial initial;
+      }
+
+      /* channel ID 4 is color temperature */
+      #channel_slider_4 + .ui-slider-track  {
+        background-image: linear-gradient(to right, #b3e5ff 0%, #fff3a1 32.79%, #ff9f79 100%);
+        background-position: initial initial;
+        background-repeat: initial initial;
+      }
+
+
+      /* simplistic p44 progress bar */
+
+      div.p44_progressbar {
+        position: relative;
+        margin: 0;
+        margin-top: 20px;
+/*
+        margin-left: auto;
+        margin-right: auto;
+*/
+        width: 100%;
+        height: 21px;
+        padding: 0px;
+        background-color:#d0d0d0;
+        border-radius: 15px;
+        border: 1px solid black;
+      }
+
+      div.p44_progressbar_text {
+        position: absolute;
+        width: 100%;
+        padding: 2px;
+        text-align: center;
+        font-family: sans-serif;
+        font-weight: bold;
+        text-shadow: none;
+      }
+
+      div.p44_progressbar_gauge {
+        background-color: #4e98ff;
+        padding: 0px;
+        margin-left: 0px;
+        margin-right: -2px; /* needed to avoid gauge enlarging bar */
+        margin-top: 0px;
+        margin-bottom: 1px;
+        width: 22px;
+        border-radius: 15px;
+        height: 21px;
+      }
+
+
+
+
+    --></style>
+
+    <script type="text/javascript"><!--
+
+      var restartLocation = window.location.href;
+
+      var tickDiff = false;
+
+      // request validation token
+      var rqvaltok = "";
+      // system info (platform, product, unit, status)
+      var devinfo = {};
+      // other info
+      var bridgename = "";
+      var vdchostdsuid = "";
+      var vdsmrunning = false;
+
+      /* simplistic p44 progress bar */
+
+      function setProgressBar(progBar, percentage)
+      {
+        if (percentage<0) percentage = 0;
+        else if (percentage>100) percentage = 100;
+        percentage = Math.round(percentage);
+        var w = progBar.width()/100*percentage;
+        if (w<progBar.height()) w = progBar.height();
+        progBar.find('.p44_progressbar_gauge').width(w);
+        progBar.find('.p44_progressbar_text').html(percentage.toString()+'%');
+      }
+
+
+      function startTimeProgress(progBar, waitTime)
+      {
+        setProgressBar(progBar, 0);
+        var progressStart = (new Date).getTime(); // MS since 1970
+        var i = setInterval(function() {
+          var nowtime = (new Date).getTime(); // MS since 1970
+          var percentage = (nowtime-progressStart)/waitTime*100;
+          setProgressBar(progBar, percentage);
+          if (percentage>=100) clearInterval(i); // stop
+        }, waitTime/100);
+      }
+
+
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+      function openDialog(dialog)
+      {
+        $(dialog).popup("open", { positionTo:"window" });
+      }
+
+
+      function closeDialog(dialog)
+      {
+        $(dialog).popup("close");
+      }
+
+
+      $(function()
+      {
+        // Initialize
+
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+          // get info
+          refresh_sysinfo();
+          refresh_ipconfig();
+        }).fail(function(response, status) {
+          console.log('TOK error ' + response.error.message);
+        });
+
+        // Handlers for Device page
+
+        // load current device list when page is opened
+        $("#devices").on('pageshow', function(event) {
+          refresh_devicelist(false);
+        });
+
+        // refresh ola dependencies
+        $("#olaCreateDevice").on('popupafteropen', function( event ) {
+          $('#olaCreateDeviceForm').each (function(){
+            this.reset();
+          });
+          refresh_ola_deps();
+        });
+
+        // load DALI dimmers when DALI grouping dialog is opened
+        $("#daliCreateGroup").on('popupafteropen', function(event) {
+          refresh_dali_grouping_deps();
+        });
+
+        // refresh customio dependencies on popup open
+        $("#customioCreateDevice").on('popupafteropen', function( event ) {
+          $('#customioCreateDeviceForm').each (function(){
+            this.reset();
+          });
+          refresh_customio_deps();
+        });
+
+
+        // Handlers for Log page
+
+        // load latest log tails when log pane is opened
+        $("#logs").on('pageshow', function(event) {
+          refresh_vdcd_log();
+          refresh_vdsm_log();
+        });
+
+
+        // Handlers for System page
+
+        // load latest IP settings and system info when system pane is opened
+        $("#system").on('pageshow', function(event) {
+          refresh_sysinfo();
+          refresh_ipconfig();
+        });
+
+      });
+
+
+      // Common utils
+
+      function dsuidShort(dsuid)
+      {
+        return dsuid.substr(0,8) + '...' + dsuid.substr(-2);
+      }
+
+
+      // Device Page
+      // ===========
+
+      var activeRequest = 0;
+
+      function learn(noProximity)
+      {
+        $("#learnWait").popup("open", { positionTo:"window" });
+        $("#learnRequest").show();
+        $("#learnCancel").show();
+        $("#learnResult").hide();
+        $("#learnOK").hide();
+        activeRequest = $.getJSON( '/api/json/p44?rqvaltok=' + rqvaltok + '&method=learn&seconds=30&disableProximityCheck=' + String(Number(noProximity)))
+        .done(function(response) {
+          var resultHtml;
+          if (response.error==408) {
+            // timed out,
+            resultHtml = "<p>Timeout: No learn event received</p>";
+          }
+          else if (response.error!=undefined) {
+            console.log('API error ' + response.errormessage);
+          }
+          else {
+            if (response.result==true)
+              resultHtml = '<p style="color: green; font-weight: bold;">Learned in device successfully.</p>';
+            else
+              resultHtml = '<p style="color: red; font-weight: bold;">Learned out device successfully.</p>';
+          }
+          // new info
+          $("#learnRequest").hide();
+          $("#learnCancel").hide();
+          $('#learnResult').html(resultHtml);
+          $("#learnResult").show();
+          $("#learnOK").show();
+          setTimeout(function() { $("#learnWait").popup("reposition", {positionTo: 'window'}); }, 1 );
+          // redisplay device list
+          refresh_devicelist(false);
+        });
+      }
+
+
+      function stopLearn()
+      {
+        activeRequest.abort();
+        activeRequest = undefined;
+        $.getJSON( '/api/json/p44?rqvaltok=' + rqvaltok + '&method=learn&seconds=0');
+      }
+
+
+      function identify()
+      {
+        $("#identifyWait").popup("open", { positionTo:"window" });
+        $("#identifyRequest").show();
+        $("#identifyCancel").show();
+        $("#identifyResult").hide();
+        $("#identifyOK").hide();
+        activeRequest = $.getJSON( '/api/json/p44?rqvaltok=' + rqvaltok + '&method=identify&seconds=30' )
+        .done(function(response) {
+          var resultHtml;
+          var focusDSUID = false;
+          if (response.error==408) {
+            // timed out,
+            resultHtml = "<p>Timeout: No device was identified</p>";
+          }
+          else if (response.error!=undefined) {
+            console.log('API error ' + response.errormessage);
+          }
+          else {
+            focusDSUID = response.result;
+            if (focusDSUID!=false) {
+              resultHtml = '<p style="color: green; font-weight: bold;">Identified Device ' + focusDSUID + '</p>';
+            }
+          }
+          // new info
+          $("#identifyRequest").hide();
+          $("#identifyCancel").hide();
+          $('#identifyResult').html(resultHtml);
+          $("#identifyResult").show();
+          $("#identifyOK").show();
+          setTimeout(function() { $("#identifyWait").popup("reposition", {positionTo: 'window'}); }, 1 );
+          // redisplay device list with focus set
+          refresh_devicelist(focusDSUID);
+        });
+      }
+
+
+      function stopIdentify()
+      {
+        activeRequest.abort();
+        activeRequest = undefined;
+        $.getJSON( '/api/json/p44?rqvaltok=' + rqvaltok + '&method=identify&seconds=0');
+      }
+
+
+      function refresh_dali_grouping_deps()
+      {
+        // check type of group
+        var grouptype = $("#dali_grouptype_select").val();
+
+        if (grouptype=="color") $(".dali_grouptype_color").show(); else $(".dali_grouptype_color").hide();
+        if (grouptype=="group") $(".dali_grouptype_group").show(); else $(".dali_grouptype_group").hide();
+
+        // query list
+        var listquery = {
+          "method":"getProperty",
+          "dSUID":"none", "x-p44-itemSpec":"vdc:DALI_Bus_Container",
+          "query":{
+            "x-p44-devices":{ "":{ "dSUID":null, "name":null, "model":null, "x-p44-deviceType":null, "hardwareGuid":null }}
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(listquery)
+        }).done(function(response) {
+          var selectHtml = '<option value="" selected="selected">- none -</option>';
+          var devices = response.result["x-p44-devices"];
+          for (var deviceKey in devices) {
+            var device = devices[deviceKey];
+            if (device["x-p44-deviceType"]=='dali_single' || (grouptype=="color" && device["x-p44-deviceType"]=='dali_group')) {
+              selectHtml += '<option value="' + device.dSUID + '">' + dsuidShort(device.dSUID) + ' - ' + device.model;
+              if (device.name.length>0) selectHtml += ' "' + device.name + '"';
+              selectHtml += '</option>';
+            }
+          }
+          if (grouptype=="color") {
+            // update selection lists
+            $("#red_dimmer_select").html(selectHtml).trigger('create');
+            $("#green_dimmer_select").html(selectHtml).trigger('create');
+            $("#blue_dimmer_select").html(selectHtml).trigger('create');
+            $("#white_dimmer_select").html(selectHtml).trigger('create');
+            // reset selection
+            $("#red_dimmer_select").val('').selectmenu("refresh");
+            $("#green_dimmer_select").val('').selectmenu("refresh");
+            $("#blue_dimmer_select").val('').selectmenu("refresh");
+            $("#white_dimmer_select").val('').selectmenu("refresh");
+          }
+          if (grouptype=="group") {
+            $("#dali_group_member_selectors").html("").trigger('create');
+            refresh_dali_group_members(selectHtml);
+          }
+          setTimeout(function() { $("#daliCreateGroup").popup("reposition", {positionTo: 'window'}); }, 1 );
+        });
+      }
+
+
+      function refresh_dali_group_members(selectHtml)
+      {
+        // check all current selectors
+        var hasEmpty = false;
+        $("select.dali_group_member").each(
+          function(index) {
+            if ($(this).val()=="") {
+              hasEmpty = true;
+            }
+          }
+        );
+        if (!hasEmpty) {
+          // add another
+          $("#dali_group_member_selectors").append(
+            '<select class="dali_group_member" data-mini="true" data-theme="a">' + selectHtml + '</select>'
+          ).trigger(
+            'create'
+          ).on('change.groupmember', function() {
+            refresh_dali_group_members(selectHtml);
+          });
+        }
+      }
+
+
+
+
+      function createDaliRGB()
+      {
+        // get IDs for the channels
+        var redID = $("#red_dimmer_select").val();
+        var greenID = $("#green_dimmer_select").val();
+        var blueID = $("#blue_dimmer_select").val();
+        var whiteID = $("#white_dimmer_select").val();
+        // check for duplicates
+        if (redID==greenID || greenID==blueID || blueID==redID ||
+          redID.length==0 || greenID.length==0 || blueID.length==0 ||
+          (whiteID.length!=0 && (whiteID==redID || whiteID==greenID || whiteID==blueID))
+        ) {
+          // need three IDs, and must be different IDs
+          alert("Please select 3 or 4 different DALI dimmers for red, green, blue or white channels.");
+        }
+        else {
+          $.mobile.loading( "show", {
+            text: "creating composite device...",
+            textVisible: true,
+            theme: "b"
+          });
+          var rgbCreateQuery = {
+            "method":"x-p44-groupDevices",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:DALI_Bus_Container:1",
+            "members":{
+              "R":redID,
+              "G":greenID,
+              "B":blueID
+            }
+          };
+          if (whiteID.length!=0) {
+            rgbCreateQuery.members.W = whiteID;
+          }
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(rgbCreateQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#daliCreateGroup").popup("close");
+            $.mobile.loading( "hide" );
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // reload modified device list
+              refresh_devicelist(false);
+            }
+          })
+          .fail(function(response, status) {
+            $("#daliCreateGroup").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      function createDaliGroup()
+      {
+        // collect dSUIDs of group members
+        var ids = new Array();
+        $("select.dali_group_member").each(
+          function(index) {
+            var v = $(this).val();
+            if (v!="" && $.inArray(v,ids)<0) {
+              // prevent duplicates and "-none-" to be added to the list
+              ids.push(v);
+            }
+          }
+        );
+        //console.log('IDs = ' + ids);
+        if (ids.length<2) {
+          // need at least 2 dimmers
+          alert("Please select at least 2 different DALI dimmers to group.");
+        }
+        else {
+          $.mobile.loading( "show", {
+            text: "creating DALI group...",
+            textVisible: true,
+            theme: "b"
+          });
+          var members = {};
+          $.each(ids,
+            function(index, element) {
+              members['D'+String(index+1)] = element;
+            }
+          );
+          //console.log('group members = ' + ids);
+          var groupCreateQuery = {
+            "method":"x-p44-groupDevices",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:DALI_Bus_Container:1",
+            "members":members
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(groupCreateQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#daliCreateGroup").popup("close");
+            $.mobile.loading( "hide" );
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // reload modified device list
+              refresh_devicelist(false);
+            }
+          })
+          .fail(function(response, status) {
+            $("#daliCreateGroup").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+
+
+      function ungroupDaliDevices(dSUID)
+      {
+        // ungroup
+        $.mobile.loading( "show", {
+          text: "separating dimmers...",
+          textVisible: true,
+          theme: "b"
+        });
+        var ungroup = {
+          "method":"x-p44-ungroupDevice",
+          "dSUID":dSUID
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(ungroup)
+        }).complete(function(response) {
+          $.mobile.loading( "hide" );
+          $("#deviceInfo").popup("close");
+          // reload modified device list
+          refresh_devicelist(false);
+        });
+      }
+
+
+      var daliScannerTimeout = 0;
+      var daliDiagnosticsIsOpen = false;
+
+      function daliDiagnostics(dSUID)
+      {
+        // close the vdc info
+        $("#vdcInfo").popup("close");
+        daliDiagnosticsIsOpen = true;
+        // stop updatding inputs when popup closes!
+        $("#daliDiagnostics").off('popupafterclose');
+        $("#daliDiagnostics").on('popupafterclose', function() {
+          clearTimeout(daliScannerTimeout);
+          daliDiagnosticsIsOpen = false;
+        });
+        // show rescan choices
+        var devicematrix='<table class="daliMatrix">';
+        for (var i=0; i<8; i++) {
+          devicematrix += '<tr>';
+          for (var j=0; j<8; j++) {
+            var addr = (i*8+j).toString();
+            devicematrix += '<td id="daliAddrCell_' + addr + '" onclick="daliCmd(\'pulse\', \'' + addr + '\');">' + addr + '</td>';
+          }
+          devicematrix += '</tr>';
+        }
+        devicematrix += '</table>';
+        $('#daliDeviceMatrix').html(devicematrix).trigger('create');
+        setTimeout(function() { $("#daliDiagnostics").popup("open", { positionTo:"window" }); }, 100 );
+        daliScannerTimeout = setTimeout(function() { daliBusScan(dSUID); }, 300 );
+      }
+
+
+      function daliCmd(cmd, addr)
+      {
+        // do it
+        //alert('Command=' + cmd + ' addr=' + addr.toString());
+        var cmdQuery = {
+          "method":"x-p44-daliCmd",
+          "dSUID":"none", "x-p44-itemSpec":"vdc:DALI_Bus_Container:1",
+          "cmd":cmd,
+          "addr":addr
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmdQuery)
+        }).done(function(response) {
+          if (response.error) {
+            alert("Error: " + response.error.message);
+          }
+        });
+      }
+
+
+      function daliBusScan(dSUID)
+      {
+        var scanQuery = {
+          "method":"x-p44-daliScan",
+          "dSUID":dSUID,
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(scanQuery)
+        }).done(function(response) {
+          // update shortaddr states
+          if (response.result.busState) {
+            var s = response.result.busState;
+            for(var i=0; i<s.length; i++) {
+              var td = $('#daliAddrCell_'+i.toString());
+              switch(s.charAt(i)) {
+                case '*' : td.attr('class', 'device'); break;
+                case 'C' : td.attr('class', 'conflict'); break;
+                case 'E' : td.attr('class', 'error'); break;
+                default : td.attr('class', ''); break;
+              }
+            }
+          }
+          if (daliDiagnosticsIsOpen) {
+            // schedule next update
+            daliScannerTimeout = setTimeout(function() { daliBusScan(dSUID); }, 10000);
+          }
+        });
+      }
+
+
+      function setDALIDefaultBrightness(dSUID)
+      {
+        $("#deviceInfo").popup("close");
+        // show confirm dialog
+        setTimeout(function() {
+          openDialog("#daliDefaultBrightnessConfirm");
+          $("#setDefaultBrightnessNowButton").off('click.setDefault');
+          $("#setDefaultBrightnessNowButton").on('click.setDefault', function() {
+            setDALIDefaultBrightnessNow(dSUID);
+          });
+        }, 100 );
+      }
+
+
+      function setDALIDefaultBrightnessNow(dSUID)
+      {
+        // set brightness now
+        var savedefault = {
+          "method":"x-p44-saveAsDefault",
+          "dSUID":dSUID
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(savedefault)
+        });
+      }
+
+
+
+      function refresh_customio_deps()
+      {
+        // current settings
+        var custom_devicetype = $("#custom_devicetype_select").val();
+        var digitalio_device = $("#digitalio_device_select").val();
+        var analogio_device = $("#analogio_device_select").val();
+        // dependent settings
+        var show_digitalio = false;
+        var show_analogio = false;
+        var show_consoleio = false;
+        var show_spark = false;
+        var show_custom = false;
+        var show_gpio_params = false;
+        var show_led_params = false;
+        var show_i2c_params = false;
+        var show_spi_params = false;
+        var show_syscmd_params = false;
+        var show_rcswitch_params = false;
+
+        // basic type
+        switch (custom_devicetype) {
+          case "digitalio" : show_digitalio = true; break;
+          case "analogio" : show_analogio = true; break;
+          case "console" : show_consoleio = true; break;
+          case "spark" : show_spark = true; break;
+          case "custom" : show_custom = true;
+        }
+        if (show_digitalio) $(".digitalio_group").show(); else $(".digitalio_group").hide();
+        if (show_analogio) $(".analogio_group").show(); else $(".analogio_group").hide();
+        if (show_consoleio) $(".consoleio_group").show(); else $(".consoleio_group").hide();
+        if (show_spark) $(".spark_group").show(); else $(".spark_group").hide();
+        if (show_custom) $(".custom_group").show(); else $(".custom_group").hide();
+        // physical I/O selectors
+        show_gpio_params = (show_digitalio && digitalio_device=="gpio");
+        show_led_params = (show_digitalio && digitalio_device=="led");
+        show_i2c_params = (show_digitalio && digitalio_device=="i2c") || (show_analogio && analogio_device=="i2c");
+        show_spi_params = (show_digitalio && digitalio_device=="spi") || (show_analogio && analogio_device=="spi");
+        show_syscmd_params = (show_digitalio && digitalio_device=="syscmd") || (show_analogio && analogio_device=="syscmd");
+        show_rcswitch_params = (show_digitalio && digitalio_device=="rcswitch");
+        if (show_gpio_params) $(".gpio_group").show(); else $(".gpio_group").hide();
+        if (show_led_params) $(".led_group").show(); else $(".led_group").hide();
+        if (show_i2c_params) $(".i2c_group").show(); else $(".i2c_group").hide();
+        if (show_spi_params) $(".spi_group").show(); else $(".spi_group").hide();
+        if (show_syscmd_params) $(".syscmd_group").show(); else $(".syscmd_group").hide();
+        if (show_rcswitch_params) $(".rcswitch_group").show(); else $(".rcswitch_group").hide();
+        setTimeout(function() { $("#customioCreateDevice").popup("reposition", {positionTo: 'window'}); }, 1 );
+      }
+
+
+      function createCustomIODevice()
+      {
+        // create custom I/O device
+        // - current settings
+        var custom_devicetype = $("#custom_devicetype_select").val();
+        var devtype = custom_devicetype; // default to selected type
+        var iospec = ""; // none
+        if (custom_devicetype=="custom") {
+          // manually entered
+          devtype = $("#custom_devicetype_textfield").val();
+          iospec = $("#custom_devicespec_textfield").val();
+        }
+        else if (custom_devicetype=="spark") {
+          // spark
+          iospec = $("#spark_sparkcoreid_textfield").val() + ":" + $("#spark_authtoken_textfield").val();
+        }
+        else if (custom_devicetype=="console") {
+          iospec =  $("#customdev_name_textfield").val() + ":" + $("#consoleio_behaviour_select").val();
+        }
+        else {
+          // create iospec from selections
+          var behaviour = "";
+          var devicekind = "missing";
+          var i2cchip = "generic";
+          var spichip = "generic";
+          if (custom_devicetype=="digitalio") {
+            behaviour = $("#digitalio_behaviour_select").val();
+            devicekind = $("#digitalio_device_select").val();
+            i2cchip = $("#digitalio_i2c_chip_select").val();
+            spichip = $("#digitalio_spi_chip_select").val();
+          }
+          else if (custom_devicetype=="analogio") {
+            behaviour = $("#analogio_behaviour_select").val();
+            devicekind = $("#analogio_device_select").val();
+            i2cchip = $("#analogio_i2c_chip_select").val();
+            spichip = $("#analogio_spi_chip_select").val();
+          }
+          var devicespec = devicekind; // default to just device kind
+          var pinNo = false;
+          if (devicekind=="gpio") {
+            pinNo = $("#gpio_pin_textfield").val();
+          }
+          else if (devicekind=="led") {
+            pinNo = $("#led_pin_textfield").val();
+          }
+          else if (devicekind=="i2c") {
+            devicespec += $("#i2c_bus_select").val() + "." + i2cchip; // add bus and chip driver name
+            devicespec += "@" + $("#i2c_address_textfield").val(); // add i2c address
+            pinNo = $("#i2c_pin_textfield").val();
+          }
+          else if (devicekind=="spi") {
+            devicespec += $("#spi_bus_select").val() + "." + spichip; // add bus and chip driver name
+            devicespec += "@" + $("#spi_address_textfield").val(); // add SPI address
+            pinNo = $("#spi_pin_textfield").val();
+          }
+          else if (devicekind=="syscmd") {
+            if (custom_devicetype=="digitalio") {
+              // digital, combine on and off commands
+              devicespec = "syscmd." + $('#syscmd_command_on_textfield').val() + '|' + $('#syscmd_command_off_textfield').val();
+              pinNo = false;
+            }
+            if (custom_devicetype=="analogio") {
+              // analog, combine range and set command
+              var range = parseInt($('#syscmd_range_textfield').val());
+              if (range<=0) range=100;
+              devicespec = "syscmd." + range.toString() + '|' + $('#syscmd_command_set_textfield').val();
+              pinNo = false;
+            }
+          }
+          else if (devicekind=="rcswitch") {
+            // RCSwitch, use send shell command
+            var snd = "send " + $('#rcswitch_housecode_textfield').val() + " " + $('#rcswitch_devicecode_textfield').val() + " ";
+            devicespec = "syscmd." + snd + "1|" + snd + "0";
+            pinNo = false;
+          }
+          // prefix with pin options, if any
+          if ($("#digitalio_pinopt_select").val()!="X") {
+            devicespec = $("#digitalio_pinopt_select").val().toString() + devicespec.toString();
+          }
+          // use three consecutive outputs for RGB dimmer
+          if (behaviour=="rgbdimmer") {
+            // use three consecutive pins
+            var i = parseInt(pinNo); // number
+            iospec =
+              devicespec + "." + i.toString() + "|" +
+              devicespec + "." + (i+1).toString() + "|" +
+              devicespec + "." + (i+2).toString();
+            iospec += ":" + behaviour;
+          }
+          else if (behaviour=="rgbwdimmer") {
+            // use four consecutive pins
+            var i = parseInt(pinNo); // number
+            iospec =
+              devicespec + "." + i.toString() + "|" +
+              devicespec + "." + (i+1).toString() + "|" +
+              devicespec + "." + (i+2).toString() + "|" +
+              devicespec + "." + (i+3).toString();
+            iospec += ":" + "rgbdimmer"; // presence of white determines RGBW functionality
+          }
+          else {
+            // single pin
+            if (pinNo !== false) devicespec = devicespec.toString() + "." + pinNo.toString();
+            iospec = devicespec + ":" + behaviour;
+          }
+        }
+        //alert("devtype = " + devtype + "\niospec = " + iospec);
+        var deviceName = $("#customdev_name_textfield").val();
+        var deviceCreateQuery = {
+          "method":"x-p44-addDevice",
+          "dSUID":"none", "x-p44-itemSpec":"vdc:Static_Device_Container:1",
+          "deviceType": devtype,
+          "deviceConfig": iospec,
+          "name" : deviceName
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(deviceCreateQuery)
+        }).done(function(response) {
+          // close the dialog
+          $("#customioCreateDevice").popup("close");
+          if (response.error) {
+            alert("Error: " + response.error.message);
+          }
+          else {
+            // reload modified device list
+            refresh_devicelist(false);
+          }
+        })
+        .fail(function(response, status) {
+          $("#customioCreateDevice").popup("close");
+          console.log('API error ' + response.error.message);
+        });
+      }
+
+
+      function refresh_ola_deps()
+      {
+        // current settings
+        var ola_devicetype = $("#ola_devicetype_select").val();
+        // dependent settings
+        var show_dimmer = false;
+        var show_color = false;
+        var show_pos = false;
+        switch (ola_devicetype) {
+          case "dimmer" : show_dimmer = true; break;
+          case "colordimmer" : show_color = true; break;
+          case "movinglight" : show_color = true; show_pos = true; break;
+        }
+        if (show_dimmer) $(".ola_dimmer_group").show(); else $(".ola_dimmer_group").hide();
+        if (show_color) $(".ola_color_group").show(); else $(".ola_color_group").hide();
+        if (show_pos) $(".ola_position_group").show(); else $(".ola_position_group").hide();
+        setTimeout(function() { $("#olaCreateDevice").popup("reposition", {positionTo: 'window'}); }, 1 );
+      }
+
+
+      function createOlaDevice()
+      {
+        // create OLA device
+        // - current settings
+        var ola_devicetype = $("#ola_devicetype_select").val();
+        var devicetype = '';
+        var deviceconfig = '';
+        if (ola_devicetype=="dimmer") {
+          // single channel dimmer, just configure white channel
+          devicetype = 'dimmer';
+          deviceconfig = 'W=' + $("#ola_dimmer_channel_textfield").val();
+        }
+        else if (ola_devicetype=="colordimmer" || ola_devicetype=="movinglight") {
+          if (
+            $("#ola_red_channel_textfield").val()=='' ||
+            $("#ola_green_channel_textfield").val()=='' ||
+            $("#ola_blue_channel_textfield").val()==''
+          ) {
+            alert("Please specify DMX channels for R,G,B");
+          }
+          else {
+            // RGB(WA) color
+            devicetype = 'color';
+            deviceconfig =
+              'R=' + $("#ola_red_channel_textfield").val() + ',' +
+              'G=' + $("#ola_green_channel_textfield").val() + ',' +
+              'B=' + $("#ola_blue_channel_textfield").val();
+            if ($("#ola_white_channel_textfield").val()!='') {
+              deviceconfig += ',W=' + $("#ola_white_channel_textfield").val();
+            }
+            if ($("#ola_amber_channel_textfield").val()!='') {
+              deviceconfig += ',A=' + $("#ola_amber_channel_textfield").val();
+            }
+            if (ola_devicetype=="movinglight") {
+              if ($("#ola_hpos_channel_textfield").val()!='') {
+                deviceconfig += ',H=' + $("#ola_hpos_channel_textfield").val();
+              }
+              if ($("#ola_vpos_channel_textfield").val()!='') {
+                deviceconfig += ',V=' + $("#ola_vpos_channel_textfield").val();
+              }
+            }
+          }
+        }
+        else {
+          // none
+        }
+        // add extra config
+        if ($("#ola_static_channels_textfield").val()!='') {
+          deviceconfig += ',' + $("#ola_static_channels_textfield").val();
+        }
+        //alert("devicetype = " + devicetype + "\ndeviceconfig = " + deviceconfig);
+        if (devicetype=='' || deviceconfig=='') {
+          // need some config
+          alert("Please specify required channel numbers");
+        }
+        else {
+          var deviceName = $("#oladev_name_textfield").val();
+          var deviceCreateQuery = {
+            "method":"x-p44-addDevice",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:OLA_Device_Container:1",
+            "deviceType": devicetype,
+            "deviceConfig": deviceconfig,
+            "name" : deviceName
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(deviceCreateQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#olaCreateDevice").popup("close");
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // reload modified device list
+              refresh_devicelist(false);
+            }
+          })
+          .fail(function(response, status) {
+            $("#olaCreateDevice").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      function createRGBLedChainDevice()
+      {
+        // create RGB LED chain device
+        // - current settings
+        if (
+          $("#rgbchain_firstled_textfield").val()=='' ||
+          $("#rgbchain_numleds_textfield").val()==''
+        ) {
+          alert("Please specify Start LED and number of LEDs");
+        }
+        else {
+          var softStart = parseInt($("#rgbchain_soft_start_textfield").val());
+          var softEnd = parseInt($("#rgbchain_soft_end_textfield").val());
+          var deviceconfig = 'segment:' + softStart.toString() + ':' + softEnd.toString();
+        }
+        var firstLED = parseInt($("#rgbchain_firstled_textfield").val());
+        var numLEDs = parseInt($("#rgbchain_numleds_textfield").val());
+        if (firstLED<0 || numLEDs<1) {
+          // need some config
+          alert("Please specify set start LED>0 and number of LEDs >=1");
+        }
+        else {
+          var deviceName = $("#rgbchaindev_name_textfield").val();
+          var deviceCreateQuery = {
+            "method":"x-p44-addDevice",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:LedChain_Device_Container:1",
+            "firstLED":firstLED,
+            "numLEDs":numLEDs,
+            "deviceConfig": deviceconfig,
+            "name" : deviceName
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(deviceCreateQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#rgbchainCreateDevice").popup("close");
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // reload modified device list
+              refresh_devicelist(false);
+            }
+          })
+          .fail(function(response, status) {
+            $("#rgbchainCreateDevice").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      function createEnoceanDevice()
+      {
+        // create enocean device
+        // - get profile #
+        var eep = $("#enocean_profile_select").val();
+        if (eep!=0) {
+          var profileAddQuery = {
+            "method":"x-p44-addProfile",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:EnOcean_Bus_Container:1",
+            "eep":eep,
+            "address":4286578943 // always automatically base-ID derived address for now
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(profileAddQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#enoceanCreateDevice").popup("close");
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // reload modified device list
+              refresh_devicelist(false);
+            }
+          })
+          .fail(function(response, status) {
+            $("#enoceanCreateDevice").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      function sendTeachInSignal(dSUID, variant)
+      {
+        // remove
+        var teachin = {
+          "method":"x-p44-teachInSignal",
+          "dSUID":dSUID,
+          "variant":variant
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(teachin)
+        });
+      }
+
+
+      function createEvaluatorDevice()
+      {
+        // create evaluator device
+        // - get type of evaluator
+        var etype = $("#evaluator_devicetype_select").val();
+        var ename = $("#evaluator_name_textfield").val();
+        if (etype!='none') {
+          var profileAddQuery = {
+            "method":"x-p44-addDevice",
+            "dSUID":"none", "x-p44-itemSpec":"vdc:Evaluator_Device_Container:1",
+            "evaluatorType":etype,
+            "name":ename
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(profileAddQuery)
+          }).done(function(response) {
+            // close the dialog
+            $("#evaluatorCreateDevice").popup("close");
+            if (response.error) {
+              alert("Error: " + response.error.message);
+            }
+            else {
+              // get dSUID of new device
+              var dSUID = response.result.dSUID;
+              // reset input fields
+              $("#evaluator_name_textfield").val('');
+              // refresh the list
+              refresh_devicelist(dSUID, function() {
+                // open evaluator editing dialog
+                editEvaluatorDevice(dSUID);
+              });
+            }
+          })
+          .fail(function(response, status) {
+            $("#enoceanCreateDevice").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      var sources = null;
+      var valuedefs = null;
+
+      function editEvaluatorDevice(dSUID)
+      {
+        // close device info if open
+        $("#deviceInfo").popup("close");
+        // query value sources
+        var valquery = {
+          "method":"getProperty",
+          "dSUID":"root",
+          "query":{
+            "x-p44-valueSources":null,
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(valquery)
+        }).done(function(response) {
+          // update value source selector
+          sources = response.result['x-p44-valueSources'];
+          // query evaluator details
+          var evalquery = {
+            "method":"getProperty",
+            "dSUID":dSUID,
+            "query":{
+              "deviceIconName":null, "name":null,
+              "x-p44-valueDefs":null,
+              "x-p44-onCondition":null,
+              "x-p44-offCondition":null,
+              "x-p44-minOnTime":null,
+              "x-p44-minOffTime":null
+            }
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            timeout: 3000,
+            data: JSON.stringify(evalquery)
+          }).done(function(response) {
+            var evaluator = response.result;
+            // display dsuid + name
+            $('#evaluatorIcon').html('<img src="/icons/icon16/' + evaluator.deviceIconName + '.png" />');
+            $('#evaluatorTitle').html(evaluator.name);
+            // set current  contents
+            valuedefs = evaluator['x-p44-valueDefs'];
+            renderValueDefs();
+            // - conditions
+            $("#evaluatorOnConditionTextfield").val(evaluator['x-p44-onCondition']);
+            $("#evaluatorOffConditionTextfield").val(evaluator['x-p44-offCondition']);
+            $("#evaluatorOnTimeTextfield").val(evaluator['x-p44-minOnTime']);
+            $("#evaluatorOffTimeTextfield").val(evaluator['x-p44-minOffTime']);
+            // reset checks
+            $('#evaluatorValueDefsCheck').html('');
+            $('#evaluatorOnConditionCheck').html('');
+            $('#evaluatorOffConditionCheck').html('');
+            // set apply handlers
+            $("#evaluatorDeviceEditApply").off('click.edit'); // remove previous one
+            $("#evaluatorDeviceEditApply").on('click.edit', function () { saveEvaluatorDevice(dSUID, true); });
+            $("#evaluatorCheckButton").off('click.edit'); // remove previous one
+            $("#evaluatorCheckButton").on('click.edit', function() { saveEvaluatorDevice(dSUID, false); return false; });
+            openDialog('#evaluatorDeviceEdit');
+          });
+        });
+      }
+
+
+      function renderValueDefs()
+      {
+        // value definitions
+        var vhtml = '';
+        var vd = valuedefs.split('\n');
+        for (var i=0; i<vd.length; ++i) {
+          if (vd[i].length>0) {
+            var v = vd[i].split(':');
+            vhtml +=
+              '<tr><td><input onchange="valueSourceRename();" id="' + v[1] + '" value="' + v[0] + '" type="text" data-role="none" /></td>' +
+              '<td>' + sources[v[1]] + '<a href="#" onclick="removeValueSourceVar(\'' + v[1] + '\')" style="float:right" data-role="none">Remove</a></td></tr>';
+          }
+        }
+        // - adder
+        vhtml +=
+          '<tr><td><label for="evaluatorValueSources">Add Sensor:</label></td>' +
+          '<td><select name="evaluatorValueSources" id="evaluatorValueSourcesSelect" onChange="addValueSourceVar();" data-mini="true" data-theme="a">';
+        vhtml += '<option value="-" checked>- select sensor -</option>';
+        for (var sourceID in sources) {
+          vhtml +=
+            '<option value="' + sourceID + '">' + sources[sourceID] + '</option>';
+        }
+        vhtml += '</select></td></tr>';
+        $('#varDefsBody').html(vhtml).trigger('create');
+      }
+
+
+      function valueSourceRename()
+      {
+        // update valuedefs
+        valuedefs = '';
+        $(".evaluatorDefs input").each(function() {
+          if (valuedefs.length>0) valuedefs += '\n';
+          valuedefs += $(this).val() + ':' + this.id;
+        });
+
+      }
+
+
+      function removeValueSourceVar(valueSourceId)
+      {
+        var vd = valuedefs.split('\n');
+        valuedefs = '';
+        for (var i=0; i<vd.length; ++i) {
+          if (!vd[i].includes(valueSourceId)) {
+            if (valuedefs.length>0) valuedefs += '\n';
+            valuedefs += vd[i];
+          }
+        }
+        renderValueDefs();
+      }
+
+
+      function addValueSourceVar()
+      {
+        var srcId = $('#evaluatorValueSourcesSelect').val();
+        if (srcId!='-') {
+          var sensorIndex = 1;
+          while (valuedefs.includes('Sensor' + sensorIndex.toString())) sensorIndex++;
+          if (!valuedefs.includes(srcId)) {
+            // not already defined
+            if (valuedefs.includes(':')) valuedefs = valuedefs + '\n';
+            valuedefs = valuedefs + 'Sensor' + sensorIndex.toString() + ':' + srcId;
+            renderValueDefs();
+            $('#evaluatorValueSourcesSelect').val('-').selectmenu('refresh'); // reset
+          }
+        }
+      }
+
+
+      function saveEvaluatorDevice(dSUID, close)
+      {
+        //$('#evaluatorDeviceEdit').find('.ui-btn-active').removeClass('ui-btn-active ui-focus');
+        // query evaluator details
+        var savequery = {
+          "method":"setProperty",
+          "dSUID":dSUID,
+          "properties":{
+            "x-p44-valueDefs":valuedefs,
+            "x-p44-onCondition":$("#evaluatorOnConditionTextfield").val(),
+            "x-p44-offCondition":$("#evaluatorOffConditionTextfield").val(),
+            "x-p44-minOnTime":$("#evaluatorOnTimeTextfield").val(),
+            "x-p44-minOffTime":$("#evaluatorOffTimeTextfield").val()
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(savequery)
+        }).done(function(response) {
+          // check syntax later
+          if (close) {
+            closeDialog('#evaluatorDeviceEdit');
+          }
+          else {
+            checkEvaluatorDevice(dSUID);
+          }
+        });
+      }
+
+
+      function checkEvaluatorDevice(dSUID)
+      {
+        // check evaluator syntax and results
+        var checkquery = {
+          "method":"x-p44-checkEvaluator",
+          "dSUID":dSUID
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(checkquery)
+        }).done(function(response) {
+          // value defs
+          var valuedefs = response.result.valueDefs;
+          var valdefscheckhtml = '';
+          for (var varname in valuedefs) {
+            if (valdefscheckhtml.length>0)
+              valdefscheckhtml += '<br/>';
+            var valdef = valuedefs[varname];
+            valdefscheckhtml += varname + '(' + escapehtml(valdef.description) + ')';
+            if (valdef.age==null)
+              valdefscheckhtml += ' = <span class="evaluatorCheckError">&lt;undefined&gt;</span>';
+            else
+              valdefscheckhtml += ' = ' + valdef.value.toString();
+          }
+          $('#evaluatorValueDefsCheck').html(valdefscheckhtml).trigger('create');
+          // on condition
+          var condhtml;
+          var cond = response.result.onCondition;
+          if (cond.error)
+            condhtml = '<span class="evaluatorCheckError">' + escapehtml(cond.error) + '</span>';
+          else
+            condhtml = 'Expression evaluates to ' + cond.result.toString() + ' (' + (cond.result>0 ? 'true' : 'false') + ')';
+          $('#evaluatorOnConditionCheck').html(condhtml).trigger('create');
+          // off condition
+          var cond = response.result.offCondition;
+          if (cond.error)
+            condhtml = '<span class="evaluatorCheckError">' + escapehtml(cond.error) + '</span>';
+          else
+            condhtml = 'Expression evaluates to ' + cond.result.toString() + ' (' + (cond.result>0 ? 'true' : 'false') + ')';
+          $('#evaluatorOffConditionCheck').html(condhtml).trigger('create');
+        });
+      }
+
+
+
+
+      function removeDevice(dSUID)
+      {
+        $("#deviceInfo").popup("close");
+        // show confirm dialog
+        setTimeout(function() {
+          openDialog("#removeDeviceConfirm");
+          $("#removeDeviceNowButton").off('click.delete');
+          $("#removeDeviceNowButton").on('click.delete', function() {
+            removeDeviceNow(dSUID);
+          });
+        }, 100 );
+      }
+
+
+      function removeDeviceNow(dSUID)
+      {
+        // remove now
+        var remove = {
+          "method":"x-p44-removeDevice",
+          "dSUID":dSUID
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(remove)
+        }).complete(function(response) {
+          // reload modified device list
+          refresh_devicelist(false);
+        });
+      }
+
+
+      function blinkDevice(dSUID)
+      {
+        // blink
+        var blink = {
+          "notification":"identify",
+          "dSUID":dSUID
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 1000,
+          data: JSON.stringify(blink)
+        });
+      }
+
+      function openVdcInfo(dSUID, event)
+      {
+
+        if (event.metaKey || event.ctrlKey) {
+          // show vdc properties in separate page
+          window.open("props.html#" + dSUID, '_blank');
+          return;
+        }
+        var hiddenFeatures = event.shiftKey;
+        // query vdc details
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "hardwareGuid":null, "hardwareModelGuid":null, "vendorId":null, "modelUID":null,
+            "x-p44-rescanModes":null, "x-p44-extraInfo":null, "x-p44-deviceClass":null
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var vdc = response.result;
+          // check for hidden feature calling
+          if (hiddenFeatures) {
+            if (vdc['x-p44-deviceClass'] == 'EnOcean_Bus_Container') {
+              // show hidden enocean profile creation dialog
+              $("#enoceanCreateDevice").popup("open", { positionTo:"window" });
+              return; // done
+            }
+          }
+          // normal info box display
+          $('#vdcInfoIcon').html('<img src="/icons/icon16/' + vdc.deviceIconName + '.png" />');
+          $('#vdcInfoTitle').html(vdc.name);
+          var infoHTML =
+            '<table id="vdcInfoTable">' +
+            '<tr><td width="35%">vdc dSUID</td><td class="infovalue">' + vdc.dSUID + '</td></tr>' +
+            '<tr><td>dS modelUID</td><td class="infovalue">' + vdc.modelUID + '</td></tr>' +
+            '<tr><td>Model</td><td class="infovalue">' + vdc.model + '</td></tr>' +
+            '<tr><td>Hardware GUID</td><td class="infovalue">' + vdc.hardwareGuid + '</td></tr>' +
+            '<tr><td>Model GUID</td><td class="infovalue">' + vdc.hardwareModelGuid + '</td></tr>' +
+            '<tr><td>VendorID</td><td class="infovalue">' + vdc.vendorId + '</td></tr>';
+          if (vdc['x-p44-extraInfo']) {
+            infoHTML += '<tr><td>vdc specific</td><td class="infovalue">' + vdc['x-p44-extraInfo'] + '</td></tr>';
+          }
+          infoHTML += '</table>';
+          $('#vdcInfoShow').html(infoHTML);
+          // probably add some extra vdc-specific controls
+          var extracontrols='';
+          if (vdc['x-p44-rescanModes'] != 0) {
+            // rescan available
+            extracontrols +=
+              '<button onclick="askRescanVdc(\'' + vdc.dSUID + '\',' + vdc['x-p44-rescanModes'] + ');" type="button" id="vdcRescan" data-theme="a">Scan for devices...</button>';
+          }
+          if (vdc['x-p44-deviceClass'] == 'DALI_Bus_Container') {
+            // DALI specific
+            extracontrols +=
+              '<button onclick="daliDiagnostics(\'' + vdc.dSUID + '\');" type="button" id="daliMonitor" data-theme="a">DALI bus diagnostics...</button>';
+          }
+          $('#vdcInfoExtraControls').html(extracontrols).trigger('create');
+          $("#vdcInfo").popup("open", { positionTo:"window" });
+        });
+      }
+
+
+      function askRescanVdc(dSUID, modes)
+      {
+        // close the vdc info
+        $("#vdcInfo").popup("close");
+        // show rescan choices
+        var scanButtons='';
+        if (modes & 0x01) {
+          scanButtons +=
+            '<button onclick="rescanVdc(\'' + dSUID + '\', true, false, false);" type="button" id="vdcRescan" data-theme="a">Look for new devices only</button>';
+        }
+        if (modes & 0x02) {
+          scanButtons +=
+            '<button onclick="rescanVdc(\'' + dSUID + '\', false, false, false);" type="button" id="vdcRescan" data-theme="a">Normal rescan of all devices</button>';
+        }
+        if (modes & 0x04) {
+          scanButtons +=
+            '<button onclick="rescanVdc(\'' + dSUID + '\', false, true, false);" type="button" id="vdcRescan" data-theme="a">Force full rescan of all devices</button>' +
+            '<p><span style="color:red">Use clearing settings with caution!</span>  All configuration for the current devices will be lost; devices will re-appear in default state and without name after scan.</span></p>' +
+            '<button onclick="rescanVdc(\'' + dSUID + '\', false, true, true);" type="button" id="vdcRescan" data-theme="a">Clear settings and exhaustive rescan</button>';
+        }
+        $('#vdcScanButtons').html(scanButtons).trigger('create');
+        setTimeout(function() { $("#vdcScanChoices").popup("open", { positionTo:"window" }); }, 100 );
+      }
+
+
+      function rescanVdc(dSUID, incremental, exhaustive, clear)
+      {
+        // rescan
+        $.mobile.loading( "show", {
+          text: "Scanning for devices...",
+          textVisible: true,
+          theme: "b"
+        });
+        var scan = {
+          "method":"scanDevices",
+          "dSUID":dSUID,
+          "incremental":incremental,
+          "exhaustive":exhaustive,
+          "clearconfig":clear
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 300000, // 5 min
+          data: JSON.stringify(scan)
+        }).complete(function(response) {
+          $.mobile.loading( "hide" );
+          $("#vdcScanChoices").popup("close");
+          // reload modified device list
+          refresh_devicelist(false);
+        });
+      }
+
+
+
+      var deviceInfoUpdaterTimeout = 0;
+      var deviceInfoIsOpen = false;
+
+      function openDeviceInfo(dSUID, event)
+      {
+        if (event.metaKey || event.ctrlKey) {
+          // show device properties in separate page
+          window.open("props.html#" + dSUID, '_blank');
+          return;
+        }
+        deviceInfoIsOpen = true;
+        // stop updatding inputs when popup closes!
+        $("#deviceInfo").off('popupafterclose');
+        $("#deviceInfo").on('popupafterclose', function() {
+          clearTimeout(deviceInfoUpdaterTimeout);
+          deviceInfoIsOpen = false;
+        });
+        // query device details
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "hardwareGuid":null, "hardwareModelGuid":null, "vendorId":null, "modelUID":null,
+            "x-p44-deviceType":null, "x-p44-softwareRemovable":null, "x-p44-extraInfo":null, "x-p44-profileVariants":null, "x-p44-profile":null, "x-p44-teachInSignals":null,
+            "x-p44-rssi":null,
+            "buttonInputDescriptions":{"#":null}, "binaryInputDescriptions":{"#":null}, "channelDescriptions":{"#":null}, "sensorDescriptions":{"#":null}
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          $('#deviceInfoIcon').html('<img src="/icons/icon16/' + device.deviceIconName + '.png" />');
+          $('#deviceInfoTitle').html(device.name);
+          var infoHTML =
+            '<table id="deviceInfoTable">' +
+            '<tr><td width="35%">dSUID</td><td class="infovalue">' + device.dSUID + '</td></tr>' +
+            '<tr><td>dS modelUID</td><td class="infovalue">' + device.modelUID + '</td></tr>' +
+            '<tr><td>Model</td><td class="infovalue">' + device.model + '</td></tr>' +
+            '<tr><td>Hardware GUID</td><td class="infovalue">' + device.hardwareGuid + '</td></tr>' +
+            '<tr><td>Model GUID</td><td class="infovalue">' + device.hardwareModelGuid + '</td></tr>' +
+            '<tr><td>VendorID</td><td class="infovalue">' + device.vendorId + '</td></tr>';
+          if (typeof(device['x-p44-rssi'])!="undefined") {
+            infoHTML += '<tr><td>RSSI</td><td id="deviceRSSIInfo" class="infovalue"></td></tr>';
+            // might be volatile, schedule first update - will be repeated periodically as long as dialog is open
+            deviceInfoUpdaterTimeout = setTimeout(function() { updateDeviceInfo(dSUID); }, 100);
+          }
+          if (device['x-p44-extraInfo']) {
+            infoHTML += '<tr><td>Device specific</td><td id="deviceInfoExtra" class="infovalue">' + device['x-p44-extraInfo'] + '</td></tr>';
+          }
+          infoHTML += '</table>';
+          $('#deviceInfoShow').html(infoHTML);
+          // probably add some extra device-specific controls
+          var extracontrols='';
+          if (device.channelDescriptions['#']>0) {
+            // output available -> identify probably available too
+            extracontrols +=
+              '<button onclick="event.stopPropagation(); blinkDevice(\'' + device.dSUID + '\');" type="button" id="deviceInfoBlink" data-theme="a" data-icon="check">Identify (blink)</button>';
+          }
+          if (device['x-p44-deviceType']=='dali_rgbw') {
+            // extra ungroup button for grouped composite device
+            extracontrols +=
+              '<button onclick="ungroupDaliDevices(\'' + device.dSUID + '\');" type="button" id="deviceInfoUngroup" data-theme="a" data-icon="back">Ungroup Color Composite device</button>';
+          }
+          else if (device['x-p44-deviceType']=='dali_group') {
+            // extra ungroup button for grouped DALI dimmers
+            extracontrols +=
+              '<button onclick="ungroupDaliDevices(\'' + device.dSUID + '\');" type="button" id="deviceInfoUngroup" data-theme="a" data-icon="back">Ungroup Dimmers</button>';
+          }
+          if (device['x-p44-deviceType'].substr(0,5)=='dali_') {
+            // extra button for setting default brightness
+            extracontrols +=
+              '<button onclick="setDALIDefaultBrightness(\'' + device.dSUID + '\');" type="button" id="deviceInfoUngroup" data-theme="a" data-icon="back">Set Power-On/Default Brightness...</button>';
+          }
+          if (device['x-p44-deviceType']=='evaluator') {
+            // evaluator edit button
+            extracontrols +=
+              '<button onclick="editEvaluatorDevice(\'' + device.dSUID + '\');" type="button" id="deviceInfoEditEvaluator" data-theme="a" data-icon="back">Edit on/off conditions...</button>';
+          }
+          if (device['x-p44-softwareRemovable']==true) {
+            // removable static device, add extra remove button
+            extracontrols +=
+              '<button onclick="removeDevice(\'' + device.dSUID + '\');" type="button" id="deviceInfoRemove" data-theme="a" data-icon="delete">Remove device...</button>';
+          }
+          if (device['x-p44-teachInSignals']>0) {
+            // device has teach-in signals
+            for(var k = 0; k<device['x-p44-teachInSignals']; k++) {
+              extracontrols +=
+                '<button onclick="event.stopPropagation(); sendTeachInSignal(\'' + device.dSUID + '\', ' + k.toString() + ');" type="button" data-theme="a" data-mini="true" data-inline="true" data-icon="gear">Teach-In #' + k.toString() + '</button>';
+            }
+          }
+          var profileVariants = device['x-p44-profileVariants'];
+          if (profileVariants!=undefined) {
+            // device with profile variants, show them
+            // - profile selector
+            extracontrols += '<p style="padding-top:20px;"></p>';
+            extracontrols += '<label for="profileVariants">Device has multiple profile variants:</label><select name="profileVariants"  data-mini="true" id="profileVariants_select" onChange="$(\'#deviceInfoProfileApply\').show()">';
+            for (var profileId in profileVariants) {
+              extracontrols += '<option value="' + profileId.toString() + '"' + (profileId.toString()==device['x-p44-profile'] ? "selected " : "") + '>' + profileVariants[profileId] + '</option>';
+            }
+            extracontrols += '</select>';
+            // - apply button (hidden until selector changed)
+            extracontrols += '<div id="deviceInfoProfileApply" style="display:none">';
+            extracontrols += '<p><span style="color:red">Please make sure the selected profile applies to the device you have connected before applying!</span></p>';
+            extracontrols += '<button onclick="event.stopPropagation(); setDeviceProfile(\'' + device.dSUID + '\');" type="button" id="deviceInfoSetProfile" data-theme="e" data-mini="true" data-icon="check">Apply new profile</button>';
+            extracontrols += '</div>';
+          }
+          $('#deviceInfoExtraControls').html(extracontrols).trigger('create');
+          $("#deviceInfo").popup("open", { positionTo:"window" });
+        });
+      }
+
+
+
+      function updateDeviceInfo(dSUID)
+      {
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "x-p44-rssi":null, "x-p44-repeaterCount":null, "x-p44-packetAge":null
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          var rssiInfo;
+          if (device['x-p44-rssi']) {
+            rssiInfo = device['x-p44-rssi'] + ' dBm (';
+            if (typeof(device['x-p44-repeaterCount'])!="undefined")
+              rssiInfo += device['x-p44-repeaterCount'] + ' repeaters, ';
+            rssiInfo += Math.round(device['x-p44-packetAge']) + ' seconds ago)';
+          }
+          else
+            rssiInfo = 'no message received yet';
+          $('#deviceRSSIInfo').html(rssiInfo);
+          // poll every 10 sec again if still open
+          if (deviceInfoIsOpen) {
+            deviceInfoUpdaterTimeout = setTimeout(function() { updateDeviceInfo(dSUID); }, 2000);
+          }
+        });
+      }
+
+
+
+      function setDeviceProfile(dSUID)
+      {
+        // set new profile
+        // { "method":"setProperty", "dSUID": "xxx", "properties":{ "x-p44-profile":16122623 } }
+        var setProfile = {
+          "method":"setProperty",
+          "dSUID":dSUID,
+          "properties": {
+            "x-p44-profile" : parseInt($("#profileVariants_select").val())
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(setProfile)
+        }).complete(function(response) {
+          $("#deviceInfo").popup("close");
+          // reload modified device list
+          refresh_devicelist(false);
+        });
+      }
+
+
+
+      function openDeviceChannels(dSUID)
+      {
+        // query channel details
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "channelDescriptions":null,
+            "channelStates":null
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          // device info
+          $('#channelInfoIcon').html('<img src="/icons/icon16/' + device.deviceIconName + '.png" />');
+          $('#channelInfoTitle').html(device.name + ' Outputchannels');
+          // channel sliders
+          var channelsHTML = '';
+          for (var channelID in device.channelDescriptions) {
+            var channel = device.channelDescriptions[channelID];
+            var max = channel.max;
+            var value = Math.round(device.channelStates[channelID].value*100)/100;
+            var resolution = Math.round(channel.resolution*100)/100;
+            channelsHTML +=
+              '<label for="channel_slider_' + channelID + '">' + channel.name + '</label>' +
+              '<input type="range" data-highlight="' + (channelID==1 || channelID==2 || channelID==4 ? 'false' : 'true') + '" name="channel_slider_' + channelID + '" id="channel_slider_' + channelID + '"' +
+              ' min="' + channel.min.toString() +'" max="' + channel.max.toString() + '" step="' + resolution.toString() + '" value="' + value.toString() + '"' +
+              ' />' + "\n";
+          }
+          $('#channelList').html(channelsHTML).trigger('create');
+          for (var channelID in device.channelDescriptions) {
+            deviceSliderChangeAttachEvent(device.dSUID, channelID);
+          }
+          $("#channelControl").popup("open", { positionTo:"window" });
+        });
+      }
+
+
+      function openSingleDevice(dSUID)
+      {
+        // query single device details
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "deviceActionDescriptions":null,
+            "deviceStateDescriptions":null,
+            "devicePropertyDescriptions":null
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          // device info
+          $('#singleDeviceIcon').html('<img src="/icons/icon16/' + device.deviceIconName + '.png" />');
+          $('#singleDeviceTitle').html(device.name + ' Controls');
+          // action selector
+          var actionsHTML = '<option value="0">-- Select action--</option>';
+          for (var actionId in device.deviceActionDescriptions) {
+            var action = device.deviceActionDescriptions[actionId];
+            var description = action.description;
+            actionsHTML +=
+              '<option value="' + actionId + '">' + escapehtml(description) + '</option>';
+          }
+          $('#singleDevice_action_select').html(actionsHTML).trigger('create');
+          $('#singleDevice_invoke_button').off("click");
+          $('#singleDevice_invoke_button').on("click", function(event) { invokeDeviceAction(dSUID); });
+          $("#singleDevice").popup("open", { positionTo:"window" });
+        });
+      }
+
+
+      function refresh_action_deps()
+      {
+        // NOP for now
+        //alert("action changed");
+      }
+
+
+      function invokeDeviceAction(dSUID)
+      {
+        var actionId = $('#singleDevice_action_select').val();
+        //alert("will call action " + actionId);
+        if (actionId!=='0') {
+          // invoke the action
+          // { "method":"invokeDeviceAction", "dSUID": "xxx", "params":{ "id":"std.lattemacchiato" } }
+          var invokeAction = {
+            "method":"invokeDeviceAction",
+            "dSUID":dSUID,
+            "id":actionId,
+            "params": {
+            }
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(invokeAction)
+          }).complete(function(response) {
+            alert("action '" + actionId + "'invoked");
+          });
+        }
+      }
+
+
+      function deviceSliderChangeAttachEvent(dSUID, channelID)
+      {
+        $('#channel_slider_' + channelID).off("change");
+        $('#channel_slider_' + channelID).on("change", function(event, ui) { changedChannelSlider(event, dSUID, channelID)});
+      }
+
+
+      var channelValueUpdaterTimeout = 0;
+      var channelValueSetRetryTimeout = 0;
+      var channelValuesUpdating = false;
+      var fastChangeHoldoff = false;
+
+      function changedChannelSlider(event, dSUID, channelID)
+      {
+        clearTimeout(channelValueUpdaterTimeout);
+        if (!channelValuesUpdating) {
+          var value = $('#channel_slider_' + channelID.toString()).val();
+          if (fastChangeHoldoff) {
+            // reset possibly pending retry of an earlier value
+            clearTimeout(channelValueSetRetryTimeout);
+            // schedule retry later
+            channelValueSetRetryTimeout = setTimeout(function() { changedChannelSlider(event, dSUID, channelID); }, 50);
+          }
+          else {
+            console.log('channelID=' + channelID.toString() + ' value=' + value.toString());
+            var changequery = {
+              "method":"setProperty",
+              "dSUID":dSUID,
+              "properties":{
+                "channelStates": { }
+              }
+            };
+            changequery.properties.channelStates[channelID.toString()] = { "value": value };
+            fastChangeHoldoff = true; // prevent another change too soon
+            $.ajax({
+              url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+              type: 'post',
+              dataType: 'json',
+              timeout: 1000,
+              data: JSON.stringify(changequery)
+            }).done(function(response) {
+              // prevent another change too soon
+              setTimeout(function() { fastChangeHoldoff = false; }, 100);
+              // after a while, read back other channels to see dependencies
+              channelValueUpdaterTimeout = setTimeout(function() { updateChannelValues(dSUID, channelID); }, 1000);
+            }).fail(function() {
+              fastChangeHoldoff = false;
+            });
+          }
+        }
+      }
+
+
+      function updateChannelValues(dSUID, exceptChannelID)
+      {
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "channelStates":null
+          }
+        };
+        channelValuesUpdating = true;
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 1000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          console.log('Updating channels');
+          for (var channelID in device.channelStates) {
+            if (channelID!=exceptChannelID) {
+              var value = Math.round(device.channelStates[channelID].value*100)/100;
+              $('#channel_slider_' + channelID.toString()).val(value).slider("refresh");
+            }
+          }
+          channelValuesUpdating = false;
+        }).fail(function() {
+          channelValuesUpdating = false;
+        });
+      }
+
+
+
+      var inputValueUpdaterTimeout = 0;
+      var deviceInputsIsOpen = false;
+
+      function openDeviceInputs(dSUID)
+      {
+        deviceInputsIsOpen = true;
+        // stop updatding inputs when popup closes!
+        $("#inputInfo" ).off('popupafterclose');
+        $("#inputInfo" ).on('popupafterclose', function() {
+          clearTimeout(inputValueUpdaterTimeout);
+          deviceInputsIsOpen = false;
+        });
+        // query input details
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "sensorDescriptions":null,
+            "binaryInputDescriptions":null,
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          // device info
+          $('#inputInfoIcon').html('<img src="/icons/icon16/' + device.deviceIconName + '.png" />');
+          $('#inputInfoTitle').html(device.name + ' Inputs');
+          // input info
+          var inputsHTML = '<table class="inputsInfoTable"><thead><tr><th class="inputsTableDesc">Description</th><th class="inputsTableAge">Last updated</th><th class="inputsTableValue">Value</th><th class="inputsTableError">Status</th></tr><tbody>';
+          for (var sensorIndex in device.sensorDescriptions) {
+            var sensor = device.sensorDescriptions[sensorIndex];
+            inputsHTML += '<tr><td class="inputsTableDesc">' + sensor.name + '</td><td class="inputsTableAge" id="sensor_age_' + sensorIndex.toString() + '"></td><td class="inputsTableValue" id="sensor_value_' + sensorIndex.toString() + '"></td><td class="inputsTableError" id="sensor_error_' + sensorIndex.toString() + '"></td></tr>';
+          }
+          for (var bininpIndex in device.binaryInputDescriptions) {
+            var bininp = device.binaryInputDescriptions[bininpIndex];
+            inputsHTML += '<tr><td class="inputsTableDesc">' + bininp.name + '</td><td class="inputsTableAge" id="input_age_' + bininpIndex.toString() + '"></td><td class="inputsTableValue" id="input_value_' + bininpIndex.toString() + '"></td><td class="inputsTableError" id="input_error_' + bininpIndex.toString() + '"></td></tr>';
+          }
+          inputsHTML += '</tbody></table/>';
+          $('#inputList').html(inputsHTML).trigger('create');
+          $("#inputInfo").popup("open", { positionTo:"window" });
+          updateDeviceInputs(dSUID);
+        });
+      }
+
+
+      function updateDeviceInputs(dSUID)
+      {
+        // query input ages and values
+        var infoquery = {
+          "method":"getProperty",
+          "dSUID":dSUID,
+          "query":{
+            "deviceIconName":null, "dSUID":null, "name":null, "model":null,
+            "sensorStates":null,
+            "sensorDescriptions":{ "": { "resolution":null, "aliveSignInterval":null }},
+            "binaryInputStates":null,
+          }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 3000,
+          data: JSON.stringify(infoquery)
+        }).done(function(response) {
+          var device = response.result;
+          for (var sensorIndex in device.sensorStates) {
+            var sensor = device.sensorStates[sensorIndex];
+            if (sensor.age!=null) {
+              $('#sensor_age_' + sensorIndex.toString()).html(sensor.age.toFixed(0).toString() + ' sec ago');
+              var fracDigits = Math.floor(-Math.log(device.sensorDescriptions[sensorIndex].resolution)/Math.log(10)+0.99);
+              if (fracDigits<0) fracDigits = 0; else if (fracDigits>20) fracDigits = 20;
+              $('#sensor_value_' + sensorIndex.toString()).html(sensor.value.toFixed(fracDigits).toString());
+            }
+            else {
+              $('#sensor_age_' + sensorIndex.toString()).html('');
+              $('#sensor_value_' + sensorIndex.toString()).html('');
+            }
+            $('#sensor_error_' + sensorIndex.toString()).html(sensor.error==0 ? 'OK' : 'Error '+sensor.error.toString());
+          }
+          for (var bininpIndex in device.binaryInputStates) {
+            var bininp = device.binaryInputStates[bininpIndex];
+            if (bininp.age!=null) {
+              $('#input_age_' + bininpIndex.toString()).html(bininp.age.toFixed(0).toString() + ' sec ago');
+              $('#input_value_' + bininpIndex.toString()).html(bininp.value.toString());
+            }
+            else {
+              $('#input_age_' + bininpIndex.toString()).html('');
+              $('#input_value_' + bininpIndex.toString()).html('');
+            }
+            $('#input_error_' + bininpIndex.toString()).html(bininp.error==0 ? 'OK' : 'Error '+bininp.error.toString());
+          }
+          // poll every 10 sec again
+          if (deviceInputsIsOpen) {
+            inputValueUpdaterTimeout = setTimeout(function() { updateDeviceInputs(dSUID); }, 2000);
+          }
+        });
+      }
+
+
+
+      function refresh_devicelist(focusDSUID, doneCB)
+      {
+        $.mobile.loading( "show", {
+          text: "reloading device list...",
+          textVisible: true,
+          theme: "b"
+        });
+        // query list
+        var listquery = {
+          "method":"getProperty",
+          "dSUID":"root",
+          "query":{
+            "x-p44-vdcs":{ "":{ "model":null, "dSUID":null, "deviceIconName":null, "name":null, "hardwareGuid":null, "x-p44-deviceClass":null, "x-p44-instanceNo":null, "x-p44-devices":{ "":{ "deviceIconName":null, "dSUID":null, "name":null, "model":null, "hardwareGuid":null,
+            "buttonInputDescriptions":{"#":null}, "binaryInputDescriptions":{"#":null}, "channelDescriptions":{"#":null}, "sensorDescriptions":{"#":null},
+            "deviceActionDescriptions":{"#":null}
+          }}}}}
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          timeout: 15000,
+          data: JSON.stringify(listquery)
+        }).done(function(response) {
+          // table header
+          var tableHtml =
+            '<table data-role="table" id="deviceList" data-mode="columntoggle"'+
+            ' class="ui-body-d ui-shadow table-stripe ui-responsive" data-column-btn-theme="b"' +
+            ' data-column-btn-text="Columns to display..." data-column-popup-theme="c">' +
+            '<thead>' +
+             '<tr class="ui-bar-d">' +
+               '<th></th>' +
+               '<th></th>' +
+               '<th>dSUID</th>' +
+               '<th>Name</th>' +
+               '<th data-priority="2">Model</th>' +
+               '<th data-priority="3">Hardware-UID</th>' +
+               '<th></th>' +
+             '</tr>' +
+            '</thead>' +
+            '<tbody>';
+          // iterate rows
+          var vdcs = response.result["x-p44-vdcs"];
+          for (var vdcKey in vdcs) {
+            var vdc = vdcs[vdcKey];
+            var vdcActionButton = '';
+            // check for vdc-specific button
+            if (vdc['x-p44-deviceClass']=='DALI_Bus_Container') {
+              vdcActionButton = '<a id="daliCreateGroupBtn" onclick="openDialog(\'#daliCreateGroup\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Group</a>';
+            }
+            else if (vdc['x-p44-deviceClass']=='Static_Device_Container') {
+              vdcActionButton = '<a id="staticDeviceAddBtn" onClick="openDialog(\'#customioCreateDevice\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Device</a>';
+            }
+            else if (vdc['x-p44-deviceClass']=='Evaluator_Device_Container') {
+              vdcActionButton = '<a id="staticDeviceAddBtn" onClick="openDialog(\'#evaluatorCreateDevice\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Evaluator</a>';
+            }
+            else if (vdc['x-p44-deviceClass']=='OLA_Device_Container') {
+              vdcActionButton = '<a id="olaDeviceAddBtn" onClick="openDialog(\'#olaCreateDevice\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Device</a>';
+            }
+            else if (vdc['x-p44-deviceClass']=='LedChain_Device_Container') {
+              vdcActionButton = '<a id="rgbchainDeviceAddBtn" onclick="openDialog(\'#rgbchainCreateDevice\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Device</a>';
+            }
+            else if (vdc['x-p44-deviceClass']=='EnOcean_Bus_Container') {
+              // Later, once this is a release feature we'll have a button here. For now, we need a shift-click in vdc info for that
+              //vdcActionButton = '<a id="enoceanDeviceAddBtn" onclick="openDialog(\'#enoceanCreateDevice\');" data-rel="popup" data-position-to="window" data-transition="pop" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-theme="c" data-inline="true">Device</a>';
+            }
+            tableHtml +=
+              '<tr class="vdcrow">' +
+              '<td><img src="/icons/icon16/' + vdc.deviceIconName + '.png" /></td>' +
+              '<td>&nbsp;</td>' +
+              '<td class="dsuid"><abbr title="' + vdc.dSUID + '">' + dsuidShort(vdc.dSUID) + '</abbr></td>' +
+              '<td class="vdccell">' + vdc.name + '</td>' +
+              '<td class="vdccell">' + vdc.model + '</td>' +
+              '<td class="vdccell">' + (vdc.hardwareGuid ? vdc.hardwareGuid : "-")  + '</td>' +
+              '<td class="actioncell">' +
+                vdcActionButton +
+                '<a onclick="openVdcInfo(\'' + vdc.dSUID + '\', event);" data-mini="true" data-role="button" data-icon="info" data-iconpos="notext" data-theme="c" data-inline="true">Info</a></td>' +
+              '</td>' +
+              '</tr>';
+            // devices in vdc
+            var devices = vdc["x-p44-devices"];
+            for (var deviceKey in devices) {
+              var device = devices[deviceKey];
+              if (device.dSUID==focusDSUID) {
+                tableHtml += '<tr class="focusdevice">';
+              }
+              else {
+                tableHtml += '<tr>';
+              }
+              tableHtml +=
+                '<td>&nbsp;</td>' +
+                '<td><img src="/icons/icon16/' + device.deviceIconName + '.png" /></td>' +
+                '<td class="dsuid"><abbr title="' + device.dSUID + '">' + dsuidShort(device.dSUID) + '</abbr></td>' +
+                '<td>' + device.name + '</td>' +
+                '<td>' + device.model + '</td>' +
+                '<td>' + (device.hardwareGuid ? device.hardwareGuid : "-")  + '</td>' +
+                '<td class="actioncell">';
+              if (device.channelDescriptions['#']>0) {
+                tableHtml += '<a onclick="openDeviceChannels(\'' + device.dSUID + '\');" data-mini="true" data-role="button" data-icon="gear" data-iconpos="notext" data-theme="c" data-inline="true">Outputs</a>';
+              }
+              if (device.deviceActionDescriptions!=undefined) {
+                tableHtml += '<a onclick="openSingleDevice(\'' + device.dSUID + '\');" data-mini="true" data-role="button" data-icon="star" data-iconpos="notext" data-theme="c" data-inline="true">Single Device</a>';
+              }
+              if (device.sensorDescriptions['#']>0 || device.binaryInputDescriptions['#']>0) {
+                tableHtml += '<a onclick="openDeviceInputs(\'' + device.dSUID + '\');" data-mini="true" data-role="button" data-icon="bars" data-iconpos="notext" data-theme="c" data-inline="true">Inputs</a>';
+              }
+              tableHtml +=
+                '<a onclick="openDeviceInfo(\'' + device.dSUID + '\', event);" data-mini="true" data-role="button" data-icon="info" data-iconpos="notext" data-theme="c" data-inline="true">Info</a>' +
+                '</td></tr>';
+            }
+          }
+          // finalisation of table
+          tableHtml +=
+            '</tbody>' +
+            '</table>';
+          $("#deviceList").html(tableHtml).trigger('create');
+          $.mobile.loading( "hide" );
+          if (doneCB) doneCB();
+        });
+      }
+
+
+
+
+      // System Page
+      // ===========
+
+
+      // IP Validation
+      function check_ip_edit(id)
+      {
+        var value = $(id).val();
+        var split = value.split('.');
+        var validated = true;
+        if (split.length != 4)
+          validated = false;
+        else {
+          for (var i=0; i<split.length; i++) {
+            var s = split[i];
+            if (s.length==0 || isNaN(s) || s<0 || s>255) {
+              validated = false;
+              break;
+            }
+          }
+        }
+        if (!validated) {
+          alert(value + "is not a valid IP address");
+          $(id).focus();
+        }
+        return validated;
+      };
+
+
+
+      function restartAfterIPChange() {
+        setTimeout(function() {
+          $("#ipRestartAsk").popup("close");
+          setTimeout(function() { system_restart(); }, 200 );
+        }, 200 );
+      }
+
+
+      function waitForRestart(dialogId)
+      {
+        $(dialogId).popup("open", { positionTo:"window" });
+        var waitTime = parseInt(devinfo.PRODUCT_RESTART_TIME)*1000;
+        if (!(waitTime>1000)) waitTime = 55000;
+        startTimeProgress($(dialogId+'Progress'), waitTime);
+        // - reload page after a while
+        setTimeout(function() {
+          window.location.replace(restartLocation);
+          window.location.reload(true); // force reload, no cache
+        }, waitTime );
+      }
+
+
+      function system_restart()
+      {
+        $("#restartConfirm").popup("close");
+        // trigger restart
+        $.ajax({
+          url: '/cfg/json/?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ cmd:'restart' })
+        })
+        .done(function(response) {
+          waitForRestart("#restartWait");
+        });
+      }
+
+      function system_shutdown()
+      {
+        $.ajax({
+          url: '/cfg/json/?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ cmd:'poweroff' })
+        })
+        .done(function(response) {
+          $("#shutdownInfo").popup("open", { positionTo:"window" });
+        });
+      }
+
+
+      function system_factoryreset(mode)
+      {
+        $("#factoryResetConfirm").popup("close");
+        // trigger factory reset
+        $.ajax({
+          url: '/cfg/json/?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ cmd:'factoryreset', mode:mode.toString() })
+        })
+        .done(function(response) {
+          // NOP for now
+        });
+        setTimeout(function() {
+          waitForRestart("#factoryResetWait");
+        }, 100 );
+      }
+
+
+      var systemUpgradeRunning = false; // prevent double-starting upgrade
+
+      function system_upgrade()
+      {
+        if (!systemUpgradeRunning) {
+          systemUpgradeRunning = true;
+          $("#updateInfoWait").popup("close");
+          // trigger update
+          $.ajax({
+            url: '/cfg/json/?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify({ cmd:'firmwareupgrade' })
+          })
+          .done(function(response) {
+            // upgrade process started ok
+            setTimeout(function() { $("#upgradeWait").popup("open", { positionTo:"window" }); }, 100 );
+            var waitTime = 360000; // 6 minutes
+            if (expectedUpgradeSeconds>0) waitTime = expectedUpgradeSeconds*1000; // use time we got from server
+            startTimeProgress($('#upgradeWaitProgress'), waitTime);
+            setTimeout(function() {
+              window.location.replace(restartLocation);
+              window.location.reload(true); // force reload, no cache
+            }, waitTime);
+          });
+        }
+      }
+
+
+      var expectedUpgradeSeconds = 0;
+
+      function check_for_update()
+      {
+        expectedUpgradeSeconds = 0; // default
+        $("#updateInfoRequest").show();
+        $("#updateInfoResult").hide();
+        $("#upgradeNow").hide();
+        $("#updateInfoOK").hide();
+        $("#updateInfoWait").popup("open", { positionTo:"window" });
+        $.getJSON( '/cfg/json/?rqvaltok=' + rqvaltok + '&cmd=updateinfo' , {
+        }).done( function(response) {
+          var resultHtml;
+          if (response.error!=undefined) {
+            if (response.error.code==204) {
+              // no new version
+              resultHtml = '<p>The most current firmware is already installed - no newer version is available</p>';
+            }
+            else {
+              resultHtml = '<p>Error checking for upgrade: ' + response.error.message + '</p>';
+            }
+          }
+          else {
+            var result = response.result;
+            var versionText = result.version;
+            if (result.feed!='prod') versionText += ' (' + result.feed + ')';
+            resultHtml =
+              '<p>New Firmware Version: <span class="infovalue">' + versionText + '</span> is available.</p>';
+            if (result.updatetime>0) {
+              // show update time estimate
+              resultHtml += '<p>Upgrade will take <span class="infovalue">about ' + parseInt((result.updatetime+59)/60).toString() + ' minutes</span>.</p>';
+              expectedUpgradeSeconds = result.updatetime;
+            }
+            resultHtml +=
+              '<h3>Release Notes:</h3>' + result.releasenotes;
+            $("#upgradeNow").show();
+          }
+          $("#updateInfoRequest").hide();
+          $('#updateInfoResult').html(resultHtml);
+          $("#updateInfoResult").show()
+          $("#updateInfoOK").show();
+          // reposition
+          setTimeout(function() { $("#updateInfoWait").popup("reposition", {positionTo: 'window'}); }, 1 );
+        }).fail(function(response) {
+          console.log('API error ' + response.error.message);
+        });
+      }
+
+
+      function system_backup_config()
+      {
+        location.href = "/cfg/json/?rqvaltok=" + rqvaltok + "&cmd=configbackup";
+        setTimeout(function() {
+          alert("Configuration has been downloaded - please store file in a safe place");
+        }, 1500 );
+      }
+
+
+      function system_restore_config()
+      {
+        $("#configRestoreDialog").popup("close");
+        var file = $('#configArchiveFile').get(0).files[0];
+        var data = new FormData();
+        data.append("upload_file", file);
+        $.ajax({
+          url: '/cfg/upload/?rqvaltok=' + rqvaltok + '&cmd=configrestoreprep',
+          data: data,
+          contentType: false, // important!
+          processData: false,
+          method: 'POST'
+        }).done(function(response) {
+          if (response.error!=undefined) {
+            alert('Restore failed: ' + response.error.message);
+          }
+          else {
+            // preparation ok
+            var result = response.result;
+            // - update info
+            if (result.oldarchive) {
+              // archive without info
+              $('#restoreDeviceInfo').html('<ul><li>Original device unknown</li></ul>');
+              $('#restoreCompatWarnings').html('<li>Old backup file (prior to firmware 1.6.0.6)</li>');
+            }
+            else {
+              // archive with info
+              var infoHtml =
+                'The backup you are about to restore was made<ul>' +
+                '<li>at <b>' + result.time + '</b>';
+              if (result.differentserial || result.differentmodel) {
+                infoHtml += '<li>on a <b>' + result.model + '</b> (GTIN:' + result.gtin + ')';
+                infoHtml += '<li>with serial number <b>' + result.serial + '</b>';
+              }
+              else {
+                infoHtml += '<li>on <b>this ' + result.model + '</b>';
+              }
+              infoHtml += '<li>with firmware version <b>' + result.version + '</b> installed at the time of backup.</ul>';
+              $('#restoreDeviceInfo').html(infoHtml);
+              var warningHtml = '';
+              if (result.differentmodel)
+                warningHtml += '<li>The backup <b>is from a different product type</b> - it will probably not work ok</li>';
+              else if (result.differentserial)
+                warningHtml += '<li>The backup <b>was made on another device than this one</b> - restore only if this unit is a replacement unit for the original</li>';
+              if (result.oldfirmware)
+                warningHtml += '<li>This device <b>has older firmware than the device the backup was made with</b> - it will probably not work ok</li>';
+              $('#restoreCompatWarnings').html(warningHtml);
+            }
+            // - show confirm dialog
+            openDialog('#configRestoreConfirm');
+          }
+        }).fail(function() {
+          alert('Configuration upload failed');
+        });
+      }
+
+
+      function system_restore_apply(mode)
+      {
+        $("#configRestoreDialog").popup("close");
+        // trigger factory reset
+        $.ajax({
+          url: '/cfg/json/?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ cmd:'configrestoreapply', mode:mode.toString() })
+        })
+        .done(function(response) {
+          // NOP for now
+        });
+        // if not cancel, wait for restart
+        if (mode!=0) {
+          setTimeout(function() {
+            waitForRestart("#restoreConfigWait");
+          }, 100 );
+        }
+      }
+
+
+
+
+      function update_device_titles()
+      {
+        var m = devinfo.PRODUCT_MODEL;
+        // model with dS given name
+        if (bridgename.length>0) m += ' "' + bridgename + '"';
+        $('#html_title_model').html(m);
+        $('#system_model').html(m);
+        // model name in about (title screen)
+        $('#about_title_model').html(devinfo.PRODUCT_MODEL);
+        // other info
+        $('#about_copyright_years').html(devinfo.PRODUCT_COPYRIGHT_YEARS);
+        $('#about_copyright_link').html(devinfo.PRODUCT_COPYRIGHT_HOLDER);
+        $('#about_copyright_link').attr("href", devinfo.PRODUCT_INFORMATION_PAGE_LINK);
+        $('#about_model_description').html(devinfo.PRODUCT_MODEL_DESCRIPTION);
+        $('#devices_compatpage_link').attr("href", devinfo.PRODUCT_COMPATIBILITY_PAGE_LINK);
+        // vdchost's dSUID
+        $('#vdchostdsuid').html(vdchostdsuid);
+      }
+
+
+      function refresh_sysinfo()
+      {
+        // platform info
+        $.getJSON( '/cfg/json/?rqvaltok=' + rqvaltok + '&cmd=devinfo' , {
+        }).done( function(response) {
+          devinfo = response.result;
+          // update global vars
+          tickDiff = devinfo.timetick*1000 - (new Date).getTime();
+          vdsmrunning = devinfo.STATUS_VDSM_RUNNING=="1";
+          // update HTML
+          var isDIY = devinfo.PRODUCT_IS_DIY=="1";
+          var hasOLA = devinfo.PRODUCT_HAS_OLA=="1";
+          var hasVDSM = devinfo.PRODUCT_HAS_VDSM=="1";
+          var isOpenWrt = devinfo.PLATFORM_OS_IDENTIFIER=="openwrt";
+          var versionText = devinfo.FIRMWARE_VERSION;
+          if (devinfo.FIRMWARE_FEED!='prod') versionText += ' (' + devinfo.FIRMWARE_FEED + ')';
+          var uphours = devinfo.uptime/3600;
+          var formattedUptime =
+            String(Math.floor(uphours/24)) + ' days ' + String(Math.floor(uphours%24)) + ' hours';
+          var sysinfo =
+            '<p>Product: <span class="infovalue" id="system_model">' + devinfo.PRODUCT_MODEL + '</span>' +
+            ' - <a target="_blank" href="' + devinfo.PRODUCT_INFORMATION_PAGE_LINK +'">product page</a></p>' +
+            '<p>Firmware Version: <span class="infovalue">' + versionText + '</span>' +
+            ' - <a target="_blank" href="' + devinfo.PRODUCT_RELEASENOTES_PAGE_LINK +'">release notes</a></p>' +
+            '<p>Serial Number: <span class="infovalue">' + devinfo.UNIT_SERIALNO + '</span></p>' +
+            '<p>GTIN: <span class="infovalue">' + devinfo.PRODUCT_GTIN + '</span></p>' +
+            '<p>MAC: <span class="infovalue">' + devinfo.UNIT_MACADDRESS + '</span></p>';
+          if (vdsmrunning) {
+            sysinfo +=
+              '<p>vdSM version: <span class="infovalue">' + devinfo.FIRMWARE_VDSM_VERSION + '</span></p>' +
+              '<p>vdSM dSUID (in whitelist): <span class="infovalue">' + devinfo.UNIT_VDSMDSUID + '</span></p>';
+          }
+          else {
+            sysinfo +=
+              '<p>vdc host dSUID (in whitelist): <span id="vdchostdsuid" class="infovalue"></span></p>';
+          }
+          sysinfo +=
+            '<p>System uptime: <span class="infovalue">' + formattedUptime + '</span></p>';
+
+          $('#systemInfo').html(sysinfo);
+          refresh_clock();
+          // update model names
+          update_device_titles();
+          // enable some extra text displays depending on product
+          if (isOpenWrt) {
+            $('#opensource_openwrt').show();
+          }
+          if (hasVDSM) {
+            $('#opensource_vdsm').show();
+          }
+          if (hasOLA) {
+            $('#opensource_ola').show();
+          }
+          if (isDIY) {
+            $('#diyWarning').show();
+          }
+          // query name and dSUID of vdc host
+          var namequery = {
+            "method":"getProperty",
+            "dSUID":"root",
+            "query":{ "dSUID":null, "name":null }
+          };
+          $.ajax({
+            url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+            type: 'post',
+            dataType: 'json',
+            data: JSON.stringify(namequery)
+          }).done(function(response) {
+            bridgename = response.result.name;
+            // Always use model from devinfo, not from vdcd
+            vdchostdsuid = response.result.dSUID;
+            update_device_titles();
+          });
+        }).fail(function(response) {
+          console.log('API error ' + response.error.message);
+        });
+      }
+
+
+      function refresh_clock()
+      {
+        if (typeof(tickDiff)=="number") {
+          var date = new Date((new Date).getTime()+tickDiff);
+          var formattedTime =
+            date.getFullYear() + '-' +
+            ('00'+String(date.getMonth()+1)).substr(-2) + '-' +
+            ('00'+String(date.getDate())).substr(-2) + ' ' +
+            ('00'+String(date.getHours())).substr(-2) + ':' +
+            ('00'+String(date.getMinutes())).substr(-2) + ':' +
+            ('00'+String(date.getSeconds())).substr(-2);
+          $('#clock').html(
+            '<p>System Date/Time: <span class="infovalue">' + formattedTime + '</span></p>'
+          );
+        }
+        // schedule next refresh
+        setTimeout(function() { refresh_clock(); }, 500 );
+      }
+
+
+
+      function refresh_ipconfig()
+      {
+        $.getJSON( '/cfg/json/?rqvaltok=' + rqvaltok + '&cmd=ipconfig' , {
+        }).done( function(response) {
+          var result = response.result;
+          var ipdisphtml = '';
+          if (result.dhcp) {
+            ipdisphtml =
+              '<p>DHCP: <span class="infovalue">on</span></p>' +
+              '<p>Current IP address: <span class="infovalue">' + result.currentip + '</span></p>';
+            $('#dhcp').val(1);
+          }
+          else {
+            ipdisphtml =
+              '<p>DHCP: <span class="infovalue">off</span></p>' +
+              '<p>Configured IP address: <span class="infovalue">' + result.ipaddr + '</span></p>' +
+              '<p>Net Mask: <span class="infovalue">' + result.netmask + '</span></p>' +
+              '<p>Default Gateway IP: <span class="infovalue">' + result.gatewayip + '</span></p>' +
+              '<p>DNS server 1: <span class="infovalue">' + result.dnsip + '</span></p>' +
+              '<p>DNS server 2: <span class="infovalue">' + result.dnsip2 + '</span></p>';
+            $('#dhcp').val(0);
+          }
+          $('#ipconfig').html(ipdisphtml);
+
+          $('#dhcp').slider("refresh");
+
+          // set IP fields
+          $("#ipAddr").val(result.ipaddr);
+          $("#ipMask").val(result.netmask);
+          $("#ipGW").val(result.gatewayip);
+          $("#ipDNS1").val(result.dnsip);
+          $("#ipDNS2").val(result.dnsip2);
+          // refresh dhcp switch dependencies
+          refresh_dhcp_deps();
+          // enable edit button now
+          $('#ipeditbtn').removeClass('ui-disabled');
+
+        }).fail(function(response) {
+          console.log('API error ' + response.error.message);
+        });
+      }
+
+
+
+      function refresh_dhcp_deps()
+      {
+        // refresh DHCP switch dependencies
+        if ($("#dhcp").val()>0) {
+          $("#ipAddr").textinput("disable");
+          $("#ipMask").textinput("disable");
+          $("#ipGW").textinput("disable");
+          $("#ipDNS1").textinput("disable");
+          $("#ipDNS2").textinput("disable");
+        }
+        else {
+          $("#ipAddr").textinput("enable");
+          $("#ipMask").textinput("enable");
+          $("#ipGW").textinput("enable");
+          $("#ipDNS1").textinput("enable");
+          $("#ipDNS2").textinput("enable");
+        }
+      }
+
+
+      var ipEditWaitTimer = null;
+
+      function applyIpSettings()
+      {
+        if (
+          check_ip_edit("#ipAddr") &&
+          check_ip_edit("#ipMask") &&
+          check_ip_edit("#ipGW") &&
+          check_ip_edit("#ipDNS1") &&
+          check_ip_edit("#ipDNS2")
+        ) {
+          var params = new Object();
+          params.dhcp = $("#dhcp").val()!=0 ? 1 : 0;
+          params.ipaddr = $("#ipAddr").val();
+          params.netmask = $("#ipMask").val();
+          params.gatewayip = $("#ipGW").val();
+          params.dnsip = $("#ipDNS1").val();
+          params.dnsip2 = $("#ipDNS2").val();
+          params.cmd = 'ipconfig';
+          $.ajax({
+            dataType: "json",
+            url: '/cfg/json/?rqvaltok=' + rqvaltok,
+            type: 'post',
+            data: JSON.stringify(params),
+            success: function(response) {
+              // make sure the ipeditWait does not appear (in case of very quick response)
+              clearTimeout(ipEditWaitTimer);
+              // close the wait popup in case it is open
+              $("#ipeditWait").popup("close");
+              // reload new config
+              if (response.error) {
+                alert("Error: " + response.error.message);
+              }
+              else {
+                // update restart location
+                if ($("#dhcp").val()==0) {
+                  // configured IP will become active, use that (note that port must be 80)
+                  restartLocation = 'http://' + $("#ipAddr").val();
+                }
+                // update IP config
+                refresh_ipconfig();
+                // ask for restart
+                setTimeout(function() { $("#ipRestartAsk").popup("open", { positionTo:"window" }); }, 100 );
+              }
+            },
+            timeout:20000
+          })
+          .fail(function(response, status) {
+            $("#ipeditWait").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+
+          setTimeout(function() {
+            $("#ipedit").popup("close");
+            $("#ipedit" ).off('popupafterclose');
+            $("#ipedit" ).on('popupafterclose', function() {
+              $("#ipedit" ).off('popupafterclose');
+              ipEditWaitTimer = setTimeout(function() { $("#ipeditWait").popup("open", { positionTo:"window" }); }, 100 );
+            });
+          }, 100 );
+        }
+      }
+
+
+      function setNewPassword()
+      {
+        // get data
+        var newPassword = $("#newPassword").val().toString();
+        var verifyPassword = $("#verifyPassword").val().toString();
+        // clear fields
+        $("#newPassword").val("");
+        $("#verifyPassword").val("");
+        if (
+          (newPassword != verifyPassword) ||
+          (newPassword.length<3)
+        ) {
+          alert("Password ist shorter than 3 chars or verification input does not match password");
+        }
+        else {
+          var params = new Object();
+          params.password = newPassword;
+          params.cmd = 'setpassword';
+          $.ajax({
+            dataType: "json",
+            url: '/cfg/json/?rqvaltok=' + rqvaltok,
+            type: 'post',
+            data: JSON.stringify(params),
+            success: function(response) {
+              // close the popup
+              $("#pwdedit").popup("close");
+            },
+            timeout:20000
+          })
+          .fail(function(response, status) {
+            $("#pwdedit").popup("close");
+            console.log('API error ' + response.error.message);
+          });
+        }
+      }
+
+
+      function openNameEdit() {
+        $("#newBridgeName").val(bridgename);
+        openDialog('#nameedit');
+      }
+
+      function setBridgeName()
+      {
+        // get data
+        bridgename = $("#newBridgeName").val().toString();
+        // query name of vdc host
+        var nameset = {
+          "method":"setProperty",
+          "dSUID":"root",
+          "properties":{ "name":bridgename }
+        };
+        $.ajax({
+          url: '/api/json/vdc?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(nameset)
+        });
+        $("#nameedit").popup("close");
+        // update titles
+        update_device_titles();
+      }
+
+
+      // Log page
+      // ========
+
+      function refresh_vdcd_log()
+      {
+        $.get(vdsmrunning ? "vdcd_tail_log.txt" : "vdcd_long_tail_log.txt", function(data) {
+          $("#vdcd_tail_log").html(data);
+        });
+      }
+
+      function refresh_vdsm_log()
+      {
+        if (vdsmrunning) {
+          $("#vdsmlogs").show();
+          $.get("vdsm_tail_log.txt", function(data) {
+            $("#vdsm_tail_log").html(data);
+          });
+        }
+        else {
+          $("#vdsmlogs").hide();
+        }
+      }
+
+      function set_vdcd_loglevel(i)
+      {
+        $.getJSON( '/api/json/p44?rqvaltok=' + rqvaltok + '&method=logLevel&value=' + String(i) )
+        .done(function(response) {
+          // refresh log
+          refresh_vdcd_log();
+        });
+      }
+
+
+
+    --></script>
+
+  </head>
+
+  <body>
+
+    <div id="title" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title" class="ui-btn-active">About</a></li>
+            <li><a href="#devices">Devices</a></li>
+            <li><a href="#system">System</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div>
+          <div class="centered" data-role="content">
+            <h1 id="about_title_model">DSB</h1>
+            <h2 id="about_model_description">digitalSTROM bridge</h2>
+            <p>© <span id="about_copyright_years">2013-2016</span> by <a id="about_copyright_link" href="http://plan44.ch/automation" target="_blank">_</a></p>
+          </div>
+
+          <h3>Opensource:</h3>
+          <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
+          data-iconpos="right">
+
+        <div data-role="collapsible">
+          <h3>vdcd - © 2013-2016 by plan44.ch, GPLv3 or commercial license</h3>
+
+          <h4><a href="http://plan44.ch/opensource/vdcd" target="_blank">vdcd</a> - virtual device connector daemon and C++ framework</h4>
+
+          <p>vdcd is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, either <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or
+          (at your option) any later version.</p>
+
+          <p>vdcd is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          GNU General Public License for more details.</p>
+
+          <p>You should have received a copy of the GNU General Public License
+          along with vdcd. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+
+          <p>Upon request, vdcd and the vdc C++ framework can also be made available under a commercial license from plan44.ch</p>
+
+        </div>
+
+        <div id="opensource_openwrt" style="display:none" data-role="collapsible">
+          <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+
+          <h4><a href="http://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded devices</h4>
+
+          <p>OpenWrt is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, version 2 of the License.</p>
+
+          <p>You should have received a copy of the GNU General Public License
+          along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+        </div>
+
+        <div id="opensource_vdsm" style="display:none" data-role="collapsible">
+          <h3>vdSM - © 2015-2016 by digitalSTROM AG, GPL v2</h3>
+
+          <h4><a href="https://git.digitalstrom.org/virtual-devices/vdsm" target="_blank">vdSM</a> - virtual digitalSTROM meter</h4>
+          <p>Copyright (c) 2015-2016 <a href="http://digitalstrom.com" target="_blank">digitalSTROM AG</a>, Zurich, Switzerland</p>
+
+          <p>vdSM is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, version 2 of the License.</p>
+
+          <p>vdSM is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          GNU General Public License for more details.</p>
+
+          <p>You should have received a copy of the GNU General Public License
+          along with vdsm. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+        </div>
+
+        <div id="opensource_ola" style="display:none" data-role="collapsible">
+          <h3>Open Lighting Project, OLA - © 2005-2014 Simon Newton, GPL/LGPL</h3>
+
+          <h4><a href="http://www.openlighting.org" target="_blank">OLA</a> - Open Lighting Architecture (interface to various lighting protocols, e.g. DMX512)</h4>
+
+          <p>The files required for libola and libolacommon are licenced under the LGPL, this means you are free to link against the OLA client library in your own
+          programs. The files required for libolaserver and olad are licenced under the GPL.</p>
+
+          <p>You should have received a copy of the GNU General Public License (GPL) and the GNU Lesser General Public License (LGPL)
+          along with <a href="https://github.com/OpenLightingProject/ola">OLA</a>. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+          <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining
+          a copy of this software and associated documentation files (the
+          "Software"), to deal in the Software without restriction, including
+          without limitation the rights to use, copy, modify, merge, publish,
+          distribute, sublicense, and/or sell copies of the Software, and to
+          permit persons to whom the Software is furnished to do so, subject to
+          the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be
+          included in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
+
+          <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
+          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
+
+          <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
+          <p>Copyright (c) 2004 avahi.org</p>
+
+          <p>avahi is free software; you can redistribute it and/or modify it
+          under the terms of the GNU Lesser General Public License as
+          published by the Free Software Foundation; either version 2.1 of the
+          License, or (at your option) any later version.</p>
+
+          <p>avahi is distributed in the hope that it will be useful, but WITHOUT
+          ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+          or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+          Public License for more details.</p>
+
+          <p>You should have received a copy of the GNU Lesser General Public
+          License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+          <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+          <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+          Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a
+          copy of this software and associated documentation files (the "Software"),
+          to deal in the Software without restriction, including without limitation
+          the rights to use, copy, modify, merge, publish, distribute, sublicense,
+          and/or sell copies of the Software, and to permit persons to whom the
+          Software is furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included
+          in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>protobuf-c - © 2008-2013, Dave Benson, BSD 2 clause license</h3>
+
+          <h4><a href="https://github.com/protobuf-c/protobuf-c" target="_blank">protobuf-c</a> - google protocol buffer implementation for C</h4>
+          <p>Copyright (c) 2008-2013, Dave Benson.  All rights reserved.</p>
+
+          <p>Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are
+          met:</p>
+
+          <ul>
+          <li>Redistributions of source code must retain the above copyright
+          notice, this list of conditions and the following disclaimer.</li>
+          <li>Redistributions in binary form must reproduce the above
+          copyright notice, this list of conditions and the following disclaimer
+          in the documentation and/or other materials provided with the
+          distribution.</li>
+          </ul>
+
+          <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+          "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+          LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+          A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+          OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+          SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+          LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+          DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+          THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+          (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+          OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+          <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+          <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a>
+        </div>
+
+
+      </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="devices" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#devices" class="ui-btn-active">Devices</a></li>
+            <li><a href="#system">System</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <button type="button" onclick="refresh_devicelist();" id="refreshDevicelist" data-inline="true" data-theme="c" data-mini="true">Reload list</button>
+          <button type="button" onclick="identify();" id="identifyButton" data-inline="true" data-theme="c" data-mini="true">Identify device...</button>
+          <button type="button" onclick="learn(false);" id="startLearn" data-inline="true" data-theme="c" data-mini="true">Device learn in/out...</button>
+          <button type="button" onclick="learn(true);" id="startLearnNoProximity" data-inline="true" data-theme="c" data-mini="true">Learn <span style="color:red">buttons w/o proximity check</span>...</button>
+          <a target="_blank" id="devices_compatpage_link" href="http://plan44.ch/automation/info.php">device compatibility information</a>
+        </div>
+        <div id="deviceList">
+        </div>
+      </div>
+
+      <div data-role="popup" id="learnWait" data-overlay-theme="a" data-theme="c" data-dismissible="false" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Learning</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <div id="learnRequest"><p style="color:orange; font-weight:bold;">Please press learn button on device to be learned in or out now!</p></div>
+          <div id="learnResult"></div>
+          <a id="learnOK" href="#" data-role="button" data-inline="true" data-rel="back" data-theme="b">OK</a>
+          <a id="learnCancel" onclick="stopLearn();" data-role="button" data-inline="true" data-rel="back" data-theme="b">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="identifyWait" data-overlay-theme="a" data-theme="c" data-dismissible="false" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Identifying</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <div id="identifyRequest"><p style="color:orange; font-weight:bold;">Please press button on device to be identified!</p></div>
+          <div id="identifyResult"></div>
+          <a id="identifyOK" href="#" data-role="button" data-inline="true" data-rel="back" data-theme="b">OK</a>
+          <a id="identifyCancel" onclick="stopIdentify();" data-role="button" data-inline="true" data-rel="back" data-theme="b">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="daliCreateGroup" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="daliCreateGroupForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create grouped DALI Device</h3>
+            <label for="dali_grouptype">Type of group to create:</label>
+            <select name="dali_grouptype" onchange="refresh_dali_grouping_deps();" id="dali_grouptype_select" data-mini="true" data-theme="a">
+              <option value="color">Color light out of separate RGB(W) dimmers</option>
+              <option value="group">Single dimmer (DALI group) out of multiple dimmers</option>
+            </select>
+            <div class="dali_grouptype_color" style="display:none">
+              <p>Please select red, green, blue and optional white channel dimmers to be combined to a single RGB(W) color device</p>
+              <label for="red_dimmer">Red Dimmer:</label>
+              <select name="red_dimmer" id="red_dimmer_select" data-mini="true" data-theme="a"></select>
+              <label for="green_dimmer">Green Dimmer:</label>
+              <select name="green_dimmer" id="green_dimmer_select" data-mini="true" data-theme="a"></select>
+              <label for="blue_dimmer">Blue Dimmer:</label>
+              <select name="blue_dimmer" id="blue_dimmer_select" data-mini="true" data-theme="a"></select>
+              <label for="white_dimmer">White Dimmer (optional):</label>
+              <select name="white_dimmer" id="white_dimmer_select" data-mini="true" data-theme="a"></select>
+              <p style="padding-top:20px;"></p>
+              <button type="button" onclick="createDaliRGB();" id="daliRGBApply" data-theme="b" data-icon="check">Create RGB(W) device</button>
+            </div>
+            <div class="dali_grouptype_group" style="display:none">
+              <p>Please select dimmers to group</p>
+              <div id="dali_group_member_selectors"></div>
+              <p style="padding-top:20px;"></p>
+              <button type="button" onclick="createDaliGroup();" id="daliGroupApply" data-theme="b" data-icon="check">Create group device</button>
+            </div>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="customioCreateDevice" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="customioCreateDeviceForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create Custom I/O (GPIO, i2c) device</h3>
+            <p><span style="color:red">Expert users only! Configuring wrong GPIO or i2c devices can damage the device permanently!</span></p>
+            <label for="custom_devicetype">Type of device:</label>
+            <select name="custom_devicetype" onchange="refresh_customio_deps();" id="custom_devicetype_select" data-mini="true" data-theme="a">
+              <option value="none">-</option>
+              <option value="digitalio">digital input or output</option>
+              <option value="analogio">analog input or output</option>
+              <option value="console">console based debug device</option>
+              <option value="spark">spark.io core based device</option>
+              <option value="custom">custom (enter device specification manually)</option>
+            </select>
+            <label for="customdev_name">Device name:</label>
+            <input type="text" name="customdev_name" id="customdev_name_textfield" value="" placeholder="Device name" data-theme="d">
+            <div class="digitalio_group" style="display:none">
+              <label for="digitalio_behaviour">Digital I/O Behaviour:</label>
+              <select name="digitalio_behaviour" onchange="refresh_customio_deps();" id="digitalio_behaviour_select" data-mini="true" data-theme="a">
+                <option value="none">-</option>
+                <option value="button">pushbutton</option>
+                <option value="input">automation input</option>
+                <option value="light">on-off light output</option>
+                <option value="relay">relay output</option>
+              </select>
+              <label for="digitalio_pinopt">Digital I/O Options:</label>
+              <select name="digitalio_pinopt" id="digitalio_pinopt_select" data-mini="true" data-theme="a">
+                <option value="X" selected="1">normal</option>
+                <option value="/">inverted</option>
+                <option value="+/">inverted with pull-up (if pin supports it)</option>
+              </select>
+              <label for="digitalio_device">Digital I/O Device:</label>
+              <select name="digitalio_device" onchange="refresh_customio_deps();" id="digitalio_device_select" data-mini="true" data-theme="a">
+                <option value="none">-</option>
+                <option value="gpio">Linux GPIO</option>
+                <option value="led">Linux LED output</option>
+                <option value="i2c">i2c bus device</option>
+                <option value="spi">SPI device</option>
+                <option value="syscmd">shell command controlled device</option>
+                <option value="rcswitch">RCSwitch device</option>
+              </select>
+            </div>
+            <div class="custom_group" style="display:none">
+              <p><span style="color:red">REALLY Expert users only! You need to know what you are doing!</span></p>
+              <label for="custom_devicetype">Custom device type:</label>
+              <input type="text" name="custom_devicetype" id="custom_devicetype_textfield" value="" placeholder="digitalio" data-theme="d">
+              <label for="custom_devicespec">Custom device specification:</label>
+              <input type="text" name="custom_devicespec" id="custom_devicespec_textfield" value="" placeholder="i2c1.PCF8574@20.0:light" data-theme="d">
+            </div>
+            <div class="spark_group" style="display:none">
+              <label for="spark_sparkcoreid">Spark core ID:</label>
+              <input type="text" name="spark_sparkcoreid" id="spark_sparkcoreid_textfield" value="" placeholder="spark core hex ID" data-theme="d">
+              <label for="spark_authtoken">Spark core authentication token:</label>
+              <input type="text" name="spark_authtoken" id="spark_authtoken_textfield" value="" placeholder="spark authentication token" data-theme="d">
+            </div>
+            <div class="analogio_group" style="display:none">
+              <label for="analogio_behaviour">Analog I/O Behaviour:</label>
+              <select name="analogio_behaviour" onchange="refresh_customio_deps();" id="analogio_behaviour_select" data-mini="true" data-theme="a">
+                <option value="none">-</option>
+                <option value="dimmer">light dimmer (single output)</option>
+                <option value="rgbdimmer">RGB light dimmer (3 outputs - R,G,B)</option>
+                <option value="rgbwdimmer">RGBW light dimmer (4 outputs - R,G,B and White)</option>
+                <option value="valve">Heating valve (0..100%)</option>
+              </select>
+              <label for="analogio_device">Analog I/O Device:</label>
+              <select name="analogio_device" onchange="refresh_customio_deps();" id="analogio_device_select" data-mini="true" data-theme="a">
+                <option value="none">-</option>
+                <option value="i2c">i2c bus device</option>
+                <option value="syscmd">shell command controlled device</option>
+              </select>
+            </div>
+            <div class="consoleio_group" style="display:none">
+              <label for="consoleio_behaviour">Console I/O Behaviour:</label>
+              <select name="consoleio_behaviour" onchange="refresh_customio_deps();" id="consoleio_behaviour_select" data-mini="true" data-theme="a">
+                <option value="none">-</option>
+                <option value="button">Simulated pushbutton (console key)</option>
+                <option value="rocker">Simulated up/down rocker button (2 console keys)</option>
+                <option value="input">Simulated binary input (console key)</option>
+                <option value="sensor">Simulated 0..50 sensor value (tunable with 2 console keys)</option>
+                <option value="dimmer">Simulated dimmer (value shown on console)</option>
+                <option value="colordimmer">Simulated color dimmer (values shown on console)</option>
+                <option value="valve">Simulated heating valve (value shown on console)</option>
+              </select>
+            </div>
+            <div class="gpio_group" style="display:none">
+              <label for="gpio_pin">GPIO number:</label>
+              <input type="number" name="gpio_pin" id="gpio_pin_textfield" value="" placeholder="GPIO number" data-theme="d">
+            </div>
+            <div class="led_group" style="display:none">
+              <label for="led_pin">LED number:</label>
+              <input type="number" name="led_pin" id="led_pin_textfield" value="" placeholder="LED number" data-theme="d">
+            </div>
+            <div class="i2c_group" style="display:none">
+              <label for="i2c_bus">i2c bus number:</label>
+              <select name="i2c_bus" id="i2c_bus_select" data-mini="true" data-theme="a">
+                <option value="1">i2c bus #1</option>
+              </select>
+              <div class="digitalio_group" style="display:none">
+                <label for="digitalio_i2c_chip">i2c digital I/O chip driver:</label>
+                <select name="digitalio_i2c_chip" id="digitalio_i2c_chip_select" data-mini="true" data-theme="a">
+                  <option value="none">-</option>
+                  <option value="TCA9555">TCA9555 - 16 digital I/O pins</option>
+                  <option value="MCP23017">MCP23017 - 16 digital I/O pins</option>
+                  <option value="PCF8574">PCF8574 - 8 digital OC I/O pins</option>
+                </select>
+              </div>
+              <div class="analogio_group" style="display:none">
+                <label for="analogio_i2c_chip">i2c analog I/O chip driver:</label>
+                <select name="analogio_i2c_chip" id="analogio_i2c_chip_select" data-mini="true" data-theme="a">
+                  <option value="none">-</option>
+                  <option value="PCA9685">PCA9685 - 16 PWM outputs (noninverted, totem pole), </option>
+                  <option value="PCA9685-I">PCA9685 - 16 PWM outputs (inverted, totem pole), </option>
+                  <option value="PCA9685-O">PCA9685 - 16 PWM outputs (noninverted, open drain), </option>
+                  <option value="PCA9685-OI">PCA9685 - 16 PWM outputs (inverted, open drain), </option>
+                </select>
+              </div>
+              <label for="i2c_address">i2c (hex) address:</label>
+              <input type="text" name="i2c_address" id="i2c_address_textfield" value="" placeholder="i2c device address (in hex)" data-theme="d">
+              <label for="i2c_pin">I/O pin number (first of 3 for RGB, first of 4 for RGBW dimmer):</label>
+              <input type="number" name="i2c_pin" id="i2c_pin_textfield" value="" placeholder="i2c I/O pin" data-theme="d">
+            </div>
+            <div class="spi_group" style="display:none">
+              <label for="spi_bus">SPI interface:</label>
+              <select name="spi_bus" id="spi_bus_select" data-mini="true" data-theme="a">
+                <option value="0">spidev0.0</option>
+                <option value="1">spidev0.1</option>
+                <option value="10">spidev1.0</option>
+                <option value="11">spidev1.1</option>
+              </select>
+              <div class="digitalio_group" style="display:none">
+                <label for="digitalio_spi_chip">SPI digital I/O chip driver:</label>
+                <select name="digitalio_spi_chip" id="digitalio_spi_chip_select" data-mini="true" data-theme="a">
+                  <option value="none">-</option>
+                  <option value="MCP23S17">MCP23S17 - 16 digital I/O pins</option>
+                </select>
+              </div>
+              <label for="spi_address">SPI device address (hex):</label>
+              <input type="text" name="spi_address" id="spi_address_textfield" value="" placeholder="SPI device address (in hex)" data-theme="d">
+              <label for="spi_pin">I/O pin number</label>
+              <input type="number" name="spi_pin" id="spi_pin_textfield" value="" placeholder="SPI I/O pin" data-theme="d">
+            </div>
+            <div class="syscmd_group" style="display:none">
+              <p><span style="color:red">Expert users only! Shell commands can be dangerous!</span></p>
+              <div class="digitalio_group" style="display:none">
+                <p>Note: shell commands for switching device on and off may not contain the | character!</p>
+                <label for="syscmd_command_on">Command to switch device on:</label>
+                <input type="text" name="syscmd_command_on" id="syscmd_command_on_textfield" value="" placeholder='echo "Switching ON"' data-theme="d">
+                <label for="syscmd_command_off">Command to switch device off:</label>
+                <input type="text" name="syscmd_command_off" id="syscmd_command_off_textfield" value="" placeholder='echo "Switching OFF"' data-theme="d">
+              </div>
+              <div class="analogio_group" style="display:none">
+                <p>Note: shell command must contain ${VALUE} which will be replaced by the device's output value</p>
+                <label for="syscmd_range">Maxium value - ${VALUE} will go from 0 to this value:</label>
+                <input type="number" name="syscmd_range" id="syscmd_range_textfield" value="" placeholder="max value" data-theme="d">
+                <label for="syscmd_command_set">Command to set device value:</label>
+                <input type="text" name="syscmd_command_set" id="syscmd_command_set_textfield" value="" placeholder='echo "Setting new Value ${VALUE}"' data-theme="d">
+              </div>
+            </div>
+            <div class="rcswitch_group" style="display:none">
+              <label for="rcswitch_housecode">House code (DIP switch positions, 0=off, 1=on):</label>
+              <input type="number" name="rcswitch_housecode" id="rcswitch_housecode_textfield" value="" placeholder='11001' data-theme="d">
+              <label for="rcswitch_devicecode">Device code (1=A, 2=B, 3=C, ...):</label>
+              <input type="number" name="syscmd_command_off" id="rcswitch_devicecode_textfield" value="" placeholder='1' data-theme="d">
+            </div>
+            <p style="padding-top:20px;"></p>
+            <button type="button" onclick="createCustomIODevice();" id="customioCreateDeviceApply" data-theme="b" data-icon="check">Create device</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="olaCreateDevice" data-dismissible="false" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="olaCreateDeviceForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create OLA/DMX512 device</h3>
+            <label for="ola_devicetype">Type of device:</label>
+            <select name="ola_devicetype" onchange="refresh_ola_deps();" id="ola_devicetype_select" data-mini="true" data-theme="a">
+              <option value="none">-</option>
+              <option value="dimmer">single channel dimmer</option>
+              <option value="colordimmer">RGB(WA) 3-5 channel color dimmer</option>
+              <option value="movinglight">RGB(WA) h/v moving light</option>
+            </select>
+            <label for="oladev_name">Device name:</label>
+            <input type="text" name="oladev_name" id="oladev_name_textfield" value="" placeholder="Device name" data-theme="d">
+            <div class="ola_dimmer_group" style="display:none">
+              <label for="ola_dimmer_channel">DMX channel number:</label>
+              <input type="number" name="ola_dimmer_channel" id="ola_dimmer_channel_textfield" value="" placeholder="DMX channel number" data-theme="d">
+            </div>
+            <div class="ola_color_group" style="display:none">
+              <label for="ola_red_channel">Red DMX channel number:</label>
+              <input type="number" name="ola_red_channel" id="ola_red_channel_textfield" value="" placeholder="red DMX channel" data-theme="d">
+              <label for="ola_green_channel">Green DMX channel number:</label>
+              <input type="number" name="ola_green_channel" id="ola_green_channel_textfield" value="" placeholder="green DMX channel" data-theme="d">
+              <label for="ola_blue_channel">Blue DMX channel number:</label>
+              <input type="number" name="ola_blue_channel" id="ola_blue_channel_textfield" value="" placeholder="blue DMX channel" data-theme="d">
+              <label for="ola_white_channel">Optional white DMX channel number:</label>
+              <input type="number" name="ola_white_channel" id="ola_white_channel_textfield" value="" placeholder="(optional) white DMX channel" data-theme="d">
+              <label for="ola_amber_channel">Optional amber DMX channel number:</label>
+              <input type="number" name="ola_amber_channel" id="ola_amber_channel_textfield" value="" placeholder="(optional) amber DMX channel" data-theme="d">
+            </div>
+            <div class="ola_position_group" style="display:none">
+              <label for="ola_hpos_channel">Horizontal position DMX channel number:</label>
+              <input type="number" name="ola_hpos_channel" id="ola_hpos_channel_textfield" value="" placeholder="horizontal position DMX channel" data-theme="d">
+              <label for="ola_vpos_channel">Vertical position DMX channel number:</label>
+              <input type="number" name="ola_vpos_channel" id="ola_vpos_channel_textfield" value="" placeholder="vertical position DMX channel" data-theme="d">
+            </div>
+            <div class="ola_static_group">
+              <label for="ola_static_channels">Optional additional config (X=channel=value[,X=channel=value]):</label>
+              <input type="text" name="ola_static_channels" id="ola_static_channels_textfield" value="" placeholder="X=8=255,X=3=8" data-theme="d">
+            </div>
+            <p style="padding-top:20px;"></p>
+            <button type="button" onclick="createOlaDevice();" id="olaCreateDeviceApply" data-theme="b" data-icon="check">Create device</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="enoceanCreateDevice" data-dismissible="false" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="enoceanCreateDeviceForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create EnOcean actor device</h3>
+            <label for="enocean_profile">Type of device:</label>
+            <select name="enocean_profile" id="enocean_profile_select" data-mini="true" data-theme="a">
+              <option value="0">-</option>
+              <option value="16774909">on/off relay</option>
+              <option value="16774908">on/off light</option>
+              <option value="16774910">jalousie controller</option>
+            </select>
+            <p style="padding-top:20px;"></p>
+            <button type="button" onclick="createEnoceanDevice();" id="enoceanCreateDeviceApply" data-theme="b" data-icon="check">Create device</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="rgbchainCreateDevice" data-dismissible="false" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="rgbchainCreateDeviceForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create RGB LED chain (WS281x) device</h3>
+            <label for="rgbchaindev_name">Device name:</label>
+            <input type="text" name="rgbchaindev_name" id="rgbchaindev_name_textfield" value="" placeholder="Device name" data-theme="d">
+            <label for="rgbchain_firstled">Device's first LED in chain:</label>
+            <input type="number" name="rgbchain_firstled" id="rgbchain_firstled_textfield" value="" placeholder="LED number (0..number of LEDs-1)" data-theme="d">
+            <label for="rgbchain_numleds">Number of LEDs in device:</label>
+            <input type="number" name="rgbchain_numleds" id="rgbchain_numleds_textfield" value="" placeholder="number of LEDs" data-theme="d">
+            <label for="rgbchain_soft_start">Fade out LEDs at beginning:</label>
+            <input type="number" name="rgbchain_soft_start" id="rgbchain_soft_start_textfield" value="" placeholder="number of LEDs for fade-in" data-theme="d">
+            <label for="rgbchain_soft_end">Fade out LEDs at end:</label>
+            <input type="number" name="rgbchain_soft_end" id="rgbchain_soft_end_textfield" value="" placeholder="number of LEDs for fade-out" data-theme="d">
+            <p style="padding-top:20px;"></p>
+            <button type="button" onclick="createRGBLedChainDevice();" id="rgbchainCreateDeviceApply" data-theme="b" data-icon="check">Create device</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="evaluatorCreateDevice" data-dismissible="false" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="evaluatorCreateDeviceForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Create Sensor Evaluator device</h3>
+            <p>Evaluator devices provide a binary input or a two-way button to the digitalSTROM system, which is controlled by other device's sensor values meeting certain conditions</p>
+            <label for="evaluator_devicetype">Evaluator result type:</label>
+            <select name="evaluator_devicetype" id="evaluator_devicetype_select" data-mini="true" data-theme="a">
+              <option value="input">binary input</option>
+              <option value="rocker">simulated two-way button</option>
+              <option value="internal">internal, not visible in digitalSTROM</option>
+            </select>
+            <label for="evaluator_name">Evaluator name:</label>
+            <input type="text" name="evaluator_name" id="evaluator_name_textfield" value="" placeholder="Name for evaluator device" data-theme="d">
+            <p style="padding-top:20px;"></p>
+            <button type="button" onclick="createEvaluatorDevice();" id="evaluatorCreateDeviceApply" data-theme="b" data-icon="check">Create evaluator</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="evaluatorDeviceEdit" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="evaluatorDeviceEditForm">
+          <div style="padding:10px 20px; min-width:480px;">
+            <div class="deviceDialogIcon" id="evaluatorIcon"></div><h3 class="deviceDialogTitle" id="evaluatorTitle">Evaluator</h3>
+            <h3>Sensors to use in evaluation expressions:</h3>
+            <p class="evaluatorCheckResult" id="evaluatorValueDefsCheck"></p>
+            <table class="evaluatorDefs" width="100%">
+              <thead>
+                <tr><th>Variable name</th><th>assigned Sensor</th></tr>
+              </thead>
+              <tbody id="varDefsBody">
+              </tbody>
+            </table>
+            <h3>Condition for result switching to ON:</h3>
+            <p class="evaluatorCheckResult" id="evaluatorOnConditionCheck"></p>
+            <input type="text" name="evaluatorOnCondition" id="evaluatorOnConditionTextfield" value="" placeholder="e.g. Sensor1 > 21.5" data-theme="d">
+            <div data-role="fieldcontain" class="ui-field-contain">
+              <label class="p44-mini-input" for="evaluatorOnTime">Minimum time on-condition must be met [Seconds]</label>
+              <input type="number" name="evaluatorOnTime" id="evaluatorOnTimeTextfield" value="" placeholder="Seconds" data-mini="true" data-theme="d">
+              <div class="p44-mini-input-end"></div>
+            </div>
+            <h3>Condition for result switching to OFF:</h3>
+            <p class="evaluatorCheckResult" id="evaluatorOffConditionCheck"></p>
+            <input type="text" name="evaluatorOffCondition" id="evaluatorOffConditionTextfield" value="" placeholder="e.g. (Sensor1+Sensor2)/2 < 18.5  & Sensor3 != 0" data-theme="d">
+            <div data-role="fieldcontain" class="ui-field-contain">
+              <label class="p44-mini-input" for="evaluatorOffTime">Minimum time off-condition must be met [Seconds]</label>
+              <input type="number" name="evaluatorOffTime" id="evaluatorOffTimeTextfield" value="" placeholder="Seconds" data-mini="true" data-theme="d">
+              <div class="p44-mini-input-end"></div>
+            </div>
+            <p style="padding-top:4px;"></p>
+            <button type="button" id="evaluatorCheckButton" data-theme="a" data-icon="check">Save + Check Expressions</button>
+            <p style="padding-top:6px;"></p>
+            <button type="button" id="evaluatorDeviceEditApply" data-theme="b" data-icon="check">Save + Close</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="deviceInfo" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="deviceInfoForm">
+          <div style="padding:10px 20px; max-width:500px;">
+            <div class="deviceDialogIcon" id="deviceInfoIcon"></div><h3 class="deviceDialogTitle" id="deviceInfoTitle">Device Infomation</h3>
+            <div id="deviceInfoShow"></div>
+            <div id="deviceInfoExtraControls"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="removeDeviceConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Remove Device</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to remove this device?</h3>
+          <p>Note: This cannot be undone - to use the device again, depending on the device type you need to learn it in again or re-create it via the "+device+ button.</p>
+          <a href="#" id="removeDeviceNowButton" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Yes, remove the device</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="vdcInfo" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="vdcInfoForm">
+          <div style="padding:10px 20px; max-width:500px;">
+            <div id="vdcInfoIcon"></div><h3 id="vdcInfoTitle">vdc Infomation</h3>
+            <div id="vdcInfoShow"></div>
+            <div id="vdcInfoExtraControls"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="vdcScanChoices" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="vdcScanChoicesForm">
+          <div style="padding:10px 20px; max-width:400px;">
+            <h3>Scan for devices</h3>
+            <p>Note: scanning for devices might take several minutes depending on type of scan and current state of connected devices.</p>
+            <div id="vdcScanButtons"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+
+
+      <div data-role="popup" id="channelControl" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="channelControlForm">
+          <div style="padding:10px 20px; min-width:320px; max-width:500px;">
+            <div id="channelInfoIcon"></div><h3 id="channelInfoTitle">Device Output Channels</h3>
+            <div id="channelList"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+
+
+      <div data-role="popup" id="singleDevice" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="singleDeviceForm">
+          <div style="padding:10px 20px; min-width:320px; max-width:500px;">
+            <div id="singleDeviceIcon"></div><h3 id="singleDeviceTitle">Single Device Actions, States, Properties</h3>
+            <div id="singleDeviceActions">
+              <label for="singleDevice_action">Standard action:</label>
+              <select name="singleDevice_action" onchange="refresh_action_deps();" id="singleDevice_action_select" data-mini="true" data-theme="a"></select>
+              <div id="singleDeviceActionParams"></div>
+              <button id="singleDevice_invoke_button" type="button" data-theme="e" data-mini="true" data-icon="forward">invoke action</button>
+            </div>
+            <div id="singleDeviceStates"></div>
+            <div id="singleDeviceProperties"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+
+
+      <div data-role="popup" id="inputInfo" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="inputInfoForm">
+          <div style="padding:10px 20px; min-width:320px; max-width:500px;">
+            <div id="inputInfoIcon"></div><h3 id="inputInfoTitle">Device Output Channels</h3>
+            <div id="inputList"></div>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="daliDiagnostics" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="daliDiagnosticsForm">
+          <div style="padding:10px 20px; min-width:320px; max-width:320px;">
+            <h3>DALI live bus monitor and diagnostics</h3>
+            <p>DALI bus devices status <b>refreshed every 10 seconds</b></p>
+            <p>Click matrix cell to pulse the light</p>
+            <div id="daliDeviceMatrix"></div>
+            <p>Status: <span class="device">OK</span> <span class="conflict">Address conflict</span> <span class="error">Error</span></p>
+            <button onclick="event.stopPropagation(); daliCmd('max',255);" type="button" data-theme="e" data-mini="true" data-icon="plus">all lights max brightness</button>
+            <button onclick="event.stopPropagation(); daliCmd('min',255);" type="button" data-theme="e" data-mini="true" data-icon="minus">all lights min brightness</button>
+            <button onclick="event.stopPropagation(); daliCmd('off',255);" type="button" data-theme="e" data-mini="true" data-icon="delete">all lights off</button>
+            <p style="padding-top:20px;"></p>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Close</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="daliDefaultBrightnessConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Set DALI default powerup/failure state</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">This will make the current brightness the default after a power down or DALI bus failure. Are you sure?</h3>
+          <p>Note: this is a DALI-level setting and is saved into the DALI hardware. It remains effective even when the device is taken out of this installation and used in another installation.</p>
+          <a href="#" id="setDefaultBrightnessNowButton" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Yes, set default state</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+
+    </div>
+
+    <div id="system" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#devices">Devices</a></li>
+            <li><a href="#system" class="ui-btn-active">System</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div data-role="content">
+          <h2>System</h2>
+          <p id="diyWarning" style="display:none"><b>Please note:</b> This installation has been created from a do-it-yourself image provided from plan44.ch to the maker community. It is <em>not a commercial product</em> and is <em>not eligible for support or firmware updates</em>. It is meant as a experimental platform - if you want a supported product instead, <em>please buy one from plan44.ch</em></p>
+          <div class="ui-grid-a">
+            <div class="ui-block-a" id="systemInfo"></div>
+            <div class="ui-block-b">
+              <button type="button" id="checkforupdate" onclick="check_for_update();" data-inline="true" data-theme="c">Check for new firmware version…</button>
+              <br/>
+              <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
+              <button type="button" id="shutdown" onclick="openDialog('#shutdownConfirm');" data-inline="true" data-theme="c">Shutdown...</button>
+              <br/>
+              <button type="button" id="configbackup" onclick="system_backup_config();" data-inline="true" data-theme="c">Download configuration backup</button>
+              <br/>
+              <button type="button" id="configrestore" onclick="openDialog('#configRestoreDialog');" data-inline="true" data-theme="c">Restore config…</button>
+              <button type="button" id="factoryreset" onclick="openDialog('#factoryResetConfirm');" data-inline="true" data-theme="c">Factory reset…</button>
+            </div>
+            <div class="ui-block-a" id="clock"></div>
+            <div class="ui-block-b">
+              <button type="button" onclick="openNameEdit();" id="nameeditbtn" data-inline="true" data-theme="c">Rename...</button>
+              <a id="pweditbtn" onclick="openDialog('#pwdedit');" data-rel="popup" data-position-to="window" data-role="button" data-inline="true" data-icon="" data-theme="c" data-transition="pop">Change Web access password…</a>
+            </div>
+          </div>
+          <h2>Network</h2>
+          <div class="ui-grid-a">
+            <div class="ui-block-a" id="ipconfig"></div>
+            <div class="ui-block-b">
+              <a id="ipeditbtn" onclick="openDialog('#ipedit');" data-rel="popup" class="ui-disabled" data-position-to="window" data-role="button" data-inline="true" data-icon="" data-theme="c" data-transition="pop">Edit network settings…</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-role="popup" id="pwdedit" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="pwdeditform">
+          <div style="padding:10px 20px;">
+            <h3>Set new password</h3>
+            <label for="newPassword">Enter new password:</label>
+            <input type="password" name="newPassword" id="newPassword" value="" data-theme="d">
+            <label for="verifyPassword">Enter new password again:</label>
+            <input type="password" name="verifyPassword" id="verifyPassword" value="" data-theme="d">
+            <button type="button" onclick="setNewPassword();" data-theme="b" data-icon="check">Save</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="nameedit" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="nameeditform">
+          <div style="padding:10px 20px;">
+            <h3>Rename bridge</h3>
+            <label for="newBridgeName">bridge name:</label>
+            <input type="text" name="newBridgeName" id="newBridgeName" value="" data-theme="d">
+            <button type="button" onclick="setBridgeName();" id="bridgeNameApply" data-theme="b" data-icon="check">Save</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+
+      <div data-role="popup" id="ipedit" data-overlay-theme="a" data-theme="a" data-dismissible="false" class="ui-corner-all">
+        <form id="ipeditfrom">
+          <div style="padding:10px 20px;">
+            <h3>Network Settings</h3>
+            <label for="dhcp">DHCP:</label>
+            <select name="dhcp" id="dhcp" onchange="refresh_dhcp_deps();" data-role="slider">
+              <option value="0">Off</option>
+              <option value="1">On</option>
+            </select>
+            <label for="ipAddr">IP address:</label>
+            <input type="text" name="ipAddr" id="ipAddr" value="" placeholder="x.x.x.x" data-theme="d">
+            <label for="ipMask">Subnet mask:</label>
+            <input type="text" name="ipMask" id="ipMask" value="" placeholder="255.x.x.x" data-theme="d">
+            <label for="ipGW">Gateway:</label>
+            <input type="text" name="ipGW" id="ipGW" value="" placeholder="x.x.x.x" data-theme="d">
+            <label for="ipDNS1">DNS server 1:</label>
+            <input type="text" name="ipDNS1" id="ipDNS1" value="" placeholder="x.x.x.x" data-theme="d">
+            <label for="ipDNS2">DNS server 2:</label>
+            <input type="text" name="ipDNS2" id="ipDNS2" value="" placeholder="x.x.x.x" data-theme="d">
+            <button type="button" onclick="applyIpSettings();" id="ipApply" data-theme="b" data-icon="check">Save</button>
+            <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" id="ipeditWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Applying network settings - please wait</h3>
+      </div>
+
+      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Restarting system - please wait...</h3>
+        <p>Page will reload automatically</p>
+        <div id="restartWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+      <div data-role="popup" id="upgradeWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Upgrading System Firmware - please wait...</h3>
+        <p style="color:red; font-weight:bold">Do not interrupt power supply until firmware update is complete!</p>
+        <p><i>Upgrade will take some time - system will restart automatically</i></p>
+        <div id="upgradeWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restart</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to restart the P44-DSB gateway?</h3>
+          <p>Note: Depending on the number of devices connected, after restart it can take up to a few minutues until all devices are accessible again</p>
+          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="shutdownConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Shut down</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to shut down the P44-DSB gateway?</h3>
+          <p><span class="warning">Warning: The P44-DSB will not start again automatically</span>, it needs to be powered off and on again to restart!</p>
+          <p>Note: shutdown is recommended before powering off the P44-DSB to make sure all settings are properly saved before power is removed.</p>
+          <a href="#" id="shutdownNow" onclick="system_shutdown();"data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Shutdown</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="shutdownInfo" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Shutting down</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">The P44-DSB will shut down now</h3>
+          <p style="color:red; font-weight:bold">Please wait at least one minute before removing power.</p>
+          <p>After powering up again, you need to reload this website in the browser.</p>
+        </div>
+      </div>
+
+      <div data-role="popup" id="ipRestartAsk" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:400px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>network settings changed</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">System must be restarted to apply network settings changes</h3>
+          <a href="#" data-role="button" data-inline="true" data-rel="back" data-theme="c">Later</a>
+          <button id="ipRestart" onclick="restartAfterIPChange();" data-inline="true" data-theme="b">Restart now</button>
+        </div>
+      </div>
+
+      <div data-role="popup" id="factoryResetConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:480px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Factory Reset</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restores settings to factory defaults</h3>
+          <p><b><span class="warningtext">Warning: You will loose all device and scene configuration and all paired devices</span> (unless you have a backup)!</b></p>
+          <p style="font-weight:bold">Usually, factory reset should only be used when initializing a device for a new installation, or when configuration data is broken such that the device does not function properly any more.</p>
+          <a href="#" onclick="system_factoryreset(1);" id="factoryResetData" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="e">Factory reset except network settings</a>
+          <a href="#" onclick="system_factoryreset(3);" id="factoryResetAll" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="e">Factory reset including network settings</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="configRestoreDialog" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:400px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restore config from backup</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restore settings from backup file</h3>
+          <label for="configArchiveFile">Select backup file to restore:</label>
+          <input type="file" id="configArchiveFile" name="configbackupfile" accept=".tgz"/>
+          <button id="configRestoreStart" onclick="system_restore_config();" data-inline="false" data-theme="b">Restore...</button>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+      <div data-role="popup" id="configRestoreConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:480px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restoring config</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restores settings to factory defaults</h3>
+          <p id="restoreDeviceInfo"></p>
+          <ul id="restoreCompatWarnings"></ul>
+          <p><b>Warning: <span class="warningtext">Current configuration data will be overwritten</span> with data from backup</b> (except for password)!</p>
+          <a href="#" onclick="system_restore_apply(1);" id="configRestoreData" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="e">Restore config but not network settings</a>
+          <a href="#" onclick="system_restore_apply(3);" id="configRestoreAll" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="e">Restore config including network settings</a>
+          <a href="#" onclick="system_restore_apply(0);" id="configRestoreCancel" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="c">Cancel</a>
+<!--           <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a> -->
+        </div>
+      </div>
+
+      <div data-role="popup" id="restoreConfigWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Restoring config and restarting system - please wait...</h3>
+        <p>Page will reload automatically.</p>
+        <div id="restoreConfigWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+      <div data-role="popup" id="factoryResetWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Resetting to factory defaults and restarting system - please wait...</h3>
+        <p>Page will reload automatically.</p>
+        <p>Note: If you have reset network settings, device may re-start with a different IP address</p>
+        <div id="factoryResetWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+
+
+      <div data-role="popup" id="updateInfoWait" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:640px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Firmware</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <div id="updateInfoRequest"><p>Checking for new firmware version...</p></div>
+          <div id="updateInfoResult"></div>
+          <a id="updateInfoOK" href="#" data-rel="back" data-role="button" data-inline="true" data-theme="b">OK</a>
+          <a id="upgradeNow" onclick="system_upgrade();" href="#" data-role="button" data-inline="true" data-theme="b">Upgrade now</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="logs" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#devices">Devices</a></li>
+            <li><a href="#system">System</a></li>
+            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div id="logcontent" data-role="content">
+          <h2>Logs</h2>
+          <div id="vdcdlogs">
+            <h3>vdcd - complete <a target="_blank" href="vdcd_current_log.txt">current</a> /
+            <a target="_blank" href="vdcd_previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_vdcd_log();">refresh</a>) -
+            set loglevel
+            <a title="debug" href="javascript:set_vdcd_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_vdcd_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_vdcd_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_vdcd_loglevel(4);">4</a>
+            </h3>
+            <pre id="vdcd_tail_log"></pre>
+          </div>
+          <div id="vdsmlogs" style="display: none">
+            <h3>vdsm - complete <a target="_blank" href="vdsm_current_log.txt">current</a> /
+            <a target="_blank" href="vdsm_previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_vdsm_log();">refresh</a>):</h3>
+            <pre id="vdsm_tail_log"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </body>
+
+</html>
