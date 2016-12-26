@@ -165,59 +165,21 @@
       }
 
 
-      function system_restore_config()
+      function uploadImage()
       {
-        $("#configRestoreDialog").popup("close");
-        var file = $('#configArchiveFile').get(0).files[0];
+        var file = $('#imageFile').get(0).files[0];
         var data = new FormData();
         data.append("upload_file", file);
         $.ajax({
-          url: '/cfg/upload/?rqvaltok=' + rqvaltok + '&cmd=configrestoreprep',
+          url: '/api/upload/?rqvaltok=' + rqvaltok + '&cmd=imageupload',
           data: data,
           contentType: false, // important!
           processData: false,
           method: 'POST'
         }).done(function(response) {
-          if (response.error!=undefined) {
-            alert('Restore failed: ' + response.error.message);
-          }
-          else {
-            // preparation ok
-            var result = response.result;
-            // - update info
-            if (result.oldarchive) {
-              // archive without info
-              $('#restoreDeviceInfo').html('<ul><li>Original device unknown</li></ul>');
-              $('#restoreCompatWarnings').html('<li>Old backup file (prior to firmware 1.6.0.6)</li>');
-            }
-            else {
-              // archive with info
-              var infoHtml =
-                'The backup you are about to restore was made<ul>' +
-                '<li>at <b>' + result.time + '</b>';
-              if (result.differentserial || result.differentmodel) {
-                infoHtml += '<li>on a <b>' + result.model + '</b> (GTIN:' + result.gtin + ')';
-                infoHtml += '<li>with serial number <b>' + result.serial + '</b>';
-              }
-              else {
-                infoHtml += '<li>on <b>this ' + result.model + '</b>';
-              }
-              infoHtml += '<li>with firmware version <b>' + result.version + '</b> installed at the time of backup.</ul>';
-              $('#restoreDeviceInfo').html(infoHtml);
-              var warningHtml = '';
-              if (result.differentmodel)
-                warningHtml += '<li>The backup <b>is from a different product type</b> - it will probably not work ok</li>';
-              else if (result.differentserial)
-                warningHtml += '<li>The backup <b>was made on another device than this one</b> - restore only if this unit is a replacement unit for the original</li>';
-              if (result.oldfirmware)
-                warningHtml += '<li>This device <b>has older firmware than the device the backup was made with</b> - it will probably not work ok</li>';
-              $('#restoreCompatWarnings').html(warningHtml);
-            }
-            // - show confirm dialog
-            openDialog('#configRestoreConfirm');
-          }
+          alert('Image uploaded');          
         }).fail(function() {
-          alert('Configuration upload failed');
+          alert('Image upload failed');
         });
       }
 
