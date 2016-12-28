@@ -8,7 +8,7 @@ config interface 'loopback'
 config interface 'wwan'
     option proto 'dhcp'
     option hostname 'pixelboard-WiFi'
-    option enabled '0'
+    option enabled '1'
 
 # Ethernet
 config interface 'lan'
