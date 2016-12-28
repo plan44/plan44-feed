@@ -165,6 +165,16 @@
       }
 
 
+      function sendMessage()
+      {
+        var msg = $('#messageText').val();        
+        $.getJSON( '/api/json/page?rqvaltok=' + rqvaltok + '&message=' + msg )
+        .done(function(response) {
+          // NOP for now
+        });        
+      }
+
+
       function uploadImage()
       {
         var file = $('#imageFile').get(0).files[0];
@@ -398,6 +408,9 @@
           <h2>Game</h2>
           <button type="button" id="restart" onclick="showPage('blocks', 0);" data-inline="true" data-theme="c">New single player game</button>
           <button type="button" id="restart" onclick="showPage('blocks', 1);" data-inline="true" data-theme="c">New two player game</button>
+          <h2>Message</h2>
+          <input type="text" id="messageText" name="messageText"/>
+          <button id="sendMessageButton" onclick="sendMessage();" data-inline="false" data-theme="b">Send</button>
           <h2>Pictures</h2>
           <label for="imageFile">Select PNG file (10x20pixels):</label>
           <input type="file" id="imageFile" name="imagefile" accept=".png"/>

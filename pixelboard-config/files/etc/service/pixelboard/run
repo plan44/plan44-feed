@@ -37,40 +37,50 @@ echo 15 >/sys/class/gpio/export
 # keep reset
 echo out >/sys/class/gpio/gpio6/direction
 echo 0 >/sys/class/gpio/gpio6/value
-# select near end
+# side selector
 echo out >/sys/class/gpio/gpio7/direction
 # release reset
 echo 1 >/sys/class/gpio/gpio6/value
 
-# configure touch key parameters
-# - disable keys 5 and 6 (Averaging factor 0)
-i2cset -y 0 0x1B 44 0
-i2cset -y 0 0x1B 45 0
-# - disable adjacent key group (Bits 0..2, by default, all keys are in group 1, 0=none)
-#   and set averaging factor (Bits 3..7, by default==8)
-i2cset -y 0 0x1B 39 0x20
-i2cset -y 0 0x1B 40 0x20
-i2cset -y 0 0x1B 41 0x20
-i2cset -y 0 0x1B 42 0x20
-i2cset -y 0 0x1B 43 0x20
-# - lower threshold, default = 20
-i2cset -y 0 0x1B 32 10
-i2cset -y 0 0x1B 33 10
-i2cset -y 0 0x1B 34 10
-i2cset -y 0 0x1B 35 10
-i2cset -y 0 0x1B 36 10
-# - integrators, default = 4
-i2cset -y 0 0x1B 46 2
-i2cset -y 0 0x1B 47 5
-i2cset -y 0 0x1B 48 5
-i2cset -y 0 0x1B 49 5
-i2cset -y 0 0x1B 50 5
-
+for SIDE in 0 1; do
+  echo $SIDE >/sys/class/gpio/gpio7/value
+  # configure
+  # - disable keys 5 and 6 (Averaging factor 0)
+  i2cset -y 0 0x1B 44 0
+  i2cset -y 0 0x1B 45 0
+  # - disable adjacent key group (Bits 0..2, by default, all keys are in group 1, 0=none)
+  #   and set averaging factor (Bits 3..7, by default==8)
+  i2cset -y 0 0x1B 39 0x40
+  i2cset -y 0 0x1B 40 0x20
+  i2cset -y 0 0x1B 41 0x20
+  i2cset -y 0 0x1B 42 0x20
+  i2cset -y 0 0x1B 43 0x20
+  # - lower threshold, default = 20
+  i2cset -y 0 0x1B 32 7
+  i2cset -y 0 0x1B 33 10
+  i2cset -y 0 0x1B 34 10
+  i2cset -y 0 0x1B 35 10
+  i2cset -y 0 0x1B 36 10
+  # - integrators, default = 4
+  i2cset -y 0 0x1B 46 2
+  i2cset -y 0 0x1B 47 5
+  i2cset -y 0 0x1B 48 5
+  i2cset -y 0 0x1B 49 5
+  i2cset -y 0 0x1B 50 5
+  # disable guard channel
+  # - averaging factor 0 = disabled
+  i2cset -y 0 0x1B 39 0
+  # - normally 0, 8=invalid guard channel=off
+  i2cset -y 0 0x1B 53 8
+done
 
 # run the daemon
 exec ${EXECUTABLE} \
   --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
   --jsonapiport 8090 \
+  --defaultpage display \
+  --image /www/images/default.png \
+  --message "Start game by touching board near the narrow end" \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
