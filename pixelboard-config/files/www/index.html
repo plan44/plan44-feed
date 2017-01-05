@@ -151,7 +151,7 @@
         $.getJSON( '/api/json/player' + String(player) + '?rqvaltok=' + rqvaltok + '&key=' + keyname )
         .done(function(response) {
           // NOP for now
-        });        
+        });
       }
 
 
@@ -161,17 +161,37 @@
         $.getJSON( '/api/json/board?rqvaltok=' + rqvaltok + '&page=' + pagename + '&twosided=' + String(twosided) )
         .done(function(response) {
           // NOP for now
-        });        
+        });
       }
 
 
       function sendMessage()
       {
-        var msg = $('#messageText').val();        
-        $.getJSON( '/api/json/page?rqvaltok=' + rqvaltok + '&message=' + msg )
-        .done(function(response) {
+        var msg = $('#messageText').val();
+        var cmd = { "message":msg };
+        $.ajax({
+          url: '/api/json/page?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmd)
+        }).done(function(response) {
           // NOP for now
-        });        
+        });
+      }
+
+
+      function setTextColor()
+      {
+        var col = $('#messageColor').val();
+        var cmd = { "textcolor":col };
+        $.ajax({
+          url: '/api/json/page?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmd)
+        }).done(function(response) {
+          // NOP for now
+        });
       }
 
 
@@ -187,7 +207,7 @@
           processData: false,
           method: 'POST'
         }).done(function(response) {
-          alert('Image uploaded');          
+          alert('Image uploaded');
         }).fail(function() {
           alert('Image upload failed');
         });
@@ -410,7 +430,9 @@
           <button type="button" id="restart" onclick="showPage('blocks', 1);" data-inline="true" data-theme="c">New two player game</button>
           <h2>Message</h2>
           <input type="text" id="messageText" name="messageText"/>
-          <button id="sendMessageButton" onclick="sendMessage();" data-inline="false" data-theme="b">Send</button>
+          <button id="sendMessageButton" onclick="sendMessage();" data-theme="b">Send</button>
+          <input type="text" id="messageColor" name="messageColor" value="" placeholder="AArrggbb web color"/>
+          <button id="textColorButton" onclick="setTextColor();" data-theme="b">Set</button>
           <h2>Pictures</h2>
           <label for="imageFile">Select PNG file (10x20pixels):</label>
           <input type="file" id="imageFile" name="imagefile" accept=".png"/>
