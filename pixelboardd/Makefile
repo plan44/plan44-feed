@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboardd
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
-PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/pixelboardd.git
+PKG_SOURCE_URL:=https://github.com/plan44/pixelboardd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
@@ -37,7 +37,7 @@ endef
 
 define Package/$(PKG_NAME)/description
  p44sbbd is a free (opensource, GPLv3) daemon for for running games and more
- on WS2813 based pixelboard (launch table) - which is an open source hardware
+ on WS2813 based pixelboard (lounge table) - which is an open source hardware
  project by itself.
 endef
 
