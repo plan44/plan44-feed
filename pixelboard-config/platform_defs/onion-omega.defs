@@ -1,3 +1,0 @@
-PLATFORM_NAME="OnionOmega"
-PLATFORM_SERIALDEV="/dev/ttyATH0"
-PLATFORM_DALIDEV="/dev/dali0"

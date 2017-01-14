@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboard-config
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -17,7 +17,7 @@ PKG_CHECK_FORMAT_SECURITY:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+mg44 +p44maintd +pixelboardd
+	DEPENDS:=+mg44 +pixelboardd
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=toys
@@ -61,18 +61,6 @@ endif
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
-	# copy platform definitions
-	$(CP) ./platform_defs/$(PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER).defs $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# - append identifier
-	echo "PLATFORM_IDENTIFIER=\"$(PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER)\"" >> $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# - append operating system
-	echo "PLATFORM_OS_IDENTIFIER=\"openwrt\"" >> $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# copy product definitions
-	$(CP) ./product_defs/pixelboard.defs $(PKG_BUILD_DIR)/etc/p44product.defs
-	# - append identifier
-	echo "PRODUCT_IDENTIFIER=\"pixelboard\"" >> $(PKG_BUILD_DIR)/etc/p44product.defs
-	# create version file
-	echo $(CONFIG_VERSION_NUMBER) > $(PKG_BUILD_DIR)/etc/p44version
 endef
 
 
@@ -88,7 +76,6 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/dropbear/authorized_keys $(1)/etc/dropbear
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-pixelboard $(1)/lib/upgrade/keep.d/pixelboard
 endef

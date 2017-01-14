@@ -5,4 +5,4 @@
 .PHONY: all
 
 all:
-	echo "p44dsb-config: Nothing to do"
+	echo "pixelboard-config: Nothing to do"

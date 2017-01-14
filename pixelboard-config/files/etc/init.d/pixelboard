@@ -27,11 +27,8 @@ boot() {
   done
   cd ${PREV}
 
-  # obtain system information vars
-  p44maintd --defs >/tmp/p44defs
-  source /tmp/p44defs
-
   # update host name if needed
+  UNIT_HOSTNAME="pixelboard"
   HN=$(uci get system.@system[0].hostname)
   if [ ! "${HN}" = "${UNIT_HOSTNAME}" ]; then
     uci set system.@system[0].hostname="${UNIT_HOSTNAME}"

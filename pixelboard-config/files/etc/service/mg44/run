@@ -1,8 +1,7 @@
 #!/bin/sh
 
 # obtain system information vars
-p44maintd --defs >/tmp/p44defs
-source /tmp/p44defs
+PRODUCT_MODEL="PIXELBOARD"
 
 # mg44's dynamic SSL loader needs basic library names
 cd /usr/lib

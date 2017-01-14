@@ -1,13 +1,14 @@
 #!/bin/sh
 
-# obtain system information vars
-p44maintd --defs >/tmp/p44defs
-source /tmp/p44defs
-
 # default features
 EXECUTABLE=pixelboardd
 LOGLEVEL=5
 EXTRAOPTS=
+
+# platform params
+PLATFORM_LEDCHAIN_GPIONO="18"
+PLATFORM_LEDCHAIN_DEVICE="/dev/ws2812"
+PLATFORM_LEDCHAIN_NUMLEDS="200"
 
 # Allow overriding options
 # - override from flash
