@@ -41,6 +41,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/$(PKG_NAME)
 	SUBMENU:=Other modules
+	DEPENDS:=@TARGET_ar71xx_generic
 	TITLE:=ws2812 draiveris drivers
 	FILES:= $(PKG_BUILD_DIR)/ws2812-draiveris.ko
 	#AUTOLOAD:=$(call AutoLoad, 92, ws2812-draiveris-dev)
