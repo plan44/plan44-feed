@@ -33,6 +33,7 @@
 #include <linux/fs.h>
 
 #include <linux/dmaengine.h>
+#include <linux/dma-mapping.h>
 
 #define P44_LEDCHAIN_MAJOR      152     /* use a LOCAL/EXPERIMENTAL major for now */
 #define P44_LEDCHAIN_MAX_LEDS   1024
@@ -40,18 +41,18 @@
 #define DEVICE_NAME "ledchain"
 
 
-// FROM MT7688 datasheet
-// - the PWM unit
+// PWM unit
+// - register block
 #define MT7688_PWM_BASE 0x10005000L
-#define MT7688_PWM_SIZE 0x10000210L
-
+#define MT7688_PWM_SIZE 0x00000210L
 // - access to ioremapped PWM area
 void __iomem *pwm_base; // set from ioremap()
 #define PWM_ADDR(offset) (pwm_base+offset)
 #define PWMENABLE        PWM_ADDR(0)
-#define PWM(channel,reg) PWM_ADDR(0x10+((channel)*0x40)+(reg))
+#define PWM_CHAN_OFFS(channel,reg) (0x10+((channel)*0x40)+(reg))
+#define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
 #define NUM_PWMS 4
-
+// - PWM channel register offsets
 #define PWMCON			    0x00
 #define PWMHDUR			    0x04
 #define PWMLDUR			    0x08
@@ -62,6 +63,25 @@ void __iomem *pwm_base; // set from ioremap()
 #define PWMDWIDTH		    0x2c
 #define PWMTHRES		    0x30
 #define PWMSENDWAVENUM  0x34
+
+// GDMA unit
+// - register block
+#define MT7688_GDMA_BASE 0x10002800L
+#define MT7688_GDMA_SIZE 0x00000250L
+// - access to ioremapped GDMA area
+void __iomem *gdma_base; // set from ioremap()
+#define GDMA_ADDR(offset) (gdma_base+offset)
+#define GDMA_UNMASK_INTSTS GDMA_ADDR(0x200)
+#define GDMA_DONE_INTSTS GDMA_ADDR(0x204)
+#define GDMA_GCT GDMA_ADDR(0x220)
+#define GDMA_CHAN(channel,reg) GDMA_ADDR((channel)*0x10+(reg))
+// - GDMA channel register offsets
+#define GDMA_SA 0x00
+#define GDMA_DA 0x04
+#define GDMA_CT0 0x08
+#define GDMA_CT1 0x0C
+
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lukas Zeller luz@plan44.ch");
@@ -84,6 +104,11 @@ MODULE_PARM_DESC(rgbw, "RGBW LEDs (SK6812)");
 static int led_count = 1; // default is 1, one single LED
 module_param(led_count, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(led_count, "number of LEDs");
+
+
+static int dma_req = 32; // default -1 => PWM_CHANNEL_DEFAULT
+module_param(dma_req, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+MODULE_PARM_DESC(pwm_channel, "DMA request line to try");
 
 
 
@@ -134,18 +159,30 @@ void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask)
 }
 
 
+// FIXME: %%% debug only
 #define sh_iowrite32(val, addr) { printk(KERN_INFO DEVICE_NAME": writing 0x%08X := 0x%08X\n", (u32)(addr), (u32)(val)); }
+
+// DMA buffer
+static size_t dma_buffer_size;
+static dma_addr_t dma_buffer;
+static void *dma_buffer_vaddr;
+
+#define DMA_CHANNEL 2 // FIXME: UGLY: this is just a channel that seems to be free normally, but maybe is NOT free!
 
 void update_leds(const char *buff, size_t len)
 {
-  // FIXME: real DMA buffer later
-  u32 outbuf[2]; // SEND0 and SEND1 for now
   u32 outmask = 0;
   u32 ledword;
   const u8 *inptr = buff;
+  u32 *outbuf;
   u32 *outptr;
   static DEFINE_SPINLOCK(critical);
   unsigned long irqflags;
+  u32 longwordsToSend;
+  // debug only
+  u32 pwm_wave_num;
+  u32 pwm_send_wave_num;
+  u32 seg_done_status;
 
   // number of bytes per LED
   int numComponents = rgbw ? 4 : 3;
@@ -154,9 +191,8 @@ void update_leds(const char *buff, size_t len)
   // limit to max
   if (leds>led_count) leds=led_count;
   // generate data into buffer
-  outptr = &outbuf[0];
-  // FIXME: set DMA for this later
-  leds = 1; // FIXME: only one LED for now, we can only send 64 bits for now
+  outbuf = (u32*)dma_buffer_vaddr; // cpu/virt address for the buffer
+  outptr = outbuf; // start at beginning
   // generate bits into buffer
   while (leds>0) {
     if (rgbw) {
@@ -181,45 +217,86 @@ void update_leds(const char *buff, size_t len)
     // next LED
     leds--;
   }
-  printk(KERN_INFO DEVICE_NAME": outptr-outbuf=%u outmask=0x%08X\n", (u32)(outptr-outbuf), outmask);
+  longwordsToSend = (u32)(outptr-outbuf);
+  if (outmask!=0) longwordsToSend++; // Note: outmask==0 means that the longword at outptr was not yet used
+  printk(KERN_INFO DEVICE_NAME": longwords to send=%u outmask=0x%08X\n", longwordsToSend, outmask);
 
+  /*
   printk(KERN_INFO DEVICE_NAME": SEND0=0x%08X SEND1=0x%08X\n", outbuf[0], outbuf[1]);
 
   printk(KERN_INFO DEVICE_NAME": PWMENABLE=0x%08X\n", (u32) PWMENABLE);
-  printk(KERN_INFO DEVICE_NAME": PWMCON=0x%08X\n", (u32) PWM(pwm_channel, PWMCON));
-  printk(KERN_INFO DEVICE_NAME": PWMSENDDATA0=0x%08X\n", (u32) PWM(pwm_channel, PWMSENDDATA0));
+  printk(KERN_INFO DEVICE_NAME": PWMCON=0x%08X\n", (u32) PWM_CHAN(pwm_channel, PWMCON));
+  printk(KERN_INFO DEVICE_NAME": PWMSENDDATA0=0x%08X\n", (u32) PWM_CHAN(pwm_channel, PWMSENDDATA0));
 
   printk(KERN_INFO DEVICE_NAME": current PWMENABLE=0x%08X\n", (u32) ioread32(PWMENABLE));
 
   // - disable the PWM
   sh_iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
   // - set up PWM for one output sequence
-  sh_iowrite32(0x7E08, PWM(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
-  sh_iowrite32(14, PWM(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
-  sh_iowrite32(32, PWM(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 800nS (25nS/clk@40Mhz)
-  sh_iowrite32(0, PWM(pwm_channel, PWMGDUR)); // no guard time
-  sh_iowrite32(1, PWM(pwm_channel, PWMWAVENUM)); // one single wave
-  sh_iowrite32(outbuf[0], PWM(pwm_channel, PWMSENDDATA0)); // Upper 32 bits // FIXME: deliver these by DMA later!
-  sh_iowrite32(outbuf[1], PWM(pwm_channel, PWMSENDDATA1)); // Lower 32 bits // FIXME: deliver these by DMA later!
+  sh_iowrite32(0x7E08, PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
+  sh_iowrite32(14, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
+  sh_iowrite32(32, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 800nS (25nS/clk@40Mhz)
+  sh_iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
+  sh_iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave
+  sh_iowrite32(outbuf[0], PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits // FIXME: deliver these by DMA later!
+  sh_iowrite32(outbuf[1], PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits // FIXME: deliver these by DMA later!
   // - enable the PWM
   sh_iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // enable PWM
+  */
 
   // pass buffer to PWM
   spin_lock_irqsave(&critical, irqflags);
-  // FIXME: for now, single LED only to test bit generator
+  // get some info
+  pwm_wave_num = ioread32(PWM_CHAN(pwm_channel, PWMWAVENUM));
+  pwm_send_wave_num = ioread32(PWM_CHAN(pwm_channel, PWMSENDWAVENUM));
+  seg_done_status = ioread32(GDMA_DONE_INTSTS);
+
+  // prepare the DMA
   // - disable the PWM
   iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
   // - set up PWM for one output sequence
-  iowrite32(0x7E08, PWM(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
-  iowrite32(14, PWM(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
-  iowrite32(32, PWM(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 800nS (25nS/clk@40Mhz)
-  iowrite32(0, PWM(pwm_channel, PWMGDUR)); // no guard time
-  iowrite32(1, PWM(pwm_channel, PWMWAVENUM)); // one single wave
-  iowrite32(outbuf[0], PWM(pwm_channel, PWMSENDDATA0)); // Upper 32 bits // FIXME: deliver these by DMA later!
-  iowrite32(outbuf[1], PWM(pwm_channel, PWMSENDDATA1)); // Lower 32 bits // FIXME: deliver these by DMA later!
+  iowrite32(0x7E08, PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
+  iowrite32(14, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
+  iowrite32(40, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 1000nS (25nS/clk@40Mhz)
+  iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
+  iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave
+  // - prepare data source
+  if (longwordsToSend>2) {
+		// start dma transfer
+		// - Source address of GDMA channel (our buffer), as physical address
+		iowrite32((u32)dma_buffer, GDMA_CHAN(DMA_CHANNEL, GDMA_SA));
+    // - Destination address of GDMA channel (PWMSENDDATA0), as physical address
+		iowrite32(MT7688_PWM_BASE+PWM_CHAN_OFFS(pwm_channel, PWMSENDDATA0), GDMA_CHAN(DMA_CHANNEL, GDMA_DA));
+    // Control Register 1 of GDMA channel:
+    // - number of segments/2 = 0
+    // - source DMA request = 32 = from memory
+    // - continuous mode disabled
+    // - destination DMA request = bits8..13
+    // - do not clear another channel's CH_MASK -> set to own channel = 2
+    // - no extra read of destination for coherency (is for memory dest only!)
+    // - no CH_UNMASK fail interrupt
+    // - CH_MASK = 0 (not gated)
+		iowrite32(0x00200010 | (dma_req<<8), GDMA_CHAN(DMA_CHANNEL, GDMA_CT1));
+    // Control Register 0 of GDMA channel 2:
+    // - target byte count = 4*longwordsToSend, bits 16..31
+    // - source address mode = 0 = incrementing
+    // - destination address mode = 1 = fixed
+    // - burst size = 000 -> one doubleword (=32bits)
+    // - DISABLE segment done interrupt
+    // - CH_EN = 1 -> channel enabled (will be cleared when segment is done)
+    // - SW_MODE_EN = 0 -> hardware mode: transfer starts when DMA request is asserted
+		iowrite32(0x0042+(longwordsToSend<<18), GDMA_CHAN(DMA_CHANNEL, GDMA_CT0));
+  }
+  else {
+    // just send data directly
+    iowrite32(outbuf[0], PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits
+    iowrite32(outbuf[1], PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits
+  }
   // - enable the PWM
   iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // enable PWM
   spin_unlock_irqrestore(&critical, irqflags);
+  // FIXME: remove debug code
+  printk(KERN_INFO DEVICE_NAME": before sending, we had pwm_wave_num=%u, pwm_send_wave_num=%u, seg_done_status=0x%08X\n", pwm_wave_num, pwm_send_wave_num, seg_done_status);
 }
 
 
@@ -255,6 +332,7 @@ static struct file_operations fops = {
 // we must create *and remove* device classes properly, otherwise we get horrible
 // kernel stack backtraces.
 static struct class *p44ledchain_class;
+static struct device *p44ledchain_dev;
 
 int init_module(void)
 {
@@ -281,18 +359,32 @@ int init_module(void)
   printk(KERN_INFO DEVICE_NAME": RGBW LEDs: %d\n", rgbw);
 
   p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
-  if (!device_create(p44ledchain_class, NULL, MKDEV(P44_LEDCHAIN_MAJOR, 0), NULL, DEVICE_NAME ))
-    {
-      printk(KERN_ALERT DEVICE_NAME": device_create failed. Try 'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, P44_LEDCHAIN_MAJOR);
-      // return -ENXIO;         // better continue anyway...
-    }
+  p44ledchain_dev = device_create(p44ledchain_class, NULL, MKDEV(P44_LEDCHAIN_MAJOR, 0), NULL, DEVICE_NAME);
+  if (!p44ledchain_dev) {
+    printk(KERN_ALERT DEVICE_NAME": device_create failed. Try 'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, P44_LEDCHAIN_MAJOR);
+    return -ENXIO;
+  }
 
-  // map PWM
+  // map PWM registers
   // TODO: should also do request_mem_region()
   pwm_base = ioremap(MT7688_PWM_BASE, MT7688_PWM_SIZE);
   printk(KERN_INFO DEVICE_NAME": pwm_base=0x%08X\n", (u32)pwm_base);
 
-  // TODO: get a DMA buffer and a DMA channel
+  // map GDMA registers
+  // TODO: should also do request_mem_region()
+  gdma_base = ioremap(MT7688_GDMA_BASE, MT7688_GDMA_SIZE);
+  printk(KERN_INFO DEVICE_NAME": gdma_base=0x%08X\n", (u32)gdma_base);
+
+  // allocate a DMA buffer
+  // - one LED bit needs 2 or 3 PWM bits
+  // - one LED has 3 or 4 bytes
+  dma_buffer_size = led_count*4*3+3; // max number of bytes required for full chain, rounded to next longword
+	dma_buffer_vaddr = dma_alloc_coherent(p44ledchain_dev, dma_buffer_size, &dma_buffer, GFP_DMA);
+  if (!dma_buffer_vaddr) {
+    printk(KERN_ALERT DEVICE_NAME": Error: cannot get coherent DMA buffer of size %d\n", dma_buffer_size);
+    return -EINVAL;
+  }
+  printk(KERN_INFO DEVICE_NAME": DMA buffer, size=%d, virtual address=0x%08X, physical address=0x%08X\n", dma_buffer_size, (u32)dma_buffer_vaddr, (u32)dma_buffer);
 
   return SUCCESS;
 }
@@ -303,15 +395,21 @@ int init_module(void)
  */
 void cleanup_module(void)
 {
+  // return DMA buffer
+  if (dma_buffer_vaddr) {
+  	dma_free_coherent(p44ledchain_dev, dma_buffer_size, dma_buffer_vaddr, dma_buffer);
+  	dma_buffer_vaddr = NULL;
+  }
+
+  // unmap GDMA
+  iounmap(gdma_base);
   // unmap PWM
   iounmap(pwm_base);
 
-  // if we don't survive this, sysfs remains in a broken state.
-  // You will see later: sysfs: cannot create duplicate filename '/class/ws2812'
   device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
   class_destroy(p44ledchain_class);
   unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
-  printk(KERN_ALERT DEVICE_NAME": Bye, that's all.\n");
+  printk(KERN_ALERT DEVICE_NAME": cleaned up\n");
 }
 
 
@@ -325,20 +423,18 @@ void cleanup_module(void)
 
 /*
  * Called when a process tries to open the device file, like
- * "cat /dev/mycharfile"
+ * "cat /dev/ledchain"
  */
 static int device_open(struct inode *inode, struct file *file)
 {
-  static int counter = 0;
+  static int opencount = 0;
 
   if (Device_Open)
     return -EBUSY;
-
   Device_Open++;
-  sprintf(msg, "I already told you %d times Hello world!\n", counter++);
+  sprintf(msg, "device_open called for /dev/%s now %d times\n", DEVICE_NAME, opencount++);
   msg_Ptr = msg;
   try_module_get(THIS_MODULE);
-
   return SUCCESS;
 }
 
@@ -362,11 +458,12 @@ static int device_release(struct inode *inode, struct file *file)
  * Called when a process, which already opened the dev file, attempts to
  * read from it.
  */
-static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
-         char *buffer,  /* buffer to fill with data */
-         size_t length, /* length of the buffer     */
-         loff_t * offset)
-{
+static ssize_t device_read(
+  struct file *filp, /* see include/linux/fs.h   */
+  char *buffer,  /* buffer to fill with data */
+  size_t length, /* length of the buffer     */
+  loff_t * offset
+) {
   /*
    * Number of bytes actually written to the buffer
    */
