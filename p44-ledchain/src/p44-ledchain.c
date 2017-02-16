@@ -12,7 +12,7 @@
  *      pwm_channel=1           # set the PWM channel to use, default = 1
  *      led_count=1             # number of LEDs in the chain, default = 1
  *      inverted=0              # have inverting line drivers at the GPIOs, default = 0
- *      rgbw=0                  # set 1 for quad-channel RGBW LEDs (SK6812), default = 0
+ *      ledtype=0               # 0=WS281x (GRB), 1=SK6812 (RGBW), 2=P9823 (RGB), default = 0
  *
  */
 
@@ -31,6 +31,9 @@
 #include <linux/ioctl.h>
 #include <asm/uaccess.h>  /* for put_user */
 #include <linux/fs.h>
+
+#include <linux/interrupt.h>
+#include <linux/irq.h>
 
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>
@@ -82,6 +85,12 @@ void __iomem *gdma_base; // set from ioremap()
 #define GDMA_CT1 0x0C
 
 
+typedef enum {
+  ledtype_ws281x, // GRB bit order
+  ledtype_sk6812, // RGBW bit order
+  ledtype_p9823 // RGB bit order
+} LedType;
+
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lukas Zeller luz@plan44.ch");
@@ -97,9 +106,9 @@ static int inverted = 0; // default is 0 == normal. 1 == inverted is good for 74
 module_param(inverted, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 MODULE_PARM_DESC(inverted, "drive inverted outputs");
 
-static int rgbw = 0; // default is 0 == WS21812. 1 == SK6812 RGBW LEDs
-module_param(rgbw, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-MODULE_PARM_DESC(rgbw, "RGBW LEDs (SK6812)");
+static int ledtype = ledtype_ws281x;
+module_param(ledtype, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+MODULE_PARM_DESC(ledtype, "LED type: 0=WS281x, 1=SK6812, 2=P9823");
 
 static int led_count = 1; // default is 1, one single LED
 module_param(led_count, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -112,12 +121,188 @@ MODULE_PARM_DESC(pwm_channel, "DMA request line to try");
 
 
 
-void generateBit(int aBit, u32 **aOutbuf, u32 *aOutMask)
+// timing
+#define ACTIVE_BIT_TIME 17 // high time 420nS/840nS - nominally: 350nS/900nS±150nS (25nS/clk@40Mhz)
+#define PASSIVE_BIT_TIME 40 // low time is 1000nS - nominally: >900nS/>350nS±150nS (25nS/clk@40Mhz)
+
+#define RELOAD_INTERVAL_NS ((ACTIVE_BIT_TIME*2+PASSIVE_BIT_TIME)*25*(22+1)) // maximum sending time for 64 bits = all H bits = sending 21.333 * 0b110
+#define TIMING_EXCEEDED_NS (30*1000+RELOAD_INTERVAL_NS) // if this time is exceeded, we need to restart sending the entire chain because chips might have reset
+#define CHAIN_RESET_NS (TIMING_EXCEEDED_NS*2) // x2 safety margin
+#define MAX_SEND_REPEATS 3
+
+// spinlock for updating hardware
+spinlock_t updatelock;
+
+// DMA output buffer
+static size_t dma_buffer_size;
+static dma_addr_t dma_buffer;
+static void *dma_buffer_vaddr;
+
+#define DMA_TO_PWM 0
+#define DMA_CHANNEL 2 // FIXME: UGLY: this is just a channel that seems to be free normally, but maybe is NOT free!
+
+#if !DMA_TO_PWM
+
+// timer controlled PWM feeding
+// - total
+static u32 *pwmdataptr;
+static u32 pwmwordstosend = 0; // initially: none
+// - current
+static u32 *pwmoutptr;
+static u32 pwmwordsleft;
+static long long last64BitsSent; // time when last 64bits were put into SENDDATA0/1
+static int sendRepeats;
+
+// - HR timer to reload data
+struct hrtimer updatetimer;
+
+static void startSendingPWM(void);
+static u32 sendNext64bits(void);
+
+static int irqcount = 0;
+
+static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
+{
+  u32 remaining = 0;
+  long timerReloadNs = 0;
+  unsigned long irqflags;
+  int rep;
+  long long sinceLastSend;
+
+  spin_lock_irqsave(&updatelock, irqflags);
+  // check if this is the chain reset end delay
+  if (pwmwordsleft==0) {
+    // timer was armed with nothing left to send -> this was the reset timer -> completely done now
+    pwmwordstosend = 0;
+  }
+  else {
+    // check if delays might have reset the chain
+    if (last64BitsSent)
+      sinceLastSend = ktime_to_ns(updatetimer.base->get_time())-last64BitsSent;
+    else
+      sinceLastSend = 0; // nothing sent yet
+    if (sinceLastSend>TIMING_EXCEEDED_NS) {
+      // check repeat count
+      sendRepeats++;
+      if (sendRepeats<MAX_SEND_REPEATS) {
+        // - delay restart sending long enough to make sure chain will reset
+        timerReloadNs = CHAIN_RESET_NS;
+        // - re-initiate sending everything, but not now -> later
+        pwmoutptr = pwmdataptr;
+        pwmwordsleft = pwmwordstosend;
+      }
+      else {
+        // give up, do not send anything more, let chain reset
+        pwmwordsleft = 0;
+      }
+    }
+    else {
+      // timing fine, can send now
+      remaining = sendNext64bits();
+      if (remaining) {
+        // more to send
+        timerReloadNs = RELOAD_INTERVAL_NS; // normal reload time
+      }
+      else {
+        // nothing remains after this, add a safe delay for chain reset
+        timerReloadNs = CHAIN_RESET_NS;
+      }
+    }
+  }
+  spin_unlock_irqrestore(&updatelock, irqflags);
+  if (!remaining) {
+    printk(KERN_INFO DEVICE_NAME": no data remaining, timerReloadNs=%ld nS, sendRepeats=%d, pwmwordsleft=%u, pwmwordstosend=%u\n", timerReloadNs, sendRepeats, pwmwordsleft, pwmwordstosend);
+  }
+  if (timerReloadNs) {
+    // do not formward (because that is relative to the expiry), but start a new timer NOW
+    hrtimer_start(&updatetimer, ktime_set(0, timerReloadNs), HRTIMER_MODE_REL);
+//     rep = hrtimer_forward_now(&updatetimer, ktime_set(0, timerReloadNs));
+//     if (unlikely(rep>1)) {
+//       // Note: docs are misleading: hrtimer_forward_now() returns number of intervals added. So 1 is the normal case when retriggering a timer
+//       printk(KERN_INFO DEVICE_NAME": timing error, hrtimer_forward returned %d\n", rep);
+//     }
+//     // still, restart
+//     return HRTIMER_RESTART;
+  }
+  // no more data, do not restart
+  return HRTIMER_NORESTART;
+}
+
+
+// IRQs blocked or IRQ context!
+void startSendingPWM()
+{
+  // init the PWM
+  sendRepeats = 0;
+  // - disable the PWM
+  iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
+  if (pwmwordstosend>0) {
+    // - set up PWM for one output sequence
+    iowrite32(0x7E08 | (inverted ? 0x0180 : 0x0000), PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
+    iowrite32(ACTIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // bit active time
+    iowrite32(PASSIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // bit passive time
+    iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
+    iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave at a time
+    // - initiate sending
+    pwmoutptr = pwmdataptr;
+    pwmwordsleft = pwmwordstosend;
+    // just start a little later
+    last64BitsSent = 0;
+    hrtimer_start(&updatetimer, ktime_set(0, PASSIVE_BIT_TIME), HRTIMER_MODE_REL);
+//     if (sendNext64bits()) {
+//       // more data to send
+//       hrtimer_start(&updatetimer, ktime_set(0, RELOAD_INTERVAL_NS), HRTIMER_MODE_REL);
+//     }
+//     else {
+//       // all data sent, just time the chain reset
+//       printk(KERN_INFO DEVICE_NAME": special case, <64 bit PWM, no reload needed -> just timing chain reset now\n");
+//       hrtimer_start(&updatetimer, ktime_set(0, CHAIN_RESET_NS), HRTIMER_MODE_REL);
+//     }
+  }
+}
+
+
+// IRQs blocked or IRQ context!
+u32 sendNext64bits()
+{
+  if (pwmwordsleft>0) {
+    // just send data directly
+    iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
+    iowrite32(*pwmoutptr, PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits
+    pwmwordsleft--;
+    pwmoutptr++;
+    if (pwmwordsleft>0) {
+      iowrite32(*pwmoutptr, PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits
+      pwmwordsleft--;
+      pwmoutptr++;
+    }
+    else {
+      iowrite32(inverted ? 0xFFFFFFFF : 0, PWM_CHAN(pwm_channel, PWMSENDDATA1)); // inactive end
+    }
+    iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // (re)enable PWM
+    last64BitsSent = ktime_to_ns(updatetimer.base->get_time());
+  }
+  return pwmwordsleft; // 0 if done, >0 if more to be transferred
+}
+
+
+static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
+{
+  irqcount++;
+  return IRQ_HANDLED;
+}
+
+
+
+#endif
+
+
+static void generateBit(int aBit, u32 **aOutbuf, u32 *aOutMask, u32 *aBitcount)
 {
   u32 *op = *aOutbuf;
   u32 om = *aOutMask;
   if (om==0) {
-    om=1L<<31; // fill MSB first
+    om=1L; // fill LSB first
     *op = 0; // init next buffer word
   }
   if (aBit!=inverted) {
@@ -129,28 +314,34 @@ void generateBit(int aBit, u32 **aOutbuf, u32 *aOutMask)
     *op = *op & ~om;
   }
   // next bit
-  om = om >> 1;
+  om = om << 1;
   if (om==0) {
     // begin next longword
     *aOutbuf = op+1;
   }
   *aOutMask = om;
+  (*aBitcount)++;
 }
 
 
 // generate bit pattern to be fed into PWM engine:
 // one input high bit generates a 110 sequence, one input low bit generates a 100 sequence
-void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask)
+static void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask, u32 *aBitcount)
 {
   u32 inMask = 1L<<31;
   int bit;
   while (aNumBits>0) {
     // generate next bit
     bit = (aWord & inMask) != 0;
-    generateBit(1, aOutbuf, aOutMask); // first bit always high
-    if (bit) generateBit(1, aOutbuf, aOutMask); // generate a second high period for a high input bit
+    // make sure 1-bit does not start at end of a 64-bit word
+    if (bit && ((*aBitcount&0x3F)==63)) {
+      // High bit starting at end of 64bit output word -> would fail because cut in two parts
+      generateBit(0, aOutbuf, aOutMask, aBitcount); // insert an extra inactive period, so bit is in fresh 64-bit word
+    }
+    generateBit(1, aOutbuf, aOutMask, aBitcount); // first bit always high
+    if (bit) generateBit(1, aOutbuf, aOutMask, aBitcount); // generate a second high period for a high input bit
 //    generateBit(bit, aOutbuf, aOutMask); // middle bit depends on input data bit
-    generateBit(0, aOutbuf, aOutMask); // last bit always low
+    generateBit(0, aOutbuf, aOutMask, aBitcount); // last bit always low
     // shift input bit mask to next bit
     inMask = inMask>>1;
     // bit done
@@ -159,15 +350,7 @@ void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask)
 }
 
 
-// FIXME: %%% debug only
-#define sh_iowrite32(val, addr) { printk(KERN_INFO DEVICE_NAME": writing 0x%08X := 0x%08X\n", (u32)(addr), (u32)(val)); }
-
-// DMA buffer
-static size_t dma_buffer_size;
-static dma_addr_t dma_buffer;
-static void *dma_buffer_vaddr;
-
-#define DMA_CHANNEL 2 // FIXME: UGLY: this is just a channel that seems to be free normally, but maybe is NOT free!
+#define DATA_DUMP 1
 
 void update_leds(const char *buff, size_t len)
 {
@@ -176,42 +359,82 @@ void update_leds(const char *buff, size_t len)
   const u8 *inptr = buff;
   u32 *outbuf;
   u32 *outptr;
-  static DEFINE_SPINLOCK(critical);
   unsigned long irqflags;
   u32 longwordsToSend;
+  int numComponents;
+  int leds;
+  u32 bitcount;
+  #if DATA_DUMP
+  int k;
+  int idx;
+  #endif
+
   // debug only
   u32 pwm_wave_num;
   u32 pwm_send_wave_num;
   u32 seg_done_status;
 
+
+  // check if last send is still in progress
+  // FIXME: need better solution than just ignoring data:
+  //   e.g. stopping current update and starting over is better
+  if (pwmwordstosend!=0) {
+    printk(KERN_INFO DEVICE_NAME": still busy sending data -> no update\n");
+    return;
+  }
+
+  printk(KERN_INFO DEVICE_NAME": received %d input bytes\n", len);
   // number of bytes per LED
-  int numComponents = rgbw ? 4 : 3;
+  numComponents = ledtype==ledtype_sk6812 ? 4 : 3;
   // number of LEDs
-  int leds = len/numComponents;
+  leds = len/numComponents;
   // limit to max
   if (leds>led_count) leds=led_count;
+  printk(KERN_INFO DEVICE_NAME": -> data for %d LEDs with %d bytes each\n", leds, numComponents);
+  #if DATA_DUMP
+  for (idx=0, k=0; k<leds; k++) {
+    if (numComponents==4) {
+      printk(KERN_INFO DEVICE_NAME": RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, inptr[idx], inptr[idx+1], inptr[idx+2], inptr[idx+3]);
+      idx += 4;
+    }
+    else {
+      printk(KERN_INFO DEVICE_NAME": RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, inptr[idx], inptr[idx+1], inptr[idx+2]);
+      idx += 3;
+    }
+  }
+  #endif
   // generate data into buffer
+  bitcount = 0;
   outbuf = (u32*)dma_buffer_vaddr; // cpu/virt address for the buffer
   outptr = outbuf; // start at beginning
   // generate bits into buffer
   while (leds>0) {
-    if (rgbw) {
+    if (ledtype==ledtype_sk6812) {
       // rgbw -> grbw
       ledword =
         inptr[1]<<24 |
         inptr[0]<<16 |
         inptr[2]<<8 |
         inptr[3];
-      generateBits(ledword, 32, &outptr, &outmask);
+      generateBits(ledword, 32, &outptr, &outmask, &bitcount);
       inptr += 4;
     }
+    else if (ledtype==ledtype_p9823) {
+      // rgb -> rgb
+      ledword =
+        inptr[0]<<24 |
+        inptr[1]<<16 |
+        inptr[2]<<8;
+      generateBits(ledword, 24, &outptr, &outmask, &bitcount);
+      inptr += 3;
+    }
     else {
-      // 0rgb -> grb
+      // assume rgb -> grb
       ledword =
         inptr[1]<<24 |
         inptr[0]<<16 |
         inptr[2]<<8;
-      generateBits(ledword, 24, &outptr, &outmask);
+      generateBits(ledword, 24, &outptr, &outmask, &bitcount);
       inptr += 3;
     }
     // next LED
@@ -219,45 +442,28 @@ void update_leds(const char *buff, size_t len)
   }
   longwordsToSend = (u32)(outptr-outbuf);
   if (outmask!=0) longwordsToSend++; // Note: outmask==0 means that the longword at outptr was not yet used
-  printk(KERN_INFO DEVICE_NAME": longwords to send=%u outmask=0x%08X\n", longwordsToSend, outmask);
-
-  /*
-  printk(KERN_INFO DEVICE_NAME": SEND0=0x%08X SEND1=0x%08X\n", outbuf[0], outbuf[1]);
-
-  printk(KERN_INFO DEVICE_NAME": PWMENABLE=0x%08X\n", (u32) PWMENABLE);
-  printk(KERN_INFO DEVICE_NAME": PWMCON=0x%08X\n", (u32) PWM_CHAN(pwm_channel, PWMCON));
-  printk(KERN_INFO DEVICE_NAME": PWMSENDDATA0=0x%08X\n", (u32) PWM_CHAN(pwm_channel, PWMSENDDATA0));
-
-  printk(KERN_INFO DEVICE_NAME": current PWMENABLE=0x%08X\n", (u32) ioread32(PWMENABLE));
-
-  // - disable the PWM
-  sh_iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
-  // - set up PWM for one output sequence
-  sh_iowrite32(0x7E08, PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
-  sh_iowrite32(14, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
-  sh_iowrite32(32, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 800nS (25nS/clk@40Mhz)
-  sh_iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
-  sh_iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave
-  sh_iowrite32(outbuf[0], PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits // FIXME: deliver these by DMA later!
-  sh_iowrite32(outbuf[1], PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits // FIXME: deliver these by DMA later!
-  // - enable the PWM
-  sh_iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // enable PWM
-  */
-
+  printk(KERN_INFO DEVICE_NAME": bits generated=%u, longwords to send=%u outmask=0x%08X\n", bitcount, longwordsToSend, outmask);
+  #if DATA_DUMP
+  for (k=0; k<longwordsToSend; k++) {
+    printk(KERN_INFO DEVICE_NAME": longwords #%d : 0x%08X\n", k, outbuf[k]);
+  }
+  #endif
   // pass buffer to PWM
-  spin_lock_irqsave(&critical, irqflags);
+  spin_lock_irqsave(&updatelock, irqflags);
   // get some info
   pwm_wave_num = ioread32(PWM_CHAN(pwm_channel, PWMWAVENUM));
   pwm_send_wave_num = ioread32(PWM_CHAN(pwm_channel, PWMSENDWAVENUM));
   seg_done_status = ioread32(GDMA_DONE_INTSTS);
 
-  // prepare the DMA
+  #if DMA_TO_PWM
+  // Use DMA to feed PWM engine
+  // TODO: find out if that's really possible, does not work yet as-is
   // - disable the PWM
   iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
   // - set up PWM for one output sequence
-  iowrite32(0x7E08, PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle=0, guard=0, 40Mhz clock, no clock dividing
-  iowrite32(14, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // high time is 350nS (25nS/clk@40Mhz)
-  iowrite32(40, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // low time is 1000nS (25nS/clk@40Mhz)
+  iowrite32(0x7E08 | (inverted ? 0x0180 : 0x0000), PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
+  iowrite32(ACTIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // bit active time
+  iowrite32(PASSIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // bit passive time
   iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
   iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave
   // - prepare data source
@@ -294,9 +500,16 @@ void update_leds(const char *buff, size_t len)
   }
   // - enable the PWM
   iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // enable PWM
-  spin_unlock_irqrestore(&critical, irqflags);
+  #else
+  // Use timer IRQs to feed PWM
+  // - init totals (for retries)
+  pwmdataptr = outbuf;
+  pwmwordstosend = longwordsToSend;
+  startSendingPWM();
+  #endif
+  spin_unlock_irqrestore(&updatelock, irqflags);
   // FIXME: remove debug code
-  printk(KERN_INFO DEVICE_NAME": before sending, we had pwm_wave_num=%u, pwm_send_wave_num=%u, seg_done_status=0x%08X\n", pwm_wave_num, pwm_send_wave_num, seg_done_status);
+  printk(KERN_INFO DEVICE_NAME": before sending, we had irqcount=%d, pwm_wave_num=%u, pwm_send_wave_num=%u, seg_done_status=0x%08X\n", irqcount, pwm_wave_num, pwm_send_wave_num, seg_done_status);
 }
 
 
@@ -334,21 +547,41 @@ static struct file_operations fops = {
 static struct class *p44ledchain_class;
 static struct device *p44ledchain_dev;
 
+static int irqno = 26+8; // hardcoded for now, supposedly: PWM (guess from MT7628 datasheet, nowhere else documented)
+
 int init_module(void)
 {
   int r;
 
-  if ((r = register_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME, &fops))) {
-    printk(KERN_ALERT DEVICE_NAME": Registering char device major=%d failed with %d\n", P44_LEDCHAIN_MAJOR, r);
-    return r;
-  }
+  // check params
   if (pwm_channel >= NUM_PWMS) {
     printk(KERN_ALERT DEVICE_NAME": Error: pwm_channel=%d > MAX=%d\n", pwm_channel, NUM_PWMS-1);
-    return -EINVAL;
+    r = -EINVAL;
+    goto err;
   }
   if (led_count >= P44_LEDCHAIN_MAX_LEDS) {
     printk(KERN_ALERT DEVICE_NAME": Error: led_count=%d > MAX=%d\n", led_count, P44_LEDCHAIN_MAX_LEDS-1);
-    return -EINVAL;
+    r = -EINVAL;
+    goto err;
+  }
+
+  if ((r = register_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME, &fops))) {
+    printk(KERN_ALERT DEVICE_NAME": Registering char device major=%d failed with %d\n", P44_LEDCHAIN_MAJOR, r);
+    r = -EINVAL;
+    goto err;
+  }
+
+  r = request_any_context_irq(
+    irqno,
+    p44ledchain_pwm_interrupt,
+    IRQF_TRIGGER_NONE, // as per hardware
+    "pwm-irq",
+    &pwmdataptr // FIXME: pass device here once we have a struct (and not only statics)
+  );
+  if (r!=IRQC_IS_HARDIRQ) {
+    printk(KERN_ERR DEVICE_NAME": registering IRQ %d failed (or not hardIRQ) for PWM; err=%d\n", irqno, r);
+    r = -EINVAL;
+    goto err_unreg_device;
   }
 
   // printk(KERN_INFO DEVICE_NAME": Build: %s %s\n", __DATE__, __TIME__); // do not use __DATE__/__TIME__ -> prevents reproducible builds
@@ -356,14 +589,21 @@ int init_module(void)
   printk(KERN_INFO DEVICE_NAME": PWM channel=%d\n", pwm_channel);
   printk(KERN_INFO DEVICE_NAME": Number of LEDs: %d\n", led_count);
   printk(KERN_INFO DEVICE_NAME": Inverted: %d\n", inverted);
-  printk(KERN_INFO DEVICE_NAME": RGBW LEDs: %d\n", rgbw);
+  printk(KERN_INFO DEVICE_NAME": LED type: %d\n", ledtype);
 
   p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
   p44ledchain_dev = device_create(p44ledchain_class, NULL, MKDEV(P44_LEDCHAIN_MAJOR, 0), NULL, DEVICE_NAME);
   if (!p44ledchain_dev) {
     printk(KERN_ALERT DEVICE_NAME": device_create failed. Try 'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, P44_LEDCHAIN_MAJOR);
-    return -ENXIO;
+    r = -ENXIO;
+    goto err_class_destroy;
   }
+
+  // init the lock
+  spin_lock_init(&updatelock);
+  // init the timer
+  hrtimer_init(&updatetimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+  updatetimer.function = p44ledchain_timer_func;
 
   // map PWM registers
   // TODO: should also do request_mem_region()
@@ -382,11 +622,23 @@ int init_module(void)
 	dma_buffer_vaddr = dma_alloc_coherent(p44ledchain_dev, dma_buffer_size, &dma_buffer, GFP_DMA);
   if (!dma_buffer_vaddr) {
     printk(KERN_ALERT DEVICE_NAME": Error: cannot get coherent DMA buffer of size %d\n", dma_buffer_size);
-    return -EINVAL;
+    r = -EINVAL;
+    goto err_device_destroy;
   }
   printk(KERN_INFO DEVICE_NAME": DMA buffer, size=%d, virtual address=0x%08X, physical address=0x%08X\n", dma_buffer_size, (u32)dma_buffer_vaddr, (u32)dma_buffer);
-
   return SUCCESS;
+err_device_destroy:
+  device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
+  iounmap(gdma_base);
+  iounmap(pwm_base);
+err_class_destroy:
+  class_destroy(p44ledchain_class);
+err_free_irq:
+  free_irq(irqno, &pwmdataptr);
+err_unreg_device:
+  unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
+err:
+  return r;
 }
 
 
@@ -406,6 +658,15 @@ void cleanup_module(void)
   // unmap PWM
   iounmap(pwm_base);
 
+  // cancel the timer
+  pwmwordsleft = 0;
+  pwmwordstosend = 0;
+  hrtimer_cancel(&updatetimer);
+
+  // free the irq
+  free_irq(irqno, &pwmdataptr);
+
+  // remove the device
   device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
   class_destroy(p44ledchain_class);
   unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
