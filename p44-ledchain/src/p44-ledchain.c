@@ -1,24 +1,17 @@
 /*
- *  p44-ledchain.c - A PWM/DMA kernel module for MT7688 SoC to control serial LEDs (WS28xx, SK68xx)
+ *  p44-ledchain.c - A MT7688 SoC hardware PWM based kernel module for driving serial LEDs (WS28xx, SK68xx, ...)
  *
- *  Copyright (C) 2017 Lukas Zeller <luz@plan44.ch> (RGBW support)
- *  Completely rewritten, but made compatible with and partially based on code snippets from
- *  ws2812-draiveris bitbanging driver for AR9931 SoC by Žilvinas Valinskas, Saulius Lukšė, Jürgen Weigert
+ *  Copyright (C) 2017 Lukas Zeller <luz@plan44.ch>
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.
  *
- * parameters:
- *      pwm_channel=1           # set the PWM channel to use, default = 1
- *      led_count=1             # number of LEDs in the chain, default = 1
- *      inverted=0              # have inverting line drivers at the GPIOs, default = 0
- *      ledtype=0               # 0=WS281x (GRB), 1=SK6812 (RGBW), 2=P9823 (RGB), default = 0
- *
  */
 
 #include <linux/init.h>
-#include <linux/module.h>       /* Needed by all modules */
-#include <linux/kernel.h>       /* Needed for KERN_INFO */
+#include <linux/module.h>
+#include <linux/kernel.h> // printk()
+#include <linux/slab.h> // kzalloc()
 #include <linux/moduleparam.h>
 #include <linux/stat.h>
 
@@ -29,22 +22,15 @@
 #include <linux/spinlock.h>
 #include <linux/watchdog.h>
 #include <linux/ioctl.h>
-#include <asm/uaccess.h>  /* for put_user */
+#include <asm/uaccess.h>
 #include <linux/fs.h>
 
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 
-#include <linux/dmaengine.h>
-#include <linux/dma-mapping.h>
 
-#define P44_LEDCHAIN_MAJOR      152     /* use a LOCAL/EXPERIMENTAL major for now */
-#define P44_LEDCHAIN_MAX_LEDS   1024
+// MARK: ===== PWM unit hardware definitions
 
-#define DEVICE_NAME "ledchain"
-
-
-// PWM unit
 // - register block
 #define MT7688_PWM_BASE 0x10005000L
 #define MT7688_PWM_SIZE 0x00000210L
@@ -78,133 +64,307 @@ void __iomem *pwm_base; // set from ioremap()
 #define PWMSENDWAVENUM  0x34
 
 
-typedef enum {
-  ledtype_ws281x, // GRB bit order
-  ledtype_sk6812, // RGBW bit order
-  ledtype_p9823 // RGB bit order
-} LedType;
-
+// MARK: ===== Global Module definitions
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Lukas Zeller luz@plan44.ch");
-MODULE_DESCRIPTION("PWM/DMA driver for WS281x and SK68xx led chains");
-MODULE_ALIAS_CHARDEV_MAJOR(P44_LEDCHAIN_MAJOR);
+MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type serial led chains");
 
 
-static int pwm_channel = 1; // default -1 => PWM_CHANNEL_DEFAULT
-module_param(pwm_channel, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-MODULE_PARM_DESC(pwm_channel, "PWM channel to use. Default is 1");
+#define DEVICE_NAME "ledchain"
 
-static int inverted = 0; // default is 0 == normal. 1 == inverted is good for 74HCT02 line drivers.
-module_param(inverted, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-MODULE_PARM_DESC(inverted, "drive inverted outputs");
+#define LEDCHAIN_MAX_LEDS   1024
+#define DEFAULT_MAX_RETRIES 3
 
-static int ledtype = ledtype_ws281x;
-module_param(ledtype, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-MODULE_PARM_DESC(ledtype, "LED type: 0=WS281x, 1=SK6812, 2=P9823");
+#define LOGPREFIX DEVICE_NAME ": "
 
-static int led_count = 1; // default is 1, one single LED
-module_param(led_count, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-MODULE_PARM_DESC(led_count, "number of LEDs");
+// MARK: ===== Module Parameter definitions
 
-
-
-// timing
-// WS2812B datasheet: High bit: 900nS high / 350nS low    Low bit: 350nS high / 900 nS low    Reset: >50µS
-// WS2813 datasheet:  High bit: 900nS high / >300nS low   Low bit: 375nS high / >300 nS low   Reset: >300µS
-// SK6812 datasheet:  High bit: 600nS high / 600nS low    Low bit: 300nS high / 900 nS low    Reset: >80µS
-// PL9823 datasheet:  High bit: 1360nS high / 350nS low   Low bit: 350nS high / 1360 nS low   Reset: >50µS
+// parameter array indices
+#define LEDCHAIN_PARAM_INVERTED 0 // inverted or not
+#define LEDCHAIN_PARAM_NUMLEDS 1 // number of LEDs
+#define LEDCHAIN_PARAM_REQUIRED_COUNT 2 // min number of params
+#define LEDCHAIN_PARAM_LEDTYPE 2 // type of LEDs
+#define LEDCHAIN_PARAM_MAXRETRIES 3 // maximum number of retries in case of timing failures before givin up
+#define LEDCHAIN_PARAM_MAX_COUNT 4 // max number of params
 
 
-#define ACTIVE_BIT_TIME 17 // high time 420nS/840nS - nominally: 350nS/900nS±150nS (25nS/clk@40Mhz)
-#define PASSIVE_BIT_TIME 40 // low time is 1000nS - nominally: >900nS/>350nS±150nS (25nS/clk@40Mhz)
+// parameter array storage
+static unsigned int ledchain0[LEDCHAIN_PARAM_MAX_COUNT] __initdata;
+int ledchain0_argc = 0;
+static unsigned int ledchain1[LEDCHAIN_PARAM_MAX_COUNT] __initdata;
+int ledchain1_argc = 0;
+static unsigned int ledchain2[LEDCHAIN_PARAM_MAX_COUNT] __initdata;
+int ledchain2_argc = 0;
+static unsigned int ledchain3[LEDCHAIN_PARAM_MAX_COUNT] __initdata;
+int ledchain3_argc = 0;
 
-#define TIMING_EXCEEDED_NS (10000) // reload >10uS too late can already trigger reset for old WS2812
-#define CHAIN_RESET_NS (300000) // WS2813 need this much to reset
-#define MAX_SEND_REPEATS 3
+#define LEDCHAIN_PARM_DESC " config: <inverted 0/1>,<numleds>[,<ledtype 0..n>[,<maxretries>]]"
 
-// spinlock for updating hardware
-spinlock_t updatelock;
-
-// DMA output buffer
-static size_t dma_buffer_size;
-static dma_addr_t dma_buffer;
-static void *dma_buffer_vaddr;
-
-// timer controlled PWM feeding
-// - total
-static u32 *pwmdataptr;
-static u32 pwmwordstosend = 0; // initially: none
-// - current
-static u32 *pwmoutptr;
-static u32 pwmwordsleft;
-static long long expectedSentAt; // time when last 64bits are expected to be fully sent
-static int sendRepeats;
-
-// - HR timer to reload data
-struct hrtimer updatetimer;
-
-static int pwm_irqcount = 0;
-static u32 pwm_irqflags = 0;
+// parameter declarations
+module_param_array(ledchain0, int, &ledchain0_argc, 0000);
+MODULE_PARM_DESC(ledchain0, "ledchain@PWM0" LEDCHAIN_PARM_DESC);
+module_param_array(ledchain1, int, &ledchain1_argc, 0000);
+MODULE_PARM_DESC(ledchain1, "ledchain@PWM1" LEDCHAIN_PARM_DESC);
+module_param_array(ledchain2, int, &ledchain2_argc, 0000);
+MODULE_PARM_DESC(ledchain2, "ledchain@PMW2" LEDCHAIN_PARM_DESC);
+module_param_array(ledchain3, int, &ledchain3_argc, 0000);
+MODULE_PARM_DESC(ledchain3, "ledchain@PWM3" LEDCHAIN_PARM_DESC);
 
 
+// === LED types and their parameters
 
-static void startSendingPWM(void);
-static void sendFirst64bits(void);
-static u32 sendNext64bits(void);
+typedef enum {
+  ledtype_ws2811,
+  ledtype_ws2812,
+  ledtype_ws2813,
+  ledtype_p9823,
+  ledtype_sk6812,
+  num_ledtypes
+} LedType_t;
+
+typedef struct {
+  const char *name; ///< name of the LED type
+  int channels; ///< number of channels, 3 or 4
+  u8 fetchIdx[4]; ///< fetch indices - at what relative index to fetch bytes from input into output stream
+  int T0Active_nS; ///< active time for sending a zero bit, such that 2*T0Active_nS are a usable T1Active_nS
+  int TPassive_min_nS; ///< minimum time signal must be passive after an active phase
+  int T0Passive_double; ///< if set, for a 0 bit the passive time is doubled
+  int TPassive_max_nS; ///< max time signal can be passive without reset occurring
+  int TReset_nS; ///< time signal must be passive to reset chain
+} LedTypeDescriptor_t;
+
+
+// Note: time resolution is 25nS (= MT7688 PWM max resolution)
+static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
+  {
+    // WS2812, WS2812B - GRB data order
+    .name = "WS2811", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    // timing from datasheet:
+    // - T0H = 350ns..650nS
+    // - T0L = 1850ns..2150nS
+    // - T1H = 1050ns..1350nS
+    // - T1L = 1150ns..1450nS
+    // - TReset = >50µS
+    .T0Active_nS = 500, .TPassive_min_nS = 1200, .T0Passive_double = 1,
+    .TPassive_max_nS = 10000, .TReset_nS = 50000
+  },
+  {
+    // WS2812, WS2812B - GRB data order
+    .name = "WS2812", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    // timing from datasheet:
+    // - T0H = 200ns..500nS
+    // - T0L = 750ns..1050nS (actual max is fortunately higher, ~10uS)
+    // - T1H = 750ns..1050nS
+    // - T1L = 200ns..500nS (actual max is fortunately higher, ~10uS)
+    // - TReset = >50µS
+    .T0Active_nS = 350, .TPassive_min_nS = 900, .T0Passive_double = 0,
+    .TPassive_max_nS = 10000, .TReset_nS = 50000
+  },
+  {
+    // WS2813 - GRB data order
+    .name = "WS2813", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    // timing from datasheet:
+    // - T0H = 300ns..450nS
+    // - T0L = 300ns..100000nS
+    // - T1H = 750ns..1000nS
+    // - T1L = 300ns..100000nS
+    // - TReset = >300µS
+    .T0Active_nS = 375, .TPassive_min_nS = 375, .T0Passive_double = 0,
+    .TPassive_max_nS = 100000, .TReset_nS = 300000
+  },
+  {
+    // P9823 - RGB data order, 5mm/8mm single LEDs
+    .name = "P9823", .channels = 3, .fetchIdx = { 0, 1, 2 },
+    // timing from datasheet:
+    // - T0H = 200ns..500nS
+    // - T0L = 1210ns..1510nS
+    // - T1H = 1210ns..1510nS
+    // - T1L = 200ns..500nS
+    // - TReset = >50µS
+    // Note: the T0L and T1H seem to be wrong, using experimentally determined values
+    .T0Active_nS = 425, .TPassive_min_nS = 1000, .T0Passive_double = 0,
+    .TPassive_max_nS = 10000, .TReset_nS = 50000
+  },
+  {
+    // SK2812 - RGBW data order
+    .name = "SK6812", .channels = 4, .fetchIdx = { 0, 1, 2, 3 },
+    // timing from datasheet:
+    // - T0H = 150ns..450nS
+    // - T0L = 750ns..1050nS (actual max is fortunately higher, ~15uS)
+    // - T1H = 450ns..750nS
+    // - T1L = 450ns..750nS (actual max is fortunately higher, ~15uS)
+    // - TReset = >50µS
+    .T0Active_nS = 300, .TPassive_min_nS = 900, .T0Passive_double = 0,
+    .TPassive_max_nS = 15000, .TReset_nS = 80000
+  },
+};
+
+
+// MARK: ===== structs
+
+// PWM pattern
+typedef struct {
+  u32 data[2];
+  u32 nanosecs;
+} PWMPattern_t;
+
+
+// device variables record
+struct p44ledchain_dev {
+  // configuration
+  // - PWM channel number (0..3)
+  int pwm_channel;
+  // - inverted signal?
+  int inverted;
+  // - LED type descriptor
+  const LedTypeDescriptor_t *ledTypeDesc;
+  // - number of LEDs
+  int num_leds;
+  // - max sending repeats
+  int maxSendRepeats;
+  // the device
+  struct cdev cdev;
+  // spinlock for updating hardware
+  spinlock_t updatelock;
+  // HR timer to restart sending
+  struct hrtimer starttimer;
+  // output buffer
+  PWMPattern_t *outBuf;
+  u32 outBufSize;
+  // - buffer pointer for generating or sending
+  PWMPattern_t *outPtr;
+  // - number of 64-bit patterns in the Buffer (=entire chain data)
+  u32 numPWMPatterns;
+  // - number of patterns left to send
+  u32 remainingPWMPatterns;
+  // - pattern generator vars
+  u32 outMask;
+  u32 bitCount;
+  u32 nanosecs;
+  // timing
+  int notReady; // set as long as no new send can be started
+  long long expectedSentAt; // time when last 64bits are expected to be fully sent (checked in IRQ to detect timing violations)
+  int sendRepeats; // how many times sending was tried
+  // statistics
+  u32 updates;
+  u32 retries;
+  u32 errors;
+};
+typedef struct p44ledchain_dev *devPtr_t;
+
+
+// MARK: ===== static (module global) vars
+
+// the IRQ number of the PWM_EN_STATUS
+static int pwm_irq_no;
+
+// the device class
+static struct class *p44ledchain_class = NULL;
+
+// the device major number
+int p44ledchain_major;
+
+// the devices stored by PWM channel, as we need this to find back device in IRQ handler
+static devPtr_t p44ledchain_pwm_devices[NUM_PWMS];
 
 
 
-// IRQs blocked or IRQ context!
-u32 sendNext64bits()
+// MARK: ===== PWM data sending
+
+// prototypes
+static u32 sendNextPattern(devPtr_t dev);
+static void sendFirstPattern(devPtr_t dev);
+static void startSendingPatterns(devPtr_t dev);
+
+
+
+// IRQs blocked!
+u32 sendNextPattern(devPtr_t dev)
 {
   u32 expectedNs = 0;
-  if (pwmwordsleft>0) {
+  if (dev->remainingPWMPatterns>0) {
     // just send data directly
-    iowrite32(ioread32(PWM_ENABLE) & ~(1<<pwm_channel), PWM_ENABLE); // disable PWM
-    iowrite32(*pwmoutptr, PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits
-    pwmoutptr++;
-    iowrite32(*pwmoutptr, PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits
-    pwmoutptr++;
+    iowrite32(ioread32(PWM_ENABLE) & ~(1<<dev->pwm_channel), PWM_ENABLE); // disable PWM
+    iowrite32(dev->outPtr->data[0], PWM_CHAN(dev->pwm_channel, PWMSENDDATA0)); // Upper 32 bits
+    iowrite32(dev->outPtr->data[1], PWM_CHAN(dev->pwm_channel, PWMSENDDATA1)); // Lower 32 bits
     // get nanoseconds
-    expectedNs = *pwmoutptr;
-    pwmoutptr++;
-    // always 3 32-bit words
-    pwmwordsleft -= 3;
-    iowrite32(ioread32(PWM_ENABLE) | (1<<pwm_channel), PWM_ENABLE); // (re)enable PWM
+    expectedNs = dev->outPtr->nanosecs;
+    // next
+    (dev->outPtr)++;
+    (dev->remainingPWMPatterns)--;
+    iowrite32(ioread32(PWM_ENABLE) | (1<<dev->pwm_channel), PWM_ENABLE); // (re)enable PWM
   }
   return expectedNs; // 0 if done, >0 how many nSecs sending this wave will take
 }
 
 
-// IRQs blocked or IRQ context!
-void sendFirst64bits()
+// IRQs blocked!
+void sendFirstPattern(devPtr_t dev)
 {
   u32 expectedNs;
-  // reset  to begin of data
-  pwmoutptr = pwmdataptr;
-  pwmwordsleft = pwmwordstosend;
+  // start at beginning of data
+  dev->outPtr = dev->outBuf;
+  dev->remainingPWMPatterns = dev->numPWMPatterns;
   // start
-  expectedNs = sendNext64bits();
+  expectedNs = sendNextPattern(dev);
   if (expectedNs) {
     // something to send, update expected time
-    expectedSentAt = ktime_to_ns(updatetimer.base->get_time())+expectedNs;
+    dev->expectedSentAt = ktime_to_ns(ktime_get())+expectedNs;
   }
   else {
-    // successfully done
-    pwmwordstosend = 0;
+    // nothing to send, no need to wait for chain to reset
+    dev->numPWMPatterns = 0;
+  }
+}
+
+
+// IRQs blocked!
+void startSendingPatterns(devPtr_t dev)
+{
+  // init the PWM
+  dev->notReady = 1;
+  dev->sendRepeats = 0;
+  dev->updates++;
+  // - disable the PWM
+  iowrite32(ioread32(PWM_ENABLE) & ~(1<<dev->pwm_channel), PWM_ENABLE); // disable PWM
+  if (dev->remainingPWMPatterns>0) {
+    // - enable PWM IRQ
+    iowrite32(0x03<<(dev->pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
+    // - set up PWM for one output sequence
+    iowrite32(0x7E08 | (dev->inverted ? 0x0180 : 0x0000), PWM_CHAN(dev->pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
+    iowrite32(dev->ledTypeDesc->T0Active_nS/25, PWM_CHAN(dev->pwm_channel, dev->inverted ? PWMLDUR : PWMHDUR)); // bit active time
+    iowrite32(dev->ledTypeDesc->TPassive_min_nS/25, PWM_CHAN(dev->pwm_channel, dev->inverted ? PWMHDUR : PWMLDUR)); // bit passive time
+    iowrite32(0, PWM_CHAN(dev->pwm_channel, PWMGDUR)); // no guard time
+    iowrite32(1, PWM_CHAN(dev->pwm_channel, PWMWAVENUM)); // one single wave at a time
+    // - initiate sending
+    sendFirstPattern(dev);
   }
 }
 
 
 static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
 {
+  devPtr_t dev = container_of(timer, struct p44ledchain_dev, starttimer);
   unsigned long irqflags;
 
-  spin_lock_irqsave(&updatelock, irqflags);
-  // - re-initiate sending
-  sendFirst64bits();
-  spin_unlock_irqrestore(&updatelock, irqflags);
+  spin_lock_irqsave(&dev->updatelock, irqflags);
+  if (dev->notReady) {
+    // still in progress
+    if (dev->remainingPWMPatterns) {
+      // timer hitting in notReady with remaining patterns means we must retry entire sequence
+      sendFirstPattern(dev);
+    }
+    else {
+      // timer hitting in notReady with NO patterns left means we become ready now
+      dev->notReady = 0;
+      // if there are new patterns, start sending those now
+      if (dev->numPWMPatterns) {
+        startSendingPatterns(dev);
+      }
+    }
+  }
+  spin_unlock_irqrestore(&dev->updatelock, irqflags);
   // done
   return HRTIMER_NORESTART;
 }
@@ -214,104 +374,163 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
 {
   long long now;
   u32 expectedNs;
-  pwm_irqcount++;
-  pwm_irqflags = ioread32(PWM_INT_STATUS); // PWM1 sets bit 2, PWM0 sets bit 0
-  iowrite32(0x03<<(pwm_channel*2), PWM_INT_ACK); // acknowledge both PWM IRQs of this channel
-  // check for timing failure
-  now = ktime_to_ns(updatetimer.base->get_time());
-  if (now-expectedSentAt > TIMING_EXCEEDED_NS) {
-    // failure, needs retry
-    sendRepeats++;
-    if (sendRepeats<MAX_SEND_REPEATS) {
-      // - schedule restart after being certain chain was reset
-      hrtimer_start(&updatetimer, ktime_set(0, CHAIN_RESET_NS), HRTIMER_MODE_REL);
+  u32 irqStatus;
+  u32 irqMask;
+  int i;
+  irqreturn_t ret = IRQ_NONE;
+  devPtr_t dev;
+
+  irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
+  now = ktime_to_ns(ktime_get());
+  irqMask = 0x03;
+  for (i=0; i<NUM_PWMS; i++) {
+    // IRQ from this PWM?
+    if (irqStatus & irqMask) {
+      dev = ((devPtr_t *)dev_id)[i];
+      if (dev) {
+        // PWM channel i has interrupt and we have a ledchain device for that channel
+        // - acknowledge both PWM IRQs of this channel (altough we don't know what the upper bit is for)
+        iowrite32(irqMask, PWM_INT_ACK);
+        // check for timing failure
+        if (now-dev->expectedSentAt > dev->ledTypeDesc->TPassive_max_nS) {
+          // failure, needs retry
+          dev->sendRepeats++;
+          dev->retries++;
+          if (dev->sendRepeats>=dev->maxSendRepeats) {
+            // give up, do not restart when timer hits
+            dev->remainingPWMPatterns = 0; // do not attempt to send anything more
+            dev->errors++; // count the errors
+          }
+          // - start timer to either hold back next update or retry sending
+          hrtimer_start(&dev->starttimer, ktime_set(0, dev->ledTypeDesc->TReset_nS), HRTIMER_MODE_REL);
+        }
+        else {
+          // send next
+          expectedNs = sendNextPattern(dev);
+          if (expectedNs) {
+            // something to send, update expected time
+            dev->expectedSentAt = now+expectedNs;
+          }
+          else {
+            // nothing more to send
+            // - start timer to know when chain reset time is over and next update can be started immediately
+            hrtimer_start(&dev->starttimer, ktime_set(0, dev->ledTypeDesc->TReset_nS), HRTIMER_MODE_REL);
+          }
+        }
+        ret = IRQ_HANDLED;
+      }
     }
-    else {
-      // give up
-      pwmwordsleft = 0;
-      pwmwordstosend = 0;
-    }
+    // next PWM
+    irqMask <<= 2;
   }
-  else {
-    // send next
-    expectedNs = sendNext64bits();
-    if (expectedNs) {
-      // something to send, update expected time
-      expectedSentAt = now+expectedNs;
-    }
-    else {
-      // done
-      pwmwordstosend = 0;
-    }
-  }
-  return IRQ_HANDLED;
+  // not my IRQ
+  return ret;
 }
 
 
-// IRQs blocked or IRQ context!
-void startSendingPWM()
+// MARK: ===== Control sending patterns
+
+
+// Call before preparing new patterns into the buffer
+static int stopSendingPatterns(devPtr_t dev)
 {
-  // init the PWM
-  sendRepeats = 0;
-  // - disable the PWM
-  iowrite32(ioread32(PWM_ENABLE) & ~(1<<pwm_channel), PWM_ENABLE); // disable PWM
-  if (pwmwordstosend>0) {
-    // - enable PWM IRQ
-    iowrite32(0x03<<(pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
-    // - set up PWM for one output sequence
-    iowrite32(0x7E08 | (inverted ? 0x0180 : 0x0000), PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
-    iowrite32(ACTIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // bit active time
-    iowrite32(PASSIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMHDUR : PWMLDUR)); // bit passive time
-    iowrite32(0, PWM_CHAN(pwm_channel, PWMGDUR)); // no guard time
-    iowrite32(1, PWM_CHAN(pwm_channel, PWMWAVENUM)); // one single wave at a time
-    // - initiate sending
-    sendFirst64bits();
-  }
+  int nrdy;
+  unsigned long irqflags;
+
+  spin_lock_irqsave(&dev->updatelock, irqflags);
+  nrdy = dev->notReady;
+  // prevent any more pattern sending
+  dev->remainingPWMPatterns = 0;
+  dev->numPWMPatterns = 0;
+  // now when IRQ or timer hits, nothing will happen except notReady cleared
+  spin_unlock_irqrestore(&dev->updatelock, irqflags);
+  return nrdy;
 }
 
 
-static void generateBit(int aBit, u32 **aOutbuf, u32 *aOutMask, u32 *aBitcount, u32 *aNanoSecs)
+// Call when new patterns are ready in the buffer to be sent
+static void scheduleNewPatterns(u32 aNumNewPatterns, devPtr_t dev)
 {
-  u32 *op = *aOutbuf;
-  u32 om = *aOutMask;
+  unsigned long irqflags;
+
+  spin_lock_irqsave(&dev->updatelock, irqflags);
+  // set number of new patterns
+  dev->numPWMPatterns = aNumNewPatterns;
+  if (!dev->notReady) {
+    // fully ready, need to initiate now
+    // (otherwise, timer will initiate it when it hits
+    startSendingPatterns(dev);
+  }
+  spin_unlock_irqrestore(&dev->updatelock, irqflags);
+}
+
+
+static int isReady(devPtr_t dev)
+{
+  int nrdy;
+  unsigned long irqflags;
+
+  spin_lock_irqsave(&dev->updatelock, irqflags);
+  nrdy = dev->notReady;
+  spin_unlock_irqrestore(&dev->updatelock, irqflags);
+  return !nrdy;
+}
+
+
+// MARK: ===== Generating new patterns
+
+
+// init generating bits
+static void initBitGenerator(devPtr_t dev)
+{
+  dev->remainingPWMPatterns = 0; // nothing ready to send yet, will also halt currently running send
+  dev->outPtr = dev->outBuf; // start at beginning of buffer
+  dev->outMask = 0;
+  dev->bitCount = 0;
+  dev->nanosecs = 0;
+}
+
+
+// generate single bit into pattern buffer
+static void generateBit(int aBit, devPtr_t dev)
+{
+  u32 om = dev->outMask;
+  u32 *owPtr = &(dev->outPtr->data[dev->bitCount & 0x20]); // second word for bits 32..63
   if (om==0) {
     om=1L; // fill LSB first
-    *op = 0; // init next buffer word
+    *owPtr = 0; // init next buffer word
   }
-  if (aBit!=inverted) {
+  if (aBit!=dev->inverted) {
     // set output bit high
-    *op = *op | om;
+    *owPtr = *owPtr | om;
   }
   else {
     // set output bit low
-    *op = *op & ~om;
+    *owPtr = *owPtr & ~om;
   }
   // update nanoseconds
   if (aBit)
-    *aNanoSecs += (ACTIVE_BIT_TIME*25);
+    dev->nanosecs += dev->ledTypeDesc->T0Active_nS;
   else
-    *aNanoSecs += (PASSIVE_BIT_TIME*25);
+    dev->nanosecs += dev->ledTypeDesc->TPassive_min_nS;
   // next bit
   om = om << 1;
-  (*aBitcount)++;
+  (dev->bitCount)++;
   if (om==0) {
     // longword complete, begin next
-    op++;
-    if ((*aBitcount & 0x3F)==0) {
-      // next 64 bits, store nanoseconds longword in between
-      *op = *aNanoSecs;
-      *aNanoSecs = 0;
-      op++;
+    if (dev->bitCount>=64) {
+      // 64 bit pattern complete, save nanoseconds
+      dev->outPtr->nanosecs = dev->nanosecs;
+      dev->nanosecs = 0;
+      (dev->outPtr)++;
     }
-    *aOutbuf = op;
   }
-  *aOutMask = om;
+  dev->outMask = om;
 }
 
 
-// generate bit pattern to be fed into PWM engine:
-// one input high bit generates a 110 sequence, one input low bit generates a 100 sequence
-static void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask, u32 *aBitcount, u32 *aNanoSecs)
+// generate bit pattern to be fed into PWM engine from input data word
+static void generateBits(u32 aWord, u8 aNumBits, devPtr_t dev)
 {
   u32 inMask = 1L<<31;
   int bit;
@@ -319,14 +538,20 @@ static void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask, u
     // generate next bit
     bit = (aWord & inMask) != 0;
     // make sure 1-bit does not start at end of a 64-bit word
-    if (bit && ((*aBitcount&0x3F)==63)) {
-      // High bit starting at end of 64bit output word -> would fail because cut in two parts
-      generateBit(0, aOutbuf, aOutMask, aBitcount, aNanoSecs); // insert an extra inactive period, so bit is in fresh 64-bit word
+    if (bit && (dev->bitCount==63)) {
+      // High bit starting at end of 64bit output word -> would fail because cut in two parts by idle period
+      generateBit(0, dev); // insert an extra inactive period, so bit is in fresh 64-bit word
     }
-    generateBit(1, aOutbuf, aOutMask, aBitcount, aNanoSecs); // first bit always high
-    if (bit) generateBit(1, aOutbuf, aOutMask, aBitcount, aNanoSecs); // generate a second high period for a high input bit
-//    generateBit(bit, aOutbuf, aOutMask, aBitcount, aNanoSecs); // middle bit depends on input data bit
-    generateBit(0, aOutbuf, aOutMask, aBitcount, aNanoSecs); // last bit always low
+    generateBit(1, dev); // first bit always high
+    if (bit) generateBit(1, dev); // generate a second high period for a high input bit
+    // idle period is only needed if not in a new pattern (pattern load time is assumed to be ALWAYS longer than minimal idle period!)
+    if (dev->bitCount!=0) {
+      generateBit(0, dev); // at least one low period is needed
+      if (!bit && dev->ledTypeDesc->T0Passive_double && dev->bitCount!=0) {
+        // 0-bit needs double passive time (but is not needed if we're at end of the pattern)
+        generateBit(0, dev); // add another low bit
+      }
+    }
     // shift input bit mask to next bit
     inMask = inMask>>1;
     // bit done
@@ -335,383 +560,434 @@ static void generateBits(u32 aWord, u8 aNumBits, u32 **aOutbuf, u32 *aOutMask, u
 }
 
 
+// finish bit generation, fill up last 64-bit PWM word
+static u32 finishBitGenerator(devPtr_t dev)
+{
+  u32 *owPtr;
+  // fill up to next 64bit
+  if (dev->bitCount!=0) {
+    // fill up current 32bit word
+    owPtr = &(dev->outPtr->data[dev->bitCount & 0x20]); // second word for bits 32..63
+    if (dev->outMask!=0) {
+      while (dev->outMask!=0) {
+        if (dev->inverted)
+          *owPtr |= (dev->outMask);
+        else
+          *owPtr &= ~(dev->outMask);
+        (dev->bitCount)++;
+        dev->nanosecs += dev->ledTypeDesc->TPassive_min_nS;
+        dev->outMask = dev->outMask << 1;
+      }
+    }
+    // test if still not 64 bits
+    if ((dev->bitCount & 0x3F)!=0) {
+      // need a dummy word to fill up
+      dev->outPtr->data[1] = dev->inverted ? 0xFFFFFFFF : 0x0;
+      dev->bitCount += 32;
+      dev->nanosecs += 32*dev->ledTypeDesc->TPassive_min_nS;
+      dev->outPtr->nanosecs = dev->nanosecs;
+      (dev->outPtr)++;
+    }
+  }
+  // return number of new patterns
+  return dev->outPtr - dev->outBuf;
+}
+
+
+// MARK: ===== Update led chain with new data
+
 #define DATA_DUMP 1
 
-void update_leds(const char *buff, size_t len)
+void update_leds(const char *buff, size_t len, devPtr_t dev)
 {
-  u32 outmask = 0;
   u32 ledword;
-  const u8 *inptr = buff;
-  u32 *outbuf;
-  u32 *outptr;
-  unsigned long irqflags;
-  u32 longwordsToSend;
-  int numComponents;
   int leds;
-  u32 bitcount;
-  u32 nanosecs;
+  int ncomp;
+  int i;
+  u32 newPatterns;
   #if DATA_DUMP
   int k;
   int idx;
   #endif
 
-  // check if last send is still in progress
-  // FIXME: need better solution than just ignoring data:
-  //   e.g. stopping current update and starting over is better
-  if (pwmwordstosend!=0) {
-    printk(KERN_INFO DEVICE_NAME": still busy sending data -> no update\n");
-    return;
-  }
-
-  printk(KERN_INFO DEVICE_NAME": received %d input bytes\n", len);
-  // number of bytes per LED
-  numComponents = ledtype==ledtype_sk6812 ? 4 : 3;
-  // number of LEDs
-  leds = len/numComponents;
+  // calculate number of LEDs
+  ncomp = dev->ledTypeDesc->channels;
+  leds = len/ncomp;
   // limit to max
-  if (leds>led_count) leds=led_count;
-  printk(KERN_INFO DEVICE_NAME": -> data for %d LEDs with %d bytes each\n", leds, numComponents);
+  if (leds>dev->num_leds) leds=dev->num_leds;
+  printk(KERN_INFO LOGPREFIX "Received %d bytes -> data for %d LEDs with %d bytes each\n", len, leds, ncomp);
   #if DATA_DUMP
+  // show LED input data
   for (idx=0, k=0; k<leds; k++) {
-    if (numComponents==4) {
-      printk(KERN_INFO DEVICE_NAME": RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, inptr[idx], inptr[idx+1], inptr[idx+2], inptr[idx+3]);
-      idx += 4;
+    if (ncomp==4) {
+      printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, buff[idx], buff[idx+1], buff[idx+2], buff[idx+3]);
     }
     else {
-      printk(KERN_INFO DEVICE_NAME": RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, inptr[idx], inptr[idx+1], inptr[idx+2]);
-      idx += 3;
+      printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, buff[idx], buff[idx+1], buff[idx+2]);
     }
+    idx += ncomp;
   }
   #endif
+  // make sure current sending is aborted
+  if (stopSendingPatterns(dev)) {
+    // was not ready yet
+    printk(KERN_INFO LOGPREFIX "was still busy sending data -> aborted and start again with new data");
+  }
   // generate data into buffer
-  bitcount = 0;
-  nanosecs = 0;
-  outbuf = (u32*)dma_buffer_vaddr; // cpu/virt address for the buffer
-  outptr = outbuf; // start at beginning
+  initBitGenerator(dev);
   // generate bits into buffer
   while (leds>0) {
-    if (ledtype==ledtype_sk6812) {
-      // rgbw -> grbw
-      ledword =
-        inptr[1]<<24 |
-        inptr[0]<<16 |
-        inptr[2]<<8 |
-        inptr[3];
-      generateBits(ledword, 32, &outptr, &outmask, &bitcount, &nanosecs);
-      inptr += 4;
+    i = 0;
+    while (true) {
+      ledword |= buff[dev->ledTypeDesc->fetchIdx[i]];
+      i++;
+      if (k>=ncomp)
+        break;
+      ledword <<= 8;
     }
-    else if (ledtype==ledtype_p9823) {
-      // rgb -> rgb
-      ledword =
-        inptr[0]<<24 |
-        inptr[1]<<16 |
-        inptr[2]<<8;
-      generateBits(ledword, 24, &outptr, &outmask, &bitcount, &nanosecs);
-      inptr += 3;
-    }
-    else {
-      // assume rgb -> grb
-      ledword =
-        inptr[1]<<24 |
-        inptr[0]<<16 |
-        inptr[2]<<8;
-      generateBits(ledword, 24, &outptr, &outmask, &bitcount, &nanosecs);
-      inptr += 3;
-    }
+    generateBits(ledword, ncomp*8, dev);
+    buff += ncomp;
     // next LED
     leds--;
   }
-  // fill up to next 64bit
-  if ((bitcount&0x3F)!=0) {
-    // - current 32bit word
-    if (outmask!=0) {
-      while (outmask!=0) {
-        if (inverted)
-          *outptr |= outmask;
-        else
-          *outptr &= ~outmask;
-        bitcount++;
-        nanosecs += (PASSIVE_BIT_TIME*25);
-        outmask = outmask << 1;
-      }
-      outptr++;
-    }
-    // test if still not 64 bits
-    if ((bitcount&0x3F)!=0) {
-      // need a dummy word to fill up
-      *outptr = inverted ? 0xFFFFFFFF : 0x0;
-      outptr++;
-      bitcount += 32;
-      nanosecs += (PASSIVE_BIT_TIME*25*32);
-      *outptr = nanosecs;
-      outptr++;
-    }
-  }
-  longwordsToSend = (u32)(outptr-outbuf);
-  printk(KERN_INFO DEVICE_NAME": bits generated=%u, longwords to send=%u\n", bitcount, longwordsToSend);
+  // finish bit generation
+  newPatterns = finishBitGenerator(dev);
+  printk(KERN_INFO LOGPREFIX "number of 64-bit patterns to send=%u\n", dev->numPWMPatterns);
   #if DATA_DUMP
-  for (k=0; k<longwordsToSend; k+=3) {
-    printk(KERN_INFO DEVICE_NAME": longword #%d : 0x%08X 0x%08X - %u nS\n", k, outbuf[k], outbuf[k+1], outbuf[k+2]);
+  for (k=0; k<dev->numPWMPatterns; k++) {
+    printk(KERN_INFO LOGPREFIX "pattern #%d : 0x%08X 0x%08X - %u nS\n", k, dev->outBuf[k].data[0], dev->outBuf[k].data[1], dev->outBuf[k].nanosecs);
   }
   #endif
-  // FIXME: remove debug code
-  printk(KERN_INFO DEVICE_NAME": before sending: sendRepeats=%d, pwm_irqcount=%d, pwm_irqflags=0x%08X\n", sendRepeats, pwm_irqcount, pwm_irqflags);
-  // pass buffer to PWM
-  spin_lock_irqsave(&updatelock, irqflags);
-  // Use IRQs to feed PWM
-  // - init totals (for retries)
-  pwmdataptr = outbuf;
-  pwmwordstosend = longwordsToSend;
-  // - start
-  startSendingPWM();
-  spin_unlock_irqrestore(&updatelock, irqflags);
+  // information
+  printk(KERN_INFO LOGPREFIX "previous update had %d repeats, total updates=%u, total retries=%u, total errors=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors);
+  // start sending now or schedule start when reset time is over
+  scheduleNewPatterns(newPatterns, dev);
 }
 
 
-/*
- *  Prototypes - this would normally go in a .h file
- */
-int init_module(void);
-void cleanup_module(void);
-static int device_open(struct inode *, struct file *);
-static int device_release(struct inode *, struct file *);
-static ssize_t device_read(struct file *, char *, size_t, loff_t *);
-static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
+// MARK: ===== character device file operations
 
-#define SUCCESS 0
+// prototypes
+static int p44ledchain_open(struct inode *, struct file *);
+static int p44ledchain_release(struct inode *, struct file *);
+static ssize_t p44ledchain_read(struct file *, char *, size_t, loff_t *);
+static ssize_t p44ledchain_write(struct file *, const char *, size_t, loff_t *);
 
-/*
- * Global variables are declared as static, so are global within the file.
- */
-
-static int Device_Open = 0; /* Is device open?
-         * Used to prevent multiple access to device */
-#define BUF_LEN 100    /* Max length of the message from the device = hello message */
-static char msg[BUF_LEN]; /* The msg the device will give when asked */
-static char *msg_Ptr;
-
-static struct file_operations fops = {
-  .read = device_read,
-  .write = device_write,
-  .open = device_open,
-  .release = device_release
+// file access handlers
+static struct file_operations p44ledchain_fops = {
+  .open = p44ledchain_open,
+  .release = p44ledchain_release,
+  .read = p44ledchain_read,
+  .write = p44ledchain_write,
 };
 
-// we must create *and remove* device classes properly, otherwise we get horrible
-// kernel stack backtraces.
-static struct class *p44ledchain_class;
-static struct device *p44ledchain_dev;
 
-static int irqno = 26+8; // hardcoded for now, supposedly: PWM (guess from MT7628 datasheet, nowhere else documented)
-
-int init_module(void)
+static int p44ledchain_open(struct inode *inode, struct file *filp)
 {
-  int r;
+  devPtr_t dev = container_of(inode->i_cdev, struct p44ledchain_dev, cdev);
+  // remember our dev in the filp
+  filp->private_data = (void *)dev;
+  return 0;
+}
 
-  // check params
-  if (pwm_channel >= NUM_PWMS) {
-    printk(KERN_ALERT DEVICE_NAME": Error: pwm_channel=%d > MAX=%d\n", pwm_channel, NUM_PWMS-1);
-    r = -EINVAL;
+
+static int p44ledchain_release(struct inode *inode, struct file *filp)
+{
+  // NOP
+  return 0;
+}
+
+
+static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
+{
+  const char *ans = NULL;
+  devPtr_t dev = (devPtr_t)filp->private_data;
+  size_t bytes = 0;
+
+  // just return "Ready" or "Busy" (up to as many chars as requested)
+  if (isReady(dev)) {
+    ans = "Ready";
+  }
+  else {
+    ans = "Busy";
+  }
+  if (ans) {
+    bytes = strlen(ans);
+  }
+  if (bytes>count) {
+    bytes = count;
+  }
+  // now copy to user, which can sleep
+  copy_to_user(buf, ans, bytes);
+  return bytes;
+}
+
+
+static ssize_t p44ledchain_write(struct file *filp, const char *buff, size_t len, loff_t * off)
+{
+  devPtr_t dev = (devPtr_t)filp->private_data;
+
+  update_leds(buff, len, dev);
+  return len;
+}
+
+
+// MARK: ===== device init and cleanup
+
+
+static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP, unsigned int *params, int param_count, const char *devname)
+{
+  int err;
+  int pval;
+  LedType_t ledType;
+	struct device *device = NULL;
+	devPtr_t dev = NULL;
+
+	BUG_ON(class==NULL || devP==NULL);
+
+  // no dev created yet
+  *devP = NULL;
+  // check param count
+  if (param_count<LEDCHAIN_PARAM_REQUIRED_COUNT) {
+    printk(KERN_WARNING LOGPREFIX "not enough parameters for %s\n", devname);
+    err = -EINVAL;
     goto err;
   }
-  if (led_count >= P44_LEDCHAIN_MAX_LEDS) {
-    printk(KERN_ALERT DEVICE_NAME": Error: led_count=%d > MAX=%d\n", led_count, P44_LEDCHAIN_MAX_LEDS-1);
-    r = -EINVAL;
+  // create device variables struct
+  dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+  if (!dev) {
+    err = -ENOMEM;
     goto err;
   }
-
-  if ((r = register_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME, &fops))) {
-    printk(KERN_ALERT DEVICE_NAME": Registering char device major=%d failed with %d\n", P44_LEDCHAIN_MAJOR, r);
-    r = -EINVAL;
-    goto err;
+  // assign PWM channel no = minor devno
+  dev->pwm_channel = minor;
+  // parse the params
+  // - invert flag
+  dev->inverted = params[LEDCHAIN_PARAM_INVERTED]!=0;
+  // - number of LEDs
+  pval = params[LEDCHAIN_PARAM_NUMLEDS];
+  if (pval<1 || pval>LEDCHAIN_MAX_LEDS) {
+    printk(KERN_WARNING LOGPREFIX "Number of LEDs must be 1..%d for %s\n", LEDCHAIN_MAX_LEDS, devname);
+    err = -EINVAL;
+    goto err_free;
   }
-
-  r = request_any_context_irq(
-    irqno,
-    p44ledchain_pwm_interrupt,
-    IRQF_TRIGGER_NONE, // as per hardware
-    "pwm-irq",
-    &pwmdataptr // FIXME: pass device here once we have a struct (and not only statics)
-  );
-  if (r!=IRQC_IS_HARDIRQ) {
-    printk(KERN_ERR DEVICE_NAME": registering IRQ %d failed (or not hardIRQ) for PWM; err=%d\n", irqno, r);
-    r = -EINVAL;
-    goto err_unreg_device;
+  dev->num_leds = pval;
+  // - LED type
+  ledType = ledtype_ws2812; // standard
+  if (LEDCHAIN_PARAM_LEDTYPE<param_count) {
+    pval = params[LEDCHAIN_PARAM_LEDTYPE];
+    if (pval<0 || pval>=num_ledtypes) {
+      printk(KERN_WARNING LOGPREFIX "LED type must be 0..%d for %s\n", num_ledtypes, devname);
+      err = -EINVAL;
+      goto err_free;
+    }
+    ledType = (LedType_t)pval;
   }
-
-  // printk(KERN_INFO DEVICE_NAME": Build: %s %s\n", __DATE__, __TIME__); // do not use __DATE__/__TIME__ -> prevents reproducible builds
-  printk(KERN_INFO DEVICE_NAME": v4, Major=%d  device=/dev/%s\n", P44_LEDCHAIN_MAJOR, DEVICE_NAME);
-  printk(KERN_INFO DEVICE_NAME": PWM channel=%d\n", pwm_channel);
-  printk(KERN_INFO DEVICE_NAME": Number of LEDs: %d\n", led_count);
-  printk(KERN_INFO DEVICE_NAME": Inverted: %d\n", inverted);
-  printk(KERN_INFO DEVICE_NAME": LED type: %d\n", ledtype);
-
-  p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
-  p44ledchain_dev = device_create(p44ledchain_class, NULL, MKDEV(P44_LEDCHAIN_MAJOR, 0), NULL, DEVICE_NAME);
-  if (!p44ledchain_dev) {
-    printk(KERN_ALERT DEVICE_NAME": device_create failed. Try 'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, P44_LEDCHAIN_MAJOR);
-    r = -ENXIO;
-    goto err_class_destroy;
+  dev->ledTypeDesc = &ledTypeDescriptors[ledType];
+  // - retries
+  dev->maxSendRepeats = DEFAULT_MAX_RETRIES;
+  if (LEDCHAIN_PARAM_MAXRETRIES<param_count) {
+    pval = params[LEDCHAIN_PARAM_MAXRETRIES];
+    if (pval<0) {
+      printk(KERN_WARNING LOGPREFIX "max retries must be >=0 for %s\n", devname);
+      err = -EINVAL;
+      goto err_free;
+    }
   }
-
+  // allocate the buffer for the LED data
+  dev->outBufSize =
+    dev->num_leds*dev->ledTypeDesc->channels // number of input bytes
+    * 8 // number of bits
+    / 64 // number of PWM patterns
+    * sizeof(PWMPattern_t);
+  dev->outBuf = kzalloc(dev->outBufSize, GFP_KERNEL);
+  if (!dev->outBuf) {
+    printk(KERN_WARNING LOGPREFIX "Cannot allocated PWM data buffer of %d bytes for %s\n", dev->outBufSize, devname);
+    err = -ENOMEM;
+    goto err_free;
+  }
+  // register cdev
+  // - init the struct contained in our dev struct
+  cdev_init(&dev->cdev, &p44ledchain_fops);
+  dev->cdev.owner = THIS_MODULE;
+  // - add one device starting at devno (major+minor)
+  err = cdev_add(&dev->cdev, MKDEV(p44ledchain_major, minor), 1);
+  if (err) {
+    printk(KERN_WARNING LOGPREFIX "Error adding cdev, err=%d\n", err);
+    goto err_free_buffer;
+  }
+  // create device
+  device = device_create(
+    class, NULL, // no parent device
+		MKDEV(p44ledchain_major, minor), NULL, // no additional data
+		devname // device name (format string + more params are allowed)
+	);
+	if (IS_ERR(device)) {
+		err = PTR_ERR(device);
+		printk(KERN_WARNING LOGPREFIX "Error %d while trying to create %s", err, devname);
+		goto err_free_cdev;
+	}
   // init the lock
-  spin_lock_init(&updatelock);
+  spin_lock_init(&dev->updatelock);
   // init the timer
-  hrtimer_init(&updatetimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-  updatetimer.function = p44ledchain_timer_func;
+  hrtimer_init(&dev->starttimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+  dev->starttimer.function = p44ledchain_timer_func;
+  // Config summary
+  printk(KERN_INFO LOGPREFIX "Device: /dev/%s\n", devname);
+  printk(KERN_INFO LOGPREFIX "- PWM channel    : %d\n", dev->pwm_channel);
+  printk(KERN_INFO LOGPREFIX "- Number of LEDs : %d\n", dev->num_leds);
+  printk(KERN_INFO LOGPREFIX "- Inverted       : %d\n", dev->inverted);
+  printk(KERN_INFO LOGPREFIX "- LED type       : %s\n", dev->ledTypeDesc->name);
+  printk(KERN_INFO LOGPREFIX "- Max retries    : %d\n", dev->maxSendRepeats);
+  // done
+  *devP = dev; // pass back new dev
+  return 0;
+// wind-down after error
+err_free_cdev:
+  cdev_del(&dev->cdev);
+err_free_buffer:
+  kfree(dev->outBuf);
+err_free:
+  kfree(dev);
+err:
+  return err;
+}
 
+
+static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *devP)
+{
+  devPtr_t dev;
+
+	BUG_ON(class==NULL || devP==NULL);
+  dev = *devP;
+  if (!dev) return; // no device to remove
+	// cancel sending
+	stopSendingPatterns(dev);
+	hrtimer_cancel(&dev->starttimer);
+	// destroy device
+	device_destroy(class, MKDEV(p44ledchain_major, minor));
+	// delete cdev
+	cdev_del(&dev->cdev);
+	// delete buffer
+  kfree(dev->outBuf);
+  // delete dev
+  kfree(dev);
+  *devP = NULL;
+	return;
+}
+
+
+// MARK: ===== module init and exit
+
+
+static int __init p44ledchain_init_module(void)
+{
+  int err;
+  int i;
+  dev_t devno;
+
+  // no devices to begin with
+  for (i=0; i<NUM_PWMS; i++) {
+    p44ledchain_pwm_devices[i] = NULL;
+  }
+  // at least one device needs to be defined
+  if (ledchain0_argc+ledchain1_argc+ledchain2_argc+ledchain3_argc==0) {
+    printk(KERN_WARNING LOGPREFIX "must specify at least one PWM driven LED chain\n");
+		err = -EINVAL;
+		goto err;
+  }
+	// Get a range of minor numbers (starting with 0) to work with */
+	err = alloc_chrdev_region(&devno, 0, NUM_PWMS, DEVICE_NAME);
+	if (err < 0) {
+		printk(KERN_WARNING LOGPREFIX "alloc_chrdev_region() failed\n");
+		return err;
+	}
+	p44ledchain_major = MAJOR(devno);
+	// Create device class
+	p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+	if (IS_ERR(p44ledchain_class)) {
+		err = PTR_ERR(p44ledchain_class);
+		goto err_unregister_region;
+	}
   // map PWM registers
   // TODO: should also do request_mem_region()
   pwm_base = ioremap(MT7688_PWM_BASE, MT7688_PWM_SIZE);
   printk(KERN_INFO DEVICE_NAME": pwm_base=0x%08X\n", (u32)pwm_base);
-
-  // allocate a DMA buffer
-  // - one LED bit needs 2 or 3 PWM bits
-  // - one LED has 3 or 4 bytes
-  // - every 64bits of data needs extra 32bits for nanosecond count
-  dma_buffer_size = (led_count*4*3+3)*3/2; // max number of bytes required for full chain, rounded to next longword
-	dma_buffer_vaddr = dma_alloc_coherent(p44ledchain_dev, dma_buffer_size, &dma_buffer, GFP_DMA);
-  if (!dma_buffer_vaddr) {
-    printk(KERN_ALERT DEVICE_NAME": Error: cannot get coherent DMA buffer of size %d\n", dma_buffer_size);
-    r = -EINVAL;
-    goto err_device_destroy;
+  // request the IRQ
+  // FIXME: for now, we just KNOW the IRQ
+  pwm_irq_no = 8+26; // Undocumented in MT7688 datasheet, but is same as mentioned in MT7628 datasheet IRQ channel table (8=CPU IRQ offset, 26=IRQ number in interrupt controller)
+  err = request_any_context_irq(
+    pwm_irq_no,
+    p44ledchain_pwm_interrupt,
+    IRQF_SHARED , // the IRQ is shared between all PWM channels
+    "pwm-irq",
+    p44ledchain_pwm_devices // array of all 4 possible devices
+  );
+  if (err!=IRQC_IS_HARDIRQ) {
+    printk(KERN_WARNING LOGPREFIX "registering IRQ %d failed (or not hardIRQ) for PWM, err=%d\n", pwm_irq_no, err);
+    goto err_unmap;
   }
-  printk(KERN_INFO DEVICE_NAME": DMA buffer, size=%d, virtual address=0x%08X, physical address=0x%08X\n", dma_buffer_size, (u32)dma_buffer_vaddr, (u32)dma_buffer);
-  return SUCCESS;
-err_device_destroy:
-  device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
+  // instantiate devices from module params
+  if (ledchain0_argc>0) {
+    err = p44ledchain_add_device(p44ledchain_class, 0, &(p44ledchain_pwm_devices[0]), ledchain0, ledchain0_argc, "ledchain0");
+    if (err) goto err_destroy_devices;
+  }
+  if (ledchain1_argc>0) {
+    err = p44ledchain_add_device(p44ledchain_class, 1, &(p44ledchain_pwm_devices[1]), ledchain1, ledchain1_argc, "ledchain1");
+    if (err) goto err_destroy_devices;
+  }
+  if (ledchain2_argc>0) {
+    err = p44ledchain_add_device(p44ledchain_class, 2, &(p44ledchain_pwm_devices[2]), ledchain2, ledchain2_argc, "ledchain2");
+    if (err) goto err_destroy_devices;
+  }
+  if (ledchain3_argc>0) {
+    err = p44ledchain_add_device(p44ledchain_class, 3, &(p44ledchain_pwm_devices[3]), ledchain3, ledchain3_argc, "ledchain3");
+    if (err) goto err_destroy_devices;
+  }
+  // done
+  return 0;
+err_destroy_devices:
+  for (i=0; i<NUM_PWMS; i++) {
+    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_pwm_devices[i]));
+  }
+//err_free_irq:
+  free_irq(pwm_irq_no, p44ledchain_pwm_devices);
+err_unmap:
   iounmap(pwm_base);
-err_class_destroy:
+//err_destroy_class:
   class_destroy(p44ledchain_class);
-err_free_irq:
-  free_irq(irqno, &pwmdataptr);
-err_unreg_device:
-  unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
+err_unregister_region:
+  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_PWMS);
 err:
-  return r;
+  return err;
 }
 
 
-/*
- * This function is called when the module is unloaded
- */
-void cleanup_module(void)
-{
-  // return DMA buffer
-  if (dma_buffer_vaddr) {
-  	dma_free_coherent(p44ledchain_dev, dma_buffer_size, dma_buffer_vaddr, dma_buffer);
-  	dma_buffer_vaddr = NULL;
-  }
 
+static void __exit p44ledchain_exit_module(void)
+{
+  int i;
+
+  // destroy the devices
+  for (i=0; i<NUM_PWMS; i++) {
+    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_pwm_devices[i]));
+  }
+  // free the IRQ
+  free_irq(pwm_irq_no, p44ledchain_pwm_devices);
+  // destroy the class
+  class_destroy(p44ledchain_class);
+  // unregister the region
+  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_PWMS);
   // unmap PWM
   iounmap(pwm_base);
-
-  // cancel the timer
-  pwmwordsleft = 0;
-  pwmwordstosend = 0;
-  hrtimer_cancel(&updatetimer);
-
-  // free the irq
-  free_irq(irqno, &pwmdataptr);
-
-  // remove the device
-  device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
-  class_destroy(p44ledchain_class);
-  unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
-  printk(KERN_ALERT DEVICE_NAME": cleaned up\n");
+  // done
+  printk(KERN_INFO LOGPREFIX "cleaned up\n");
+	return;
 }
 
 
+module_init(p44ledchain_init_module);
+module_exit(p44ledchain_exit_module);
 
 
 
-
-/*
- * Methods
- */
-
-/*
- * Called when a process tries to open the device file, like
- * "cat /dev/ledchain"
- */
-static int device_open(struct inode *inode, struct file *file)
-{
-  static int opencount = 0;
-
-  if (Device_Open)
-    return -EBUSY;
-  Device_Open++;
-  sprintf(msg, "device_open called for /dev/%s now %d times\n", DEVICE_NAME, opencount++);
-  msg_Ptr = msg;
-  try_module_get(THIS_MODULE);
-  return SUCCESS;
-}
-
-/*
- * Called when a process closes the device file.
- */
-static int device_release(struct inode *inode, struct file *file)
-{
-  Device_Open--;    /* We're now ready for our next caller */
-
-  /*
-   * Decrement the usage count, or else once you opened the file, you'll
-   * never get get rid of the module.
-   */
-  module_put(THIS_MODULE);
-
-  return 0;
-}
-
-/*
- * Called when a process, which already opened the dev file, attempts to
- * read from it.
- */
-static ssize_t device_read(
-  struct file *filp, /* see include/linux/fs.h   */
-  char *buffer,  /* buffer to fill with data */
-  size_t length, /* length of the buffer     */
-  loff_t * offset
-) {
-  /*
-   * Number of bytes actually written to the buffer
-   */
-  int bytes_read = 0;
-
-  /*
-   * If we're at the end of the message,
-   * return 0 signifying end of file
-   */
-  if (*msg_Ptr == 0)
-    return 0;
-
-  /*
-   * Actually put the data into the buffer
-   */
-  while (length && *msg_Ptr) {
-
-    /*
-     * The buffer is in the user data segment, not the kernel
-     * segment so "*" assignment won't work.  We have to use
-     * put_user which copies data from the kernel data segment to
-     * the user data segment.
-     */
-    put_user(*(msg_Ptr++), buffer++);
-
-    length--;
-    bytes_read++;
-  }
-
-  /*
-   * Most read functions return the number of bytes put into the buffer
-   */
-  return bytes_read;
-}
-
-
-// To reach all connected leds send: len = gpio_count * leds_per_gpio * 3 bytes (4 bytes in rgbw mode)
-static ssize_t device_write(struct file *filp, const char *buff, size_t len, loff_t * off)
-{
-  update_leds(buff, len);
-  return len;
-}
