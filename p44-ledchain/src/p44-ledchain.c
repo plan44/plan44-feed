@@ -51,7 +51,17 @@
 // - access to ioremapped PWM area
 void __iomem *pwm_base; // set from ioremap()
 #define PWM_ADDR(offset) (pwm_base+offset)
-#define PWMENABLE        PWM_ADDR(0)
+#define PWM_ENABLE        PWM_ADDR(0)
+#define PWM_EN_STATUS     PWM_ADDR(0x20C)
+
+// - information about undocumented PWM IRQ in MT7628 found in Android kernel driver in
+//   mediatek-android-linux-kerneltree/drivers/misc/mediatek/pwm/mt8173/include/mach/mt_pwm_prv.h
+//   Note that the MZ8173/MT6595 PWM is more capable (DMA!) than the MT7688's, but IRQ seems to be
+//   the same
+#define PWM_INT_ENABLE    PWM_ADDR(0x200) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
+#define PWM_INT_STATUS    PWM_ADDR(0x204) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
+#define PWM_INT_ACK       PWM_ADDR(0x208) // write 1 to acknowledge IRQ
+
 #define PWM_CHAN_OFFS(channel,reg) (0x10+((channel)*0x40)+(reg))
 #define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
 #define NUM_PWMS 4
@@ -141,6 +151,8 @@ static void *dma_buffer_vaddr;
 #define DMA_TO_PWM 0
 #define DMA_CHANNEL 2 // FIXME: UGLY: this is just a channel that seems to be free normally, but maybe is NOT free!
 
+#define PWM_IRQ 1
+
 #if !DMA_TO_PWM
 
 // timer controlled PWM feeding
@@ -159,7 +171,8 @@ struct hrtimer updatetimer;
 static void startSendingPWM(void);
 static u32 sendNext64bits(void);
 
-static int irqcount = 0;
+static int pwm_irqcount = 0;
+static u32 pwm_irqflags = 0;
 
 static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
 {
@@ -235,8 +248,10 @@ void startSendingPWM()
   // init the PWM
   sendRepeats = 0;
   // - disable the PWM
-  iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
+  iowrite32(ioread32(PWM_ENABLE) & ~(1<<pwm_channel), PWM_ENABLE); // disable PWM
   if (pwmwordstosend>0) {
+    // - enable PWM IRQ
+    iowrite32(0x03<<(pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
     // - set up PWM for one output sequence
     iowrite32(0x7E08 | (inverted ? 0x0180 : 0x0000), PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
     iowrite32(ACTIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // bit active time
@@ -246,6 +261,10 @@ void startSendingPWM()
     // - initiate sending
     pwmoutptr = pwmdataptr;
     pwmwordsleft = pwmwordstosend;
+    #if PWM_IRQ
+    // send first word, let interrupt take care of the rest
+    sendNext64bits();
+    #else
     // just start a little later
     last64BitsSent = 0;
     hrtimer_start(&updatetimer, ktime_set(0, PASSIVE_BIT_TIME), HRTIMER_MODE_REL);
@@ -258,6 +277,7 @@ void startSendingPWM()
 //       printk(KERN_INFO DEVICE_NAME": special case, <64 bit PWM, no reload needed -> just timing chain reset now\n");
 //       hrtimer_start(&updatetimer, ktime_set(0, CHAIN_RESET_NS), HRTIMER_MODE_REL);
 //     }
+    #endif
   }
 }
 
@@ -267,7 +287,7 @@ u32 sendNext64bits()
 {
   if (pwmwordsleft>0) {
     // just send data directly
-    iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
+    iowrite32(ioread32(PWM_ENABLE) & ~(1<<pwm_channel), PWM_ENABLE); // disable PWM
     iowrite32(*pwmoutptr, PWM_CHAN(pwm_channel, PWMSENDDATA0)); // Upper 32 bits
     pwmwordsleft--;
     pwmoutptr++;
@@ -279,19 +299,27 @@ u32 sendNext64bits()
     else {
       iowrite32(inverted ? 0xFFFFFFFF : 0, PWM_CHAN(pwm_channel, PWMSENDDATA1)); // inactive end
     }
-    iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // (re)enable PWM
+    iowrite32(ioread32(PWM_ENABLE) | (1<<pwm_channel), PWM_ENABLE); // (re)enable PWM
     last64BitsSent = ktime_to_ns(updatetimer.base->get_time());
   }
   return pwmwordsleft; // 0 if done, >0 if more to be transferred
 }
 
 
+#if PWM_IRQ
 static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
 {
-  irqcount++;
+  pwm_irqcount++;
+  pwm_irqflags = ioread32(PWM_INT_STATUS); // PWM1 sets bit 2, PWM0 sets bit 0
+  iowrite32(0x03<<(pwm_channel*2), PWM_INT_ACK); // acknowledge both PWM IRQs of this channel
+  // send next
+  if (sendNext64bits()==0) {
+    // done
+    pwmwordstosend = 0;
+  }
   return IRQ_HANDLED;
 }
-
+#endif
 
 
 #endif
@@ -459,7 +487,7 @@ void update_leds(const char *buff, size_t len)
   // Use DMA to feed PWM engine
   // TODO: find out if that's really possible, does not work yet as-is
   // - disable the PWM
-  iowrite32(ioread32(PWMENABLE) & ~(1<<pwm_channel), PWMENABLE); // disable PWM
+  iowrite32(ioread32(PWM_ENABLE) & ~(1<<pwm_channel), PWM_ENABLE); // disable PWM
   // - set up PWM for one output sequence
   iowrite32(0x7E08 | (inverted ? 0x0180 : 0x0000), PWM_CHAN(pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
   iowrite32(ACTIVE_BIT_TIME, PWM_CHAN(pwm_channel, inverted ? PWMLDUR : PWMHDUR)); // bit active time
@@ -499,7 +527,7 @@ void update_leds(const char *buff, size_t len)
     iowrite32(outbuf[1], PWM_CHAN(pwm_channel, PWMSENDDATA1)); // Lower 32 bits
   }
   // - enable the PWM
-  iowrite32(ioread32(PWMENABLE) | (1<<pwm_channel), PWMENABLE); // enable PWM
+  iowrite32(ioread32(PWM_ENABLE) | (1<<pwm_channel), PWM_ENABLE); // enable PWM
   #else
   // Use timer IRQs to feed PWM
   // - init totals (for retries)
@@ -509,7 +537,7 @@ void update_leds(const char *buff, size_t len)
   #endif
   spin_unlock_irqrestore(&updatelock, irqflags);
   // FIXME: remove debug code
-  printk(KERN_INFO DEVICE_NAME": before sending, we had irqcount=%d, pwm_wave_num=%u, pwm_send_wave_num=%u, seg_done_status=0x%08X\n", irqcount, pwm_wave_num, pwm_send_wave_num, seg_done_status);
+  printk(KERN_INFO DEVICE_NAME": before sending, we had pwm_irqcount=%d, pwm_irqflags=0x%08X, pwm_wave_num=%u, pwm_send_wave_num=%u, seg_done_status=0x%08X\n", pwm_irqcount, pwm_irqflags, pwm_wave_num, pwm_send_wave_num, seg_done_status);
 }
 
 
@@ -571,6 +599,8 @@ int init_module(void)
     goto err;
   }
 
+
+  #if PWM_IRQ
   r = request_any_context_irq(
     irqno,
     p44ledchain_pwm_interrupt,
@@ -583,9 +613,10 @@ int init_module(void)
     r = -EINVAL;
     goto err_unreg_device;
   }
+  #endif
 
   // printk(KERN_INFO DEVICE_NAME": Build: %s %s\n", __DATE__, __TIME__); // do not use __DATE__/__TIME__ -> prevents reproducible builds
-  printk(KERN_INFO DEVICE_NAME": Major=%d  device=/dev/%s\n", P44_LEDCHAIN_MAJOR, DEVICE_NAME);
+  printk(KERN_INFO DEVICE_NAME": v4, Major=%d  device=/dev/%s\n", P44_LEDCHAIN_MAJOR, DEVICE_NAME);
   printk(KERN_INFO DEVICE_NAME": PWM channel=%d\n", pwm_channel);
   printk(KERN_INFO DEVICE_NAME": Number of LEDs: %d\n", led_count);
   printk(KERN_INFO DEVICE_NAME": Inverted: %d\n", inverted);
@@ -634,7 +665,9 @@ err_device_destroy:
 err_class_destroy:
   class_destroy(p44ledchain_class);
 err_free_irq:
+  #if PWM_IRQ
   free_irq(irqno, &pwmdataptr);
+  #endif
 err_unreg_device:
   unregister_chrdev(P44_LEDCHAIN_MAJOR, DEVICE_NAME);
 err:
@@ -663,8 +696,10 @@ void cleanup_module(void)
   pwmwordstosend = 0;
   hrtimer_cancel(&updatetimer);
 
+  #if PWM_IRQ
   // free the irq
   free_irq(irqno, &pwmdataptr);
+  #endif
 
   // remove the device
   device_destroy(p44ledchain_class, MKDEV(P44_LEDCHAIN_MAJOR,0));
