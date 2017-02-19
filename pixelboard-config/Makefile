@@ -48,11 +48,9 @@ endif
 ifeq ($(CONFIG_TARGET_ar71xx_generic_CARAMBOLA2),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=carambola2
 endif
-# NOTE: for now assume Omega2 when build is for Linkit Smart (Omega2 prototype uses Linkitsmart build)
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_LinkIt7688),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=lis7688
 endif
-# NOTE: check actual symbol for Omega2 when it is released!
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_P44DSBOmega2),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
 endif

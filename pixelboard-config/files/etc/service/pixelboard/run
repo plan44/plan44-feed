@@ -7,7 +7,7 @@ EXTRAOPTS=
 
 # platform params
 PLATFORM_LEDCHAIN_GPIONO="18"
-PLATFORM_LEDCHAIN_DEVICE="/dev/ws2812"
+PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain0"
 PLATFORM_LEDCHAIN_NUMLEDS="200"
 
 # Allow overriding options
@@ -22,7 +22,11 @@ fi
 
 
 # load the LED chain kernel module
-insmod ws2812-draiveris gpios=${PLATFORM_LEDCHAIN_GPIONO} leds_per_gpio=${PLATFORM_LEDCHAIN_NUMLEDS}
+# - Omega1
+#insmod ws2812-draiveris gpios=${PLATFORM_LEDCHAIN_GPIONO} leds_per_gpio=${PLATFORM_LEDCHAIN_NUMLEDS}
+# - Omega2 with non-inverted WS2813 LEDs
+insmod p44-ledchain ledchain0=0,${PLATFORM_LEDCHAIN_NUMLEDS},2
+omega2-ctrl gpiomux set pwm0 pwm
 
 # load the i2c module
 insmod i2c-gpio-custom bus0=0,21,20,50,10,0,0,1
