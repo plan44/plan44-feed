@@ -28,9 +28,9 @@ include $(INCLUDE_DIR)/kernel.mk
 # name
 PKG_NAME:=p44-ledchain
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.9
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -39,7 +39,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/$(PKG_NAME)
 	SUBMENU:=Other modules
-	DEPENDS:=@TARGET_ramips_mt7688 +kmod-dma-ralink +kmod-pwm-mediatek
+	DEPENDS:=@TARGET_ramips_mt7688
 	TITLE:=p44-ledchain driver for WS28xx/SK68xx
 	FILES:= $(PKG_BUILD_DIR)/p44-ledchain.ko
 endef
