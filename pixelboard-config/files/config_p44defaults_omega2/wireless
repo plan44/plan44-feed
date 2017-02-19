@@ -12,6 +12,7 @@ config wifi-iface 'ap_radio0'
 	option mode 'ap'
 	option ssid 'PIXELBOARD'
 	option encryption 'none'
+	option disabled '1'
 
 config wifi-iface 'cli_radio0'
 	option device 'radio0'
