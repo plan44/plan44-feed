@@ -33,11 +33,6 @@ define Package/$(PKG_NAME)/description
 endef
 
 
-define Package/$(PKG_NAME)/config
-	source "$(SOURCE)/Config.in"
-endef
-
-
 # derive P44 platform identifier
 ifeq ($(CONFIG_TARGET_brcm2708_bcm2708_RaspberryPi),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
@@ -50,6 +45,9 @@ ifeq ($(CONFIG_TARGET_ar71xx_generic_CARAMBOLA2),y)
 endif
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_LinkIt7688),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=lis7688
+endif
+ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_omega2),y)
+  PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_P44DSBOmega2),y)
   PIXELBOARD_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
