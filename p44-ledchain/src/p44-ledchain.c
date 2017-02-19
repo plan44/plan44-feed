@@ -479,6 +479,7 @@ static int isReady(devPtr_t dev)
 
 // MARK: ===== Generating new patterns
 
+#define VAR_DUMP 0
 
 // init generating bits
 static void initBitGenerator(devPtr_t dev)
@@ -495,7 +496,12 @@ static void initBitGenerator(devPtr_t dev)
 static void generateBit(int aBit, devPtr_t dev)
 {
   u32 om = dev->outMask;
-  u32 *owPtr = &(dev->outPtr->data[dev->bitCount & 0x20]); // second word for bits 32..63
+  u32 *owPtr = &(dev->outPtr->data[(dev->bitCount & 0x20) ? 1 : 0]); // second word for bits 32..63
+
+  #if VAR_DUMP
+  printk(KERN_INFO LOGPREFIX "bit=%d, outPtr=0x%08X, om=0x%08X, bitCount=%d, *owPtr=0x%08X, nanosecs=%d\n", aBit, (u32)(dev->outPtr), om, dev->bitCount, *owPtr, dev->nanosecs);
+  #endif
+
   if (om==0) {
     om=1L; // fill LSB first
     *owPtr = 0; // init next buffer word
@@ -522,6 +528,7 @@ static void generateBit(int aBit, devPtr_t dev)
       // 64 bit pattern complete, save nanoseconds
       dev->outPtr->nanosecs = dev->nanosecs;
       dev->nanosecs = 0;
+      dev->bitCount = 0;
       (dev->outPtr)++;
     }
   }
@@ -532,7 +539,7 @@ static void generateBit(int aBit, devPtr_t dev)
 // generate bit pattern to be fed into PWM engine from input data word
 static void generateBits(u32 aWord, u8 aNumBits, devPtr_t dev)
 {
-  u32 inMask = 1L<<31;
+  u32 inMask = 1L<<(aNumBits-1);
   int bit;
   while (aNumBits>0) {
     // generate next bit
@@ -567,7 +574,7 @@ static u32 finishBitGenerator(devPtr_t dev)
   // fill up to next 64bit
   if (dev->bitCount!=0) {
     // fill up current 32bit word
-    owPtr = &(dev->outPtr->data[dev->bitCount & 0x20]); // second word for bits 32..63
+    owPtr = &(dev->outPtr->data[(dev->bitCount & 0x20) ? 1 : 0]); // second word for bits 32..63
     if (dev->outMask!=0) {
       while (dev->outMask!=0) {
         if (dev->inverted)
@@ -585,9 +592,10 @@ static u32 finishBitGenerator(devPtr_t dev)
       dev->outPtr->data[1] = dev->inverted ? 0xFFFFFFFF : 0x0;
       dev->bitCount += 32;
       dev->nanosecs += 32*dev->ledTypeDesc->TPassive_min_nS;
-      dev->outPtr->nanosecs = dev->nanosecs;
-      (dev->outPtr)++;
     }
+    // word full now, save nanosecs and advance
+    dev->outPtr->nanosecs = dev->nanosecs;
+    (dev->outPtr)++;
   }
   // return number of new patterns
   return dev->outPtr - dev->outBuf;
@@ -596,7 +604,7 @@ static u32 finishBitGenerator(devPtr_t dev)
 
 // MARK: ===== Update led chain with new data
 
-#define DATA_DUMP 1
+#define DATA_DUMP 0
 
 void update_leds(const char *buff, size_t len, devPtr_t dev)
 {
@@ -604,6 +612,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   int leds;
   int ncomp;
   int i;
+  u8 *inPtr;
   u32 newPatterns;
   #if DATA_DUMP
   int k;
@@ -616,14 +625,15 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   // limit to max
   if (leds>dev->num_leds) leds=dev->num_leds;
   printk(KERN_INFO LOGPREFIX "Received %d bytes -> data for %d LEDs with %d bytes each\n", len, leds, ncomp);
+  inPtr = (u8 *)buff;
   #if DATA_DUMP
   // show LED input data
   for (idx=0, k=0; k<leds; k++) {
     if (ncomp==4) {
-      printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, buff[idx], buff[idx+1], buff[idx+2], buff[idx+3]);
+      printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, inPtr[idx], inPtr[idx+1], inPtr[idx+2], inPtr[idx+3]);
     }
     else {
-      printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, buff[idx], buff[idx+1], buff[idx+2]);
+      printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, inPtr[idx], inPtr[idx+1], inPtr[idx+2]);
     }
     idx += ncomp;
   }
@@ -639,22 +649,22 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   while (leds>0) {
     i = 0;
     while (true) {
-      ledword |= buff[dev->ledTypeDesc->fetchIdx[i]];
+      ledword |= inPtr[dev->ledTypeDesc->fetchIdx[i]];
       i++;
-      if (k>=ncomp)
+      if (i>=ncomp)
         break;
       ledword <<= 8;
     }
     generateBits(ledword, ncomp*8, dev);
-    buff += ncomp;
+    inPtr += ncomp;
     // next LED
     leds--;
   }
   // finish bit generation
   newPatterns = finishBitGenerator(dev);
-  printk(KERN_INFO LOGPREFIX "number of 64-bit patterns to send=%u\n", dev->numPWMPatterns);
+  printk(KERN_INFO LOGPREFIX "number of 64-bit patterns to send=%u\n", newPatterns);
   #if DATA_DUMP
-  for (k=0; k<dev->numPWMPatterns; k++) {
+  for (k=0; k<newPatterns; k++) {
     printk(KERN_INFO LOGPREFIX "pattern #%d : 0x%08X 0x%08X - %u nS\n", k, dev->outBuf[k].data[0], dev->outBuf[k].data[1], dev->outBuf[k].nanosecs);
   }
   #endif
@@ -974,12 +984,12 @@ static void __exit p44ledchain_exit_module(void)
   }
   // free the IRQ
   free_irq(pwm_irq_no, p44ledchain_pwm_devices);
+  // unmap PWM
+  iounmap(pwm_base);
   // destroy the class
   class_destroy(p44ledchain_class);
   // unregister the region
   unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_PWMS);
-  // unmap PWM
-  iounmap(pwm_base);
   // done
   printk(KERN_INFO LOGPREFIX "cleaned up\n");
 	return;
