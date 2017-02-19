@@ -1,0 +1,28 @@
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option ula_prefix 'fd1d:48c4:7633::/48'
+
+# station mode WiFi
+config interface 'wlan'
+	option proto 'dhcp'
+	option hostname 'pixelboard-WiFi'
+	option enabled '1'
+
+# Ethernet
+config interface 'lan'
+	option ifname 'eth0'
+	option proto 'dhcp'
+	option hostname 'pixelboard-LAN'
+	option enabled '1'
+
+# AP mode WiFi
+config interface 'wlanap'
+	option proto 'static'
+	option ipaddr '192.168.44.1'
+	option netmask '255.255.255.0'
+	option enabled '1'
