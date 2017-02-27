@@ -64,6 +64,24 @@ void __iomem *pwm_base; // set from ioremap()
 #define PWMSENDWAVENUM  0x34
 
 
+// set 1 to enable IRQ/TIMER sequence tracing
+#define SEQ_TRACING 0
+
+// receiver sequence debug macros
+#if SEQ_TRACING
+#define SEQ_TRACE_MAX 1000
+static char seq_traceinfo[SEQ_TRACE_MAX];
+int seq_trace_idx;
+#define SEQ_TRACE_CLEAR() { seq_traceinfo[0]=0; seq_trace_idx=0; }
+#define SEQ_TRACE(c) { if(seq_trace_idx<SEQ_TRACE_MAX-1) seq_traceinfo[seq_trace_idx++] = c; seq_traceinfo[seq_trace_idx] = 0; }
+#define SEQ_TRACE_SHOW() { printk(KERN_INFO LOGPREFIX "sequence trace = %s\n", seq_traceinfo); }
+#else
+#define SEQ_TRACE_CLEAR()
+#define SEQ_TRACE(c)
+#define SEQ_TRACE_SHOW()
+#endif
+
+
 // MARK: ===== Global Module definitions
 
 MODULE_LICENSE("GPL");
@@ -184,7 +202,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     // - TReset = >50µS
     // Note: the T0L and T1H seem to be wrong, using experimentally determined values
     .T0Active_nS = 425, .TPassive_min_nS = 1000, .T0Passive_double = 0,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 15000, .TReset_nS = 50000
   },
   {
     // SK2812 - RGBW data order
@@ -236,6 +254,7 @@ struct p44ledchain_dev {
   PWMPattern_t *outPtr;
   // - number of 64-bit patterns in the Buffer (=entire chain data)
   u32 numPWMPatterns;
+  u32 nextPWMPatterns; // next scheduled number of patterns
   // - number of patterns left to send
   u32 remainingPWMPatterns;
   // - pattern generator vars
@@ -247,6 +266,7 @@ struct p44ledchain_dev {
   long long expectedSentAt; // time when last 64bits are expected to be fully sent (checked in IRQ to detect timing violations)
   int sendRepeats; // how many times sending was tried
   // statistics
+  u32 irq_count;
   u32 updates;
   u32 retries;
   u32 errors;
@@ -283,6 +303,8 @@ static void startSendingPatterns(devPtr_t dev);
 u32 sendNextPattern(devPtr_t dev)
 {
   u32 expectedNs = 0;
+
+  SEQ_TRACE('p');
   if (dev->remainingPWMPatterns>0) {
     // just send data directly
     iowrite32(ioread32(PWM_ENABLE) & ~(1<<dev->pwm_channel), PWM_ENABLE); // disable PWM
@@ -294,6 +316,7 @@ u32 sendNextPattern(devPtr_t dev)
     (dev->outPtr)++;
     (dev->remainingPWMPatterns)--;
     iowrite32(ioread32(PWM_ENABLE) | (1<<dev->pwm_channel), PWM_ENABLE); // (re)enable PWM
+    SEQ_TRACE('s');
   }
   return expectedNs; // 0 if done, >0 how many nSecs sending this wave will take
 }
@@ -303,16 +326,20 @@ u32 sendNextPattern(devPtr_t dev)
 void sendFirstPattern(devPtr_t dev)
 {
   u32 expectedNs;
+
+  SEQ_TRACE('P');
   // start at beginning of data
   dev->outPtr = dev->outBuf;
   dev->remainingPWMPatterns = dev->numPWMPatterns;
   // start
   expectedNs = sendNextPattern(dev);
   if (expectedNs) {
-    // something to send, update expected time
+    // something sent, update expected time
     dev->expectedSentAt = ktime_to_ns(ktime_get())+expectedNs;
+    SEQ_TRACE('S');
   }
   else {
+    SEQ_TRACE('0');
     // nothing to send, no need to wait for chain to reset
     dev->numPWMPatterns = 0;
   }
@@ -322,13 +349,18 @@ void sendFirstPattern(devPtr_t dev)
 // IRQs blocked!
 void startSendingPatterns(devPtr_t dev)
 {
+  SEQ_TRACE('B');
+  dev->numPWMPatterns = dev->nextPWMPatterns;
+  dev->nextPWMPatterns = 0; // used now
   // init the PWM
-  dev->notReady = 1;
-  dev->sendRepeats = 0;
-  dev->updates++;
   // - disable the PWM
   iowrite32(ioread32(PWM_ENABLE) & ~(1<<dev->pwm_channel), PWM_ENABLE); // disable PWM
-  if (dev->remainingPWMPatterns>0) {
+  // - set up the PWM for new pattern
+  if (dev->numPWMPatterns>0) {
+    SEQ_TRACE('>');
+    dev->updates++;
+    dev->notReady = 1;
+    dev->sendRepeats = 0;
     // - enable PWM IRQ
     iowrite32(0x03<<(dev->pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
     // - set up PWM for one output sequence
@@ -349,7 +381,9 @@ static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
   unsigned long irqflags;
 
   spin_lock_irqsave(&dev->updatelock, irqflags);
+  SEQ_TRACE('T');
   if (dev->notReady) {
+    SEQ_TRACE('!');
     // still in progress
     if (dev->remainingPWMPatterns) {
       // timer hitting in notReady with remaining patterns means we must retry entire sequence
@@ -359,9 +393,7 @@ static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
       // timer hitting in notReady with NO patterns left means we become ready now
       dev->notReady = 0;
       // if there are new patterns, start sending those now
-      if (dev->numPWMPatterns) {
-        startSendingPatterns(dev);
-      }
+      startSendingPatterns(dev);
     }
   }
   spin_unlock_irqrestore(&dev->updatelock, irqflags);
@@ -380,42 +412,55 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   irqreturn_t ret = IRQ_NONE;
   devPtr_t dev;
 
+  SEQ_TRACE('I');
   irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
   now = ktime_to_ns(ktime_get());
   irqMask = 0x03;
   for (i=0; i<NUM_PWMS; i++) {
     // IRQ from this PWM?
     if (irqStatus & irqMask) {
+      SEQ_TRACE('i');
       dev = ((devPtr_t *)dev_id)[i];
       if (dev) {
+        SEQ_TRACE('d');
+        SEQ_TRACE('0'+i);
         // PWM channel i has interrupt and we have a ledchain device for that channel
         // - acknowledge both PWM IRQs of this channel (altough we don't know what the upper bit is for)
         iowrite32(irqMask, PWM_INT_ACK);
         // check for timing failure
         if (now-dev->expectedSentAt > dev->ledTypeDesc->TPassive_max_nS) {
           // failure, needs retry
+          SEQ_TRACE('o');
           dev->sendRepeats++;
           dev->retries++;
           if (dev->sendRepeats>=dev->maxSendRepeats) {
             // give up, do not restart when timer hits
+            SEQ_TRACE('E');
             dev->remainingPWMPatterns = 0; // do not attempt to send anything more
             dev->errors++; // count the errors
           }
           // - start timer to either hold back next update or retry sending
-          hrtimer_start(&dev->starttimer, ktime_set(0, dev->ledTypeDesc->TReset_nS), HRTIMER_MODE_REL);
+          hrtimer_start(&dev->starttimer, ktime_set(0, (dev->ledTypeDesc->TReset_nS)/2*3), HRTIMER_MODE_REL);
         }
         else {
           // send next
+          SEQ_TRACE('n');
           expectedNs = sendNextPattern(dev);
           if (expectedNs) {
             // something to send, update expected time
             dev->expectedSentAt = now+expectedNs;
+            SEQ_TRACE('w');
           }
           else {
             // nothing more to send
+            SEQ_TRACE('W');
+            // - completely and successfully written out
+            dev->numPWMPatterns = 0;
             // - start timer to know when chain reset time is over and next update can be started immediately
-            hrtimer_start(&dev->starttimer, ktime_set(0, dev->ledTypeDesc->TReset_nS), HRTIMER_MODE_REL);
+            hrtimer_start(&dev->starttimer, ktime_set(0, (dev->ledTypeDesc->TReset_nS)/2*3), HRTIMER_MODE_REL);
           }
+          // statistics
+          dev->irq_count++;
         }
         ret = IRQ_HANDLED;
       }
@@ -423,7 +468,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
     // next PWM
     irqMask <<= 2;
   }
-  // not my IRQ
+  // return handled status
   return ret;
 }
 
@@ -438,10 +483,12 @@ static int stopSendingPatterns(devPtr_t dev)
   unsigned long irqflags;
 
   spin_lock_irqsave(&dev->updatelock, irqflags);
+  SEQ_TRACE('X');
   nrdy = dev->notReady;
   // prevent any more pattern sending
   dev->remainingPWMPatterns = 0;
   dev->numPWMPatterns = 0;
+  dev->nextPWMPatterns = 0;
   // now when IRQ or timer hits, nothing will happen except notReady cleared
   spin_unlock_irqrestore(&dev->updatelock, irqflags);
   return nrdy;
@@ -453,12 +500,13 @@ static void scheduleNewPatterns(u32 aNumNewPatterns, devPtr_t dev)
 {
   unsigned long irqflags;
 
+  SEQ_TRACE('N');
   spin_lock_irqsave(&dev->updatelock, irqflags);
   // set number of new patterns
-  dev->numPWMPatterns = aNumNewPatterns;
+  dev->nextPWMPatterns = aNumNewPatterns;
   if (!dev->notReady) {
     // fully ready, need to initiate now
-    // (otherwise, timer will initiate it when it hits
+    // (otherwise, timer will initiate it when it hits)
     startSendingPatterns(dev);
   }
   spin_unlock_irqrestore(&dev->updatelock, irqflags);
@@ -669,8 +717,10 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   }
   #endif
   // information
-  printk(KERN_INFO LOGPREFIX "previous update had %d repeats, total updates=%u, total retries=%u, total errors=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors);
+  SEQ_TRACE_SHOW()
+  printk(KERN_INFO LOGPREFIX "previous update had %d repeats. Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
   // start sending now or schedule start when reset time is over
+  SEQ_TRACE_CLEAR()
   scheduleNewPatterns(newPatterns, dev);
 }
 
@@ -896,6 +946,7 @@ static int __init p44ledchain_init_module(void)
   int i;
   dev_t devno;
 
+  SEQ_TRACE_CLEAR()
   // no devices to begin with
   for (i=0; i<NUM_PWMS; i++) {
     p44ledchain_pwm_devices[i] = NULL;
