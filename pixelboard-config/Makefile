@@ -9,7 +9,7 @@ PKG_NAME:=pixelboard-config
 # version of what we are downloading
 PKG_VERSION:=0.2
 # version of this makefile
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -57,6 +57,11 @@ endif
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
+	# Replace contents of /files with stuff we want to have there
+	# (is ugly, but works assuming only one xxx-config package is enabled -
+	# fair enough, because these packages ARE meant to be overall target config packages)
+	rm -r $(TOPDIR)/files/* ||:
+	#$(CP) -r ./into-buildroot-files/* $(TOPDIR)/files
 endef
 
 
