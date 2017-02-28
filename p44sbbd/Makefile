@@ -51,8 +51,6 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
-	$(INSTALL_DIR) $(1)/etc/service
-	$(CP) $(PKG_BUILD_DIR)/etc/service/* $(1)/etc/service
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
