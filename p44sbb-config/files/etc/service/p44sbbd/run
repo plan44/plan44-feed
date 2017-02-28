@@ -5,6 +5,7 @@ APPCONFIG="--timedisplay 55,8"
 
 # basic config
 RS485PORT=/dev/ttyATH0
+RS485TXOFFDELAY=2
 RS485TXENPIN=gpio.26
 RS485RXENPIN=/gpio.23
 JSONAPIPORT=9999
@@ -18,6 +19,7 @@ chmod 777 ${STATEDIR}
 # run
 exec p44sbbd \
   --rs485connection ${RS485PORT} \
+  --rs485txoffdelay ${RS485TXOFFDELAY} \
   --rs485txenable ${RS485TXENPIN} \
   --rs485rxenable ${RS485RXENPIN} \
   --jsonapiport ${JSONAPIPORT} \
