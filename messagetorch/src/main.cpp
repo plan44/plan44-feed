@@ -246,6 +246,8 @@ static const glyph_t fontGlyphs[numGlyphs] = {
 const uint16_t maxLeds = 512;
 uint16_t numLeds;
 
+const char *deviceName = "/dev/ledchain";
+
 // LED chain configuration: the values set here are the defaults, and can be overridden by command line options
 
 // Number of LEDs around the tube. One too much looks better (italic text look)
@@ -919,6 +921,7 @@ static void usage(char *name)
 {
   fprintf(stderr, "usage:\n");
   fprintf(stderr, "  %s [options] [text or command]...\n", name);
+  fprintf(stderr, "    -d device: the LED chain device name\n");
   fprintf(stderr, "    -P : UDP port number to listen for commands (default=%d)\n", DEFAULT_PORT_NO);
   fprintf(stderr, "         To show a text message just send the text via UDP\n");
   fprintf(stderr, "         To change a param send '/param paramname=value' via UDP\n");
@@ -928,7 +931,7 @@ static void usage(char *name)
   fprintf(stderr, "    -a : change X after every level\n");
   fprintf(stderr, "    -s : swap X and Y direction\n");
   fprintf(stderr, "    -m : mirror text\n");
-  fprintf(stderr, "    -w : rgbW LEDs (SK6812) instead of rgb (WS2812)\n");
+  fprintf(stderr, "    -w : rgbW LEDs (SK6812) instead of rgb (WS281x)\n");
   fprintf(stderr, "    -h : show this help\n");
 }
 
@@ -944,11 +947,14 @@ int main(int argc, char *argv[])
     swapXY = false;
     mirrorText = false;
   }
-  while ((c = getopt(argc, argv, "hP:W:H:rasmw")) != -1) {
+  while ((c = getopt(argc, argv, "hd:P:W:H:rasmw")) != -1) {
     switch (c) {
       case 'h':
         usage(argv[0]);
         exit(0);
+      case 'd':
+        deviceName = optarg;
+        break;
       case 'P':
         commandPort = atoi(optarg);
         break;
@@ -986,7 +992,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
   // create LED driver class
-  leds = new p44_ws2812(rgbw ? p44_ws2812::ledtype_sk6812 : p44_ws2812::ledtype_ws2812, numLeds, swapXY ? levels : ledsPerLevel, reversedX, alternatingX, swapXY); // create WS2812/SK6812 driver
+  leds = new p44_ws2812(deviceName, rgbw ? p44_ws2812::ledtype_sk6812 : p44_ws2812::ledtype_ws2812, numLeds, swapXY ? levels : ledsPerLevel, reversedX, alternatingX, swapXY); // create WS2812/SK6812 driver
   if (!leds) {
     fprintf(stderr, "Error: cannot allocate LED driver\n");
     exit(-1);

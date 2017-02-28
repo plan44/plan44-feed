@@ -1,20 +1,19 @@
 //
-//  Copyright (c) 2016 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Lukas Zeller <luz@plan44.ch>
 
 
 #include "p44_ws2812.hpp"
 
-#define WS2812_DEVICENAME "/dev/ws2812" // we use the ws2812-draiveris kernel driver to talk to the WS2812 chain(s)
 
-
-p44_ws2812::p44_ws2812(LedType aLedType, uint16_t aNumLeds, uint16_t aLedsPerRow, bool aXReversed, bool aAlternating, bool aSwapXY) :
+p44_ws2812::p44_ws2812(const char *aLedChainDevice, LedType aLedType, uint16_t aNumLeds, uint16_t aLedsPerRow, bool aXReversed, bool aAlternating, bool aSwapXY) :
   initialized(false)
 
 {
   // type
   ledType = aLedType;
+  deviceName = aLedChainDevice;
   numColorComponents = ledType==ledtype_sk6812 ? 4 : 3;
   // number of LEDs
   numLeds = aNumLeds;
@@ -64,7 +63,7 @@ bool p44_ws2812::begin()
 {
   if (!initialized) {
     ledbuffer = new uint8_t[numColorComponents*numLeds];
-    ledFd = open(WS2812_DEVICENAME, O_RDWR);
+    ledFd = open(deviceName.c_str(), O_RDWR);
     if (ledFd>=0) {
       initialized = true;
     }

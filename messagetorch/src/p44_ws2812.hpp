@@ -13,6 +13,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <string>
+
+using namespace std;
 
 class p44_ws2812
 {
@@ -35,19 +38,21 @@ private:
 
   bool initialized;
   uint8_t numColorComponents; // depends on ledType
+  string deviceName;
 
   int ledFd; // the file descriptor for the LED device
   uint8_t *ledbuffer; // the raw bytes to be sent to the WS2812 device
 
 public:
   /// create driver for a WS2812 LED chain
+  /// @param aLedChainDevice name of LED chain device
   /// @param aLedType type of LEDs
   /// @param aNumLeds number of LEDs in the chain
   /// @param aLedsPerRow number of consecutive LEDs in the WS2812 chain that build a row (usually x direction, y if swapXY was set)
   /// @param aXReversed X direction is reversed
   /// @param aAlternating X direction is reversed in first row, normal in second, reversed in third etc..
   /// @param aSwapXY X and Y reversed (for up/down wiring)
-  p44_ws2812(LedType aLedType, uint16_t aNumLeds, uint16_t aLedsPerRow=0, bool aXReversed=false, bool aAlternating=false, bool aSwapXY=false);
+  p44_ws2812(const char *aLedChainDevice, LedType aLedType, uint16_t aNumLeds, uint16_t aLedsPerRow=0, bool aXReversed=false, bool aAlternating=false, bool aSwapXY=false);
 
   /// destructor
   ~p44_ws2812();
