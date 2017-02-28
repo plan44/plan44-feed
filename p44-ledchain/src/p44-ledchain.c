@@ -202,7 +202,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     // - TReset = >50µS
     // Note: the T0L and T1H seem to be wrong, using experimentally determined values
     .T0Active_nS = 425, .TPassive_min_nS = 1000, .T0Passive_double = 0,
-    .TPassive_max_nS = 15000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000
   },
   {
     // SK2812 - RGBW data order
@@ -261,11 +261,15 @@ struct p44ledchain_dev {
   u32 outMask;
   u32 bitCount;
   u32 nanosecs;
+  // read index
+  size_t read_idx;
   // timing
   int notReady; // set as long as no new send can be started
   long long expectedSentAt; // time when last 64bits are expected to be fully sent (checked in IRQ to detect timing violations)
   int sendRepeats; // how many times sending was tried
   // statistics
+  u32 max_irq_delay; // max IRQ delay behind expectedSentAt that did NOT trigger a retry
+  u32 last_timeout_ns; // last IRQ delay that triggered a retry
   u32 irq_count;
   u32 updates;
   u32 retries;
@@ -361,6 +365,8 @@ void startSendingPatterns(devPtr_t dev)
     dev->updates++;
     dev->notReady = 1;
     dev->sendRepeats = 0;
+    dev->last_timeout_ns = 0;
+    dev->max_irq_delay = 0;
     // - enable PWM IRQ
     iowrite32(0x03<<(dev->pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
     // - set up PWM for one output sequence
@@ -408,6 +414,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   u32 expectedNs;
   u32 irqStatus;
   u32 irqMask;
+  u32 irq_delay_ns;
   int i;
   irqreturn_t ret = IRQ_NONE;
   devPtr_t dev;
@@ -428,11 +435,13 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
         // - acknowledge both PWM IRQs of this channel (altough we don't know what the upper bit is for)
         iowrite32(irqMask, PWM_INT_ACK);
         // check for timing failure
-        if (now-dev->expectedSentAt > dev->ledTypeDesc->TPassive_max_nS) {
+        irq_delay_ns = now-dev->expectedSentAt;
+        if (irq_delay_ns > dev->ledTypeDesc->TPassive_max_nS) {
           // failure, needs retry
           SEQ_TRACE('o');
           dev->sendRepeats++;
           dev->retries++;
+          dev->last_timeout_ns = irq_delay_ns;
           if (dev->sendRepeats>=dev->maxSendRepeats) {
             // give up, do not restart when timer hits
             SEQ_TRACE('E');
@@ -445,6 +454,8 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
         else {
           // send next
           SEQ_TRACE('n');
+          if (irq_delay_ns>dev->max_irq_delay)
+            dev->max_irq_delay = irq_delay_ns;
           expectedNs = sendNextPattern(dev);
           if (expectedNs) {
             // something to send, update expected time
@@ -577,7 +588,13 @@ static void generateBit(int aBit, devPtr_t dev)
       dev->outPtr->nanosecs = dev->nanosecs;
       dev->nanosecs = 0;
       dev->bitCount = 0;
-      (dev->outPtr)++;
+      // safeguard
+      if (dev->outPtr-dev->outBuf>=dev->outBufSize) {
+        printk(KERN_WARNING LOGPREFIX "output buffer exhaused (should not happen)\n");
+      }
+      else {
+        (dev->outPtr)++;
+      }
     }
   }
   dev->outMask = om;
@@ -595,7 +612,7 @@ static void generateBits(u32 aWord, u8 aNumBits, devPtr_t dev)
     // make sure 1-bit does not start at end of a 64-bit word
     if (bit && (dev->bitCount==63)) {
       // High bit starting at end of 64bit output word -> would fail because cut in two parts by idle period
-      generateBit(0, dev); // insert an extra inactive period, so bit is in fresh 64-bit word
+      generateBit(0, dev); // insert an extra inactive period, so High bit is in fresh 64-bit word
     }
     generateBit(1, dev); // first bit always high
     if (bit) generateBit(1, dev); // generate a second high period for a high input bit
@@ -652,7 +669,9 @@ static u32 finishBitGenerator(devPtr_t dev)
 
 // MARK: ===== Update led chain with new data
 
-#define DATA_DUMP 0
+#define DATA_DUMP 0 // data input and output dump
+#define STAT_INFO 0 // statistic info dump for every update
+
 
 void update_leds(const char *buff, size_t len, devPtr_t dev)
 {
@@ -672,7 +691,9 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   leds = len/ncomp;
   // limit to max
   if (leds>dev->num_leds) leds=dev->num_leds;
+  #if STAT_INFO
   printk(KERN_INFO LOGPREFIX "Received %d bytes -> data for %d LEDs with %d bytes each\n", len, leds, ncomp);
+  #endif
   inPtr = (u8 *)buff;
   #if DATA_DUMP
   // show LED input data
@@ -696,6 +717,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   // generate bits into buffer
   while (leds>0) {
     i = 0;
+    ledword = 0;
     while (true) {
       ledword |= inPtr[dev->ledTypeDesc->fetchIdx[i]];
       i++;
@@ -710,7 +732,9 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   }
   // finish bit generation
   newPatterns = finishBitGenerator(dev);
+  #if STAT_INFO
   printk(KERN_INFO LOGPREFIX "number of 64-bit patterns to send=%u\n", newPatterns);
+  #endif
   #if DATA_DUMP
   for (k=0; k<newPatterns; k++) {
     printk(KERN_INFO LOGPREFIX "pattern #%d : 0x%08X 0x%08X - %u nS\n", k, dev->outBuf[k].data[0], dev->outBuf[k].data[1], dev->outBuf[k].nanosecs);
@@ -718,7 +742,14 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   #endif
   // information
   SEQ_TRACE_SHOW()
-  printk(KERN_INFO LOGPREFIX "previous update had %d repeats. Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
+  #if STAT_INFO
+  printk(KERN_INFO LOGPREFIX "Previous update had %d repeats, last timeout=%d nS, max irq=%d nS.\n", dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay);
+  printk(KERN_INFO LOGPREFIX "Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->updates, dev->retries, dev->errors, dev->irq_count);
+  #else
+  if (dev->sendRepeats>dev->maxSendRepeats) {
+    printk(KERN_INFO LOGPREFIX "Previous update failed (%d repeats) - Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
+  }
+  #endif
   // start sending now or schedule start when reset time is over
   SEQ_TRACE_CLEAR()
   scheduleNewPatterns(newPatterns, dev);
@@ -747,6 +778,7 @@ static int p44ledchain_open(struct inode *inode, struct file *filp)
   devPtr_t dev = container_of(inode->i_cdev, struct p44ledchain_dev, cdev);
   // remember our dev in the filp
   filp->private_data = (void *)dev;
+  dev->read_idx = 0;
   return 0;
 }
 
@@ -760,25 +792,39 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
 
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
-  const char *ans = NULL;
-  devPtr_t dev = (devPtr_t)filp->private_data;
+  const int ansBufferSize = 512;
+  char ans[ansBufferSize];
   size_t bytes = 0;
+  devPtr_t dev = (devPtr_t)filp->private_data;
+  const char *ansP;
 
-  // just return "Ready" or "Busy" (up to as many chars as requested)
-  if (isReady(dev)) {
-    ans = "Ready";
+  // return "Ready" or "Busy" on first line, some stats on following lines
+  bytes = snprintf(ans, ansBufferSize,
+    "%s\n"
+    "Last update: %d repeats, last timeout=%d nS, max irq=%d nS\n"
+    "Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n",
+    isReady(dev) ? "Ready" : "Busy",
+    dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay,
+    dev->updates, dev->retries, dev->errors, dev->irq_count
+  );
+  if (bytes<=0 || dev->read_idx>=bytes) {
+    // all data read already before -> create an EOF conditon for now
+    bytes = 0;
+    dev->read_idx = 0; // next read will again return the entire answer
   }
   else {
-    ans = "Busy";
+    // not all bytes read yet
+    bytes -= dev->read_idx; // don't return already read bytes again
+    ansP = ans + dev->read_idx;
+    // limit to amount requested
+    if (bytes>count) {
+      bytes = count;
+    }
+    // update reading index
+    dev->read_idx += bytes;
+    // now copy to user, which can sleep
+    copy_to_user(buf, ansP, bytes);
   }
-  if (ans) {
-    bytes = strlen(ans);
-  }
-  if (bytes>count) {
-    bytes = count;
-  }
-  // now copy to user, which can sleep
-  copy_to_user(buf, ans, bytes);
   return bytes;
 }
 
@@ -856,8 +902,9 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
   }
   // allocate the buffer for the LED data
   dev->outBufSize =
-    dev->num_leds*dev->ledTypeDesc->channels // number of input bytes
-    * 8 // number of bits
+    dev->num_leds*dev->ledTypeDesc->channels // = number of input bytes
+    * 8 // * number of bits = number of LED bits to send max
+    * 3 // * number of PWM bits per payload bits (max) = number of PWM bits total
     / 64 // number of PWM patterns
     * sizeof(PWMPattern_t);
   dev->outBuf = kzalloc(dev->outBufSize, GFP_KERNEL);
@@ -895,6 +942,7 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
   // Config summary
   printk(KERN_INFO LOGPREFIX "Device: /dev/%s\n", devname);
   printk(KERN_INFO LOGPREFIX "- PWM channel    : %d\n", dev->pwm_channel);
+  printk(KERN_INFO LOGPREFIX "- PWM buffer size: %u\n", dev->outBufSize);
   printk(KERN_INFO LOGPREFIX "- Number of LEDs : %d\n", dev->num_leds);
   printk(KERN_INFO LOGPREFIX "- Inverted       : %d\n", dev->inverted);
   printk(KERN_INFO LOGPREFIX "- LED type       : %s\n", dev->ledTypeDesc->name);
