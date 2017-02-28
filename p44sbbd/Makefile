@@ -45,8 +45,6 @@ endef
 
 define Build/Prepare
 	$(Build/Prepare/Default)
-	mkdir -p $(PKG_BUILD_DIR)/etc
-	$(CP) ./files/* $(PKG_BUILD_DIR)/
 endef
 
 

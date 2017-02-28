@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# clock config
-CLOCK="--timedisplay 55,8"
-
-# start p44sbbd
-exec p44sbbd --rs485connection /dev/ttyATH0 --rs485txenable gpio.26 --rs485rxenable /gpio.23 ${CLOCK} >/dev/null 2>&1
