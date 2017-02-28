@@ -12,8 +12,6 @@ jsoncsrf_path /tok/json
 jsonapi_path /api/json/
 jsonapi_host localhost
 jsonapi_port 8090
-jsoncmd_path /cfg/json/
-jsoncmd_tool /usr/bin/p44maintd
 jsonupload_path /cfg/upload
 jsonapiupload_path /api/upload
 uploaddir /tmp
