@@ -899,6 +899,7 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
       err = -EINVAL;
       goto err_free;
     }
+    dev->maxSendRepeats = pval;
   }
   // allocate the buffer for the LED data
   dev->outBufSize =
