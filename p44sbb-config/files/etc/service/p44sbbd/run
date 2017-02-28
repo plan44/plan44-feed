@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# app config
+APPCONFIG="--timedisplay 55,8"
+
+# basic config
+RS485PORT=/dev/ttyATH0
+RS485TXENPIN=gpio.26
+RS485RXENPIN=/gpio.23
+JSONAPIPORT=9999
+STATEDIR=/tmp/p44sbbd
+LOGLEVEL=5
+
+# make the state dir
+mkdir -p ${STATEDIR}
+chmod 777 ${STATEDIR}
+
+# run
+exec p44sbbd \
+  --rs485connection ${RS485PORT} \
+  --rs485txenable ${RS485TXENPIN} \
+  --rs485rxenable ${RS485RXENPIN} \
+  --jsonapiport ${JSONAPIPORT} \
+  --statedir ${STATEDIR} \
+  -l ${LOGLEVEL} \
+  ${APPCONFIG} \
+  </dev/null
