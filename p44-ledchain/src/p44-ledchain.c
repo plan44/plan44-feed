@@ -270,10 +270,11 @@ struct p44ledchain_dev {
   // statistics
   u32 max_irq_delay; // max IRQ delay behind expectedSentAt that did NOT trigger a retry
   u32 last_timeout_ns; // last IRQ delay that triggered a retry
-  u32 irq_count;
-  u32 updates;
-  u32 retries;
-  u32 errors;
+  u32 irq_count; // IRQ counter
+  u32 updates; // number of updates requested
+  u32 retries; // number of retries
+  u32 errors; // number of failed updates
+  u32 overruns; // number of updates which came while another update was still in progress
 };
 typedef struct p44ledchain_dev *devPtr_t;
 
@@ -410,6 +411,7 @@ static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
 
 static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
 {
+  unsigned long irqflags;
   long long now;
   u32 expectedNs;
   u32 irqStatus;
@@ -419,6 +421,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   irqreturn_t ret = IRQ_NONE;
   devPtr_t dev;
 
+  local_irq_save(irqflags);
   SEQ_TRACE('I');
   irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
   now = ktime_to_ns(ktime_get());
@@ -479,6 +482,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
     // next PWM
     irqMask <<= 2;
   }
+  local_irq_restore(irqflags);
   // return handled status
   return ret;
 }
@@ -710,7 +714,10 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   // make sure current sending is aborted
   if (stopSendingPatterns(dev)) {
     // was not ready yet
+    dev->overruns++;
+    #if STAT_INFO
     printk(KERN_INFO LOGPREFIX "was still busy sending data -> aborted and start again with new data");
+    #endif
   }
   // generate data into buffer
   initBitGenerator(dev);
@@ -744,7 +751,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   SEQ_TRACE_SHOW()
   #if STAT_INFO
   printk(KERN_INFO LOGPREFIX "Previous update had %d repeats, last timeout=%d nS, max irq=%d nS.\n", dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay);
-  printk(KERN_INFO LOGPREFIX "Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->updates, dev->retries, dev->errors, dev->irq_count);
+  printk(KERN_INFO LOGPREFIX "Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u\n", dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count);
   #else
   if (dev->sendRepeats>dev->maxSendRepeats) {
     printk(KERN_INFO LOGPREFIX "Previous update failed (%d repeats) - Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
@@ -802,10 +809,10 @@ static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff
   bytes = snprintf(ans, ansBufferSize,
     "%s\n"
     "Last update: %d repeats, last timeout=%d nS, max irq=%d nS\n"
-    "Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n",
+    "Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u\n",
     isReady(dev) ? "Ready" : "Busy",
     dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay,
-    dev->updates, dev->retries, dev->errors, dev->irq_count
+    dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count
   );
   if (bytes<=0 || dev->read_idx>=bytes) {
     // all data read already before -> create an EOF conditon for now
