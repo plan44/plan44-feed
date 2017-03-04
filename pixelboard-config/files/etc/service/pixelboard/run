@@ -24,9 +24,11 @@ fi
 # load the LED chain kernel module
 # - Omega1
 #insmod ws2812-draiveris gpios=${PLATFORM_LEDCHAIN_GPIONO} leds_per_gpio=${PLATFORM_LEDCHAIN_NUMLEDS}
-# - Omega2 with non-inverted WS2813 LEDs
-insmod p44-ledchain ledchain0=0,${PLATFORM_LEDCHAIN_NUMLEDS},2
+# - Omega2 with non-inverted WS2813 LEDs (must switch GPIO18/19 to GPIO mode first via devmem)!
+devmem 0x1000003C 32 0x00FE01FF
 omega2-ctrl gpiomux set pwm0 pwm
+#insmod p44-ledchain ledchain0=0,${PLATFORM_LEDCHAIN_NUMLEDS},2
+insmod p44-ledchain ledchain0=0,200,2
 
 # load the i2c module
 insmod i2c-gpio-custom bus0=0,21,20,50,10,0,0,1
