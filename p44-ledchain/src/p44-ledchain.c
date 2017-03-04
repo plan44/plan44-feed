@@ -184,11 +184,11 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     .name = "WS2813", .channels = 3, .fetchIdx = { 1, 0, 2 },
     // timing from datasheet:
     // - T0H = 300ns..450nS
-    // - T0L = 300ns..100000nS
+    // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
     // - T1H = 750ns..1000nS
-    // - T1L = 300ns..100000nS
+    // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
     // - TReset = >300µS
-    .T0Active_nS = 375, .TPassive_min_nS = 375, .T0Passive_double = 0,
+    .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
     .TPassive_max_nS = 100000, .TReset_nS = 300000
   },
   {
