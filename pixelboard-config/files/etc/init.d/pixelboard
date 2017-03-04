@@ -3,7 +3,22 @@
 START=99
 
 boot() {
-	echo "[pixelboard] preparing for runit"
+
+  echo "[pixelboard] configuring hardware"
+
+  # GPIO18/19 as GPIO, not Ethernet
+  devmem 0x1000003C 32 0x00FE01FF
+  # RS485 RX driver disabled (GPIO2, inverted)
+  echo 2 >/sys/class/gpio/export
+  echo out >/sys/class/gpio/gpio2/direction
+  echo 1 >/sys/class/gpio/gpio2/value
+  # RS485 TX driver disabled (GPIO3, non-inverted)
+  echo 3 >/sys/class/gpio/export
+  echo out >/sys/class/gpio/gpio3/direction
+  echo 0 >/sys/class/gpio/gpio3/value
+
+
+  echo "[pixelboard] preparing for runit"
 
   # softlink all runit supervise dirs to /var/run
   PREV=$(pwd)
