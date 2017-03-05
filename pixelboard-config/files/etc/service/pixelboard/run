@@ -4,6 +4,7 @@
 EXECUTABLE=pixelboardd
 LOGLEVEL=5
 EXTRAOPTS=
+MESSAGE=
 
 # platform params (Omega2, v3 board)
 PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain0"
@@ -18,7 +19,6 @@ fi
 if [ -e /tmp/pixelboardd_debug ]; then
   source /tmp/pixelboardd_debug
 fi
-
 
 # load the LED chain kernel module
 # - Omega2 with non-inverted WS2813 LEDs (must switch GPIO18/19 to GPIO mode first via devmem)!
@@ -96,7 +96,7 @@ exec ${EXECUTABLE} \
   --jsonapiport 8090 \
   --defaultpage display \
   --image /www/images/default.png \
-  --message "Start game by touching board near the narrow end" \
+  --message "${MESSAGE}" \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
