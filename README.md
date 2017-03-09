@@ -8,11 +8,20 @@ If you have a LEDE or OpenWrt build environment set up, you can use the plan44 f
     
 to your *feeds.conf.default*
 
+## Useful right now
+
+The following packages are of general usefulness right now:
+
+- **p44-ledchain**: this is a kernel module written by me for the MT7688/Omega2 which makes use of the hardware PWM in the chip to drive individually addressable WS281x-type LED chains. In contrast to the *ws2812_draiveris* driver (see below) that does the same for AR9331/Omega1, *p44-ledchain* does **not** block IRQs at all. At this time, *p44-ledchain* is extensively tested with a chain of 200 WS2813, and one of 24 P9823 LEDs. The driver also has modes for WS2811, WS2812 and the RGBW SK6812 LEDs.
+
+- **ws2812-draivris**: this is a WS281x LED driver that works for AR9331/Omega1, but blocks interrupts for several milliseconds per update, which is *very* bad behaviour for a kernel module. The author of *ws2812-draivris* (not me) is not to blame for this, because the AR9331 chip does not provide any hardware that could generate WS281x timing, so bitbanging and blocking IRQs is the *only* way to do WS281x on a AR9331. Still, it's a bit of a hack that could backfire when other parts of the system rely on fast IRQ response.
+
+
 ## Work in progress!
 
-At this time, there's a lot of work-in-progress in this feed, so don't expect everything turnkey ready. In particular, the p44sbbd, pixelboard and pixelboard-config packages are parts of ongoing projects not ready for prime time.
+At this time, there's also a lot of work-in-progress in this feed, so don't expect everything turnkey ready. In particular, the p44sbbd, p44sbb-config, pixelboard and pixelboard-config packages are parts of ongoing projects not yet ready for prime time.
 
-Note that *i2c-tools* and *libpng* are available in the standard feeds, but in slightly different variations - I needed some modifications for my own projects so I duplicated the packages. Fortunately, OpenWrt/LEDE source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
+Note that *i2c-tools* and *libpng* are also available in the standard feeds, but in slightly different variations - I needed some modifications for my own projects so I duplicated the packages. Fortunately, OpenWrt/LEDE source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
 
     ./scripts/feeds update plan44
     ./scripts/feeds install -p plan44 libpng
