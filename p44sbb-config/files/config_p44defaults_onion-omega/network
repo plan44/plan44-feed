@@ -7,14 +7,14 @@ config interface 'loopback'
 # station mode WiFi
 config interface 'wwan'
     option proto 'dhcp'
-    option hostname 'pixelboard-WiFi'
+    option hostname 'p44sbb-WiFi'
     option enabled '1'
 
 # Ethernet
 config interface 'lan'
     option ifname 'eth0'
     option proto 'dhcp'
-    option hostname 'pixelboard-LAN'
+    option hostname 'p44sbb-LAN'
     option enabled '1'
 
 # AP mode WiFi

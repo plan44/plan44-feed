@@ -1,13 +1,21 @@
 #!/bin/sh
 
 # app config
-APPCONFIG="--timedisplay 55,8"
+APPCONFIG="--timedisplay 79,8"
 
-# basic config
-RS485PORT=/dev/ttyATH0
-RS485TXOFFDELAY=2
-RS485TXENPIN=gpio.26
-RS485RXENPIN=/gpio.23
+# basic config Omega1 on controlboard v1/v2
+# RS485TXOFFDELAY=2
+# RS485PORT=/dev/ttyATH0
+# RS485TXENPIN=gpio.26
+# RS485RXENPIN=/gpio.23
+
+# basic config Omega2 on splitflapcontroller v1
+RS485TXOFFDELAY=3
+RS485PORT=/dev/ttyS1
+RS485TXENPIN=gpio.0
+RS485RXENPIN=missing
+
+# general settings
 JSONAPIPORT=9999
 STATEDIR=/tmp/p44sbbd
 LOGLEVEL=5
@@ -15,6 +23,11 @@ LOGLEVEL=5
 # make the state dir
 mkdir -p ${STATEDIR}
 chmod 777 ${STATEDIR}
+
+# prepare output
+omega2-ctrl gpiomux set uart1 uart
+omega2-ctrl gpiomux set i2s gpio
+omega2-ctrl gpiomux set spi_s pwm01_uart2
 
 # run
 exec p44sbbd \

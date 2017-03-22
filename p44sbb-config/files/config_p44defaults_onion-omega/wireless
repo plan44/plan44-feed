@@ -11,7 +11,7 @@ config wifi-iface
 	option device 'radio0'
 	option mode 'ap'
 	option network 'wlan'
-	option ssid 'Omega-202D'
+	option ssid 'P44SBB'
 	option encryption 'none'
 
 config wifi-iface
