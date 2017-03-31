@@ -32,7 +32,7 @@ omega2-ctrl gpiomux set i2c gpio
 omega2-ctrl gpiomux set spi_s gpio
 # - use two software i2c, one for each side (hardware i2c is too fast for the long wires anyway)
 # bus<Y>=<id>,<sda>,<scl>,<udelay>,<timeout>,<sda_od>,<scl_od>,<scl_oo>
-insmod i2c-gpio-custom bus1=1,5,4,50,10,0,0,1 bus2=2,16,17,50,10,0,0,1
+insmod i2c-gpio-custom bus1=1,5,4,100,10,0,0,1 bus2=2,16,17,100,10,0,0,1
 
 # GPIO6 is SPI_CS1 by default, switch to GPIO
 omega2-ctrl gpiomux set spi_cs1 gpio
