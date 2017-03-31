@@ -155,10 +155,10 @@
       }
 
 
-      function showPage(pagename, twosided)
+      function showPage(pagename, mode)
       {
         // http://pixelboard62988333.local./api/json/board?page=blocks&twosided=true
-        $.getJSON( '/api/json/board?rqvaltok=' + rqvaltok + '&page=' + pagename + '&twosided=' + String(twosided) )
+        $.getJSON( '/api/json/board?rqvaltok=' + rqvaltok + '&page=' + pagename + '&mode=' + String(mode) )
         .done(function(response) {
           // NOP for now
         });
@@ -426,8 +426,10 @@
       <div data-role="content">
         <div data-role="content">
           <h2>Game</h2>
-          <button type="button" id="restart" onclick="showPage('blocks', 0);" data-inline="true" data-theme="c">New single player game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 1);" data-inline="true" data-theme="c">New two player game</button>
+          <button type="button" id="restart" onclick="showPage('blocks', 1+4);" data-inline="true" data-theme="c">New player1 game</button>
+          <button type="button" id="restart" onclick="showPage('blocks', 2+4);" data-inline="true" data-theme="c">New player2 game</button>
+          <button type="button" id="restart" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="c">New two player game</button>
+          <button type="button" id="restart" onclick="showPage('display', 0+4);" data-inline="true" data-theme="c">Show display page</button>
           <h2>Message</h2>
           <input type="text" id="messageText" name="messageText"/>
           <button id="sendMessageButton" onclick="sendMessage();" data-theme="b">Send</button>

@@ -7,7 +7,7 @@ EXTRAOPTS=
 MESSAGE=
 
 # platform params (Omega2, v3 board)
-PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain0"
+PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain1"
 PLATFORM_LEDCHAIN_NUMLEDS="200"
 
 # Allow overriding options
@@ -21,80 +21,81 @@ if [ -e /tmp/pixelboardd_debug ]; then
 fi
 
 # load the LED chain kernel module
-# - Omega2 with non-inverted WS2813 LEDs (must switch GPIO18/19 to GPIO mode first via devmem)!
+# - Omega2 with non-inverted WS2813 LEDs at GPIO46/PWM1
 devmem 0x1000003C 32 0x00FE01FF
-omega2-ctrl gpiomux set pwm0 pwm
-insmod p44-ledchain ledchain0=0,${PLATFORM_LEDCHAIN_NUMLEDS},2
+omega2-ctrl gpiomux set uart1 pwm01
+insmod p44-ledchain ledchain1=0,${PLATFORM_LEDCHAIN_NUMLEDS},2
 
 # configure GPIOs for i2c switch, reset, change sense for touch boards
-# - use a software i2c because the hardware bus is too fast for the long wires
+# - switch hardware i2c pins to gpio
 omega2-ctrl gpiomux set i2c gpio
-insmod i2c-gpio-custom bus1=1,5,4,50,10,0,0,1
+omega2-ctrl gpiomux set spi_s gpio
+# - use two software i2c, one for each side (hardware i2c is too fast for the long wires anyway)
+# bus<Y>=<id>,<sda>,<scl>,<udelay>,<timeout>,<sda_od>,<scl_od>,<scl_oo>
+insmod i2c-gpio-custom bus1=1,5,4,50,10,0,0,1 bus2=2,16,17,50,10,0,0,1
 
 # GPIO6 is SPI_CS1 by default, switch to GPIO
 omega2-ctrl gpiomux set spi_cs1 gpio
-# GPIO6 = /TOUCH_RST (0=Reset, 1=run)
-# GPIO0 = TOUCH_SEL (1=far end P4 touch board SCL enabled, 0=near end P3 touch board enabled)
-# GPIO15 = /TOUCH_CHG (0=change detected)
-echo 6 >/sys/class/gpio/export
-echo 0 >/sys/class/gpio/export
+# GPIO15 = /TOUCH_RST (0=Reset, 1=run)
+# GPIO19 = /TOUCH_CHG (0=change detected)
 echo 15 >/sys/class/gpio/export
+echo 19 >/sys/class/gpio/export
 # keep reset
-echo out >/sys/class/gpio/gpio6/direction
-echo 0 >/sys/class/gpio/gpio6/value
-# side selector
-echo out >/sys/class/gpio/gpio0/direction
+echo out >/sys/class/gpio/gpio15/direction
+echo 0 >/sys/class/gpio/gpio15/value
 # release reset
-echo 1 >/sys/class/gpio/gpio6/value
+echo 1 >/sys/class/gpio/gpio15/value
 
-for SIDE in 0 1; do
-  # set side
-  echo $SIDE >/sys/class/gpio/gpio0/value
+for SIDE in 1 2; do
   # configure key LEDs
   # - turn off LEDs (active LOW) - OLATA
-  i2cset -y 1 0x20 0x14 0x1E
+  i2cset -y $SIDE 0x20 0x14 0x1E
   # - make GPA1..4 outputs (clear bits in IODIRA)
-  i2cset -y 1 0x20 0x00 0xE1
+  i2cset -y $SIDE 0x20 0x00 0xE1
   # - turn LEDs on during calibration
-  i2cset -y 1 0x20 0x14 0x00
+  i2cset -y $SIDE 0x20 0x14 0x00
   # configure touch
   # - disable keys 5 and 6 (Averaging factor 0)
-  i2cset -y 1 0x1B 44 0
-  i2cset -y 1 0x1B 45 0
+  i2cset -y $SIDE 0x1B 44 0
+  i2cset -y $SIDE 0x1B 45 0
   # - disable adjacent key group (Bits 0..2, by default, all keys are in group 1, 0=none)
   #   and set averaging factor (Bits 3..7, by default==8)
-  i2cset -y 1 0x1B 39 0x40
-  i2cset -y 1 0x1B 40 0x20
-  i2cset -y 1 0x1B 41 0x20
-  i2cset -y 1 0x1B 42 0x20
-  i2cset -y 1 0x1B 43 0x20
+  i2cset -y $SIDE 0x1B 39 0x40
+  i2cset -y $SIDE 0x1B 40 0x20
+  i2cset -y $SIDE 0x1B 41 0x20
+  i2cset -y $SIDE 0x1B 42 0x20
+  i2cset -y $SIDE 0x1B 43 0x20
   # - lower threshold, default = 20
-  i2cset -y 1 0x1B 32 7
-  i2cset -y 1 0x1B 33 10
-  i2cset -y 1 0x1B 34 10
-  i2cset -y 1 0x1B 35 10
-  i2cset -y 1 0x1B 36 10
+  i2cset -y $SIDE 0x1B 32 7
+  i2cset -y $SIDE 0x1B 33 10
+  i2cset -y $SIDE 0x1B 34 10
+  i2cset -y $SIDE 0x1B 35 10
+  i2cset -y $SIDE 0x1B 36 10
   # - integrators, default = 4
-  i2cset -y 1 0x1B 46 2
-  i2cset -y 1 0x1B 47 5
-  i2cset -y 1 0x1B 48 5
-  i2cset -y 1 0x1B 49 5
-  i2cset -y 1 0x1B 50 5
+  i2cset -y $SIDE 0x1B 46 2
+  i2cset -y $SIDE 0x1B 47 5
+  i2cset -y $SIDE 0x1B 48 5
+  i2cset -y $SIDE 0x1B 49 5
+  i2cset -y $SIDE 0x1B 50 5
   # disable guard channel
   # - averaging factor 0 = disabled
-  i2cset -y 1 0x1B 39 0
+  i2cset -y $SIDE 0x1B 39 0
   # - normally 0, 8=invalid guard channel=off
-  i2cset -y 1 0x1B 53 8
+  i2cset -y $SIDE 0x1B 53 8
   # recalibrate (with LEDs on)
-  i2cset -y 1 0x1B 56 1
+  i2cset -y $SIDE 0x1B 56 1
 done
 
 # run the daemon
 exec ${EXECUTABLE} \
-  --i2cbusno 1 \
+  --i2cbuslow 1 \
+  --i2cbushigh 2 \
+  --touchreset "gpio.15" \
+  --touchdetect "/gpio.19" \
   --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
   --jsonapiport 8090 \
   --defaultpage display \
+  --defaultmode 1 \
   --image /www/images/default.png \
   --message "${MESSAGE}" \
   -l ${LOGLEVEL} \

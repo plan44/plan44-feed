@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboard-config
 # version of what we are downloading
-PKG_VERSION:=0.2
+PKG_VERSION:=0.4
 # version of this makefile
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
