@@ -46,7 +46,7 @@ endef
 
 define KernelPackage/$(PKG_NAME)/description
 	This package contains the p44-ledchain kernel driver for WS28xx and SK68xx type serial LED chains
-	for MT7688, which uses PWM and DMA to generate the WS28xx timing without blocking IRQs.
+	for MT7688, which uses PWM unit to generate the WS28xx timing without blocking IRQs.
 endef
 
 define Build/Prepare
