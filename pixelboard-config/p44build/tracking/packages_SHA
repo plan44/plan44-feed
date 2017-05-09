@@ -1,0 +1,5 @@
+# feed/package giturl:gitref
+plan44/pixelboardd https://github.com/plan44/pixelboardd.git:dfd1824b49767f4e06c3884d20bf83817c72be92
+p44i/mg44 ssh://plan44@plan44.ch/home/plan44/sharedgit/mg44.git:002b1e8408c823317afa9ed10508d3b35af24ce5
+p44i/serialfwd ssh://plan44@plan44.ch/home/plan44/gitrepositories/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
+onion/omega2-ctrl git@github.com:OnionIoT/omega2-ctrl.git:fa0425d861abbcc34bacd6edc3c7b531ad32c4d9
