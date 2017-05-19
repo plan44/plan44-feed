@@ -20,6 +20,9 @@ if [ -e /tmp/pixelboardd_debug ]; then
   source /tmp/pixelboardd_debug
 fi
 
+# switch off the Omega2 LED
+echo 0 >/sys/class/leds/omega2\:amber\:system/brightness
+
 # load the LED chain kernel module
 # - Omega2 with non-inverted WS2813 LEDs at GPIO46/PWM1
 devmem 0x1000003C 32 0x00FE01FF
