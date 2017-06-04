@@ -1,0 +1,29 @@
+--- a/target/linux/generic/patches-4.4/132-mips_inline_dma_ops.patch
++++ b/target/linux/generic/patches-4.4/132-mips_inline_dma_ops.patch
+@@ -110,8 +110,8 @@ Signed-off-by: Felix Fietkau <nbd@nbd.na
+  }
+  
+  static inline bool dma_capable(struct device *dev, dma_addr_t addr, size_t size)
+-@@ -29,9 +77,399 @@ static inline bool dma_capable(struct de
+- 
++@@ -29,9 +77,397 @@ static inline bool dma_capable(struct de
++
+  static inline void dma_mark_clean(void *addr, size_t size) {}
+  
+ -#include <asm-generic/dma-mapping-common.h>
+@@ -392,7 +392,6 @@ Signed-off-by: Felix Fietkau <nbd@nbd.na
+ +	       dma_addr_t dma_addr, size_t size, struct dma_attrs *attrs)
+ +{
+ +	struct dma_map_ops *ops = get_dma_ops(dev);
+-+	BUG_ON(!ops);
+ +	if (ops && ops->mmap)
+ +		return ops->mmap(dev, vma, cpu_addr, dma_addr, size, attrs);
+ +	return dma_common_mmap(dev, vma, cpu_addr, dma_addr, size);
+@@ -409,7 +408,6 @@ Signed-off-by: Felix Fietkau <nbd@nbd.na
+ +		      dma_addr_t dma_addr, size_t size, struct dma_attrs *attrs)
+ +{
+ +	struct dma_map_ops *ops = get_dma_ops(dev);
+-+	BUG_ON(!ops);
+ +	if (ops && ops->get_sgtable)
+ +		return ops->get_sgtable(dev, sgt, cpu_addr, dma_addr, size,
+ +					attrs);
