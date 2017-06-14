@@ -57,11 +57,6 @@ endif
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
-	# Replace contents of /files with stuff we want to have there
-	# (is ugly, but works assuming only one xxx-config package is enabled -
-	# fair enough, because these packages ARE meant to be overall target config packages)
-	rm -r $(TOPDIR)/files/* ||:
-	#$(CP) -r ./into-buildroot-files/* $(TOPDIR)/files
 endef
 
 
