@@ -1,0 +1,3 @@
+# feed/package giturl:gitref
+p44i/serialfwd ssh://plan44@plan44.ch/home/plan44/gitrepositories/serialfwd.git:ow_testing
+onion/omega2-ctrl git@github.com:OnionIoT/omega2-ctrl.git:HEAD

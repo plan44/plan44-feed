@@ -1,0 +1,130 @@
+CONFIG_TARGET_ramips=y
+CONFIG_TARGET_ramips_mt7688=y
+CONFIG_TARGET_ramips_mt7688_DEVICE_omega2=y
+CONFIG_BUSYBOX_CUSTOM=y
+CONFIG_BUSYBOX_CONFIG_CHPST=y
+CONFIG_BUSYBOX_CONFIG_DEVMEM=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_PS_LONG=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_RUNSVDIR_LOG=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_USE_TERMIOS=y
+# CONFIG_BUSYBOX_CONFIG_IFCONFIG is not set
+CONFIG_BUSYBOX_CONFIG_LSOF=y
+CONFIG_BUSYBOX_CONFIG_MICROCOM=y
+CONFIG_BUSYBOX_CONFIG_NOHUP=y
+CONFIG_BUSYBOX_CONFIG_NSLOOKUP=y
+CONFIG_BUSYBOX_CONFIG_PRINTENV=y
+CONFIG_BUSYBOX_CONFIG_REALPATH=y
+CONFIG_BUSYBOX_CONFIG_RUNSV=y
+CONFIG_BUSYBOX_CONFIG_RUNSVDIR=y
+CONFIG_BUSYBOX_CONFIG_SV=y
+CONFIG_BUSYBOX_CONFIG_SVLOGD=y
+CONFIG_BUSYBOX_CONFIG_SV_DEFAULT_SERVICE_DIR="/etc/service"
+CONFIG_DROPBEAR_ECC=y
+# CONFIG_FEED_packages is not set
+# CONFIG_FEED_routing is not set
+CONFIG_IMAGEOPT=y
+CONFIG_KERNEL_DEVMEM=y
+CONFIG_OPENSSL_WITH_DEPRECATED=y
+CONFIG_OPENSSL_WITH_EC=y
+CONFIG_OPENSSL_WITH_NPN=y
+CONFIG_OPENSSL_WITH_PSK=y
+CONFIG_OPENSSL_WITH_SRP=y
+CONFIG_PACKAGE_alsa-lib=y
+CONFIG_PACKAGE_avahi-daemon-service-http=y
+CONFIG_PACKAGE_avahi-daemon-service-ssh=y
+CONFIG_PACKAGE_avahi-dbus-daemon=y
+CONFIG_PACKAGE_block-mount=y
+CONFIG_PACKAGE_boost=y
+CONFIG_PACKAGE_dbus=y
+# CONFIG_PACKAGE_dnsmasq is not set
+# CONFIG_PACKAGE_firewall is not set
+CONFIG_PACKAGE_i2c-tools=y
+CONFIG_PACKAGE_kmod-dma-ralink=y
+CONFIG_PACKAGE_kmod-fs-hfsplus=y
+CONFIG_PACKAGE_kmod-fs-vfat=y
+CONFIG_PACKAGE_kmod-i2c-algo-bit=y
+CONFIG_PACKAGE_kmod-i2c-core=y
+CONFIG_PACKAGE_kmod-i2c-gpio=y
+CONFIG_PACKAGE_kmod-i2c-gpio-custom=y
+CONFIG_PACKAGE_kmod-i2c-mt7628=y
+CONFIG_PACKAGE_kmod-input-core=y
+CONFIG_PACKAGE_kmod-ledtrig-default-on=y
+CONFIG_PACKAGE_kmod-ledtrig-netdev=y
+CONFIG_PACKAGE_kmod-ledtrig-oneshot=y
+CONFIG_PACKAGE_kmod-ledtrig-timer=y
+CONFIG_PACKAGE_kmod-ledtrig-transient=y
+CONFIG_PACKAGE_kmod-lib-lzo=y
+CONFIG_PACKAGE_kmod-nls-cp437=y
+CONFIG_PACKAGE_kmod-nls-iso8859-1=y
+CONFIG_PACKAGE_kmod-nls-utf8=y
+CONFIG_PACKAGE_kmod-p44-ledchain=y
+CONFIG_PACKAGE_kmod-regmap=y
+CONFIG_PACKAGE_kmod-scsi-core=y
+CONFIG_PACKAGE_kmod-sound-core=y
+CONFIG_PACKAGE_kmod-spi-bitbang=y
+CONFIG_PACKAGE_kmod-spi-dev=y
+CONFIG_PACKAGE_kmod-spi-gpio=y
+CONFIG_PACKAGE_kmod-spi-gpio-custom=y
+CONFIG_PACKAGE_kmod-usb-serial=y
+CONFIG_PACKAGE_kmod-usb-serial-cp210x=y
+CONFIG_PACKAGE_kmod-usb-serial-ftdi=y
+CONFIG_PACKAGE_kmod-usb-serial-pl2303=y
+CONFIG_PACKAGE_kmod-usb-storage=y
+CONFIG_PACKAGE_kmod-vocore-gdma=m
+CONFIG_PACKAGE_libavahi-client=y
+CONFIG_PACKAGE_libavahi-dbus-support=y
+CONFIG_PACKAGE_libdaemon=y
+CONFIG_PACKAGE_libdbus=y
+CONFIG_PACKAGE_libexpat=y
+CONFIG_PACKAGE_libncurses=y
+CONFIG_PACKAGE_libopenssl=y
+CONFIG_PACKAGE_libpng=y
+CONFIG_PACKAGE_libprotobuf-c=y
+CONFIG_PACKAGE_libreadline=y
+CONFIG_PACKAGE_librt=y
+CONFIG_PACKAGE_libsqlite3=y
+CONFIG_PACKAGE_libstdcpp=y
+CONFIG_PACKAGE_libusb-1.0=m
+CONFIG_PACKAGE_messagetorch=y
+CONFIG_PACKAGE_mg44=y
+# CONFIG_PACKAGE_odhcpd is not set
+CONFIG_PACKAGE_omega2-ctrl=y
+CONFIG_PACKAGE_p44-maint-keys=y
+# CONFIG_PACKAGE_ppp is not set
+CONFIG_PACKAGE_rpcd=y
+CONFIG_PACKAGE_rpcd-mod-iwinfo=y
+CONFIG_PACKAGE_serialfwd=y
+CONFIG_PACKAGE_spidev-test=m
+CONFIG_PACKAGE_sqlite3-cli=y
+CONFIG_PACKAGE_terminfo=y
+CONFIG_PACKAGE_usbutils=m
+CONFIG_PACKAGE_zlib=y
+CONFIG_VERSIONOPT=y
+CONFIG_VERSION_BUG_URL=""
+CONFIG_VERSION_CODE=""
+CONFIG_VERSION_CODE_FILENAMES=y
+CONFIG_VERSION_DIST="P44BANDIT"
+CONFIG_VERSION_FILENAMES=y
+CONFIG_VERSION_HWREV="0"
+CONFIG_VERSION_MANUFACTURER="plan44.ch"
+CONFIG_VERSION_MANUFACTURER_URL="http://plan44.ch/automation"
+CONFIG_VERSION_NICK=""
+CONFIG_VERSION_NUMBER="0.01"
+CONFIG_VERSION_PRODUCT="P44BANDIT"
+CONFIG_VERSION_REPO="http://downloads.lede-project.org/snapshots"
+CONFIG_VERSION_SUPPORT_URL=""
+CONFIG_boost-runtime-shared=y
+CONFIG_boost-static-and-shared-libs=y
+CONFIG_boost-variant-release=y
+CONFIG_PACKAGE_kmod-ipt-nat=y
+CONFIG_PACKAGE_kmod-lib-crc-ccitt=y
+# CONFIG_PACKAGE_kmod-mppe is not set
+CONFIG_PACKAGE_kmod-nf-nat=y
+CONFIG_PACKAGE_kmod-ppp=y
+# CONFIG_PACKAGE_kmod-ppp-synctty is not set
+# CONFIG_PACKAGE_kmod-pppoa is not set
+CONFIG_PACKAGE_kmod-pppoe=y
+# CONFIG_PACKAGE_kmod-pppol2tp is not set
+CONFIG_PACKAGE_kmod-pppox=y
+# CONFIG_PACKAGE_kmod-pptp is not set
+CONFIG_PACKAGE_kmod-slhc=y

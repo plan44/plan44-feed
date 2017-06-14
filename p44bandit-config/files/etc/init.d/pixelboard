@@ -1,0 +1,46 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2016 plan44.ch/luz
+START=99
+
+boot() {
+
+  echo "[pixelboard] configuring hardware"
+
+  # GPIO18/19 as GPIO, not Ethernet
+  devmem 0x1000003C 32 0x00FE01FF
+
+  echo "[pixelboard] preparing for runit"
+
+  # softlink all runit supervise dirs to /var/run
+  PREV=$(pwd)
+  cd /etc/service
+  SERVICES=*
+  mkdir -v -p /var/run/runit
+  for SERV in ${SERVICES}; do
+    # create softlink if not yet existing
+    if [ ! -h /etc/service/${SERV}/supervise ]; then
+      rm -v -r /etc/service/${SERV}/supervise
+      ln -v -s -f /var/run/runit/supervise.${SERV} /etc/service/${SERV}/supervise
+    fi
+    # check for log
+    if [ -d /etc/service/${SERV}/log ]; then
+      # create softlink if not yet existing
+      if [ ! -h /etc/service/${SERV}/log/supervise ]; then
+        rm -v -r /etc/service/${SERV}/log/supervise
+        ln -v -s -f /var/run/runit/supervise.${SERV}.log /etc/service/${SERV}/log/supervise
+      fi
+    fi
+  done
+  cd ${PREV}
+
+  # update host name if needed
+  UNIT_HOSTNAME="pixelboard"
+  HN=$(uci get system.@system[0].hostname)
+  if [ ! "${HN}" = "${UNIT_HOSTNAME}" ]; then
+    uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
+    uci commit system
+  fi
+
+  # start runit
+  /sbin/runsvdir-start &
+}
