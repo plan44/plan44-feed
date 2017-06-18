@@ -21,7 +21,7 @@ Note that WS2812 and P9823 are most demanding regarding timing, so these are mor
 after compiling/installing the p44-ledchain kernel module package, activate the driver as follows:
 
     insmod p44-ledchain ledchain<PWMno>=<inverted>,<numberofleds>,<ledtype>
-    
+
 Where
 
 - *PWMno* The PWM to use. Can be 0 or 1 (theoretically also 2 or 3, but MT7688 PWM2/3 outputs are not exposed in the Omega2.
@@ -35,17 +35,17 @@ Where
   - 4 : **SK6812** RGBW four channel LED, similar timing to WS2812
 
 So, the following command will create a `/dev/ledchain0` device, which can drive 200 WS2813 LEDs connected without inverter to PWM0.
-  
+
     insmod p44-ledchain ledchain0=0,200,2
-    
+
 Of course, the pin multiplexer must be set such that PWM0 is actually output on the pin:
 
     omega2-ctrl gpiomux set pwm0 pwm
 
 Now, with a WS2813 ledchain connected, you can update the LEDs by just writing a string of bytes into /dev/ledchain0:
 
-    echo -en '\xFF\x00\x00\xFF\x00\x00'
-    
+    echo -en '\xFF\x00\x00\xFF\x00\x00' >/dev/ledchain0
+
 This should make the first two LEDs bright red.
 
 ## Notes:
