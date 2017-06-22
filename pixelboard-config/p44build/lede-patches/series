@@ -4,6 +4,6 @@
 202-dropbear-with-dss.diff
 204-mt7628an-pwm-irq.diff
 205-omega2-dtsi-gdma-i2s-enable.diff
-210-omega2-sound-max98357a
-900-use-newest-mt76-wifi-improvements
-942-omega2-dma-bughunt-WIP
+210-omega2-sound-max98357a.diff
+900-use-newest-mt76-wifi-improvements.diff
+942-omega2-dma-bughunt-WIP.diff
