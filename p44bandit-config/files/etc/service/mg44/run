@@ -26,7 +26,7 @@ fi
 
 # check if we have a non-zero password file, if not, create default
 if [ ! -s /flash/webui_authfile ]; then
-  mg44 -A /flash/webui_authfile ${PRODUCT_MODEL} pixelboard pixelboard
+  mg44 -A /flash/webui_authfile ${PRODUCT_MODEL} p44bandit p44bandit
 fi
 
 # start mg44, using config file from /tmp

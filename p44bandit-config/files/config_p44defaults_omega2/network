@@ -10,14 +10,14 @@ config globals 'globals'
 # station mode WiFi
 config interface 'wlan'
 	option proto 'dhcp'
-	option hostname 'pixelboard-WiFi'
+	option hostname 'p44bandit-WiFi'
 	option enabled '1'
 
 # Ethernet
 config interface 'lan'
 	option ifname 'eth0'
 	option proto 'dhcp'
-	option hostname 'pixelboard-LAN'
+	option hostname 'p44bandit-LAN'
 	option enabled '1'
 
 # AP mode WiFi

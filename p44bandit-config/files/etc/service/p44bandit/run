@@ -7,22 +7,9 @@ EXTRAOPTS=
 MESSAGE=
 
 
-# %%%% just before we actually have the daemon
-sleep 30
-
-
 # run the daemon
 exec ${EXECUTABLE} \
-  --i2cbuslow 1 \
-  --i2cbushigh 2 \
-  --touchreset "gpio.15" \
-  --touchdetect "/gpio.19" \
-  --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
   --jsonapiport 8090 \
-  --defaultpage display \
-  --defaultmode 1 \
-  --image /www/images/default.png \
-  --message "${MESSAGE}" \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null

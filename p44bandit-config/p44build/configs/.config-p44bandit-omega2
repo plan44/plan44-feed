@@ -3330,7 +3330,8 @@ CONFIG_PACKAGE_p44-maint-keys=y
 # toys
 #
 CONFIG_PACKAGE_messagetorch=y
-# CONFIG_PACKAGE_p44bandit-config is not set
+CONFIG_PACKAGE_p44bandit-config=y
+CONFIG_PACKAGE_p44banditd=y
 # CONFIG_PACKAGE_p44sbb-config is not set
 # CONFIG_PACKAGE_p44sbbd is not set
 # CONFIG_PACKAGE_pixelboard-config is not set

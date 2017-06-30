@@ -1,4 +1,4 @@
-# Copyright (c) 2016 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -9,7 +9,7 @@ PKG_NAME:=p44bandit-config
 # version of what we are downloading
 PKG_VERSION:=0.4
 # version of this makefile
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
