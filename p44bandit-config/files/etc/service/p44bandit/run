@@ -2,14 +2,20 @@
 
 # default features
 EXECUTABLE=p44banditd
-LOGLEVEL=5
+LOGLEVEL=6
 EXTRAOPTS=
-MESSAGE=
 
+# basic config Omega2 on splitflapcontroller v1
+SERIALPORT=/dev/ttyS1
+HSOUTPIN=gpio.39
+HSINPIN=gpio.40
 
 # run the daemon
 exec ${EXECUTABLE} \
   --jsonapiport 8090 \
+  --serialport ${SERIALPORT} \
+  --hsoutpin ${HSOUTPIN} \
+  --hsinpin ${HSINPIN} \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
