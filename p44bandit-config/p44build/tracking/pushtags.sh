@@ -10,11 +10,6 @@ pushd serialfwd
 git tag -f P44BANDIT/0.01/p44bandit-omega2 e198c8ec40a31b6e39687125efa159950f55e3e5
 git push -f origin P44BANDIT/0.01/p44bandit-omega2
 popd
-git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/p44banditd.git p44banditd
-pushd p44banditd
-git tag -f P44BANDIT/0.01/p44bandit-omega2 ec1fcd766223148a33991e3fa41475484b1a2fdd
-git push -f origin P44BANDIT/0.01/p44bandit-omega2
-popd
 git clone --depth 1 --no-checkout --single-branch --branch HEAD git@github.com:OnionIoT/omega2-ctrl.git omega2-ctrl
 pushd omega2-ctrl
 git tag -f P44BANDIT/0.01/p44bandit-omega2 fa0425d861abbcc34bacd6edc3c7b531ad32c4d9
