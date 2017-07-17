@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=p44wiperd
+LOGLEVEL=6
+EXTRAOPTS=
+
+# basic config Omega2 on dcmotorcontroller v1
+#HSOUTPIN=gpio.39
+#HSINPIN=gpio.40
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --jsonapiport 8090 \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null

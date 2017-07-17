@@ -1,5 +1,5 @@
 #!/bin/sh
-DAEMON=p44banditd
+DAEMON=p44wiperd
 LOGDIR=/var/log/${DAEMON}
 
 # create logdir (svlogd runs as nobody)
