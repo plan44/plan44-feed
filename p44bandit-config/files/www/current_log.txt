@@ -1,1 +1,1 @@
-<!--#include file="/var/log/pixelboardd/current"-->
+<!--#include file="/var/log/p44banditd/current"-->
