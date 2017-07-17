@@ -1,0 +1,21 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -12,7 +12,7 @@
+ /logs
+ /feeds
+ /feeds.conf
+-/files
++#/files
+ /overlay
+ /package/feeds
+ /package/openwrt-packages
+@@ -25,3 +25,9 @@ key-build*
+ .emacs.desktop*
+ TAGS*~
+ git-src
++# p44build additions
++/patches
++/.pc
++/.p44build
++p44b
++
