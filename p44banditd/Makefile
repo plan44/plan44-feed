@@ -29,8 +29,8 @@ define Package/$(PKG_NAME)
   DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=toys
-	TITLE:=pixelboard daemon
+	SUBMENU:=custom
+	TITLE:=p44bandit daemon
 	URL:=https://github.com/plan44/pixelboardd
 	MAINTAINER:=luz@plan44.ch
 endef
