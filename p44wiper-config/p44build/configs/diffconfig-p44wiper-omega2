@@ -58,6 +58,7 @@ CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-iso8859-1=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
 CONFIG_PACKAGE_kmod-p44-ledchain=y
+CONFIG_PACKAGE_kmod-pwm-mediatek=y
 CONFIG_PACKAGE_kmod-regmap=y
 CONFIG_PACKAGE_kmod-scsi-core=y
 CONFIG_PACKAGE_kmod-sound-core=y
