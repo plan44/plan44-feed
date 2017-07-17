@@ -20,7 +20,7 @@ define Package/$(PKG_NAME)
 	DEPENDS:=+mg44 +p44banditd
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=toys
+	SUBMENU:=custom
 	TITLE:=P44-BANDIT configuration setup
 	URL:=https://plan44.ch/automation
 	MAINTAINER:=luz@plan44.ch
