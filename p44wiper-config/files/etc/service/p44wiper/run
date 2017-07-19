@@ -6,11 +6,36 @@ LOGLEVEL=6
 EXTRAOPTS=
 
 # basic config Omega2 on dcmotorcontroller v1
-#HSOUTPIN=gpio.39
-#HSINPIN=gpio.40
+# - PWM1 with 40uS = 25kHz period
+PWM_OUTPUT_PIN=pwmchip0.1.40000
+# - motor direction
+CW_OUTPUT_PIN=gpio.2
+CCW_OUTPUT_PIN=gpio.3
+# - zero position sensor
+ZEROPOS_INPUT_PIN=/gpio.0
+# - PIR input
+PIR_INPUT_PIN=gpio.11
+
+# - Button
+BUTTON_PIN=gpio.38
+# - LEDs
+GREENLED_PIN=gpio.19
+REDLED_PIN=gpio.18
+
+# configure the GPIO mux
+omega2-ctrl gpiomux set uart1 pwm01
+omega2-ctrl gpiomux set i2s gpio
 
 # run the daemon
 exec ${EXECUTABLE} \
+  --poweroutput ${PWM_OUTPUT_PIN} \
+  --cwoutput ${CW_OUTPUT_PIN} \
+  --ccwoutput ${CCW_OUTPUT_PIN} \
+  --zeroposinput ${ZEROPOS_INPUT_PIN} \
+  --movementinput ${PIR_INPUT_PIN} \
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
   --jsonapiport 8090 \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
