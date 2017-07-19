@@ -1,15 +1,16 @@
 --- a/target/linux/ramips/modules.mk
 +++ b/target/linux/ramips/modules.mk
-@@ -120,12 +120,14 @@ define KernelPackage/sound-mt7620
-   KCONFIG:= \
+@@ -121,13 +121,15 @@ define KernelPackage/sound-mt7620
  	CONFIG_SND_RALINK_SOC_I2S \
  	CONFIG_SND_SIMPLE_CARD \
+ 	CONFIG_SND_SIMPLE_CARD_UTILS \
 -	CONFIG_SND_SOC_WM8960
 +	CONFIG_SND_SOC_WM8960 \
 +	CONFIG_SND_SOC_MAX98357A
    FILES:= \
  	$(LINUX_DIR)/sound/soc/ralink/snd-soc-ralink-i2s.ko \
  	$(LINUX_DIR)/sound/soc/generic/snd-soc-simple-card.ko \
+ 	$(LINUX_DIR)/sound/soc/generic/snd-soc-simple-card-utils.ko \
 -	$(LINUX_DIR)/sound/soc/codecs/snd-soc-wm8960.ko
 -  AUTOLOAD:=$(call AutoLoad,90,snd-soc-wm8960 snd-soc-ralink-i2s snd-soc-simple-card)
 +	$(LINUX_DIR)/sound/soc/codecs/snd-soc-wm8960.ko \
@@ -17,7 +18,7 @@
 +  AUTOLOAD:=$(call AutoLoad,90,snd-soc-wm8960 snd-soc-max98357a snd-soc-ralink-i2s snd-soc-simple-card)
    $(call AddDepends/sound)
  endef
- 
+
 --- a/target/linux/ramips/dts/OMEGA2.dtsi
 +++ b/target/linux/ramips/dts/OMEGA2.dtsi
 @@ -30,6 +30,31 @@
@@ -50,26 +51,26 @@
 +  };
 +
  };
- 
+
  &pinctrl {
 @@ -51,7 +76,7 @@
- 
+
  		i2s {
  			ralink,group = "i2s";
 -			ralink,function = "gpio";
 +			ralink,function = "i2s";
  		};
- 
+
  		spis {
 @@ -170,5 +195,6 @@
  };
- 
+
  &i2s {
 +	#sound-dai-cells = <0>;
  	status = "okay";
  };
 --- /dev/null
-+++ b/target/linux/ramips/patches-4.4/0722-asoc-enable-max98357a-kconfig.patch
++++ b/target/linux/ramips/patches-4.9/0722-asoc-enable-max98357a-kconfig.patch
 @@ -0,0 +1,11 @@
 +--- a/sound/soc/codecs/Kconfig
 ++++ b/sound/soc/codecs/Kconfig

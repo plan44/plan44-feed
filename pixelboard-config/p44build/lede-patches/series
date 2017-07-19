@@ -6,5 +6,3 @@
 205-omega2-dtsi-gdma-i2s-enable.diff
 210-omega2-sound-max98357a.diff
 301-files-etc-shadow--no-root-login.diff
-900-use-newest-mt76-wifi-improvements.diff
-942-omega2-dma-bughunt-WIP.diff
