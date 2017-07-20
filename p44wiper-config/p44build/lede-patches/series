@@ -5,5 +5,6 @@
 204-mt7628an-pwm-irq.diff
 205-omega2-dtsi-gdma-i2s-enable.diff
 206-omega2-dtsi-pwm-enable.diff
+290-omega2-dtsi-p44-button-and-leds.diff
 301-files-etc-shadow--no-root-login.diff
 900-use-newest-mt76-wifi-improvements.diff
