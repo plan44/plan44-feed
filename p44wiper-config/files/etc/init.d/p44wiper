@@ -6,7 +6,7 @@ boot() {
 
   echo "[p44wiper] configuring hardware"
 
-  # GPIO18/19 as GPIO, not Ethernet
+  # GPIO18/19 as GPIO, not Ethernet (we connect the LEDs there)
   devmem 0x1000003C 32 0x00FE01FF
 
   echo "[p44wiper] preparing for runit"

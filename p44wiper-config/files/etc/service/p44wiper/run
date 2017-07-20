@@ -19,8 +19,8 @@ PIR_INPUT_PIN=gpio.11
 # - Button
 BUTTON_PIN=gpio.38
 # - LEDs
-GREENLED_PIN=gpio.19
-REDLED_PIN=gpio.18
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
 
 # configure the GPIO mux
 omega2-ctrl gpiomux set uart1 pwm01
@@ -36,6 +36,7 @@ exec ${EXECUTABLE} \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
+  --sqlitedir /flash \
   --jsonapiport 8090 \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
