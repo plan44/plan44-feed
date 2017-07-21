@@ -32,6 +32,14 @@
       .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
       .p44-mini-input-end { clear: right; }
 
+      #settingsTable * td { padding-top:0; padding-bottom:0; vertical-align:middle; }
+
+      #settingsTable { min-width: 100%; margin-left: 0; margin-right: 0; }
+
+      #settingsTable .desccol { width: 50%; }
+      #settingsTable .valuecol { width: 300px; }
+
+
 
       /* simplistic p44 progress bar */
 
@@ -136,104 +144,156 @@
           console.log('TOK error ' + response.error.message);
         });
 
+        // Handlers
+
+        // load latest log tails when log pane is opened
+        $("#logs").on('pageshow', function(event) {
+          refresh_log();
+        });
+
+        // load current settings list when page is opened
+        $("#settings").on('pageshow', function(event) {
+          refresh_settings();
+        });
+
+
       });
 
 
       // Common utils
 
-      // Main Page
-      // =========
-
-
-      function sendKey(player, keyname)
+      function sendAction(context, action, doneCB)
       {
-        // http://pixelboard62988333.local./api/json/player1?key=left
-        $.getJSON( '/api/json/player' + String(player) + '?rqvaltok=' + rqvaltok + '&key=' + keyname )
-        .done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function showPage(pagename, mode)
-      {
-        // http://pixelboard62988333.local./api/json/board?page=blocks&twosided=true
-        $.getJSON( '/api/json/board?rqvaltok=' + rqvaltok + '&page=' + pagename + '&mode=' + String(mode) )
-        .done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function sendMessage()
-      {
-        var msg = $('#messageText').val();
-        var cmd = { "message":msg };
         $.ajax({
-          url: '/api/json/page?rqvaltok=' + rqvaltok,
+          url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
           type: 'post',
           dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function setTextColor()
-      {
-        var col = $('#messageColor').val();
-        var cmd = { "textcolor":col };
-        $.ajax({
-          url: '/api/json/page?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function uploadImage()
-      {
-        var file = $('#imageFile').get(0).files[0];
-        var data = new FormData();
-        data.append("upload_file", file);
-        $.ajax({
-          url: '/api/upload/?rqvaltok=' + rqvaltok + '&cmd=imageupload',
-          data: data,
-          contentType: false, // important!
-          processData: false,
-          method: 'POST'
-        }).done(function(response) {
-          alert('Image uploaded');
-        }).fail(function() {
-          alert('Image upload failed');
-        });
-      }
-
-
-      function system_restore_apply(mode)
-      {
-        $("#configRestoreDialog").popup("close");
-        // trigger factory reset
-        $.ajax({
-          url: '/cfg/json/?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify({ cmd:'configrestoreapply', mode:mode.toString() })
+          data: JSON.stringify({ action:action })
         })
         .done(function(response) {
-          // NOP for now
+          if (doneCB) doneCB(response);
         });
-        // if not cancel, wait for restart
-        if (mode!=0) {
-          setTimeout(function() {
-            waitForRestart("#restoreConfigWait");
-          }, 100 );
-        }
       }
+
+
+      // Settings Page
+      // =============
+
+      function refresh_settings(doneCB)
+      {
+/*
+        $.mobile.loading( "show", {
+          text: "reloading settings list...",
+          textVisible: true,
+          theme: "b"
+        });
+*/
+        // query list
+        $.getJSON( '/api/json/settings?rqvaltok=' + rqvaltok )
+        .done(function(response) {
+          // table header
+          var tableHtml =
+            '<table data-role="table" id="settingsTable" data-mode="reflow"'+
+            ' class="ui-body-d ui-shadow table-stripe ui-responsive" data-column-btn-theme="b"' +
+            ' >' +
+            '<thead>' +
+             '<tr class="ui-bar-d">' +
+               '<th>Name</th>' +
+               '<th>Description</th>' +
+               '<th>Range</th>' +
+               '<th>Value</th>' +
+             '</tr>' +
+            '</thead>' +
+            '<tbody>';
+          // iterate rows
+          for (var fieldname in response) {
+            var fld = response[fieldname];
+            tableHtml +=
+              '<tr class="settingsrow">' +
+              '<td>' + fieldname + '</td>' +
+              '<td class="desccol">' + fld.title + '</td>';
+            if (fld.min!=undefined) {
+              var res = 1;
+              if (fld.res!=undefined) res = fld.res;
+              tableHtml +=
+                '<td>' + fld.min.toString() + '..' + fld.max.toString() + '</td>' +
+                '<td class="valuecol"><input type="range" name="' + fieldname + '_slider" id="' + fieldname +'_slider"' +
+                ' min="' + fld.min.toString() + '" max="' + fld.max.toString() + '" step="' + res.toString() + '" value="' + fld.value.toString() + '"></td>'
+            }
+            else {
+              tableHtml +=
+                '<td>&nbsp;</td>' +
+                '<td class="valuecol"><input type="text" name="' + fieldname + '_edit" id="' + fieldname +'_edit"' +
+                ' value="' + fld.value.toString() + '"></td>'
+            }
+            tableHtml +=
+              '</tr>';
+          }
+          // finalisation of table
+          tableHtml +=
+            '</tbody>' +
+            '</table>';
+          $("#settingsList").html(tableHtml).trigger('create');
+          // attach handlers
+          for (var fieldname in response) {
+            var fld = response[fieldname];
+            if (fld.min!=undefined) {
+              // Slider
+              settingsFieldChangeAttachEvent(fieldname, 'slider');
+            }
+            else {
+              // Text field
+              settingsFieldChangeAttachEvent(fieldname, 'edit');
+            }
+          }
+//           $.mobile.loading( "hide" );
+          if (doneCB) doneCB();
+        });
+      }
+
+
+      function settingsFieldChangeAttachEvent(fieldname, suffix)
+      {
+        $('#' + fieldname + '_' + suffix).off("change");
+        $('#' + fieldname + '_' + suffix).on("change", function(event, ui) { changedField(event, fieldname, $('#' + fieldname + '_' + suffix).val()); });
+      }
+
+
+      function changedField(event, fieldname, value)
+      {
+        $.ajax({
+          url: '/api/json/settings?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ field:fieldname, value:value })
+        })
+        .done(function(response) {
+          // NOP
+        });
+      }
+
+
+      // Log page
+      // ========
+
+      function refresh_log()
+      {
+        $.get("tail_log.txt", function(data) {
+          $("#tail_log").html(data);
+        });
+      }
+
+
+      function set_loglevel(i)
+      {
+        $.getJSON( '/api/json/log?rqvaltok=' + rqvaltok + '&level=' + String(i) )
+        .done(function(response) {
+          // refresh log
+          refresh_log();
+        });
+      }
+
+
 
     --></script>
 
@@ -247,168 +307,168 @@
           <ul>
             <li><a href="#title" class="ui-btn-active">About</a></li>
             <li><a href="#control">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
         <div>
           <div class="centered" data-role="content">
-            <h1 id="about_title_model">PIXELBOARD</h1>
-            <h2 id="about_model_description">OpenWrt/LEDE driven all lasercut pixel lounge table</h2>
-            <p>© <span id="about_copyright_years">2016</span> by <a id="about_copyright_link" href="http://hardturm.ch/luz" target="_blank">luz</a></p>
+            <h1 id="about_title_model">Wiper Machine</h1>
+            <h2 id="about_model_description">OpenWrt/LEDE driven Wiper DC motor controller</h2>
+            <p>© <span id="about_copyright_years">2017</span> by <a id="about_copyright_link" href="http://hardturm.ch/luz" target="_blank">luz</a></p>
           </div>
 
           <h3>Opensource:</h3>
           <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
           data-iconpos="right">
 
-        <div id="opensource_openwrt" style="display:none" data-role="collapsible">
-          <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+            <div id="opensource_openwrt" style="display:none" data-role="collapsible">
+              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
 
-          <h4><a href="http://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded devices</h4>
+              <h4><a href="http://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded devices</h4>
 
-          <p>OpenWrt is free software: you can redistribute it and/or modify
-          it under the terms of the GNU General Public License as published by
-          the Free Software Foundation, version 2 of the License.</p>
+              <p>OpenWrt is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, version 2 of the License.</p>
 
-          <p>You should have received a copy of the GNU General Public License
-          along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+              <p>You should have received a copy of the GNU General Public License
+              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+              <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+              <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining
+              a copy of this software and associated documentation files (the
+              "Software"), to deal in the Software without restriction, including
+              without limitation the rights to use, copy, modify, merge, publish,
+              distribute, sublicense, and/or sell copies of the Software, and to
+              permit persons to whom the Software is furnished to do so, subject to
+              the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be
+              included in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+              LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+              OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+              WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
+              <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
+              <p>Copyright (c) 2004 avahi.org</p>
+
+              <p>avahi is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>avahi is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+              <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+              <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+              <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+              Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"),
+              to deal in the Software without restriction, including without limitation
+              the rights to use, copy, modify, merge, publish, distribute, sublicense,
+              and/or sell copies of the Software, and to permit persons to whom the
+              Software is furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included
+              in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+              SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+              <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+              <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
+            </div>
+
+          </div>
         </div>
-
-        <div data-role="collapsible">
-          <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
-
-          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
-          <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining
-          a copy of this software and associated documentation files (the
-          "Software"), to deal in the Software without restriction, including
-          without limitation the rights to use, copy, modify, merge, publish,
-          distribute, sublicense, and/or sell copies of the Software, and to
-          permit persons to whom the Software is furnished to do so, subject to
-          the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be
-          included in all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
-
-          <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
-          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-          of this software and associated documentation files (the "Software"), to deal
-          in the Software without restriction, including without limitation the rights
-          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-          copies of the Software, and to permit persons to whom the Software is
-          furnished to do so, subject to the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be included in
-          all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-          THE SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
-
-          <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
-          <p>Copyright (c) 2004 avahi.org</p>
-
-          <p>avahi is free software; you can redistribute it and/or modify it
-          under the terms of the GNU Lesser General Public License as
-          published by the Free Software Foundation; either version 2.1 of the
-          License, or (at your option) any later version.</p>
-
-          <p>avahi is distributed in the hope that it will be useful, but WITHOUT
-          ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-          or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
-          Public License for more details.</p>
-
-          <p>You should have received a copy of the GNU Lesser General Public
-          License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
-
-          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
-          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-          of this software and associated documentation files (the "Software"), to deal
-          in the Software without restriction, including without limitation the rights
-          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-          copies of the Software, and to permit persons to whom the Software is
-          furnished to do so, subject to the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be included in
-          all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-          THE SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
-
-          <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
-          <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
-          Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining a
-          copy of this software and associated documentation files (the "Software"),
-          to deal in the Software without restriction, including without limitation
-          the rights to use, copy, modify, merge, publish, distribute, sublicense,
-          and/or sell copies of the Software, and to permit persons to whom the
-          Software is furnished to do so, subject to the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be included
-          in all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-          SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
-
-          <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
-
-          <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
-        </div>
-
-      </div>
-    </div>
       </div>
     </div>
 
@@ -418,36 +478,25 @@
           <ul>
             <li><a href="#title">About</a></li>
             <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
         <div data-role="content">
-          <h2>Game</h2>
-          <button type="button" id="restart" onclick="showPage('blocks', 1+4);" data-inline="true" data-theme="c">New player1 game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 2+4);" data-inline="true" data-theme="c">New player2 game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="c">New two player game</button>
-          <button type="button" id="restart" onclick="showPage('display', 0+4);" data-inline="true" data-theme="c">Show display page</button>
-          <h2>Message</h2>
-          <input type="text" id="messageText" name="messageText"/>
-          <button id="sendMessageButton" onclick="sendMessage();" data-theme="b">Send</button>
-          <input type="text" id="messageColor" name="messageColor" value="" placeholder="AArrggbb web color"/>
-          <button id="textColorButton" onclick="setTextColor();" data-theme="b">Set</button>
-          <h2>Pictures</h2>
-          <label for="imageFile">Select PNG file (10x20pixels):</label>
-          <input type="file" id="imageFile" name="imagefile" accept=".png"/>
-          <button id="imageUploadStart" onclick="uploadImage();" data-inline="false" data-theme="b">Upload...</button>
-<!--
-          <h2>System</h2>
-          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
--->
+          <h2>Operation</h2>
+          <button type="button" id="off" onclick="sendAction('/operation', 'off');" data-inline="true" data-theme="c">Off</button>
+          <button type="button" id="auto" onclick="sendAction('/operation', 'auto');" data-inline="true" data-theme="c">Auto</button>
+          <button type="button" id="always" onclick="sendAction('/operation', 'always');" data-inline="true" data-theme="c">Always</button>
+          <h2>Calibrate</h2>
+          <button type="button" id="rezero" onclick="sendAction('/operation', 'findzero');" data-inline="true" data-theme="c">Find zero</button>
+          <button type="button" id="calibrate" onclick="sendAction('/operation', 'calibrate');" data-inline="true" data-theme="c">Calibrate</button>
         </div>
       </div>
 
       <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
-        <h3>Restarting Pixelboard - please wait...</h3>
+        <h3>Restarting Wiper Machine - please wait...</h3>
         <p>Page will reload automatically</p>
         <div id="restartWaitProgress" class="p44_progressbar">
           <div class="p44_progressbar_text">-</div>
@@ -461,7 +510,7 @@
           <h1>Restart</h1>
         </div>
         <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
-          <h3 class="ui-title">Do you want to restart the PIXELBOARD?</h3>
+          <h3 class="ui-title">Do you want to restart the Wiper Machine?</h3>
           <p>Note: it will take a little while until the pixels are all ready again</p>
           <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
           <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
@@ -470,60 +519,58 @@
 
     </div>
 
-    <div id="player1" data-role="page">
+    <div id="settings" data-role="page">
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
             <li><a href="#title">About</a></li>
             <li><a href="#control">Control</a></li>
-            <li><a href="#player1" class="ui-btn-active">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
+            <li><a href="#settings" class="ui-btn-active">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
-        <h2>Player1</h2>
+        <h2>Settings</h2>
+        <div id="settingsList">
+        </div>
+        <button type="button" id="refresh" onclick="refresh_settings();" data-inline="true" data-theme="c">Refresh list</button>
+        <button type="button" id="save" onclick="sendAction('/settings', 'save');" data-inline="true" data-theme="c">Save Settings</button>
+        <button type="button" id="reload" onclick="sendAction('/settings', 'reload', function() { refresh_settings(); });" data-inline="true" data-theme="c">Reload saved settings</button>
+        <button type="button" id="defaults" onclick="sendAction('/settings', 'defaults', function() { refresh_settings(); });" data-inline="true" data-theme="c">Load default values</button>
+      </div>
+    </div>
 
-        <button type="button" id="restart" onclick="sendKey(1, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
-<!--
-        <div class="ui-grid-a">
-          <div class="ui-block-a" id="systemInfo"></div>
-          <div class="ui-block-b">
-            <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
-            <br/>
-            <button type="button" id="configrestore" onclick="openDialog('#configRestoreDialog');" data-inline="true" data-theme="c">Restore config…</button>
+    <div id="logs" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div id="logcontent" data-role="content">
+          <h2>Logs</h2>
+          <div id="logs">
+            <h3>vdcd - complete <a target="_blank" href="current_log.txt">current</a> /
+            <a target="_blank" href="previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_log();">refresh</a>) -
+            set loglevel
+            <a title="debug" href="javascript:set_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
+            </h3>
+            <pre id="tail_log"></pre>
           </div>
         </div>
--->
       </div>
     </div>
 
-
-    <div id="player2" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2" class="ui-btn-active">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Player2</h2>
-
-        <button type="button" id="restart" onclick="sendKey(2, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
-      </div>
-    </div>
 
 
   </body>
