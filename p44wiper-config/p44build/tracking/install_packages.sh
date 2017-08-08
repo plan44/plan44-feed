@@ -53,5 +53,6 @@
 ./scripts/feeds install -p plan44 pagekitec
 ./scripts/feeds install -p plan44 pixelboard-config
 ./scripts/feeds install -p plan44 pixelboardd
+./scripts/feeds install -p plan44 timidity
 ./scripts/feeds install -p plan44 vocore-gdma
 ./scripts/feeds install -p plan44 ws2812-draiveris
