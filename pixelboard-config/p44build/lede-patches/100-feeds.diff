@@ -12,6 +12,5 @@
  #src-git management https://github.com/openwrt-management/packages.git
  #src-git oldpackages http://git.openwrt.org/packages.git
  #src-link custom /usr/src/openwrt/custom-feed
-+src-git p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44_openwrt_feed.git;master
-+src-git plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git;master
++src-git p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git;master
 +src-git onion https://github.com/OnionIoT/OpenWRT-Packages.git
