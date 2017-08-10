@@ -3,5 +3,6 @@
 202-dropbear-with-dss.diff
 204-mt7628an-pwm-irq.diff
 205-omega2-dtsi-gdma-i2s-enable.diff
+207-uboot-envtools-config-init-for-omega2.diff
 210-omega2-sound-max98357a.diff
 301-files-etc-shadow--no-root-login.diff
