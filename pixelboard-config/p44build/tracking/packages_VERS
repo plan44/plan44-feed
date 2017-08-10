@@ -1,1 +1,4 @@
 # feed/package giturl:gitref
+plan44/pixelboardd https://github.com/plan44/pixelboardd.git:master
+plan44/mg44 https://github.com/plan44/mg44.git:master
+onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:HEAD

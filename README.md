@@ -8,13 +8,18 @@ If you have a LEDE or OpenWrt build environment set up, you can use the plan44 f
     
 to your *feeds.conf.default*
 
+Note: the master branch of this feed is intended to use with the current LEDE release (17.01 at the time of writing). If you want to build LEDE master, use `for-lede-master` version of the feed.
+
+
 ## Useful right now
 
 The following packages are of general usefulness right now:
 
 - **p44-ledchain**: this is a kernel module written by me for the MT7688/Omega2 which makes use of the hardware PWM in the chip to drive individually addressable WS281x-type LED chains. In contrast to the *ws2812_draiveris* driver (see below) that does the same for AR9331/Omega1, *p44-ledchain* does **not** block IRQs at all. At this time, *p44-ledchain* is extensively tested with a chain of 200 WS2813, and one of 24 P9823 LEDs. The driver also has modes for WS2811, WS2812 and the RGBW SK6812 LEDs.
 
-- **ws2812-draivris**: this is a WS281x LED driver that works for AR9331/Omega1, but blocks interrupts for several milliseconds per update, which is *very* bad behaviour for a kernel module. The author of *ws2812-draivris* (not me) is not to blame for this, because the AR9331 chip does not provide any hardware that could generate WS281x timing, so bitbanging and blocking IRQs is the *only* way to do WS281x on a AR9331. Still, it's a bit of a hack that could backfire when other parts of the system rely on fast IRQ response.
+- **pixelboard-config**: this is a "master" package containing all information needed to build the firmware for *pixelboard* (tetris/game-of-life lounge table based on WS2813 LEDs). See pixelboard-config/README.md for detailed instructions how to build the FW image.
+
+- **ws2812-draiveris**: this is a WS281x LED driver that works for AR9331/Omega1, but blocks interrupts for several milliseconds per update, which is *very* bad behaviour for a kernel module. The author of *ws2812-draivris* (not me) is not to blame for this, because the AR9331 chip does not provide any hardware that could generate WS281x timing, so bitbanging and blocking IRQs is the *only* way to do WS281x on a AR9331. Still, it's a bit of a hack that could backfire when other parts of the system rely on fast IRQ response.
 
 
 ## Work in progress!
