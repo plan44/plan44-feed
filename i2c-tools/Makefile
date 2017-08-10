@@ -39,7 +39,7 @@ define Package/$(PKG_NAME)/description
  packages can use it.
 
  Note that it also installs a copy of i2c-dev.h as lib-i2c-dev.h
- because due to search path order, the override might not
+ because due to search path order, the override might not work
  when the toolchain /usr/include also contains a i2c-dev.h.
 
  Note also that the originally included python-smbus package has
