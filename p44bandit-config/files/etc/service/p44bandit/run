@@ -5,10 +5,10 @@ EXECUTABLE=p44banditd
 LOGLEVEL=6
 EXTRAOPTS=
 
-# basic config Omega2 on splitflapcontroller v1
+# basic config Omega2 on serialcontroller v1
 SERIALPORT=/dev/ttyS1
-HSOUTPIN=gpio.39
-HSINPIN=gpio.40
+HSOUTPIN=/gpio.39
+HSINPIN=/gpio.40
 
 # run the daemon
 exec ${EXECUTABLE} \
