@@ -1,0 +1,45 @@
+--- a/autoconf/arts.m4
++++ b/autoconf/arts.m4
+@@ -10,7 +10,7 @@ dnl AM_PATH_ARTS([MINIMUM-VERSION, [ACTI
+ dnl Test for aRts, and define ARTS_CFLAGS and ARTS_LIBS
+ dnl
+ AC_DEFUN(AM_PATH_ARTS,
+-	[dnl 
++	[dnl
+ dnl Get the cflags and libraries from the arts-config script
+ dnl
+ AC_ARG_WITH(arts-prefix,[  --with-arts-prefix=PFX   Prefix where ARTS is installed (optional)],
+@@ -61,7 +61,7 @@ char*
+ my_strdup (char *str)
+ {
+   char *new_str;
+-  
++
+   if (str)
+     {
+       new_str = malloc ((strlen (str) + 1) * sizeof(char));
+@@ -69,7 +69,7 @@ my_strdup (char *str)
+     }
+   else
+     new_str = NULL;
+-  
++
+   return new_str;
+ }
+ 
+@@ -112,7 +112,7 @@ int main ()
+   fi
+   if test "x$no_arts" = x ; then
+      AC_MSG_RESULT(yes)
+-     ifelse([$2], , :, [$2])     
++     ifelse([$2], , :, [$2])
+   else
+      AC_MSG_RESULT(no)
+      if test "$ARTS_CONFIG" = "no" ; then
+@@ -156,4 +156,4 @@ int main ()
+   AC_SUBST(ARTS_LIBS)
+   rm -f conf.artstest
+ ])
+-dnl End of aRts
+\ No newline at end of file
++dnl End of aRts

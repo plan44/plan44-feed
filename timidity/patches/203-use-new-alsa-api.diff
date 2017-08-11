@@ -1,0 +1,118 @@
+--- a/timidity/alsa_a.c
++++ b/timidity/alsa_a.c
+@@ -42,8 +42,8 @@
+ 
+ /*ALSA header file*/
+ #if HAVE_ALSA_ASOUNDLIB_H
+-#define ALSA_PCM_OLD_HW_PARAMS_API
+-#define ALSA_PCM_OLD_SW_PARAMS_API
++//#define ALSA_PCM_OLD_HW_PARAMS_API
++//#define ALSA_PCM_OLD_SW_PARAMS_API
+ #include <alsa/asoundlib.h>
+ #else
+ #include <sys/asoundlib.h>
+@@ -289,7 +289,8 @@ static int open_output(void)
+ {
+   int orig_rate = dpm.rate;
+   int ret_val = 0;
+-  int tmp, frags, r, pfds;
++  int tmp, frags, r, v, pfds;
++  snd_pcm_uframes_t uf;
+   int rate;
+   snd_pcm_hw_params_t *pinfo;
+   snd_pcm_sw_params_t *swpinfo;
+@@ -370,17 +371,18 @@ static int open_output(void)
+   }
+ 
+   /*check rate*/
+-  r = snd_pcm_hw_params_get_rate_min(pinfo, NULL);
+-  if (r >= 0 && r > dpm.rate) {
+-    dpm.rate = r;
++  r = snd_pcm_hw_params_get_rate_min(pinfo, &v, NULL);
++  if (r >= 0 && v > dpm.rate) {
++    dpm.rate = v;
+     ret_val = 1;
+   }
+-  r = snd_pcm_hw_params_get_rate_max(pinfo, NULL);
+-  if (r >= 0 && r < dpm.rate) {
+-    dpm.rate = r;
++  r = snd_pcm_hw_params_get_rate_max(pinfo, &v, NULL);
++  if (r >= 0 && v < dpm.rate) {
++    dpm.rate = v;
+     ret_val = 1;
+   }
+-  if ((rate = snd_pcm_hw_params_set_rate_near(handle, pinfo, dpm.rate, 0)) < 0) {
++  rate = dpm.rate;
++  if (snd_pcm_hw_params_set_rate_near(handle, pinfo, &rate, 0) < 0) {
+     ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+ 	      "ALSA pcm '%s' can't set rate %d",
+ 	      alsa_device_name(), dpm.rate);
+@@ -396,7 +398,7 @@ static int open_output(void)
+     if (snd_pcm_hw_params_test_channels(handle, pinfo, 2) < 0)
+       dpm.encoding |= PE_MONO;
+   }
+-    
++
+   if (dpm.encoding & PE_MONO) {
+     if (snd_pcm_hw_params_set_channels(handle, pinfo, 1) < 0) {
+       ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+@@ -437,7 +439,8 @@ static int open_output(void)
+   ctl->cmsg(CMSG_INFO, VERB_VERBOSE,
+ 	    "Requested buffer size %d, fragment size %d",
+ 	    total_bytes, frag_size);
+-  if ((tmp = snd_pcm_hw_params_set_buffer_size_near(handle, pinfo, total_bytes >> sample_shift)) < 0) {
++	uf = total_bytes >> sample_shift;
++  if (snd_pcm_hw_params_set_buffer_size_near(handle, pinfo, &uf) < 0) {
+     ctl->cmsg(CMSG_WARNING, VERB_NORMAL,
+ 	      "ALSA pcm '%s' can't set buffer size %d",
+ 	      alsa_device_name(), total_bytes);
+@@ -445,7 +448,8 @@ static int open_output(void)
+     return -1;
+   }
+ 
+-  if ((tmp = snd_pcm_hw_params_set_period_size_near(handle, pinfo, frag_size >> sample_shift, 0)) < 0) {
++  uf = frag_size >> sample_shift;
++  if (snd_pcm_hw_params_set_period_size_near(handle, pinfo, &uf, 0) < 0) {
+     ctl->cmsg(CMSG_WARNING, VERB_NORMAL,
+ 	      "ALSA pcm '%s' can't set period size %d",
+ 	      alsa_device_name(), frag_size);
+@@ -463,14 +467,16 @@ static int open_output(void)
+     return -1;
+   }
+ 
+-  total_bytes = snd_pcm_hw_params_get_buffer_size(pinfo) << sample_shift;
+-  frag_size = snd_pcm_hw_params_get_period_size(pinfo, NULL) << sample_shift;
++  snd_pcm_hw_params_get_buffer_size(pinfo, &uf);
++  total_bytes = uf << sample_shift;
++  snd_pcm_hw_params_get_period_size(pinfo, &uf, NULL);
++  frag_size = uf << sample_shift;
+   ctl->cmsg(CMSG_INFO, VERB_VERBOSE,
+ 	    "ALSA pcm '%s' set buffer size %d, period size %d bytes",
+ 	    alsa_device_name(), total_bytes, frag_size);
+-  tmp = snd_pcm_hw_params_get_rate(pinfo, NULL);
+-  if (tmp > 0 && tmp != dpm.rate) {
+-    dpm.rate = tmp;
++  r = snd_pcm_hw_params_get_rate(pinfo, &rate, NULL);
++  if (r >= 0 && rate > 0 && rate != dpm.rate) {
++    dpm.rate = rate;
+     ret_val = 1;
+   }
+   if (orig_rate != dpm.rate) {
+@@ -537,7 +543,7 @@ static int output_data(char *buf, int32 
+   if (dpm.encoding & PE_16BIT)
+     shift++;
+   nframes >>= shift;
+-  
++
+   while (nframes > 0) {
+     n = snd_pcm_writei(handle, buf, nframes);
+     if (n == -EAGAIN || (n >= 0 && n < nframes)) {
+@@ -597,7 +603,7 @@ static int acntl(int request, void *arg)
+       return -1;
+     *((int *)arg) = snd_pcm_status_get_avail(status);
+     return 0;
+-    
++
+   case PM_REQ_GETFILLED:
+     if (total_bytes == -1)
+       return -1;

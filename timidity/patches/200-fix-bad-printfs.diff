@@ -1,0 +1,510 @@
+--- a/interface/wrdt_tty.c
++++ b/interface/wrdt_tty.c
+@@ -66,7 +66,7 @@ static int inkey_flag;
+ 
+ static int wrdt_open(char *dummy)
+ {
+-  
++
+     wrdt.opened = 1;
+     inkey_flag = 0;
+     return 0;
+@@ -118,7 +118,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	len = strlen(p);
+ 	text = (char *)new_segment(&tmpbuffer, SAFE_CONVERT_LENGTH(len));
+ 
+-	/*This must be not good thing,but as far as I know no wrd file 
++	/*This must be not good thing,but as far as I know no wrd file
+ 	  written in EUC-JP code found*/
+ 
+ 	code_convert(p, text, SAFE_CONVERT_LENGTH(len), "SJIS", (char *)-1);
+@@ -287,7 +287,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	  fillbuf[0]=0x1b;
+ 	  fillbuf[1]='7';
+ 	  fillbuf[2]=0;
+-	  printf(fillbuf);
++	  printf("%s",fillbuf);
+ 
+ 	  /* 0-7: normal, 8-16: reverse */
+ 	  if(wrd_args[4] <= 7)
+@@ -303,7 +303,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	  fillbuf[0]=0x1b;
+ 	  fillbuf[1]='8';
+ 	  fillbuf[2]=0;
+-	  printf(fillbuf);
++	  printf("%s",fillbuf);
+ 	  printf("\033[%dm",txtclr_preserve);
+ 	  fflush(stdout);
+ 	}
+--- a/timidity/timidity.c
++++ b/timidity/timidity.c
+@@ -525,12 +525,12 @@ CRITICAL_SECTION critSect;
+ static BOOL WINAPI handler(DWORD dw)
+ {
+ #if defined(IA_WINSYN) || defined(IA_PORTMIDISYN)
+-	if( ctl->id_character == 'W' 
++	if( ctl->id_character == 'W'
+ 		|| ctl->id_character == 'P' )
+ 	{
+     	rtsyn_midiports_close();
+ 	}
+-#endif	
++#endif
+     printf ("***BREAK" NLS); fflush(stdout);
+     intr++;
+     return TRUE;
+@@ -582,7 +582,7 @@ static int copymap(int mapto, int mapfro
+ {
+ 	ToneBank **tb = isdrum ? drumset : tonebank;
+ 	int i, bankfrom, bankto;
+-	
++
+ 	for(i = 0; i < 128; i++)
+ 	{
+ 		bankfrom = find_instrument_map_bank(isdrum, mapfrom, i);
+@@ -601,7 +601,7 @@ static float *config_parse_tune(const ch
+ 	const char *p;
+ 	float *tune_list;
+ 	int i;
+-	
++
+ 	/* count num */
+ 	*num = 1, p = cp;
+ 	while ((p = strchr(p, ',')) != NULL)
+@@ -622,7 +622,7 @@ static int16 *config_parse_int16(const c
+ 	const char *p;
+ 	int16 *list;
+ 	int i;
+-	
++
+ 	/* count num */
+ 	*num = 1, p = cp;
+ 	while ((p = strchr(p, ',')) != NULL)
+@@ -643,7 +643,7 @@ static int **config_parse_envelope(const
+ 	const char *p, *px;
+ 	int **env_list;
+ 	int i, j;
+-	
++
+ 	/* count num */
+ 	*num = 1, p = cp;
+ 	while ((p = strchr(p, ',')) != NULL)
+@@ -685,7 +685,7 @@ static Quantity **config_parse_modulatio
+ 		QUANTITY_UNIT_TYPE(TREMOLO_SWEEP), QUANTITY_UNIT_TYPE(TREMOLO_RATE), QUANTITY_UNIT_TYPE(DIRECT_INT),
+ 		QUANTITY_UNIT_TYPE(VIBRATO_SWEEP), QUANTITY_UNIT_TYPE(VIBRATO_RATE), QUANTITY_UNIT_TYPE(DIRECT_INT)
+ 	};
+-	
++
+ 	/* count num */
+ 	*num = 1, p = cp;
+ 	while ((p = strchr(p, ',')) != NULL)
+@@ -731,7 +731,7 @@ static int set_gus_patchconf_opts(char *
+ {
+ 	char *cp;
+ 	int k;
+-	
++
+ 	if (! (cp = strchr(opts, '='))) {
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+ 				"%s: line %d: bad patch option %s", name, line, opts);
+@@ -819,7 +819,7 @@ static int set_gus_patchconf_opts(char *
+ 		tone->scltune = config_parse_int16(cp, &tone->scltunenum);
+ 	else if (! strcmp(opts, "comm")) {
+ 		char *p;
+-		
++
+ 		if (tone->comment)
+ 			free(tone->comment);
+ 		p = tone->comment = safe_strdup(cp);
+@@ -979,7 +979,7 @@ static int set_gus_patchconf(char *name,
+ static int set_patchconf(char *name, int line, ToneBank *bank, char *w[], int dr, int mapid, int bankmapfrom, int bankno)
+ {
+     int i;
+-    
++
+     i = atoi(w[0]);
+     if(!dr)
+ 	i -= progbase;
+@@ -1042,7 +1042,7 @@ static int mapname2id(char *name, int *i
+ 		{"xgsfx64",     XG_SFX64_MAP, 0}
+ 	};
+ 	const MapNameEntry *found;
+-	
++
+ 	found = (MapNameEntry *)bsearch(name, data, sizeof data / sizeof data[0], sizeof data[0], mapnamecompare);
+ 	if (found != NULL)
+ 	{
+@@ -1429,7 +1429,7 @@ MAIN_INTERFACE int read_config_file(char
+ 	else if (strcmp(w[0], "opt") == 0) {
+ 		int c, longind, err;
+ 		char *p, *cmd, *arg;
+-		
++
+ 		if (words != 2 && words != 3) {
+ 			ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+ 					"%s: line %d: Syntax error", name, line);
+@@ -2048,7 +2048,7 @@ MAIN_INTERFACE int read_config_file(char
+ 	else if(!strcmp(w[0], "drumset"))
+ 	{
+ 	    int newmapid, isdrum, newbankno;
+-	    
++
+ 	    if(words < 2)
+ 	    {
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+@@ -2120,7 +2120,7 @@ MAIN_INTERFACE int read_config_file(char
+ 	else if(!strcmp(w[0], "bank"))
+ 	{
+ 	    int newmapid, isdrum, newbankno;
+-	    
++
+ 	    if(words < 2)
+ 	    {
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+@@ -2362,7 +2362,7 @@ int opt_buffer_fragments = -1;
+ MAIN_INTERFACE int set_tim_opt_short(int c, char *optarg)
+ {
+ 	int err = 0;
+-	
++
+ 	switch (c) {
+ 	case '4':
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL,
+@@ -2483,7 +2483,7 @@ MAIN_INTERFACE int set_tim_opt_long(int 
+ {
+ 	const struct option *the_option = &(longopts[index]);
+ 	char *arg;
+-	
++
+ 	if (c == '?')	/* getopt_long failed parsing */
+ 		parse_opt_fail(optarg);
+ 	else if (c < TIM_OPT_FIRST)
+@@ -2713,7 +2713,7 @@ static inline int parse_opt_B(const char
+ {
+ 	/* --buffer-fragments */
+ 	const char *p;
+-	
++
+ 	/* num */
+ 	if (*arg != ',') {
+ 		if (set_value(&opt_buffer_fragments, atoi(arg), 0, 1000,
+@@ -2769,7 +2769,7 @@ static inline int parse_opt_E(char *arg)
+ {
+ 	/* undocumented option --ext */
+ 	int err = 0;
+-	
++
+ 	while (*arg) {
+ 		switch (*arg) {
+ 		case 'w':
+@@ -2950,7 +2950,7 @@ static inline int parse_opt_default_mid(
+ {
+ 	/* --default-mid */
+ 	int val = str2mID(arg);
+-	
++
+ 	if (! val) {
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL, "Manufacture ID: Illegal value");
+ 		return 1;
+@@ -2963,7 +2963,7 @@ static inline int parse_opt_system_mid(c
+ {
+ 	/* --system-mid */
+ 	int val = str2mID(arg);
+-	
++
+ 	if (! val) {
+ 		ctl->cmsg(CMSG_ERROR, VERB_NORMAL, "Manufacture ID: Illegal value");
+ 		return 1;
+@@ -2994,7 +2994,7 @@ static inline int parse_opt_default_prog
+ 	/* --default-program */
+ 	int prog, i;
+ 	const char *p;
+-	
++
+ 	if (set_value(&prog, atoi(arg), 0, 0x7f, "Program number"))
+ 		return 1;
+ 	if ((p = strchr(arg, '/')) != NULL) {
+@@ -3012,7 +3012,7 @@ static inline int parse_opt_force_progra
+ 	/* --force-program */
+ 	const char *p;
+ 	int i;
+-	
++
+ 	if (set_value(&def_prog, atoi(arg), 0, 0x7f, "Program number"))
+ 		return 1;
+ 	if (ctl->opened)
+@@ -3031,7 +3031,7 @@ static inline int set_default_program(in
+ {
+ 	int bank;
+ 	Instrument *ip;
+-	
++
+ 	bank = (special_tonebank >= 0) ? special_tonebank : default_tonebank;
+ 	if ((ip = play_midi_load_instrument(0, bank, prog)) == NULL)
+ 		return 1;
+@@ -3043,7 +3043,7 @@ static inline int parse_opt_delay(const 
+ {
+ 	/* --delay */
+ 	const char *p;
+-	
++
+ 	switch (*arg) {
+ 	case '0':
+ 	case 'd':	/* disable */
+@@ -3073,7 +3073,7 @@ static inline int parse_opt_chorus(const
+ {
+ 	/* --chorus */
+ 	const char *p;
+-	
++
+ 	switch (*arg) {
+ 	case '0':
+ 	case 'd':	/* disable */
+@@ -3104,7 +3104,7 @@ static inline int parse_opt_reverb(const
+ {
+ 	/* --reverb */
+ 	const char *p;
+-	
++
+ 	/* option       action                  opt_reverb_control
+ 	 * reverb=0     no reverb                 0
+ 	 * reverb=1     old reverb                1
+@@ -3115,11 +3115,11 @@ static inline int parse_opt_reverb(const
+ 	 * reverb=3,n   set reverb level to n   (-1 to -127) - 256
+ 	 * reverb=4     "global" new reverb       4
+ 	 * reverb=4,n   set reverb level to n   (-1 to -127) - 384
+-	 * 
++	 *
+ 	 * I think "global" was meant to apply a single global reverb,
+ 	 * without applying any reverb to the channels.  The do_effects()
+ 	 * function in effects.c looks like a good way to do this.
+-	 * 
++	 *
+ 	 * This is NOT the "correct" way to implement global reverb, we should
+ 	 * really make a new variable just for that.  But if opt_reverb_control
+ 	 * is already used in a similar fashion, rather than creating a new
+@@ -3128,7 +3128,7 @@ static inline int parse_opt_reverb(const
+ 	 * variables for both global reverb and channel reverb level settings
+ 	 * in the future, but this will do for now.
+ 	 */
+-	
++
+ 	switch (*arg) {
+ 	case '0':
+ 	case 'd':	/* disable */
+@@ -3295,7 +3295,7 @@ static inline int parse_opt_H(const char
+ {
+ 	/* force keysig (number of sharp/flat) */
+ 	int keysig;
+-	
++
+ 	if (set_value(&keysig, atoi(arg), -7, 7,
+ 			"Force keysig (number of sHarp(+)/flat(-))"))
+ 		return 1;
+@@ -3533,7 +3533,7 @@ static inline int parse_opt_h(const char
+ 	char mark[128];
+ 	PlayMode *pmp, **pmpp;
+ 	WRDTracer *wlp, **wlpp;
+-	
++
+ 	fp = open_pager();
+ 	help_args[0] = timidity_version;
+ 	help_args[1] = program_name;
+@@ -3543,7 +3543,7 @@ static inline int parse_opt_h(const char
+ 			if (*(strchr(h, '%') + 1) != '%')
+ 				fprintf(fp, h, help_args[j++]);
+ 			else
+-				fprintf(fp, h);
++				fprintf(fp, "%s", h);
+ 		} else
+ 			fputs(h, fp);
+ 		fputs(NLS, fp);
+@@ -3702,7 +3702,7 @@ static inline void list_dyna_interface(F
+ 	URL url;
+ 	char fname[BUFSIZ], *info;
+ 	int id;
+-	
++
+ 	if ((url = url_dir_open(path)) == NULL)
+ 		return;
+ 	while (url_gets(url, fname, sizeof(fname)) != NULL)
+@@ -3724,7 +3724,7 @@ static inline char *dynamic_interface_in
+ 	static char libinfo[MAXPATHLEN];
+ 	int fd, n;
+ 	char *nl;
+-	
++
+ 	sprintf(libinfo, "%s" PATH_STRING "interface_%c.txt",
+ 			dynamic_lib_root, id);
+ 	if ((fd = open(libinfo, 0)) < 0)
+@@ -3748,7 +3748,7 @@ char *dynamic_interface_module(int id)
+ {
+ 	static char shared_library[MAXPATHLEN];
+ 	int fd;
+-	
++
+ 	sprintf(shared_library, "%s" PATH_STRING "interface_%c%s",
+ 			dynamic_lib_root, id, SHARED_LIB_EXT);
+ 	if ((fd = open(shared_library, 0)) < 0)
+@@ -3763,7 +3763,7 @@ static inline int parse_opt_i(const char
+ 	/* interface mode */
+ 	ControlMode *cmp, **cmpp;
+ 	int found = 0;
+-	
++
+ 	for (cmpp = ctl_list; (cmp = *cmpp) != NULL; cmpp++) {
+ 		if (cmp->id_character == *arg) {
+ 			found = 1;
+@@ -3958,7 +3958,7 @@ static inline int parse_opt_m(const char
+ static inline int parse_opt_N(const char *arg)
+ {
+ 	int val;
+-	
++
+ 	switch (get_current_resampler()) {
+ 	case RESAMPLE_CSPLINE:
+ 	case RESAMPLE_LAGRANGE:
+@@ -3983,7 +3983,7 @@ static inline int parse_opt_O(const char
+ 	/* output mode */
+ 	PlayMode *pmp, **pmpp;
+ 	int found = 0;
+-	
++
+ 	for (pmpp = play_mode_list; (pmp = *pmpp) != NULL; pmpp++)
+ 		if (pmp->id_character == *arg) {
+ 			found = 1;
+@@ -4159,7 +4159,7 @@ static inline int parse_opt_p1(const cha
+ static inline int parse_opt_Q(const char *arg)
+ {
+ 	const char *p = arg;
+-	
++
+ 	if (strchr(arg, 't'))
+ 		/* backward compatibility */
+ 		return parse_opt_Q1(arg);
+@@ -4176,7 +4176,7 @@ static inline int parse_opt_Q1(const cha
+ 	/* --temper-mute */
+ 	int prog;
+ 	const char *p = arg;
+-	
++
+ 	if (set_value(&prog, atoi(arg), 0, 7, "Temperament program number"))
+ 		return 1;
+ 	temper_type_mute |= 1 << prog;
+@@ -4192,7 +4192,7 @@ static inline int parse_opt_q(const char
+ {
+ 	char *max_buff = safe_strdup(arg);
+ 	char *fill_buff = strchr(max_buff, '/');
+-	
++
+ 	if (fill_buff != max_buff) {
+ 		if (opt_aq_max_buff)
+ 			free(opt_aq_max_buff);
+@@ -4228,7 +4228,7 @@ static inline int parse_opt_S(const char
+ {
+ 	int suffix = arg[strlen(arg) - 1];
+ 	int32 figure;
+-	
++
+ 	switch (suffix) {
+ 	case 'M':
+ 	case 'm':
+@@ -4261,7 +4261,7 @@ static inline int parse_opt_T(const char
+ {
+ 	/* tempo adjust */
+ 	int adjust;
+-	
++
+ 	if (set_value(&adjust, atoi(arg), 10, 400, "Tempo adjust"))
+ 		return 1;
+ 	tempo_adjust = 100.0 / adjust;
+@@ -4317,7 +4317,7 @@ static inline int parse_opt_v(const char
+ 	};
+ 	FILE *fp = open_pager();
+ 	int i;
+-	
++
+ 	for (i = 0; i < sizeof(version_list) / sizeof(char *); i++)
+ 		fputs(version_list[i], fp);
+ 	close_pager(fp);
+@@ -4327,7 +4327,7 @@ static inline int parse_opt_v(const char
+ static inline int parse_opt_W(char *arg)
+ {
+ 	WRDTracer *wlp, **wlpp;
+-	
++
+ 	if (*arg == 'R') {	/* for WRD reader options */
+ 		put_string_table(&wrd_read_opts, arg + 1, strlen(arg + 1));
+ 		return 0;
+@@ -4373,7 +4373,7 @@ static inline int parse_opt_w(const char
+ static inline int parse_opt_x(char *arg)
+ {
+ 	StringTableNode *st;
+-	
++
+ 	if ((st = put_string_table(&opt_config_string,
+ 			arg, strlen(arg))) != NULL)
+ 		expand_escape_string(st->string);
+@@ -4383,7 +4383,7 @@ static inline int parse_opt_x(char *arg)
+ static inline void expand_escape_string(char *s)
+ {
+ 	char *t = s;
+-	
++
+ 	if (s == NULL)
+ 		return;
+ 	for (t = s; *s; s++)
+@@ -4433,7 +4433,7 @@ static inline int parse_opt_Z1(const cha
+ {
+ 	/* --pure-intonation */
+ 	int keysig;
+-	
++
+ 	opt_pure_intonation = 1;
+ 	if (*arg) {
+ 		if (set_value(&keysig, atoi(arg), -7, 7,
+@@ -4466,7 +4466,7 @@ static inline int parse_opt_fail(const c
+ static inline int set_value(int *param, int i, int low, int high, char *name)
+ {
+ 	int32 val;
+-	
++
+ 	if (set_val_i32(&val, i, low, high, name))
+ 		return 1;
+ 	*param = val;
+@@ -4537,7 +4537,7 @@ static inline FILE *open_pager(void)
+ #if ! defined(__MACOS__) && defined(HAVE_POPEN) && defined(HAVE_ISATTY) \
+ 		&& ! defined(IA_W32GUI) && ! defined(IA_W32G_SYN)
+ 	char *pager;
+-	
++
+ 	if (isatty(1) && (pager = getenv("PAGER")) != NULL)
+ 		return popen(pager, "w");
+ #endif
+@@ -4695,7 +4695,7 @@ MAIN_INTERFACE void timidity_start_initi
+     }
+ 
+     if (play_mode == NULL) {
+-	/* try to detect the first available device */  
++	/* try to detect the first available device */
+ 	for(i = 0; play_mode_list[i]; i++) {
+ 	    /* check only the devices with detect callback */
+ 	    if (play_mode_list[i]->detect) {
+@@ -4706,7 +4706,7 @@ MAIN_INTERFACE void timidity_start_initi
+ 	    }
+ 	}
+     }
+-    
++
+     if (play_mode == NULL) {
+ 	fprintf(stderr, "Couldn't open output device" NLS);
+ 	exit(1);
+@@ -5210,7 +5210,7 @@ int main(int argc, char **argv)
+ 		return 0;
+ 	}
+ #endif
+-	
++
+     for(c = 1; c < argc; c++)
+     {
+ 	if(is_directory(argv[c]))
