@@ -1,6 +1,6 @@
 # feed giturl:gitref
 onion https://github.com/OnionIoT/OpenWRT-Packages.git:53e7f074478aad296d403e7922de1108b6d83142
-p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git:54776971248ce63dc7eb349a511eac670848a65a
+p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git:942c563902abedccbfc181b322fa804e85dc6ca4
 packages https://git.lede-project.org/feed/packages.git:449f578975c720f4634ea89207cf0d0ff27d6c6b
-plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:2941420fbc0774ecb5c3c0b399db4bc5e6d7e41a
+plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:062890f23d58a9ce94e8b2387b0e18cbf7a84fbf
 routing https://git.lede-project.org/feed/routing.git:34a2618d2e41030df6cadbb0b8ff0272df34943c
