@@ -36,12 +36,10 @@
 
       #filesTable { min-width: 100%; margin-left: 0; margin-right: 0; }
 
-      #filesTable .filesrow { width: 100%; }
-
       #filesTable .selected { background-color: #ffd900; }
 
-      #filesTable .namecol { width: 60%; }
-      #filesTable .actioncol { width: 300px; }
+      #filesTable .namecol { width: 90%; }
+      #filesTable .actioncol { min-width: 160px; text-align: right; }
 
 
 
@@ -199,13 +197,13 @@
         .done(function(response) {
           // table header
           var tableHtml =
-            '<table data-role="table" id="filesTable" data-mode="reflow"'+
+            '<table data-role="table" id="filesTable" data-mode="normal"'+
             ' class="ui-body-d ui-shadow table-stripe ui-responsive" data-column-btn-theme="b"' +
             ' >' +
             '<thead>' +
              '<tr class="ui-bar-d">' +
-               '<th>Name</th>' +
-               '<th>Actions</th>' +
+               '<th class="namecol">Name</th>' +
+               '<th class="actioncol">Actions</th>' +
              '</tr>' +
             '</thead>' +
             '<tbody>';
@@ -626,10 +624,6 @@
         <h2>Settings</h2>
         <div id="settingsList">
         </div>
-        <button type="button" id="refresh" onclick="refresh_settings();" data-inline="true" data-theme="c">Refresh list</button>
-        <button type="button" id="save" onclick="sendAction('/settings', 'save');" data-inline="true" data-theme="c">Save Settings</button>
-        <button type="button" id="reload" onclick="sendAction('/settings', 'reload', function() { refresh_settings(); });" data-inline="true" data-theme="c">Reload saved settings</button>
-        <button type="button" id="defaults" onclick="sendAction('/settings', 'defaults', function() { refresh_settings(); });" data-inline="true" data-theme="c">Load default values</button>
       </div>
     </div>
 
@@ -648,7 +642,7 @@
         <div id="logcontent" data-role="content">
           <h2>Logs</h2>
           <div id="logs">
-            <h3>vdcd - complete <a target="_blank" href="current_log.txt">current</a> /
+            <h3>complete <a target="_blank" href="current_log.txt">current</a> /
             <a target="_blank" href="previous_log.txt">previous</a> log -
             last lines (<a href="javascript:refresh_log();">refresh</a>) -
             set loglevel
