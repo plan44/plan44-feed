@@ -5,10 +5,17 @@ EXECUTABLE=p44banditd
 LOGLEVEL=6
 EXTRAOPTS=
 
+# config
+DATADIR="/flash/datadir"
+
 # basic config Omega2 on serialcontroller v1
 SERIALPORT=/dev/ttyS1
 HSOUTPIN=/gpio.39
 HSINPIN=/gpio.40
+
+# prepare
+mkdir -p ${DATADIR}
+
 
 # run the daemon
 exec ${EXECUTABLE} \
@@ -16,6 +23,7 @@ exec ${EXECUTABLE} \
   --serialport ${SERIALPORT} \
   --hsoutpin ${HSOUTPIN} \
   --hsinpin ${HSINPIN} \
+  --datadir ${DATADIR}
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
