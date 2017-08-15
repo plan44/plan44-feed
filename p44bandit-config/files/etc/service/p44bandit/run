@@ -13,6 +13,13 @@ SERIALPORT=/dev/ttyS1
 HSOUTPIN=/gpio.39
 HSINPIN=/gpio.40
 
+# - Button
+BUTTON_PIN=gpio.38
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+
 # prepare
 mkdir -p ${DATADIR}
 
@@ -23,6 +30,9 @@ exec ${EXECUTABLE} \
   --serialport ${SERIALPORT} \
   --hsoutpin ${HSOUTPIN} \
   --hsinpin ${HSINPIN} \
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
   --datadir ${DATADIR}
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
