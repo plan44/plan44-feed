@@ -31,9 +31,11 @@
 ./scripts/feeds install -p plan44 libpng
 ./scripts/feeds install -p plan44 messagetorch
 ./scripts/feeds install -p plan44 mg44
+./scripts/feeds install -p plan44 kmod-p44-ledchain
 ./scripts/feeds install -p plan44 p44sbbd
 ./scripts/feeds install -p plan44 p44wiper-config
 ./scripts/feeds install -p plan44 p44wiperd
 ./scripts/feeds install -p plan44 pagekitec
 ./scripts/feeds install -p plan44 pixelboard-config
 ./scripts/feeds install -p plan44 pixelboardd
+./scripts/feeds install -p plan44 timidity

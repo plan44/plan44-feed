@@ -2,5 +2,5 @@
 onion https://github.com/OnionIoT/OpenWRT-Packages.git:9e8fdc120d6af28592c261e2854d7dcd9d97bb3a
 p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git:54776971248ce63dc7eb349a511eac670848a65a
 packages https://git.lede-project.org/feed/packages.git:e0c9e8fcb80b9a2a5b6dfb150b703fe1b604ced3
-plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:c1ffda9461acc378e572d40eeb66114048f8992e
+plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:a3c03f32394caa247016b36a95dbe1a542593092
 routing https://git.lede-project.org/feed/routing.git:e656a6e0e69dd45b7caa24775bc86b6eb5dcfe7f
