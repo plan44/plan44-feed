@@ -76,7 +76,20 @@
      ctl->cmsg(CMSG_WARNING, VERB_NORMAL,
  	      "ALSA pcm '%s' can't set period size %d",
  	      alsa_device_name(), frag_size);
-@@ -463,14 +467,16 @@ static int open_output(void)
+@@ -453,24 +457,27 @@ static int open_output(void)
+     return -1;
+   }
+ 
+-  if (snd_pcm_hw_params(handle, pinfo) < 0) {
++  r = snd_pcm_hw_params(handle, pinfo);
++  if (r < 0) {
+     snd_output_t *log;
+     ctl->cmsg(CMSG_WARNING, VERB_NORMAL,
+-	      "ALSA pcm '%s' can't set hw_params", alsa_device_name());
++	      "ALSA pcm '%s' can't set hw_params: %s", alsa_device_name(), snd_strerror(r));
+     snd_output_stdio_attach(&log, stderr, 0);
+     snd_pcm_hw_params_dump(pinfo, log);
+     snd_pcm_close(handle);
      return -1;
    }
  
@@ -98,7 +111,7 @@
      ret_val = 1;
    }
    if (orig_rate != dpm.rate) {
-@@ -537,7 +543,7 @@ static int output_data(char *buf, int32 
+@@ -537,7 +544,7 @@ static int output_data(char *buf, int32 
    if (dpm.encoding & PE_16BIT)
      shift++;
    nframes >>= shift;
@@ -107,7 +120,7 @@
    while (nframes > 0) {
      n = snd_pcm_writei(handle, buf, nframes);
      if (n == -EAGAIN || (n >= 0 && n < nframes)) {
-@@ -597,7 +603,7 @@ static int acntl(int request, void *arg)
+@@ -597,7 +604,7 @@ static int acntl(int request, void *arg)
        return -1;
      *((int *)arg) = snd_pcm_status_get_avail(status);
      return 0;
