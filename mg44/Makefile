@@ -29,7 +29,7 @@ define Package/$(PKG_NAME)
   DEPENDS:=+libjson-c +libopenssl +libpthread +librt $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=digitalstrom
+	SUBMENU:=products
 	TITLE:=mg44 minimal mongoose based webserver
 	URL:=https://github.com/plan44/mg44
 	MAINTAINER:=luz@plan44.ch
