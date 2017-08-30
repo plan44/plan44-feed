@@ -29,7 +29,7 @@ define Package/$(PKG_NAME)
   DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=digitalstrom
+	SUBMENU:=products
 	TITLE:=plan44 digitalstrom virtual device connector daemon
 	URL:=https://github.com/plan44/vdcd
 	MAINTAINER:=luz@plan44.ch
