@@ -110,6 +110,27 @@ or just install all packages from all feeds:
 
 **Note:** when doing this for the first time, it takes a looooong time (hours). This is because initial LEDE build involves creating the compiler toolchain, and the complete linux kernel and tools. Subsequent builds will be faster.
 
-### Save your build's config, feeds, versions
+### Flash the firmware image to a Omega2
+
+If everything went well, the LEDE build process will have produced a ready-to-flash firmware image in `bin/targets/ramips/mt7688`. You can now send this to the Omega2 and flash it (of course, to actually get a Pixelboard you'd need to have [built the hardware around it](https://github.com/plan44/pixelboard))
+
+    # specify the IP address of your Omega2 here
+    TARGET_HOST=192.168.11.86
+	
+    # copy FW image to the Omega2
+    scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no bin/targets/ramips/mt7688/pixelboard-*-ramips-mt7688-omega2-squashfs-sysupgrade.bin root@${TARGET_HOST}:/tmp
+    
+    # login to the Omega2
+    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@${TARGET_HOST}
+    
+    # on the Omega2, flash the new firmware image
+    cd /tmp
+    sysupgrade -n pixelboard-*.bin
+
+After that, Omega reboots and is now a Pixelboard controller :-)
+
+### Finally, but optionally: save your build's config, feeds, versions
 
     p44b save
+    
+This records the precise details of this build into `feeds/plan44/pixelboard-config/p44build`, in particular the LEDE tree's SHA and .config as well as the SHAs of the feeds used. The idea is that this can be committed back into the pixelboard-config package, as kind of a "head" record for this very pixelboard firmware build, and allows to go back to this point later, even if the LEDE tree was used to build other firmware images in between (in fact, exactly that is the very purpose of `p44b` - the ability to work and switch between different firmware projects in a single LEDE tree)
