@@ -19,7 +19,9 @@ The following packages are of general usefulness right now:
 
 - **pixelboard-config**: this is a "master" package containing all information needed to build the firmware for *pixelboard* (tetris/game-of-life lounge table based on WS2813 LEDs). See pixelboard-config/README.md for detailed instructions how to build the FW image.
 
-- **ws2812-draiveris**: this is a WS281x LED driver that works for AR9331/Omega1, but blocks interrupts for several milliseconds per update, which is *very* bad behaviour for a kernel module. The author of *ws2812-draivris* (not me) is not to blame for this, because the AR9331 chip does not provide any hardware that could generate WS281x timing, so bitbanging and blocking IRQs is the *only* way to do WS281x on a AR9331. Still, it's a bit of a hack that could backfire when other parts of the system rely on fast IRQ response.
+- **pagekitec** (also containing **libpagekite**): copied this from [remakeelectric/owrt_pub_feeds](https://github.com/remakeelectric/owrt_pub_feeds), a C implementation of the [pagekite](https://pagekite.net) reverse proxy protocol which is useful to make services of devices which do not have a public IP or are behind firewalls accessible from the internet.
+
+- **ws2812-draiveris**: this is a WS281x LED driver that works for AR9331/Omega1, but blocks interrupts for several milliseconds per update, which is *very* bad behaviour for a kernel module. The author of *ws2812-draiveris* (not me) is not to blame for this, because the AR9331 chip does not provide any hardware that could generate WS281x timing, so bitbanging and blocking IRQs is the *only* way to do WS281x on a AR9331. Still, it's a bit of a hack that could backfire when other parts of the system rely on fast IRQ response.
 
 
 ## Work in progress!
