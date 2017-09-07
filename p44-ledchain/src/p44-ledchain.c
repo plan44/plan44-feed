@@ -29,59 +29,6 @@
 #include <linux/irq.h>
 
 
-// MARK: ===== PWM unit hardware definitions
-
-// - register block
-#define MT7688_PWM_BASE 0x10005000L
-#define MT7688_PWM_SIZE 0x00000210L
-// - access to ioremapped PWM area
-void __iomem *pwm_base; // set from ioremap()
-#define PWM_ADDR(offset) (pwm_base+offset)
-#define PWM_ENABLE        PWM_ADDR(0)
-#define PWM_EN_STATUS     PWM_ADDR(0x20C)
-
-// - information about undocumented PWM IRQ in MT7628 found in Android kernel driver in
-//   mediatek-android-linux-kerneltree/drivers/misc/mediatek/pwm/mt8173/include/mach/mt_pwm_prv.h
-//   Note that the MZ8173/MT6595 PWM is more capable (DMA!) than the MT7688's, but IRQ seems to be
-//   the same
-#define PWM_INT_ENABLE    PWM_ADDR(0x200) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
-#define PWM_INT_STATUS    PWM_ADDR(0x204) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
-#define PWM_INT_ACK       PWM_ADDR(0x208) // write 1 to acknowledge IRQ
-
-#define PWM_CHAN_OFFS(channel,reg) (0x10+((channel)*0x40)+(reg))
-#define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
-#define NUM_PWMS 4
-// - PWM channel register offsets
-#define PWMCON			    0x00
-#define PWMHDUR			    0x04
-#define PWMLDUR			    0x08
-#define PWMGDUR			    0x0c
-#define PWMSENDDATA0	  0x20
-#define PWMSENDDATA1	  0x24
-#define PWMWAVENUM	    0x28
-#define PWMDWIDTH		    0x2c
-#define PWMTHRES		    0x30
-#define PWMSENDWAVENUM  0x34
-
-
-// set 1 to enable IRQ/TIMER sequence tracing
-#define SEQ_TRACING 0
-
-// receiver sequence debug macros
-#if SEQ_TRACING
-#define SEQ_TRACE_MAX 1000
-static char seq_traceinfo[SEQ_TRACE_MAX];
-int seq_trace_idx;
-#define SEQ_TRACE_CLEAR() { seq_traceinfo[0]=0; seq_trace_idx=0; }
-#define SEQ_TRACE(c) { if(seq_trace_idx<SEQ_TRACE_MAX-1) seq_traceinfo[seq_trace_idx++] = c; seq_traceinfo[seq_trace_idx] = 0; }
-#define SEQ_TRACE_SHOW() { printk(KERN_INFO LOGPREFIX "sequence trace = %s\n", seq_traceinfo); }
-#else
-#define SEQ_TRACE_CLEAR()
-#define SEQ_TRACE(c)
-#define SEQ_TRACE_SHOW()
-#endif
-
-
 // MARK: ===== Global Module definitions
 
 MODULE_LICENSE("GPL");
@@ -128,6 +75,59 @@ module_param_array(ledchain2, int, &ledchain2_argc, 0000);
 MODULE_PARM_DESC(ledchain2, "ledchain@PMW2" LEDCHAIN_PARM_DESC);
 module_param_array(ledchain3, int, &ledchain3_argc, 0000);
 MODULE_PARM_DESC(ledchain3, "ledchain@PWM3" LEDCHAIN_PARM_DESC);
+
+
+// MARK: ===== PWM unit hardware definitions
+
+// - register block
+#define MT7688_PWM_BASE 0x10005000L
+#define MT7688_PWM_SIZE 0x00000210L
+// - access to ioremapped PWM area
+void __iomem *pwm_base; // set from ioremap()
+#define PWM_ADDR(offset) (pwm_base+offset)
+#define PWM_ENABLE        PWM_ADDR(0)
+#define PWM_EN_STATUS     PWM_ADDR(0x20C)
+
+// - information about undocumented PWM IRQ in MT7628 found in Android kernel driver in
+//   mediatek-android-linux-kerneltree/drivers/misc/mediatek/pwm/mt8173/include/mach/mt_pwm_prv.h
+//   Note that the MZ8173/MT6595 PWM is more capable (DMA!) than the MT7688's, but IRQ seems to be
+//   the same
+#define PWM_INT_ENABLE    PWM_ADDR(0x200) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
+#define PWM_INT_STATUS    PWM_ADDR(0x204) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
+#define PWM_INT_ACK       PWM_ADDR(0x208) // write 1 to acknowledge IRQ
+
+#define PWM_CHAN_OFFS(channel,reg) (0x10+((channel)*0x40)+(reg))
+#define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
+#define NUM_DEVICES 4 // number of PWMS = number of devices
+// - PWM channel register offsets
+#define PWMCON			    0x00
+#define PWMHDUR			    0x04
+#define PWMLDUR			    0x08
+#define PWMGDUR			    0x0c
+#define PWMSENDDATA0	  0x20
+#define PWMSENDDATA1	  0x24
+#define PWMWAVENUM	    0x28
+#define PWMDWIDTH		    0x2c
+#define PWMTHRES		    0x30
+#define PWMSENDWAVENUM  0x34
+
+
+// set 1 to enable IRQ/TIMER sequence tracing
+#define SEQ_TRACING 0
+
+// receiver sequence debug macros
+#if SEQ_TRACING
+#define SEQ_TRACE_MAX 1000
+static char seq_traceinfo[SEQ_TRACE_MAX];
+int seq_trace_idx;
+#define SEQ_TRACE_CLEAR() { seq_traceinfo[0]=0; seq_trace_idx=0; }
+#define SEQ_TRACE(c) { if(seq_trace_idx<SEQ_TRACE_MAX-1) seq_traceinfo[seq_trace_idx++] = c; seq_traceinfo[seq_trace_idx] = 0; }
+#define SEQ_TRACE_SHOW() { printk(KERN_INFO LOGPREFIX "sequence trace = %s\n", seq_traceinfo); }
+#else
+#define SEQ_TRACE_CLEAR()
+#define SEQ_TRACE(c)
+#define SEQ_TRACE_SHOW()
+#endif
 
 
 // === LED types and their parameters
@@ -291,7 +291,7 @@ static struct class *p44ledchain_class = NULL;
 int p44ledchain_major;
 
 // the devices stored by PWM channel, as we need this to find back device in IRQ handler
-static devPtr_t p44ledchain_pwm_devices[NUM_PWMS];
+static devPtr_t p44ledchain_devices[NUM_DEVICES];
 
 
 
@@ -426,7 +426,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
   now = ktime_to_ns(ktime_get());
   irqMask = 0x03;
-  for (i=0; i<NUM_PWMS; i++) {
+  for (i=0; i<NUM_DEVICES; i++) {
     // IRQ from this PWM?
     if (irqStatus & irqMask) {
       SEQ_TRACE('i');
@@ -1004,8 +1004,8 @@ static int __init p44ledchain_init_module(void)
 
   SEQ_TRACE_CLEAR()
   // no devices to begin with
-  for (i=0; i<NUM_PWMS; i++) {
-    p44ledchain_pwm_devices[i] = NULL;
+  for (i=0; i<NUM_DEVICES; i++) {
+    p44ledchain_devices[i] = NULL;
   }
   // at least one device needs to be defined
   if (ledchain0_argc+ledchain1_argc+ledchain2_argc+ledchain3_argc==0) {
@@ -1014,7 +1014,7 @@ static int __init p44ledchain_init_module(void)
 		goto err;
   }
 	// Get a range of minor numbers (starting with 0) to work with */
-	err = alloc_chrdev_region(&devno, 0, NUM_PWMS, DEVICE_NAME);
+	err = alloc_chrdev_region(&devno, 0, NUM_DEVICES, DEVICE_NAME);
 	if (err < 0) {
 		printk(KERN_WARNING LOGPREFIX "alloc_chrdev_region() failed\n");
 		return err;
@@ -1038,7 +1038,7 @@ static int __init p44ledchain_init_module(void)
     p44ledchain_pwm_interrupt,
     IRQF_SHARED , // the IRQ is shared between all PWM channels
     "pwm-irq",
-    p44ledchain_pwm_devices // array of all 4 possible devices
+    p44ledchain_devices // array of all 4 possible devices
   );
   if (err!=IRQC_IS_HARDIRQ) {
     printk(KERN_WARNING LOGPREFIX "registering IRQ %d failed (or not hardIRQ) for PWM, err=%d\n", pwm_irq_no, err);
@@ -1046,35 +1046,35 @@ static int __init p44ledchain_init_module(void)
   }
   // instantiate devices from module params
   if (ledchain0_argc>0) {
-    err = p44ledchain_add_device(p44ledchain_class, 0, &(p44ledchain_pwm_devices[0]), ledchain0, ledchain0_argc, "ledchain0");
+    err = p44ledchain_add_device(p44ledchain_class, 0, &(p44ledchain_devices[0]), ledchain0, ledchain0_argc, "ledchain0");
     if (err) goto err_destroy_devices;
   }
   if (ledchain1_argc>0) {
-    err = p44ledchain_add_device(p44ledchain_class, 1, &(p44ledchain_pwm_devices[1]), ledchain1, ledchain1_argc, "ledchain1");
+    err = p44ledchain_add_device(p44ledchain_class, 1, &(p44ledchain_devices[1]), ledchain1, ledchain1_argc, "ledchain1");
     if (err) goto err_destroy_devices;
   }
   if (ledchain2_argc>0) {
-    err = p44ledchain_add_device(p44ledchain_class, 2, &(p44ledchain_pwm_devices[2]), ledchain2, ledchain2_argc, "ledchain2");
+    err = p44ledchain_add_device(p44ledchain_class, 2, &(p44ledchain_devices[2]), ledchain2, ledchain2_argc, "ledchain2");
     if (err) goto err_destroy_devices;
   }
   if (ledchain3_argc>0) {
-    err = p44ledchain_add_device(p44ledchain_class, 3, &(p44ledchain_pwm_devices[3]), ledchain3, ledchain3_argc, "ledchain3");
+    err = p44ledchain_add_device(p44ledchain_class, 3, &(p44ledchain_devices[3]), ledchain3, ledchain3_argc, "ledchain3");
     if (err) goto err_destroy_devices;
   }
   // done
   return 0;
 err_destroy_devices:
-  for (i=0; i<NUM_PWMS; i++) {
-    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_pwm_devices[i]));
+  for (i=0; i<NUM_DEVICES; i++) {
+    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_devices[i]));
   }
 //err_free_irq:
-  free_irq(pwm_irq_no, p44ledchain_pwm_devices);
+  free_irq(pwm_irq_no, p44ledchain_devices);
 err_unmap:
   iounmap(pwm_base);
 //err_destroy_class:
   class_destroy(p44ledchain_class);
 err_unregister_region:
-  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_PWMS);
+  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_DEVICES);
 err:
   return err;
 }
@@ -1086,17 +1086,17 @@ static void __exit p44ledchain_exit_module(void)
   int i;
 
   // destroy the devices
-  for (i=0; i<NUM_PWMS; i++) {
-    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_pwm_devices[i]));
+  for (i=0; i<NUM_DEVICES; i++) {
+    p44ledchain_remove_device(p44ledchain_class, i, &(p44ledchain_devices[i]));
   }
   // free the IRQ
-  free_irq(pwm_irq_no, p44ledchain_pwm_devices);
+  free_irq(pwm_irq_no, p44ledchain_devices);
   // unmap PWM
   iounmap(pwm_base);
   // destroy the class
   class_destroy(p44ledchain_class);
   // unregister the region
-  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_PWMS);
+  unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_DEVICES);
   // done
   printk(KERN_INFO LOGPREFIX "cleaned up\n");
 	return;
