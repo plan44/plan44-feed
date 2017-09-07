@@ -5,8 +5,8 @@ This is my source feed for building various LEDE/OpenWrt packages I wrote for pr
 If you have a LEDE or OpenWrt build environment set up, you can use the plan44 feed by adding the line
 
     src-git plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git;master
-    
-to your *feeds.conf.default*
+
+to your `feeds.conf.default` (or, more correctly, to a copy of `feeds.conf.default` named `feeds.conf`)
 
 ## Useful right now
 
@@ -25,5 +25,5 @@ Note that *i2c-tools* and *libpng* are also available in the standard feeds, but
 
     ./scripts/feeds update plan44
     ./scripts/feeds install -p plan44 libpng
- 
+
 
