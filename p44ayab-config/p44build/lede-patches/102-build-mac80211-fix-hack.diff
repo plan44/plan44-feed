@@ -1,0 +1,20 @@
+--- /dev/null
++++ b/package/kernel/mac80211/patches/019-fix-mac80211-rhashtable-issue-hack.patch
+@@ -0,0 +1,17 @@
++--- a/compat/Kconfig
+++++ b/compat/Kconfig
++@@ -139,9 +139,12 @@ config BPAUTO_BUILD_WANT_DEV_COREDUMP
++ config BPAUTO_RHASHTABLE
++ 	bool
++ 	# current API of rhashtable was introduced in version 4.1
++-	depends on KERNEL_4_8
+++	# luz hack: dependency on kernel 4.8 prevents BPAUTO_RHASHTABLE in LEDE 17.01 - Kernel 4.4.92
+++	#depends on KERNEL_4_8
++ 	# not very nice - but better than always having it
++-	default y if MAC80211
+++	# luz hack: dependency on MAC80211 does not work, always enabling it
+++	#default y if MAC80211
+++	default y
++ 	#h-file linux/rhashtable.h
++ 	#c-file lib/rhashtable.c
++ 
