@@ -35,22 +35,22 @@ endef
 
 # derive P44 platform identifier
 ifeq ($(CONFIG_TARGET_brcm2708_bcm2708_RaspberryPi),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
+  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
 endif
 ifeq ($(CONFIG_TARGET_ar71xx_generic_OMEGA),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=onion-omega
+  P44_CONFIG_PLATFORM_IDENTIFIER:=onion-omega
 endif
 ifeq ($(CONFIG_TARGET_ar71xx_generic_CARAMBOLA2),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=carambola2
+  P44_CONFIG_PLATFORM_IDENTIFIER:=carambola2
 endif
-ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_LinkIt7688),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=lis7688
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_omega2),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=omega2
+  P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
 ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_P44DSBOmega2),y)
-  P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
+  P44_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
 endif
 
 
@@ -69,8 +69,8 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
 	$(CP) $(PKG_BUILD_DIR)/etc/* $(1)/etc
-	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
-	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44-BANDIT_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
+	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
+	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-p44wiper $(1)/lib/upgrade/keep.d/p44wiper
