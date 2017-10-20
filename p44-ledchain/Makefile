@@ -39,7 +39,7 @@ include $(INCLUDE_DIR)/package.mk
 
 define KernelPackage/$(PKG_NAME)
 	SUBMENU:=Other modules
-	DEPENDS:=@TARGET_ramips_mt7688
+	DEPENDS:=@(TARGET_ramips_mt76x8||TARGET_ramips_mt7688)
 	TITLE:=p44-ledchain driver for WS28xx/SK68xx
 	FILES:= $(PKG_BUILD_DIR)/p44-ledchain.ko
 endef
