@@ -4,12 +4,12 @@ START=99
 
 boot() {
 
-  echo "[p44bandit] configuring hardware"
+  echo "[p44ayab] configuring hardware"
 
   # GPIO18/19 as GPIO, not Ethernet
   devmem 0x1000003C 32 0x00FE01FF
 
-  echo "[p44bandit] preparing for runit"
+  echo "[p44ayab] preparing for runit"
 
   # softlink all runit supervise dirs to /var/run
   PREV=$(pwd)
@@ -34,7 +34,7 @@ boot() {
   cd ${PREV}
 
   # update host name if needed
-  UNIT_HOSTNAME="p44bandit"
+  UNIT_HOSTNAME="p44ayab"
   HN=$(uci get system.@system[0].hostname)
   if [ ! "${HN}" = "${UNIT_HOSTNAME}" ]; then
     uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
