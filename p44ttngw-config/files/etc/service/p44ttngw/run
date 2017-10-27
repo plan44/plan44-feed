@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=
+LOGLEVEL=6
+EXTRAOPTS=
+
+# config
+DATADIR="/flash/datadir"
+
+# basic config Omega2 on serialcontroller v1
+SERIALPORT=/dev/ttyS1
+HSOUTPIN=/gpio.39
+HSINPIN=/gpio.40
+
+# - Button
+BUTTON_PIN=gpio.38
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+
+# prepare
+mkdir -p ${DATADIR}
+
+
+# run the daemon
+# %%% NOP so far
+sleep 0

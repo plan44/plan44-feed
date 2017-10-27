@@ -1,0 +1,24 @@
+--- a/libloragw/library.cfg
++++ b/libloragw/library.cfg
+@@ -15,10 +15,10 @@ CFG_SPI= native
+ ### SPI native half-duplex flag ###
+ # Set the flag to 1 to enable the half-duplex mode, needed for HW which can't
+ # make full-duplex spi calls
+-CFG_SPI_HALF_DUPLEX= 0
++CFG_SPI_HALF_DUPLEX= 1
+ 
+ 
+-### Specify which platform you are on. 
++### Specify which platform you are on.
+ # Accepted values:
+ #  kerlink     This is the default from Semtech and works for the Kerlink
+ #  lorank      This is for the Lorank (BeagleBone + IMST concentrator).
+@@ -26,7 +26,7 @@ CFG_SPI_HALF_DUPLEX= 0
+ #  linklabs_blowfish_rpi This is for the LinkLabs concentrators with a Raspberry Pi host.
+ #  mtk         This is for MTK devices with device /dev/spidev32766.1
+ 
+-PLATFORM= kerlink
++PLATFORM= mtk
+ 
+ 
+ ### Debug options ###

@@ -1,0 +1,3 @@
+# feed/package giturl:gitref
+onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:HEAD
+plan44/packet_forwarder https://github.com/TheThingsNetwork/packet_forwarder.git:legacy

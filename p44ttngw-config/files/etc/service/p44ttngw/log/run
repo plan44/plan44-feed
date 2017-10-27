@@ -1,0 +1,30 @@
+#!/bin/sh
+DAEMON=p44ttngw
+LOGDIR=/var/log/${DAEMON}
+
+# create logdir (svlogd runs as nobody)
+mkdir -p ${LOGDIR}
+chmod 777 ${LOGDIR}
+
+# default line and filter matching length should be short
+LINELEN=80
+BUFLEN=200
+
+# Allow overriding log configuration
+# - override from flash
+if [ -e /flash/${DAEMON}_logconfig ]; then
+  ln -f -s /flash/${DAEMON}_logconfig ${LOGDIR}/config
+  LINELEN=400
+  BUFLEN=496
+# - override from tmp
+elif [ -e /tmp/${DAEMON}_logconfig ]; then
+  ln -f -s /tmp/${DAEMON}_logconfig ${LOGDIR}/config
+  LINELEN=400
+  BUFLEN=496
+# - use default log config
+else
+  ln -f -s /etc/svlogd.conf ${LOGDIR}/config
+fi
+
+# start the log daemon
+exec chpst -unobody svlogd -l ${LINELEN} -b ${BUFLEN} ${LOGDIR}
