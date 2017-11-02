@@ -1,29 +1,35 @@
 #!/bin/sh
 
-# default features
-EXECUTABLE=
-LOGLEVEL=6
-EXTRAOPTS=
+# RAK831 reset pin GPIO
+RAK831_RESET_GPIO=0
 
-# config
-DATADIR="/flash/datadir"
+# static config (template) dir
+CONFSRC="/etc/lora"
+RUNCONF="/tmp/loracfg"
 
-# basic config Omega2 on serialcontroller v1
-SERIALPORT=/dev/ttyS1
-HSOUTPIN=/gpio.39
-HSINPIN=/gpio.40
+# calculate EUI from MAC
+# - MAC with FFFE in the middle
+GATEWAY_EUI=$(ip link show eth0 | awk '/ether/ {print $2}' | awk -F\: '{print $1$2$3"FFFE"$4$5$6}')
+# - make uppercase (busybox/ash proof)
+GATEWAY_EUI=$(echo $GATEWAY_EUI | sed -e 'y/abcdef/ABCDEF/')
 
-# - Button
-BUTTON_PIN=gpio.38
-# - LEDs
-GREENLED_PIN="led.p44:green:status1"
-REDLED_PIN="led.p44:red:status2"
+# prepare the config from templates
+# - copy config
+mkdir -p "${RUNCONF}"
+cp -f ${CONFSRC}/* ${RUNCONF}
+# - substitute gateway EUI
+sed -i -r -e "s/##GATEWAY_EUI##/${GATEWAY_EUI}/" ${RUNCONF}/local_conf.json
 
+# perform RAK reset
+echo "${RAK831_RESET_GPIO}" >/sys/class/gpio/export
+echo "out" >/sys/class/gpio/gpio${RAK831_RESET_GPIO}/direction
+echo "0" >/sys/class/gpio/gpio${RAK831_RESET_GPIO}/value
+sleep 1
+echo "1" >/sys/class/gpio/gpio${RAK831_RESET_GPIO}/value
+sleep 1
+echo "0" > /sys/class/gpio/gpio${RAK831_RESET_GPIO}/value
+sleep 1
 
-# prepare
-mkdir -p ${DATADIR}
-
-
-# run the daemon
-# %%% NOP so far
-sleep 0
+# run the packet forwarder, all output goes to log
+cd ${RUNCONF}
+exec basic_pkt_fwd 2>&1
