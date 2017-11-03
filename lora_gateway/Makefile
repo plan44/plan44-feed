@@ -19,13 +19,12 @@ PKG_SOURCE_VERSION:=legacy
 #PKG_SOURCE_URL:=https://github.com/mirakonta/lora_gateway.git
 #PKG_SOURCE_VERSION:=a01a504e004bbe2e6a18c169fb9e2de2f617cb94
 
-# Where temporary checkout will be stored
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-# the filename of the original source
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
-#PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+# Note: we need to override the standard "packagename-packageversion" here, because
+#   packet_forwarder has a ugly ../../lora_gateway reference to the build dir of this package
+# Where temporary checkout will be stored, and thus how the .tar.gz will be named (=default PKG_SOURCE)
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)
+# override build dir, because default is "packagename-packageversion" as well
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 
 include $(INCLUDE_DIR)/host-build.mk
