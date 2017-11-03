@@ -24,7 +24,7 @@ PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 # the filename of the original source
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 
-#PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 #PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 
@@ -32,7 +32,8 @@ include $(INCLUDE_DIR)/host-build.mk
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  TITLE:=Semtech lora-gateway package
+  TITLE:=Semtech lora-gateway package for MT7688 hosts
+	DEPENDS:=@(TARGET_ramips_mt76x8||TARGET_ramips_mt7688)
   SECTION:=plan44
   CATEGORY:=plan44
 	SUBMENU:=maker
@@ -44,6 +45,8 @@ endef
 define Package/$(PKG_NAME)/description
   lora-gateway is a library to build a gateway based on
   a Semtech LoRa multi-channel RF receiver (a.k.a. concentrator).
+  Note: currently this package is hardcoded to Mediatek MT76xx,
+  and thus dependent on that target. TODO: make it generic
 endef
 
 TARGET_CFLAGS += $(FPIC) -O2 -Wall -Wextra -std=c99 -Iinc -I. -lm
