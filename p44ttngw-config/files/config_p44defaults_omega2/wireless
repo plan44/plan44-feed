@@ -12,7 +12,7 @@ config wifi-iface 'ap_radio0'
 	option mode 'ap'
 	option ssid 'P44TTNGW'
 	option encryption 'none'
-	option disabled '1'
+	option disabled '0'
 
 config wifi-iface 'cli_radio0'
 	option device 'radio0'
