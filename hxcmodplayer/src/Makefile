@@ -1,7 +1,9 @@
-hxcmodplayer:pcmsine.o
-	$(CC) $(LDFLAGS) -lasound pcmsine.o -o hxcmodplayer
-pcmsine.o:pcmsine.c
-	$(CC) $(CCFLAGS) -c pcmsine.c
+hxcmodplayer:hxcmodplayer.o hxcmod.o
+	$(CC) $(LDFLAGS) -lasound hxcmodplayer.o hxcmod.o -o hxcmodplayer
+hxcmod.o:hxcmod.c
+	$(CC) $(CCFLAGS) -c hxcmod.c
+hxcmodplayer.o:hxcmodplayer.c
+	$(CC) $(CCFLAGS) -c hxcmodplayer.c
 
 # remove object files and executable when user executes "make clean"
 clean:
