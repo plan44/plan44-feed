@@ -17,7 +17,6 @@ PKG_SOURCE_URL:=http://dl.lm-sensors.org/i2c-tools/releases
 #PKG_MD5SUM:=f15019e559e378c6e9d5d6299a00df21
 
 include $(INCLUDE_DIR)/package.mk
-$(call include_mk, python-package.mk)
 
 define Package/$(PKG_NAME)
 	SECTION:=plan44
@@ -53,7 +52,6 @@ define Build/Compile
 		LINUX="$(LINUX_DIR)" \
 		CC="$(TARGET_CC)" \
 		STAGING_DIR="$(STAGING_DIR)"
-	$(Build/Compile/python-smbus)
 endef
 
 
