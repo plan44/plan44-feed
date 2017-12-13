@@ -1,9 +1,9 @@
 --- a/package/network/services/dropbear/patches/120-openwrt_options.patch
 +++ b/package/network/services/dropbear/patches/120-openwrt_options.patch
-@@ -51,15 +51,6 @@
-  #define DROPBEAR_MD5_HMAC
+@@ -53,15 +53,6 @@
   
   /* You can also disable integrity. Don't bother disabling this if you're
+   * still using a cipher, it's relatively cheap. If you disable this it's dead
 -@@ -146,7 +146,7 @@ If you test it please contact the Dropbe
 -  * Removing either of these won't save very much space.
 -  * SSH2 RFC Draft requires dss, recommends rsa */
