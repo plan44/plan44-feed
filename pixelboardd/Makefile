@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboardd
 # version of what we are downloading
-PKG_VERSION:=0.6
+PKG_VERSION:=0.8
 # version of this makefile
-PKG_RELEASE:=6
+PKG_RELEASE:=8
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -36,7 +36,7 @@ define Package/$(PKG_NAME)
 endef
 
 define Package/$(PKG_NAME)/description
- p44sbbd is a free (opensource, GPLv3) daemon for for running games and more
+ pixelboard is a free (opensource, GPLv3) daemon for for running games and more
  on WS2813 based pixelboard (lounge table) - which is an open source hardware
  project by itself.
 endef
