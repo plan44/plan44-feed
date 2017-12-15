@@ -6,6 +6,9 @@ LOGLEVEL=5
 EXTRAOPTS=
 MESSAGE=
 
+# resources (images, sounds)
+RESOURCEPATH="/usr/share/pixelboard"
+
 # platform params (Omega2, v3 board)
 PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain1"
 PLATFORM_LEDCHAIN_NUMLEDS="200"
@@ -101,6 +104,7 @@ exec ${EXECUTABLE} \
   --defaultmode 1 \
   --image /www/images/default.png \
   --message "${MESSAGE}" \
+  --resourcepath "${RESOURCEPATH}" \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
