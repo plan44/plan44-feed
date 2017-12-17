@@ -11,6 +11,8 @@
 ./scripts/feeds install -p packages alsa-utils
 #./scripts/feeds install -p packages alsa-utils-seq
 #./scripts/feeds install -p packages alsa-utils-tests
+./scripts/feeds install -p packages attr
+#./scripts/feeds install -p packages libattr
 ./scripts/feeds install -p packages libavahi-client
 #./scripts/feeds install -p packages libavahi-compat-libdnssd
 #./scripts/feeds install -p packages avahi-utils
@@ -23,6 +25,10 @@
 #./scripts/feeds install -p packages avahi-daemon-service-ssh
 #./scripts/feeds install -p packages avahi-dnsconfd
 ./scripts/feeds install -p packages bash
+./scripts/feeds install -p packages bluez-examples
+#./scripts/feeds install -p packages bluez-libs
+#./scripts/feeds install -p packages bluez-utils
+#./scripts/feeds install -p packages bluez-daemon
 ./scripts/feeds install -p packages boost-atomic
 #./scripts/feeds install -p packages boost-chrono
 #./scripts/feeds install -p packages boost-container
@@ -60,9 +66,11 @@
 #./scripts/feeds install -p packages dbus-utils
 ./scripts/feeds install -p packages libexpat
 ./scripts/feeds install -p packages libgdbm
+./scripts/feeds install -p packages glib2
 ./scripts/feeds install -p packages intltool
 ./scripts/feeds install -p packages libdaemon
 ./scripts/feeds install -p packages libffi
+./scripts/feeds install -p packages libical
 ./scripts/feeds install -p packages libpam
 ./scripts/feeds install -p packages libxml2
 ./scripts/feeds install -p packages openssh-client
@@ -75,6 +83,7 @@
 #./scripts/feeds install -p packages openssh-sftp-server
 #./scripts/feeds install -p packages openssh-sftp-avahi-service
 ./scripts/feeds install -p packages libprotobuf-c
+./scripts/feeds install -p packages python-pip-conf
 ./scripts/feeds install -p packages libsqlite3
 #./scripts/feeds install -p packages sqlite3-cli
 ./scripts/feeds install -p packages xz-utils
@@ -88,6 +97,7 @@
 #./scripts/feeds install -p packages xzless
 #./scripts/feeds install -p packages xzmore
 ./scripts/feeds update plan44
+./scripts/feeds install -p plan44 hxcmodplayer
 ./scripts/feeds install -p plan44 i2c-tools
 ./scripts/feeds install -p plan44 libev
 ./scripts/feeds install -p plan44 libpng
