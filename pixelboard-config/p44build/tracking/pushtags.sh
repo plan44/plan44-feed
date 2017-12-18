@@ -2,7 +2,7 @@
 pushd /tmp; rm -rf /tmp/p44b_temp; mkdir p44b_temp; cd p44b_temp
 git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/pixelboardd.git pixelboardd
 pushd pixelboardd
-git tag -f PIXELBOARD/0.33/pixelboard-omega2 355aa425d8d1aa6369d6a079e7c1be7788b4c240
+git tag -f PIXELBOARD/0.33/pixelboard-omega2 c512f5bdcb9340c25046c9ae338996a65660baf6
 git push -f origin PIXELBOARD/0.33/pixelboard-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/mg44.git mg44
