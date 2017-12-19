@@ -20,7 +20,7 @@
 
     <style type="text/css"><!--
       h1 { font-family:Helvetica; font-size:36pt; }
-      h2 { font-family:Helvetica; font-size:18pt; }
+      h2 { font-family:Helvetica; font-size:18pt; text-align: center; }
 
       .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
 
@@ -72,7 +72,7 @@
         height: 21px;
       }
 
-      #displaymirror {
+      .pixelpage {
         margin-left: auto;
         margin-right: auto;
         display: block;
@@ -93,6 +93,56 @@
         width: 22px;
         height: 22px;
       }
+
+
+      .touchpad {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 20px;
+        margin-bottom: 40px;
+        display: block;
+        width: 85%;
+        max-width: 500px;
+        min-height: 140px;
+        line-height: 0;
+      }
+
+      .touchpadkey {
+        float:left;
+        position: relative;
+        overflow:hidden;
+        padding: 0;
+        margin: 1%;
+        display: inline-block;
+        width: 23%;
+        padding-bottom : 23%; /* = width for a 1:1 aspect ratio */
+        background-color: #888888;
+        -webkit-user-select:none;
+        -moz-user-select:none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      .touchpadkey:active {
+        background-color: #000000;
+      }
+
+      .left {
+        background-color: #880000;
+      }
+
+      .turn {
+        background-color: #888800;
+      }
+
+      .drop {
+        background-color: #008888;
+      }
+
+      .right {
+        background-color: #000088;
+      }
+
 
 
     --></style>
@@ -158,9 +208,11 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
+          refreshDisplay(true);
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
+
 
         $("#control").on('pageshow', function(event) {
           refreshDisplay(true);
@@ -315,14 +367,12 @@
       </div>
       <div data-role="content">
         <div data-role="content">
-          <h2>Game</h2>
+          <h2>Pixelboard</h2>
 
-          <div id="displaymirror"></div>
+          <div class="pixelpage" id="displaymirror"></div>
 
-
-          <button type="button" id="refresh" onclick="refreshDisplay(true);" data-inline="true" data-theme="a">refresh</button>
-          <button type="button" id="conway" onclick="showPage('life', 0+4);" data-inline="true" data-theme="a">Game of Life</button>
-          <button type="button" id="main" onclick="showPage('display', 0+4);" data-inline="true" data-theme="a">Main Menu</button>
+          <button type="button" id="conway" onclick="showPage('life', 0+4);" data-theme="a">Game of Life</button>
+          <button type="button" id="main" onclick="showPage('display', 0+4);" data-theme="a">Main Menu</button>
           <h2>Message</h2>
           <input type="text" id="messageText" name="messageText"/>
           <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
@@ -334,7 +384,7 @@
           <button id="imageUploadStart" onclick="uploadImage();" data-inline="false" data-theme="a">Upload...</button>
 <!--
           <h2>System</h2>
-          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
+          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-theme="c">Restart...</button>
 -->
         </div>
       </div>
@@ -377,13 +427,15 @@
       <div data-role="content">
         <h2>Player1</h2>
 
-        <button type="button" id="left1" onclick="sendKey(1, 'left');" data-inline="true" data-theme="a">&lt;&lt; Left</button>
-        <button type="button" id="right1" onclick="sendKey(1, 'right');" data-inline="true" data-theme="a">Right &gt;&gt;</button>
-        <button type="button" id="turn1" onclick="sendKey(1, 'turn');" data-inline="true" data-theme="a">Turn</button>
-        <button type="button" id="drop1" onclick="sendKey(1, 'drop');" data-inline="true" data-theme="a">Drop</button>
+        <div class="touchpad">
+          <div class="touchpadkey left" onclick="sendKey(1, 'left');"></div>
+          <div class="touchpadkey turn" onclick="sendKey(1, 'turn');"></div>
+          <div class="touchpadkey drop" onclick="sendKey(1, 'drop');"></div>
+          <div class="touchpadkey right" onclick="sendKey(1, 'right');"></div>
+        </div>
 
-        <button type="button" id="start1" onclick="showPage('blocks', 1+4);" data-inline="true" data-theme="a">New game</button>
-        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="a">New cooperative game</button>
+        <button type="button" id="start1" onclick="showPage('blocks', 1+4);" data-theme="a">New game</button>
+        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-theme="a">New cooperative game</button>
 
       </div>
     </div>
@@ -402,13 +454,15 @@
       <div data-role="content">
         <h2>Player2</h2>
 
-        <button type="button" id="left2" onclick="sendKey(2, 'left');" data-inline="true" data-theme="a">&lt;&lt; Left</button>
-        <button type="button" id="right2" onclick="sendKey(2, 'right');" data-inline="true" data-theme="a">Right &gt;&gt;</button>
-        <button type="button" id="turn2" onclick="sendKey(2, 'turn');" data-inline="true" data-theme="a">Turn</button>
-        <button type="button" id="drop2" onclick="sendKey(2, 'drop');" data-inline="true" data-theme="a">Drop</button>
+        <div class="touchpad">
+          <div class="touchpadkey left" onclick="sendKey(2, 'left');"></div>
+          <div class="touchpadkey turn" onclick="sendKey(2, 'turn');"></div>
+          <div class="touchpadkey drop" onclick="sendKey(2, 'drop');"></div>
+          <div class="touchpadkey right" onclick="sendKey(2, 'right');"></div>
+        </div>
 
-        <button type="button" id="start2" onclick="showPage('blocks', 2+4);" data-inline="true" data-theme="e">New game</button>
-        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="e">New cooperative game</button>
+        <button type="button" id="start2" onclick="showPage('blocks', 2+4);" data-theme="a">New game</button>
+        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-theme="a">New cooperative game</button>
 
       </div>
     </div>
@@ -427,8 +481,8 @@
       <div data-role="content">
         <div>
           <div class="centered" data-role="content">
-            <h1 id="about_title_model">PIXELBOARD</h1>
-            <h2 id="about_model_description">OpenWrt/LEDE driven all lasercut pixel lounge table</h2>
+            <h1 id="about_title_model">Pixelboard</h1>
+            <h2 id="about_model_description">OpenWrt driven all lasercut pixel lounge table</h2>
             <p>© <span id="about_copyright_years">2016-2017</span> by <a id="about_copyright_link" href="https://github.com/plan44/pixelboard-hardware" target="_blank">luz/plan44</a></p>
           </div>
 
