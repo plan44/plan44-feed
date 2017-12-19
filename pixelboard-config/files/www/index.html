@@ -9,15 +9,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
-    <script src="js/jquery-1.9.1.min.js"></script>
-    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+  	<link rel="stylesheet" href="css/themes/pixelboard/pixelboard.min.css">
+		<link rel="stylesheet" href="css/themes/default/jquery.mobile.structure-1.4.5.min.css" />
+		<link rel="stylesheet" href="css/themes/pixelboard/jquery.mobile.icons.min.css" />
+
+	  <script src="js/jquery.min.js"></script>
+	  <script src="js/jquery.mobile-1.4.5.min.js"></script>
 
     <title id="html_title_model">DSB</title>
 
     <style type="text/css"><!--
-      h1 { font-family:Helvetica; font-size:42pt; }
-      h2 { font-family:Helvetica; font-size:21pt; }
+      h1 { font-family:Helvetica; font-size:36pt; }
+      h2 { font-family:Helvetica; font-size:18pt; }
 
       .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
 
@@ -68,6 +71,29 @@
         border-radius: 15px;
         height: 21px;
       }
+
+      #displaymirror {
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        width: 240px;
+        height: 480px;
+        min-width: 240px;
+        min-height: 480px;
+        max-width: 240px;
+        max-height: 480px;
+        background-color: #333333;
+        line-height: 0;
+      }
+
+      .pixel {
+        padding: 0px;
+        margin: 1px;
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+      }
+
 
     --></style>
 
@@ -136,6 +162,16 @@
           console.log('TOK error ' + response.error.message);
         });
 
+        $("#control").on('pageshow', function(event) {
+          refreshDisplay(true);
+        });
+
+        $("#control").on('pagehide', function(event) {
+          refreshDisplay(false);
+        });
+
+
+
       });
 
 
@@ -163,6 +199,31 @@
           // NOP for now
         });
       }
+
+
+      var displayRefreshTimer;
+
+      function refreshDisplay(continuously)
+      {
+        if (!continuously) {
+          clearTimeout(displayRefreshTimer);
+        }
+        // http://pixelboard62988333.local./api/json/display
+        $.getJSON( '/api/json/display?rqvaltok=' + rqvaltok + '&onlychanged=1' )
+        .done(function(response) {
+          var pixels = '';
+          if (response.length>0) {
+            for(i=0; i<response.length; i++) {
+              pixels += '<div class="pixel" style="background-color:' + response[i] + '"></div>';
+            }
+            $('#displaymirror').html(pixels);
+          }
+          if (continuously) {
+            displayRefreshTimer = setTimeout(function() { refreshDisplay(true); }, 100 );
+          }
+        });
+      }
+
 
 
       function sendMessage()
@@ -241,14 +302,125 @@
 
   <body>
 
+    <div id="control" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+            <li><a href="#player1">Player1</a></li>
+            <li><a href="#player2">Player2</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div data-role="content">
+          <h2>Game</h2>
+
+          <div id="displaymirror"></div>
+
+
+          <button type="button" id="refresh" onclick="refreshDisplay(true);" data-inline="true" data-theme="a">refresh</button>
+          <button type="button" id="conway" onclick="showPage('life', 0+4);" data-inline="true" data-theme="a">Game of Life</button>
+          <button type="button" id="main" onclick="showPage('display', 0+4);" data-inline="true" data-theme="a">Main Menu</button>
+          <h2>Message</h2>
+          <input type="text" id="messageText" name="messageText"/>
+          <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+          <input type="text" id="messageColor" name="messageColor" value="" placeholder="AArrggbb web color"/>
+          <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+          <h2>Pictures</h2>
+          <label for="imageFile">Select PNG file (10x20pixels):</label>
+          <input type="file" id="imageFile" name="imagefile" accept=".png"/>
+          <button id="imageUploadStart" onclick="uploadImage();" data-inline="false" data-theme="a">Upload...</button>
+<!--
+          <h2>System</h2>
+          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
+-->
+        </div>
+      </div>
+
+      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="e">
+        <h3>Restarting Pixelboard - please wait...</h3>
+        <p>Page will reload automatically</p>
+        <div id="restartWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restart</h1>
+        </div>
+        <div data-role="content" data-theme="a" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to restart the PIXELBOARD?</h3>
+          <p>Note: it will take a little while until the pixels are all ready again</p>
+          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="e">Restart</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="a">Cancel</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="player1" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#player1" class="ui-btn-active">Player1</a></li>
+            <li><a href="#player2">Player2</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Player1</h2>
+
+        <button type="button" id="left1" onclick="sendKey(1, 'left');" data-inline="true" data-theme="a">&lt;&lt; Left</button>
+        <button type="button" id="right1" onclick="sendKey(1, 'right');" data-inline="true" data-theme="a">Right &gt;&gt;</button>
+        <button type="button" id="turn1" onclick="sendKey(1, 'turn');" data-inline="true" data-theme="a">Turn</button>
+        <button type="button" id="drop1" onclick="sendKey(1, 'drop');" data-inline="true" data-theme="a">Drop</button>
+
+        <button type="button" id="start1" onclick="showPage('blocks', 1+4);" data-inline="true" data-theme="a">New game</button>
+        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="a">New cooperative game</button>
+
+      </div>
+    </div>
+
+    <div id="player2" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#player1">Player1</a></li>
+            <li><a href="#player2" class="ui-btn-active">Player2</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Player2</h2>
+
+        <button type="button" id="left2" onclick="sendKey(2, 'left');" data-inline="true" data-theme="a">&lt;&lt; Left</button>
+        <button type="button" id="right2" onclick="sendKey(2, 'right');" data-inline="true" data-theme="a">Right &gt;&gt;</button>
+        <button type="button" id="turn2" onclick="sendKey(2, 'turn');" data-inline="true" data-theme="a">Turn</button>
+        <button type="button" id="drop2" onclick="sendKey(2, 'drop');" data-inline="true" data-theme="a">Drop</button>
+
+        <button type="button" id="start2" onclick="showPage('blocks', 2+4);" data-inline="true" data-theme="e">New game</button>
+        <button type="button" id="start12" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="e">New cooperative game</button>
+
+      </div>
+    </div>
+
     <div id="title" data-role="page">
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
-            <li><a href="#title" class="ui-btn-active">About</a></li>
             <li><a href="#control">Control</a></li>
             <li><a href="#player1">Player1</a></li>
             <li><a href="#player2">Player2</a></li>
+            <li><a href="#title" class="ui-btn-active">About</a></li>
           </ul>
         </div>
       </div>
@@ -257,11 +429,11 @@
           <div class="centered" data-role="content">
             <h1 id="about_title_model">PIXELBOARD</h1>
             <h2 id="about_model_description">OpenWrt/LEDE driven all lasercut pixel lounge table</h2>
-            <p>© <span id="about_copyright_years">2016</span> by <a id="about_copyright_link" href="http://hardturm.ch/luz" target="_blank">luz</a></p>
+            <p>© <span id="about_copyright_years">2016-2017</span> by <a id="about_copyright_link" href="https://github.com/plan44/pixelboard-hardware" target="_blank">luz/plan44</a></p>
           </div>
 
           <h3>Opensource:</h3>
-          <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
+          <div data-role="collapsible-set" data-theme="a" data-mini="true" data-content-theme="a"
           data-iconpos="right">
 
         <div id="opensource_openwrt" style="display:none" data-role="collapsible">
@@ -278,10 +450,10 @@
         </div>
 
         <div data-role="collapsible">
-          <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
+          <h3>jQuery mobile 1.4.5 - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
 
           <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
-          <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+          <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
 
           <p>Permission is hereby granted, free of charge, to any person obtaining
           a copy of this software and associated documentation files (the
@@ -409,119 +581,6 @@
 
       </div>
     </div>
-      </div>
-    </div>
-
-    <div id="control" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <div data-role="content">
-          <h2>Game</h2>
-          <button type="button" id="restart" onclick="showPage('blocks', 1+4);" data-inline="true" data-theme="c">New player1 game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 2+4);" data-inline="true" data-theme="c">New player2 game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 3+4);" data-inline="true" data-theme="c">New two player game</button>
-          <button type="button" id="restart" onclick="showPage('display', 0+4);" data-inline="true" data-theme="c">Show display page</button>
-          <h2>Message</h2>
-          <input type="text" id="messageText" name="messageText"/>
-          <button id="sendMessageButton" onclick="sendMessage();" data-theme="b">Send</button>
-          <input type="text" id="messageColor" name="messageColor" value="" placeholder="AArrggbb web color"/>
-          <button id="textColorButton" onclick="setTextColor();" data-theme="b">Set</button>
-          <h2>Pictures</h2>
-          <label for="imageFile">Select PNG file (10x20pixels):</label>
-          <input type="file" id="imageFile" name="imagefile" accept=".png"/>
-          <button id="imageUploadStart" onclick="uploadImage();" data-inline="false" data-theme="b">Upload...</button>
-<!--
-          <h2>System</h2>
-          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
--->
-        </div>
-      </div>
-
-      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
-        <h3>Restarting Pixelboard - please wait...</h3>
-        <p>Page will reload automatically</p>
-        <div id="restartWaitProgress" class="p44_progressbar">
-          <div class="p44_progressbar_text">-</div>
-          <div class="p44_progressbar_gauge"></div>
-        </div>
-      </div>
-
-
-      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
-        <div data-role="header" data-theme="a" class="ui-corner-top">
-          <h1>Restart</h1>
-        </div>
-        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
-          <h3 class="ui-title">Do you want to restart the PIXELBOARD?</h3>
-          <p>Note: it will take a little while until the pixels are all ready again</p>
-          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
-          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
-        </div>
-      </div>
-
-    </div>
-
-    <div id="player1" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#player1" class="ui-btn-active">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Player1</h2>
-
-        <button type="button" id="restart" onclick="sendKey(1, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
-<!--
-        <div class="ui-grid-a">
-          <div class="ui-block-a" id="systemInfo"></div>
-          <div class="ui-block-b">
-            <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
-            <br/>
-            <button type="button" id="configrestore" onclick="openDialog('#configRestoreDialog');" data-inline="true" data-theme="c">Restore config…</button>
-          </div>
-        </div>
--->
-      </div>
-    </div>
-
-
-    <div id="player2" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2" class="ui-btn-active">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Player2</h2>
-
-        <button type="button" id="restart" onclick="sendKey(2, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
       </div>
     </div>
 
