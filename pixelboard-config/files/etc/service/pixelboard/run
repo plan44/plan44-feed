@@ -102,7 +102,7 @@ exec ${EXECUTABLE} \
   --jsonapiport 8090 \
   --defaultpage display \
   --defaultmode 1 \
-  --image /www/images/default.png \
+  --image ${RESOURCEPATH}/images/default.png \
   --message "${MESSAGE}" \
   --resourcepath "${RESOURCEPATH}" \
   -l ${LOGLEVEL} \
