@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboardd
 # version of what we are downloading
-PKG_VERSION:=0.9
+PKG_VERSION:=0.11
 # version of this makefile
-PKG_RELEASE:=9
+PKG_RELEASE:=11
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master

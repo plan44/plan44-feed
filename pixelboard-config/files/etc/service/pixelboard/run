@@ -13,6 +13,20 @@ RESOURCEPATH="/usr/share/pixelboard"
 PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain1"
 PLATFORM_LEDCHAIN_NUMLEDS="200"
 
+# ALSA sound (note we need our own .asoundrc for that)
+PLATFORM_SOUND_DEVICE="sound"
+PLATFORM_MUSIC_DEVICE="music"
+DEFAULT_SOUND_VOLUME="100%"
+DEFAULT_MUSIC_VOLUME="60%"
+
+# init sound
+# - make sure controls exist
+aplay -D "${PLATFORM_SOUND_DEVICE}" "${RESOURCEPATH}/sounds/silence.wav"
+aplay -D "${PLATFORM_MUSIC_DEVICE}" "${RESOURCEPATH}/sounds/silence.wav"
+# - init volumes
+amixer sset "${PLATFORM_SOUND_DEVICE}" "${DEFAULT_SOUND_VOLUME}"
+amixer sset "${PLATFORM_MUSIC_DEVICE}" "${DEFAULT_MUSIC_VOLUME}"
+
 # Allow overriding options
 # - override from flash
 if [ -e /flash/pixelboardd_debug ]; then
@@ -99,6 +113,8 @@ exec ${EXECUTABLE} \
   --touchreset "gpio.15" \
   --touchdetect "/gpio.19" \
   --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
+  --sound "${PLATFORM_SOUND_DEVICE}" \
+  --music "${PLATFORM_MUSIC_DEVICE}" \
   --jsonapiport 8090 \
   --defaultpage display \
   --defaultmode 1 \
