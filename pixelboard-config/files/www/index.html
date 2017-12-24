@@ -208,7 +208,13 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
-          refreshDisplay(true);
+          // get volume
+          $.getJSON( '/api/json/sound?rqvaltok=' + rqvaltok , {
+          }).done( function(response) {
+            $('#sound_volume').val(response.sound/10).slider("refresh");
+            $('#music_volume').val(response.music/10).slider("refresh");
+            refreshDisplay(true);
+          });
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
@@ -221,6 +227,21 @@
         $("#control").on('pagehide', function(event) {
           refreshDisplay(false);
         });
+
+        // volume sliders
+        $('#sound_volume').on("change", function(event, ui) {
+          $.getJSON( '/api/json/sound?rqvaltok=' + rqvaltok + '&sound=' + ($('#sound_volume').val()*10).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+        $('#music_volume').on("change", function(event, ui) {
+          $.getJSON( '/api/json/sound?rqvaltok=' + rqvaltok + '&music=' + ($('#music_volume').val()*10).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+
 
 
 
@@ -373,6 +394,11 @@
 
           <button type="button" id="conway" onclick="showPage('life', 0+4);" data-theme="a">Game of Life</button>
           <button type="button" id="main" onclick="showPage('display', 0+4);" data-theme="a">Main Menu</button>
+          <label for="sound_volume">Sound Volume:</label>
+          <input type="range" data-highlight="true" name="sound_volume" id="sound_volume" min="0" max="10" step="1" />
+          <label for="music_volume">Music Volume:</label>
+          <input type="range" data-highlight="true" name="music_volume" id="music_volume" min="0" max="10" step="1" />
+
           <h2>Message</h2>
           <input type="text" id="messageText" name="messageText"/>
           <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
