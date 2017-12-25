@@ -41,6 +41,7 @@ CONFIG_TARGET_ramips=y
 # CONFIG_TARGET_archs38 is not set
 # CONFIG_TARGET_ar7 is not set
 # CONFIG_TARGET_omap is not set
+# CONFIG_TARGET_uml is not set
 # CONFIG_TARGET_zynq is not set
 # CONFIG_TARGET_x86 is not set
 # CONFIG_TARGET_ramips_mt7620 is not set
@@ -316,7 +317,7 @@ CONFIG_TARGET_INIT_CMD="/sbin/init"
 CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
 CONFIG_VERSIONOPT=y
 CONFIG_VERSION_DIST="PIXELBOARD"
-CONFIG_VERSION_NUMBER="0.35"
+CONFIG_VERSION_NUMBER="0.36"
 CONFIG_VERSION_CODE=""
 CONFIG_VERSION_REPO="http://downloads.lede-project.org/snapshots"
 CONFIG_VERSION_MANUFACTURER="plan44.ch"
@@ -331,12 +332,10 @@ CONFIG_PER_FEED_REPO=y
 CONFIG_PER_FEED_REPO_ADD_DISABLED=y
 CONFIG_PER_FEED_REPO_ADD_COMMENTED=y
 # CONFIG_FEED_packages is not set
-CONFIG_FEED_luci=y
 # CONFIG_FEED_routing is not set
-CONFIG_FEED_telephony=y
 CONFIG_FEED_plan44=y
-CONFIG_FEED_onion=y
 CONFIG_FEED_p44i=y
+CONFIG_FEED_onion=y
 
 #
 # Base system
@@ -2566,6 +2565,7 @@ CONFIG_PACKAGE_kmod-input-core=y
 #
 # LED modules
 #
+# CONFIG_PACKAGE_kmod-gpio-rgb-led is not set
 CONFIG_PACKAGE_kmod-leds-gpio=y
 # CONFIG_PACKAGE_kmod-leds-pca963x is not set
 CONFIG_PACKAGE_kmod-ledtrig-default-on=y
@@ -2815,6 +2815,7 @@ CONFIG_PACKAGE_kmod-eeprom-93cx6=y
 # CONFIG_PACKAGE_kmod-gpio-beeper is not set
 CONFIG_PACKAGE_kmod-gpio-button-hotplug=y
 # CONFIG_PACKAGE_kmod-gpio-dev is not set
+# CONFIG_PACKAGE_kmod-gpio-irq is not set
 # CONFIG_PACKAGE_kmod-gpio-mcp23s08 is not set
 # CONFIG_PACKAGE_kmod-gpio-nxp-74hc164 is not set
 # CONFIG_PACKAGE_kmod-gpio-pca953x is not set
@@ -2828,6 +2829,7 @@ CONFIG_PACKAGE_kmod-gpio-button-hotplug=y
 # CONFIG_PACKAGE_kmod-mtdoops is not set
 # CONFIG_PACKAGE_kmod-mtdtests is not set
 CONFIG_PACKAGE_kmod-p44-ledchain=y
+# CONFIG_PACKAGE_kmod-p44dbr is not set
 # CONFIG_PACKAGE_kmod-pps is not set
 # CONFIG_PACKAGE_kmod-pps-gpio is not set
 # CONFIG_PACKAGE_kmod-pps-ldisc is not set
@@ -3072,6 +3074,7 @@ CONFIG_PACKAGE_kmod-mt76x2=y
 #
 # CONFIG_PACKAGE_dkjson is not set
 # CONFIG_PACKAGE_json4lua is not set
+# CONFIG_PACKAGE_ldbus is not set
 # CONFIG_PACKAGE_libiwinfo-lua is not set
 # CONFIG_PACKAGE_lpeg is not set
 # CONFIG_PACKAGE_lsqlite3 is not set
@@ -3128,6 +3131,8 @@ CONFIG_PACKAGE_kmod-mt76x2=y
 # CONFIG_PACKAGE_node-hid is not set
 # CONFIG_PACKAGE_node-npm is not set
 # CONFIG_PACKAGE_node-serialport is not set
+# CONFIG_PACKAGE_nodejs is not set
+# CONFIG_PACKAGE_npm is not set
 
 #
 # PHP
@@ -3160,172 +3165,64 @@ CONFIG_PACKAGE_kmod-mt76x2=y
 # CONFIG_PACKAGE_micropython-lib is not set
 # CONFIG_PACKAGE_openpyxl is not set
 # CONFIG_PACKAGE_pillow is not set
-# CONFIG_PACKAGE_python is not set
 # CONFIG_PACKAGE_python-asn1crypto is not set
 # CONFIG_PACKAGE_python-attrs is not set
-# CONFIG_PACKAGE_python-base is not set
-# CONFIG_PACKAGE_python-base-src is not set
 # CONFIG_PACKAGE_python-cffi is not set
-# CONFIG_PACKAGE_python-codecs is not set
-# CONFIG_PACKAGE_python-codecs-src is not set
-# CONFIG_PACKAGE_python-compiler is not set
-# CONFIG_PACKAGE_python-compiler-src is not set
 # CONFIG_PACKAGE_python-crcmod is not set
 # CONFIG_PACKAGE_python-crypto is not set
 # CONFIG_PACKAGE_python-cryptography is not set
-# CONFIG_PACKAGE_python-ctypes is not set
-# CONFIG_PACKAGE_python-ctypes-src is not set
 # CONFIG_PACKAGE_python-curl is not set
 # CONFIG_PACKAGE_python-dateutil is not set
-# CONFIG_PACKAGE_python-db is not set
-# CONFIG_PACKAGE_python-db-src is not set
-# CONFIG_PACKAGE_python-decimal is not set
-# CONFIG_PACKAGE_python-decimal-src is not set
-# CONFIG_PACKAGE_python-dev is not set
-# CONFIG_PACKAGE_python-dev-src is not set
-# CONFIG_PACKAGE_python-distutils is not set
-# CONFIG_PACKAGE_python-distutils-src is not set
 # CONFIG_PACKAGE_python-dns is not set
 # CONFIG_PACKAGE_python-dpkt is not set
 # CONFIG_PACKAGE_python-egenix-mx-base is not set
-# CONFIG_PACKAGE_python-email is not set
-# CONFIG_PACKAGE_python-email-src is not set
 # CONFIG_PACKAGE_python-enum34 is not set
 # CONFIG_PACKAGE_python-evdev is not set
-# CONFIG_PACKAGE_python-gdbm is not set
-# CONFIG_PACKAGE_python-gdbm-src is not set
 # CONFIG_PACKAGE_python-gmpy2 is not set
 # CONFIG_PACKAGE_python-gnupg is not set
 # CONFIG_PACKAGE_python-idna is not set
 # CONFIG_PACKAGE_python-ipaddress is not set
 # CONFIG_PACKAGE_python-ldap is not set
-# CONFIG_PACKAGE_python-lib2to3 is not set
-# CONFIG_PACKAGE_python-lib2to3-src is not set
-# CONFIG_PACKAGE_python-light is not set
-
-#
-# Configuration
-#
-# CONFIG_PYTHON_BLUETOOTH_SUPPORT is not set
-# CONFIG_PACKAGE_python-light-src is not set
-# CONFIG_PACKAGE_python-logging is not set
-# CONFIG_PACKAGE_python-logging-src is not set
 # CONFIG_PACKAGE_python-lxml is not set
-# CONFIG_PACKAGE_python-multiprocessing is not set
-# CONFIG_PACKAGE_python-multiprocessing-src is not set
 # CONFIG_PACKAGE_python-mysql is not set
-# CONFIG_PACKAGE_python-ncurses is not set
-# CONFIG_PACKAGE_python-ncurses-src is not set
-# CONFIG_PACKAGE_python-openssl is not set
-# CONFIG_PACKAGE_python-openssl-src is not set
 # CONFIG_PACKAGE_python-parsley is not set
 # CONFIG_PACKAGE_python-pcapy is not set
-# CONFIG_PACKAGE_python-pip is not set
 # CONFIG_PACKAGE_python-pip-conf is not set
-# CONFIG_PACKAGE_python-pip-src is not set
 # CONFIG_PACKAGE_python-ply is not set
 # CONFIG_PACKAGE_python-psycopg2 is not set
 # CONFIG_PACKAGE_python-pyasn1 is not set
 # CONFIG_PACKAGE_python-pyasn1-modules is not set
 # CONFIG_PACKAGE_python-pycparser is not set
-# CONFIG_PACKAGE_python-pydoc is not set
-# CONFIG_PACKAGE_python-pydoc-src is not set
 # CONFIG_PACKAGE_python-pyodbc is not set
 # CONFIG_PACKAGE_python-pyopenssl is not set
 # CONFIG_PACKAGE_python-pyptlib is not set
 # CONFIG_PACKAGE_python-pyserial is not set
 # CONFIG_PACKAGE_python-service-identity is not set
-# CONFIG_PACKAGE_python-setuptools is not set
-# CONFIG_PACKAGE_python-setuptools-src is not set
 # CONFIG_PACKAGE_python-six is not set
-# CONFIG_PACKAGE_python-sqlite3 is not set
-# CONFIG_PACKAGE_python-sqlite3-src is not set
-# CONFIG_PACKAGE_python-src is not set
 # CONFIG_PACKAGE_python-txsocksx is not set
-# CONFIG_PACKAGE_python-unittest is not set
-# CONFIG_PACKAGE_python-unittest-src is not set
 # CONFIG_PACKAGE_python-urllib3 is not set
-# CONFIG_PACKAGE_python-xml is not set
-# CONFIG_PACKAGE_python-xml-src is not set
 # CONFIG_PACKAGE_python-yaml is not set
-# CONFIG_PACKAGE_python3 is not set
 # CONFIG_PACKAGE_python3-asn1crypto is not set
-# CONFIG_PACKAGE_python3-asyncio is not set
-# CONFIG_PACKAGE_python3-asyncio-src is not set
-# CONFIG_PACKAGE_python3-base is not set
-# CONFIG_PACKAGE_python3-base-src is not set
 # CONFIG_PACKAGE_python3-bottle is not set
 # CONFIG_PACKAGE_python3-cffi is not set
-# CONFIG_PACKAGE_python3-cgi is not set
-# CONFIG_PACKAGE_python3-cgi-src is not set
-# CONFIG_PACKAGE_python3-cgitb is not set
-# CONFIG_PACKAGE_python3-cgitb-src is not set
 # CONFIG_PACKAGE_python3-click is not set
-# CONFIG_PACKAGE_python3-codecs is not set
-# CONFIG_PACKAGE_python3-codecs-src is not set
 # CONFIG_PACKAGE_python3-cryptography is not set
-# CONFIG_PACKAGE_python3-ctypes is not set
-# CONFIG_PACKAGE_python3-ctypes-src is not set
-# CONFIG_PACKAGE_python3-dbm is not set
-# CONFIG_PACKAGE_python3-dbm-src is not set
-# CONFIG_PACKAGE_python3-decimal is not set
-# CONFIG_PACKAGE_python3-decimal-src is not set
-# CONFIG_PACKAGE_python3-dev is not set
-# CONFIG_PACKAGE_python3-dev-src is not set
-# CONFIG_PACKAGE_python3-distutils is not set
-# CONFIG_PACKAGE_python3-distutils-src is not set
-# CONFIG_PACKAGE_python3-email is not set
-# CONFIG_PACKAGE_python3-email-src is not set
 # CONFIG_PACKAGE_python3-evdev is not set
 # CONFIG_PACKAGE_python3-flask is not set
-# CONFIG_PACKAGE_python3-gdbm is not set
-# CONFIG_PACKAGE_python3-gdbm-src is not set
 # CONFIG_PACKAGE_python3-gnupg is not set
 # CONFIG_PACKAGE_python3-idna is not set
 # CONFIG_PACKAGE_python3-itsdangerous is not set
 # CONFIG_PACKAGE_python3-jinja2 is not set
-# CONFIG_PACKAGE_python3-lib2to3 is not set
-# CONFIG_PACKAGE_python3-lib2to3-src is not set
-# CONFIG_PACKAGE_python3-light is not set
-
-#
-# Configuration
-#
-# CONFIG_PYTHON3_BLUETOOTH_SUPPORT is not set
-# CONFIG_PACKAGE_python3-light-src is not set
-# CONFIG_PACKAGE_python3-logging is not set
-# CONFIG_PACKAGE_python3-logging-src is not set
 # CONFIG_PACKAGE_python3-lxml is not set
-# CONFIG_PACKAGE_python3-lzma is not set
-# CONFIG_PACKAGE_python3-lzma-src is not set
 # CONFIG_PACKAGE_python3-markupsafe is not set
-# CONFIG_PACKAGE_python3-multiprocessing is not set
-# CONFIG_PACKAGE_python3-multiprocessing-src is not set
-# CONFIG_PACKAGE_python3-ncurses is not set
-# CONFIG_PACKAGE_python3-ncurses-src is not set
-# CONFIG_PACKAGE_python3-openssl is not set
-# CONFIG_PACKAGE_python3-openssl-src is not set
-# CONFIG_PACKAGE_python3-pip is not set
-# CONFIG_PACKAGE_python3-pip-src is not set
 # CONFIG_PACKAGE_python3-ply is not set
 # CONFIG_PACKAGE_python3-pyasn1 is not set
 # CONFIG_PACKAGE_python3-pyasn1-modules is not set
 # CONFIG_PACKAGE_python3-pycparser is not set
-# CONFIG_PACKAGE_python3-pydoc is not set
-# CONFIG_PACKAGE_python3-pydoc-src is not set
 # CONFIG_PACKAGE_python3-pyodbc is not set
 # CONFIG_PACKAGE_python3-pyopenssl is not set
-# CONFIG_PACKAGE_python3-setuptools is not set
-# CONFIG_PACKAGE_python3-setuptools-src is not set
 # CONFIG_PACKAGE_python3-six is not set
-# CONFIG_PACKAGE_python3-sqlite3 is not set
-# CONFIG_PACKAGE_python3-sqlite3-src is not set
-# CONFIG_PACKAGE_python3-src is not set
-# CONFIG_PACKAGE_python3-unittest is not set
-# CONFIG_PACKAGE_python3-unittest-src is not set
 # CONFIG_PACKAGE_python3-werkzeug is not set
-# CONFIG_PACKAGE_python3-xml is not set
-# CONFIG_PACKAGE_python3-xml-src is not set
 # CONFIG_PACKAGE_python3-yaml is not set
 # CONFIG_PACKAGE_pytz is not set
 # CONFIG_PACKAGE_rcssmin is not set
@@ -3766,6 +3663,7 @@ CONFIG_PACKAGE_libncurses=y
 # CONFIG_PACKAGE_libnetfilter-queue is not set
 # CONFIG_PACKAGE_libnetsnmp is not set
 # CONFIG_PACKAGE_libnettle is not set
+# CONFIG_PACKAGE_libnfc is not set
 # CONFIG_PACKAGE_libnfnetlink is not set
 # CONFIG_PACKAGE_libnftnl is not set
 # CONFIG_PACKAGE_libnghttp2 is not set
@@ -3801,6 +3699,7 @@ CONFIG_PACKAGE_libpagekite=y
 # CONFIG_PACKAGE_libpkcs11-spy is not set
 # CONFIG_PACKAGE_libplist is not set
 # CONFIG_PACKAGE_libplistcxx is not set
+CONFIG_PACKAGE_libpng=y
 # CONFIG_PACKAGE_libpopt is not set
 CONFIG_PACKAGE_libprotobuf-c=y
 # CONFIG_PACKAGE_libqrencode is not set
@@ -3916,43 +3815,6 @@ CONFIG_PACKAGE_zlib=y
 #
 
 #
-# 2. Modules
-#
-# CONFIG_PACKAGE_luci-base is not set
-# CONFIG_LUCI_SRCDIET is not set
-
-#
-# Translations
-#
-# CONFIG_LUCI_LANG_ca is not set
-# CONFIG_LUCI_LANG_cs is not set
-# CONFIG_LUCI_LANG_de is not set
-# CONFIG_LUCI_LANG_el is not set
-# CONFIG_LUCI_LANG_en is not set
-# CONFIG_LUCI_LANG_es is not set
-# CONFIG_LUCI_LANG_fr is not set
-# CONFIG_LUCI_LANG_he is not set
-# CONFIG_LUCI_LANG_hu is not set
-# CONFIG_LUCI_LANG_it is not set
-# CONFIG_LUCI_LANG_ja is not set
-# CONFIG_LUCI_LANG_ko is not set
-# CONFIG_LUCI_LANG_ms is not set
-# CONFIG_LUCI_LANG_no is not set
-# CONFIG_LUCI_LANG_pl is not set
-# CONFIG_LUCI_LANG_pt is not set
-# CONFIG_LUCI_LANG_pt-br is not set
-# CONFIG_LUCI_LANG_ro is not set
-# CONFIG_LUCI_LANG_ru is not set
-# CONFIG_LUCI_LANG_sk is not set
-# CONFIG_LUCI_LANG_sv is not set
-# CONFIG_LUCI_LANG_tr is not set
-# CONFIG_LUCI_LANG_uk is not set
-# CONFIG_LUCI_LANG_vi is not set
-# CONFIG_LUCI_LANG_zh-cn is not set
-# CONFIG_LUCI_LANG_zh-tw is not set
-# CONFIG_PACKAGE_luci-mod-admin-full is not set
-
-#
 # 3. Applications
 #
 # CONFIG_PACKAGE_luci-app-bird4 is not set
@@ -3961,18 +3823,12 @@ CONFIG_PACKAGE_zlib=y
 # CONFIG_PACKAGE_luci-app-bmx7 is not set
 # CONFIG_PACKAGE_luci-app-cjdns is not set
 # CONFIG_PACKAGE_luci-app-hnet is not set
-# CONFIG_PACKAGE_luci-app-uhttpd is not set
 
 #
 # 6. Libraries
 #
 # CONFIG_PACKAGE_luci-lib-dracula is not set
-# CONFIG_PACKAGE_luci-lib-httpclient is not set
-# CONFIG_PACKAGE_luci-lib-ip is not set
 # CONFIG_PACKAGE_luci-lib-jquery-1-4 is not set
-# CONFIG_PACKAGE_luci-lib-json is not set
-# CONFIG_PACKAGE_luci-lib-jsonc is not set
-# CONFIG_PACKAGE_luci-lib-nixio is not set
 
 #
 # Mail
@@ -4175,6 +4031,7 @@ CONFIG_PACKAGE_iptables=y
 #
 # Firewall Tunnel
 #
+# CONFIG_PACKAGE_httptunnel is not set
 # CONFIG_PACKAGE_iodine is not set
 # CONFIG_PACKAGE_iodined is not set
 
@@ -4311,6 +4168,11 @@ CONFIG_PACKAGE_avahi-dbus-daemon=y
 # CONFIG_PACKAGE_oonf-dlep-radio is not set
 # CONFIG_PACKAGE_oonf-init-scripts is not set
 # CONFIG_PACKAGE_oonf-olsrd2 is not set
+
+#
+# Onion
+#
+# CONFIG_PACKAGE_onion-service is not set
 
 #
 # Open vSwitch
@@ -4816,6 +4678,7 @@ CONFIG_PACKAGE_odhcpd_ipv6only_ext_cer_id=0
 # CONFIG_PACKAGE_seafile-seahub is not set
 # CONFIG_PACKAGE_seafile-server is not set
 # CONFIG_PACKAGE_ser2net is not set
+# CONFIG_PACKAGE_shellinabox is not set
 # CONFIG_PACKAGE_simple-adblock is not set
 # CONFIG_PACKAGE_sipgrep is not set
 # CONFIG_PACKAGE_smartsnmpd is not set
@@ -4875,34 +4738,127 @@ CONFIG_PACKAGE_wpad-mini=y
 #
 
 #
+# Base system
+#
+# CONFIG_PACKAGE_onion-repo-keys is not set
+
+#
+# Console
+#
+# CONFIG_PACKAGE_console-install-tool is not set
+# CONFIG_PACKAGE_node-red-install-tool is not set
+# CONFIG_PACKAGE_onion-calculator is not set
+# CONFIG_PACKAGE_onion-console-base is not set
+# CONFIG_PACKAGE_onion-console-editor is not set
+# CONFIG_PACKAGE_onion-console-node-red is not set
+# CONFIG_PACKAGE_onion-console-terminal is not set
+# CONFIG_PACKAGE_onion-console-webcam is not set
+# CONFIG_PACKAGE_onion-resistor-calculator is not set
+
+#
+# Drivers
+#
+# CONFIG_PACKAGE_ads1x15-chip is not set
+# CONFIG_PACKAGE_i2c-exp-ubus is not set
+# CONFIG_PACKAGE_oled-exp is not set
+# CONFIG_PACKAGE_power-dock is not set
+# CONFIG_PACKAGE_power-dock2 is not set
+# CONFIG_PACKAGE_pwm-exp is not set
+# CONFIG_PACKAGE_relay-exp is not set
+
+#
+# Libraries
+#
+# CONFIG_PACKAGE_blynk-library is not set
+# CONFIG_PACKAGE_liboniondebug is not set
+# CONFIG_PACKAGE_libonioni2c is not set
+# CONFIG_PACKAGE_libonionili9341 is not set
+# CONFIG_PACKAGE_libonionmcp23008 is not set
+# CONFIG_PACKAGE_libonionneopixel is not set
+# CONFIG_PACKAGE_libonionoledexp is not set
+# CONFIG_PACKAGE_libonionpwmexp is not set
+# CONFIG_PACKAGE_libonionrelayexp is not set
+# CONFIG_PACKAGE_libonionspi is not set
+# CONFIG_PACKAGE_libonionst7735 is not set
+# CONFIG_PACKAGE_libv8m-rb is not set
+# CONFIG_PACKAGE_node-oled-exp is not set
+# CONFIG_PACKAGE_node-pwm-exp is not set
+# CONFIG_PACKAGE_node-relay-exp is not set
+# CONFIG_PACKAGE_node-usb is not set
+# CONFIG_PACKAGE_onion-node-red is not set
+# CONFIG_PACKAGE_onion-sh-lib is not set
+# CONFIG_PACKAGE_onoff-node is not set
+# CONFIG_PACKAGE_pyNeopixel is not set
+# CONFIG_PACKAGE_pyOledExp is not set
+# CONFIG_PACKAGE_pyOmegaArduinoDock is not set
+# CONFIG_PACKAGE_pyOmegaExpansion is not set
+# CONFIG_PACKAGE_pyOnionGpio is not set
+# CONFIG_PACKAGE_pyOnionI2C is not set
+# CONFIG_PACKAGE_pyOnionSpi is not set
+# CONFIG_PACKAGE_pyOnionSt7735 is not set
+# CONFIG_PACKAGE_pyPwmExp is not set
+# CONFIG_PACKAGE_pyRelayExp is not set
+# CONFIG_PACKAGE_python-spidev is not set
+
+#
 # Network
 #
+# CONFIG_PACKAGE_device-client is not set
+# CONFIG_PACKAGE_hostname-tool is not set
+# CONFIG_PACKAGE_ubidots-client is not set
+# CONFIG_PACKAGE_wdb40 is not set
 # CONFIG_PACKAGE_wifimanager is not set
+# CONFIG_PACKAGE_wifisaint is not set
 # CONFIG_PACKAGE_wifisetup is not set
+
+#
+# Node-RED
+#
+# CONFIG_PACKAGE_node-red-contrib-ibm-watson-iot is not set
+
+#
+# Ralink
+#
+# CONFIG_PACKAGE_ralink-wifi-mt76x8 is not set
 
 #
 # Utilities
 #
+# CONFIG_PACKAGE_arduino-dock is not set
+# CONFIG_PACKAGE_arduino-dock-2 is not set
+# CONFIG_PACKAGE_base-www is not set
+# CONFIG_PACKAGE_dht-sensor is not set
+# CONFIG_PACKAGE_fast-gpio is not set
 # CONFIG_PACKAGE_gpio-test is not set
+# CONFIG_PACKAGE_ili9341-test is not set
+# CONFIG_PACKAGE_neopixel-tool is not set
+# CONFIG_PACKAGE_o2-wifi is not set
+# CONFIG_PACKAGE_ogps is not set
 CONFIG_PACKAGE_omega2-ctrl=y
+# CONFIG_PACKAGE_onion-helper is not set
+# CONFIG_PACKAGE_onion-ubus is not set
+# CONFIG_PACKAGE_oupgrade is not set
+# CONFIG_PACKAGE_setup-wizard is not set
+# CONFIG_PACKAGE_spi-tool is not set
+# CONFIG_PACKAGE_st7735-test is not set
+# CONFIG_PACKAGE_ubus-intf is not set
 
 #
 # plan44
 #
 
 #
-# Libraries
-#
-CONFIG_PACKAGE_libpng=y
-
-#
 # Utilities
 #
 CONFIG_PACKAGE_i2c-tools=y
+# CONFIG_PACKAGE_serialfwd is not set
+# CONFIG_PACKAGE_sqfloatswapper is not set
 
 #
 # custom
 #
+# CONFIG_PACKAGE_p44bandit-config is not set
+# CONFIG_PACKAGE_p44banditd is not set
 # CONFIG_PACKAGE_p44wiper-config is not set
 # CONFIG_PACKAGE_p44wiperd is not set
 
@@ -4915,18 +4871,28 @@ CONFIG_PACKAGE_p44pagekite=y
 #
 # products
 #
+# CONFIG_PACKAGE_alix-flashbox-config is not set
 CONFIG_PACKAGE_mg44=y
+# CONFIG_PACKAGE_p44dsb-config is not set
+# CONFIG_PACKAGE_p44dsb-webui is not set
+# CONFIG_PACKAGE_p44lc-config is not set
+# CONFIG_PACKAGE_p44lc-webui is not set
+# CONFIG_PACKAGE_p44maintd is not set
+# CONFIG_PACKAGE_vdcd is not set
+# CONFIG_PACKAGE_vdsm is not set
 
 #
 # sound
 #
 CONFIG_PACKAGE_hxcmodplayer=y
+# CONFIG_PACKAGE_libxm is not set
 CONFIG_PACKAGE_timidity=y
 
 #
 # toys
 #
 CONFIG_PACKAGE_messagetorch=y
+# CONFIG_PACKAGE_p44sbb-config is not set
 # CONFIG_PACKAGE_p44sbbd is not set
 CONFIG_PACKAGE_pixelboard-config=y
 CONFIG_PACKAGE_pixelboardd=y
@@ -5088,6 +5054,11 @@ CONFIG_PACKAGE_uboot-envtools=y
 # CONFIG_PACKAGE_stm32flash is not set
 
 #
+# Onion
+#
+# CONFIG_PACKAGE_gpioutil is not set
+
+#
 # RTKLIB Suite
 #
 # CONFIG_PACKAGE_convbin is not set
@@ -5179,6 +5150,8 @@ CONFIG_PACKAGE_sqlite3-cli=y
 CONFIG_PACKAGE_dbus=y
 # CONFIG_PACKAGE_dbus-utils is not set
 # CONFIG_PACKAGE_dfu-util is not set
+# CONFIG_PACKAGE_digitemp is not set
+# CONFIG_PACKAGE_digitemp-usb is not set
 # CONFIG_PACKAGE_dmesg is not set
 # CONFIG_PACKAGE_dropbearconvert is not set
 # CONFIG_PACKAGE_dtc is not set
@@ -5258,6 +5231,7 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_netopeer2-keystored is not set
 # CONFIG_PACKAGE_netopeer2-server is not set
 # CONFIG_PACKAGE_netwhere is not set
+# CONFIG_PACKAGE_nfc-utils is not set
 # CONFIG_PACKAGE_oath-toolkit is not set
 # CONFIG_PACKAGE_open-plc-utils is not set
 # CONFIG_PACKAGE_open2300 is not set
@@ -5285,9 +5259,11 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_rng-tools is not set
 # CONFIG_PACKAGE_rtl-ais is not set
 # CONFIG_PACKAGE_rtl-sdr is not set
+# CONFIG_PACKAGE_rtl_433 is not set
 # CONFIG_PACKAGE_sane-backends is not set
 # CONFIG_PACKAGE_sane-daemon is not set
 # CONFIG_PACKAGE_sane-frontends is not set
+# CONFIG_PACKAGE_setserial is not set
 # CONFIG_PACKAGE_shadow-utils is not set
 # CONFIG_PACKAGE_sispmctl is not set
 # CONFIG_PACKAGE_slide-switch is not set
@@ -5297,6 +5273,7 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_sockread is not set
 # CONFIG_PACKAGE_spi-tools is not set
 CONFIG_PACKAGE_spidev-test=m
+# CONFIG_PACKAGE_sshpass is not set
 # CONFIG_PACKAGE_strace is not set
 # CONFIG_PACKAGE_strace_libunwind is not set
 # CONFIG_PACKAGE_stress is not set
@@ -5315,6 +5292,7 @@ CONFIG_PACKAGE_spidev-test=m
 # CONFIG_PACKAGE_udns-rblcheck is not set
 # CONFIG_PACKAGE_ugps is not set
 # CONFIG_PACKAGE_uledd is not set
+# CONFIG_PACKAGE_upnpbeacon is not set
 # CONFIG_PACKAGE_usb-modeswitch is not set
 # CONFIG_PACKAGE_usbmuxd is not set
 # CONFIG_PACKAGE_usbreset is not set

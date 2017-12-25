@@ -1,12 +1,12 @@
 src-git packages https://git.lede-project.org/feed/packages.git
-src-git luci https://git.lede-project.org/project/luci.git
+#src-git luci https://git.lede-project.org/project/luci.git
 src-git routing https://git.lede-project.org/feed/routing.git
-src-git telephony https://git.lede-project.org/feed/telephony.git
+#src-git telephony https://git.lede-project.org/feed/telephony.git
 #src-git video https://github.com/openwrt/video.git
 #src-git targets https://github.com/openwrt/targets.git
 #src-git management https://github.com/openwrt-management/packages.git
 #src-git oldpackages http://git.openwrt.org/packages.git
 #src-link custom /usr/src/openwrt/custom-feed
-src-git plan44 https://github.com/plan44/plan44-feed.git;for-lede-master
-src-git onion https://github.com/OnionIoT/OpenWRT-Packages.git
+src-git plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git;freshstart
 src-git p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git;master
+src-git onion https://github.com/OnionIoT/OpenWRT-Packages.git
