@@ -15,7 +15,7 @@ PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=git@github.com:pagekite/libpagekite.git
+PKG_SOURCE_URL:=https://github.com/pagekite/libpagekite.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=$(PKG_REV)
 
