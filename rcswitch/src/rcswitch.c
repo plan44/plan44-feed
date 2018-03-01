@@ -3,8 +3,8 @@
  *
  * Author:
  * 	Stefan Wendler (devnull@kaltpost.de)
- * 
- * Credits: 
+ *
+ * Credits:
  *
  * Most of the parts for sending command to the RCSwitches over RF are
  * taken from  r10r [rcswitch-pi] (https://github.com/r10r/rcswitch-pi)
@@ -20,6 +20,7 @@
  *
  */
 
+#include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/gpio.h>
@@ -31,14 +32,14 @@
 #endif
 
 /* TX-GPIO to 434Mhz sender */
-#ifdef RASPI 
+#ifdef RASPI
 static int tx_gpio = 17;		/* RasPi */
 #else
 static int tx_gpio = 9;			/* Carambola */
 #endif
 
 /* EN-GPIO to 434Mhz sender */
-#ifdef RASPI 
+#ifdef RASPI
 static int en_gpio = -1;		/* RasPI, NO power management */
 #else
 static int en_gpio = 7;			/* Carambola */
@@ -52,7 +53,7 @@ static int tx_repeat = 10;
 
 /* Module param for TX-GPIO */
 module_param(tx_gpio, int, 0);
-#ifdef RASPI 
+#ifdef RASPI
 MODULE_PARM_DESC(tx_gpio, "Number of GPIO to which TX of 434Mhz sender is connected (17).");
 #else
 MODULE_PARM_DESC(tx_gpio, "Number of GPIO to which TX of 434Mhz sender is connected (default 9/CTS).");
@@ -60,7 +61,7 @@ MODULE_PARM_DESC(tx_gpio, "Number of GPIO to which TX of 434Mhz sender is connec
 
 /* Module param for EN-GPIO */
 module_param(en_gpio, int, 0);
-#ifdef RASPI 
+#ifdef RASPI
 MODULE_PARM_DESC(en_gpio, "Number of GPIO to which 3v3 of 434Mhz sender is connected (default -1, -1 to not use EN).");
 #else
 MODULE_PARM_DESC(en_gpio, "Number of GPIO to which 3v3 of 434Mhz sender is connected (default 7/RTS, -1 to not use EN).");
@@ -93,6 +94,10 @@ static ssize_t sysfs_command_store(struct kobject *kobj, struct kobj_attribute *
     return count;
 }
 
+/* generally, giving write-all access is a bad idea, so VERIFY_OCTAL_PERMISSIONS called by __ATTR prevents this.
+   However, in this case we knowingly want to allow it, hence VERIFY_OCTAL_PERMISSIONS must be overridden. */
+#undef VERIFY_OCTAL_PERMISSIONS
+#define VERIFY_OCTAL_PERMISSIONS(perms) (perms)
 static struct kobj_attribute command_attribute = __ATTR(command, 0222, NULL, sysfs_command_store);
 
 /* SYSFS: get power state: on (1)/off (0)/disabled (-1) */
@@ -102,7 +107,7 @@ static ssize_t sysfs_power_show(struct kobject *kobj, struct kobj_attribute *att
     {
         return sprintf(buf, "%d\n", gpio_get_value(en_gpio));
     }
-    
+
     return sprintf(buf, "%d\n", -1);
 }
 
@@ -182,7 +187,7 @@ char *get_code_word(char* group, int channel_code, int status)
 
     char* code[6] = { "FFFFF", "0FFFF", "F0FFF", "FF0FF", "FFF0F", "FFFF0" };
 
-    if (channel_code < 1 || channel_code > 5) 
+    if (channel_code < 1 || channel_code > 5)
     {
         return 0;
     }
@@ -237,7 +242,7 @@ void transmit(int high_count, int low_count)
 }
 
 /**
- * Sends a code word using 0, F or 1. 
+ * Sends a code word using 0, F or 1.
  */
 void send_tri_state(char* code_word)
 {
@@ -269,21 +274,21 @@ void send_tri_state(char* code_word)
 
 /**
  * Send string command to switch.
- * 
- * Format is: 
- * 
+ *
+ * Format is:
+ *
  * AAAAACS
- * 
- * Where: 
+ *
+ * Where:
  * AAAAA 	- address bits - e.g. '11111'
  * C		- channel A, B, C or D - e.g. 'A'
  *                instead of A, B, C, D one could also use 1, 2, 3 or 4
  * S		- state 1 (on) or 0 (off) - e.g. '1'
- * 
- * Complete command string examples: 
- *  
- * '11111A0' 	- Switch channel A off for address '11111' 
- * '11111B1' 	- Switch channel B on  for address '11111' 
+ *
+ * Complete command string examples:
+ *
+ * '11111A0' 	- Switch channel A off for address '11111'
+ * '11111B1' 	- Switch channel B on  for address '11111'
  */
 void send(const char *command)
 {
