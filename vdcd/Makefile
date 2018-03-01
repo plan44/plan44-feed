@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2018 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=1.0
+PKG_VERSION:=4.0
 # version of this makefile
-PKG_RELEASE:=2
+PKG_RELEASE:=26
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -26,7 +26,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt $(CXX_DEPENDS)
+  DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
@@ -41,9 +41,20 @@ define Package/$(PKG_NAME)/description
  virtual devices into a digitalSTROM system.
 endef
 
-define Build/Configure
-  $(call Build/Configure/Default,--enable-p44buildow)
+define Package/$(PKG_NAME)/config
+	source "$(SOURCE)/Config.in"
 endef
+
+# further possibilities to pass flags would be:
+#TARGET_CFLAGS +=
+#TARGET_CPPFLAGS += $(if $(CONFIG_VDCD_OLA),-DOLA=1,)
+#TARGET_LDFLAGS += -Wl,--gc-sections
+
+CONFIGURE_ARGS += \
+	--enable-p44buildow \
+	$(call autoconf_bool,CONFIG_VDCD_OLA,ola) \
+	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x)
+
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin

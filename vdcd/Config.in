@@ -1,0 +1,19 @@
+# vdcd configuration
+if PACKAGE_vdcd
+
+config VDCD_OLA
+	bool "Include OLA Support"
+	default n
+  help
+    Enabling this includes support for OLA (Open Lighting Architecture).
+    If enabled, vdcd depends on package ola
+
+config VDCD_RPIWS281X
+  depends on TARGET_brcm2708_bcm2708_DEVICE_rpi || TARGET_brcm2708_bcm2709_DEVICE_rpi-2 || TARGET_brcm2708_bcm2710_DEVICE_rpi-3
+	bool "Include support for WS281x LED-chains"
+	default n
+	help
+    Enabling this makes ledchain support use RaspberryPi-specific
+    hardware (instead relying on a kernel driver like p44-ledchain)
+
+endif
