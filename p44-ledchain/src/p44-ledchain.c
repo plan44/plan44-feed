@@ -156,8 +156,8 @@ typedef struct {
 // Note: time resolution is 25nS (= MT7688 PWM max resolution)
 static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   {
-    // WS2812, WS2812B - GRB data order
-    .name = "WS2811", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    // WS2811 - RGB data order
+    .name = "WS2811", .channels = 3, .fetchIdx = { 0, 1, 2 },
     // timing from datasheet:
     // - T0H = 350ns..650nS
     // - T0L = 1850ns..2150nS

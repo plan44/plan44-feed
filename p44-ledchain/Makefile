@@ -28,9 +28,9 @@ include $(INCLUDE_DIR)/kernel.mk
 # name
 PKG_NAME:=p44-ledchain
 # version of what we are downloading
-PKG_VERSION:=1.0
+PKG_VERSION:=1.1
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
