@@ -3,12 +3,13 @@
 #
 
 SET(CMAKE_SYSTEM_NAME Linux)
-SET(CMAKE_C_COMPILER arm-openwrt-linux-uclibcgnueabi-gcc)
-SET(CMAKE_CXX_COMPILER arm-openwrt-linux-uclibcgnueabi-g++)
-SET(CMAKE_ASM_COMPILER arm-openwrt-linux-uclibcgnueabi-gcc)
+SET(CMAKE_C_COMPILER arm-openwrt-linux-muslgnueabi-gcc)
+SET(CMAKE_CXX_COMPILER arm-openwrt-linux-muslgnueabi-g++)
+SET(CMAKE_ASM_COMPILER arm-openwrt-linux-muslgnueabi-gcc)
 SET(CMAKE_SYSTEM_PROCESSOR arm)
 
-add_definitions("-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=soft")
+#add_definitions("-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=soft")
+add_definitions("-mcpu=arm1176jzf-s -mfpu=vfp")
 
 # rdynamic means the backtrace should work
 IF (CMAKE_BUILD_TYPE MATCHES "Debug")
