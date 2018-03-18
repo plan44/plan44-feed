@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2012 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -11,13 +11,17 @@ PKG_NAME:=rpi-userland
 PKG_VERSION:=20141122
 PKG_RELEASE:=1
 
-PKG_SOURCE_URL:=https://github.com/raspberrypi/userland/archive/
 PKG_REV:=4333d6d023a1f0dcc763d0706a1fe6523f9b6005
 PKG_MD5SUM:=3cac9d31589cc7d41e8c03d02de76732
 
-PKG_SOURCE:=$(PKG_REV).tar.gz
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/userland-$(PKG_REV)
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_VERSION:=${PKG_REV}
+PKG_SOURCE_URL:=https://github.com/raspberrypi/userland.git
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
 PKG_BUILD_DEPENDS:=libfreetype zlib
+
 CMAKE_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -284,7 +288,7 @@ define Build/InstallDev
 		$(1)/usr/include \
 		$(1)/usr/src/hello_pi \
 		$(1)/usr/lib/pkgconfig
-		
+
 	$(CP) $(PKG_INSTALL_DIR)/opt/vc/lib/*.so* $(1)/usr/lib
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/include/** $(1)/usr/include/
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/src/hello_pi/** $(1)/usr/src/hello_pi/
