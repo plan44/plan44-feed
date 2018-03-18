@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/cmake.mk
 
 PKG_NAME:=rpi-userland
-PKG_VERSION:=20141126
+PKG_VERSION:=20141122
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=https://github.com/raspberrypi/userland/archive/
@@ -30,7 +30,7 @@ endef
 
 define Package/rpi-userland
   $(call Package/rpi-userland/Default)
-  DEPENDS:=+libwayland +libpthread +librt @TARGET_brcm2708
+  DEPENDS:=+libpthread +librt @TARGET_brcm2708
   TITLE:=rpi-userland
   MENU:=1
 endef
@@ -38,7 +38,6 @@ endef
 define Package/rpi-userland/description
  Raspberry PI userland libraries for interfaces EGL, mmal, GLESv2,
  vcos, openmaxil, vchiq_arm, bcm_host, WCF and OpenVG
- with Wayland EGL support.
 endef
 
 define Package/rpi-vcgencmd
@@ -125,12 +124,6 @@ define Package/rpi-hellovideocube
   TITLE:=rpi-hellovideocube demo
 endef
 
-define Package/rpi-hellowayland
-  $(call Package/rpi-userland/Default)
-  DEPENDS:=rpi-userland +rpi-hellotriangle +libwayland
-  TITLE:=rpi-hellowayland demo
-endef
-
 define Package/rpi-helloworld
   $(call Package/rpi-userland/Default)
   DEPENDS:=rpi-userland
@@ -179,8 +172,6 @@ define Build/Configure
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DDL_LIBRARY=$(STAGING_DIR) \
 		-DCMAKE_PREFIX_PATH=$(STAGING_DIR) \
-		-DBUILD_WAYLAND=TRUE \
-		-DWAYLAND_SCANNER_EXECUTABLE:FILEPATH:=$(TOPDIR)/staging_dir/host/bin/wayland-scanner \
 		$(CMAKE_OPTIONS) \
 		../../.. \
 	)
@@ -275,12 +266,6 @@ define Build/Compile
 		$(TARGET_CC) -o hello_videocube -Wl,--whole-archive triangle.o video.o $(HELLOPI_LDFLAGS) -lilclient -Wl,--no-whole-archive -rdynamic; \
 	)
 
-	#Build hellowayland demo
-	(cd $(PKG_BUILD_DIR)/host_applications/linux/apps/hello_pi/hello_wayland; \
-		$(TARGET_CC) $(TARGET_CFLAGS) $(HELLOPI_CFLAGS) $(HELLOPI_INCLUDES) -g -c triangle.c -o triangle.o -Wno-deprecated-declarations; \
-		$(TARGET_CC) -o hello_wayland -Wl,--whole-archive triangle.o $(HELLOPI_LDFLAGS) -lwayland-client -lwayland-egl -Wl,--no-whole-archive -rdynamic; \
-	)
-
 	#Build helloworld demo
 	(cd $(PKG_BUILD_DIR)/host_applications/linux/apps/hello_pi/hello_world; \
 		$(TARGET_CC) $(TARGET_CFLAGS) $(HELLOPI_CFLAGS) $(HELLOPI_INCLUDES) -g -c world.c -o world.o -Wno-deprecated-declarations; \
@@ -304,7 +289,9 @@ define Build/InstallDev
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/include/** $(1)/usr/include/
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/src/hello_pi/** $(1)/usr/src/hello_pi/
 
-	$(CP) $(PKG_INSTALL_DIR)/opt/vc/lib/pkgconfig/** $(1)/usr/lib/pkgconfig/
+	$(INSTALL_DATA) ./files/bcm_host.pc $(1)/usr/lib/pkgconfig/
+	$(INSTALL_DATA) ./files/egl.pc $(1)/usr/lib/pkgconfig/
+	$(INSTALL_DATA) ./files/glesv2.pc $(1)/usr/lib/pkgconfig/
 
 endef
 
@@ -394,11 +381,6 @@ define Package/rpi-hellovideocube/install
 	$(CP) $(PKG_BUILD_DIR)/host_applications/linux/apps/hello_pi/hello_videocube/hello_videocube $(1)/usr/share/rpi_demos/
 endef
 
-define Package/rpi-hellowayland/install
-	$(INSTALL_DIR) $(1)/usr/share/rpi_demos
-	$(CP) $(PKG_BUILD_DIR)/host_applications/linux/apps/hello_pi/hello_wayland/hello_wayland $(1)/usr/share/rpi_demos/
-endef
-
 define Package/rpi-helloworld/install
 	$(INSTALL_DIR) $(1)/usr/share/rpi_demos
 	$(CP) $(PKG_BUILD_DIR)/host_applications/linux/apps/hello_pi/hello_world/hello_world $(1)/usr/share/rpi_demos/
@@ -419,5 +401,4 @@ $(eval $(call BuildPackage,rpi-hellotriangle))
 $(eval $(call BuildPackage,rpi-hellotriangle2))
 $(eval $(call BuildPackage,rpi-hellovideo))
 $(eval $(call BuildPackage,rpi-hellovideocube))
-$(eval $(call BuildPackage,rpi-hellowayland))
 $(eval $(call BuildPackage,rpi-helloworld))
