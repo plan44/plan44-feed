@@ -293,9 +293,7 @@ define Build/InstallDev
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/include/** $(1)/usr/include/
 	$(CP) -R $(PKG_INSTALL_DIR)/opt/vc/src/hello_pi/** $(1)/usr/src/hello_pi/
 
-	$(INSTALL_DATA) ./files/bcm_host.pc $(1)/usr/lib/pkgconfig/
-	$(INSTALL_DATA) ./files/egl.pc $(1)/usr/lib/pkgconfig/
-	$(INSTALL_DATA) ./files/glesv2.pc $(1)/usr/lib/pkgconfig/
+#	$(CP) $(PKG_INSTALL_DIR)/opt/vc/lib/pkgconfig/** $(1)/usr/lib/pkgconfig/
 
 endef
 
