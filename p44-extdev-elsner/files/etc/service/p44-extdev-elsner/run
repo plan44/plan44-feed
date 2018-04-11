@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# name of serial port device connected to Elsner P03 RS485
+SERIALPORT=/dev/ttyUSB0
+LOGLEVEL=5
+
+exec /usr/bin/p44extdevelsner --logtoapi --loglevel ${LOGLEVEL} --serialport ${SERIALPORT}
