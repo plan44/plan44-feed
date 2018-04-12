@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # name of serial port device connected to Elsner P03 RS485
 SERIALPORT=/dev/ttyUSB0
