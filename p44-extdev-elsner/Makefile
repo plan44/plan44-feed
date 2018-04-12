@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44-extdev-elsner
 # version of what we are downloading
-PKG_VERSION:=1.0
+PKG_VERSION:=1.01
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -37,7 +37,7 @@ endef
 
 P44UTILS_PROTO:=git
 P44UTILS_URL:=https://github.com/plan44/p44utils.git
-P44UTILS_VERSION:=3bfd976b0bda7154aee53d64229eb28277e9babd
+P44UTILS_VERSION:=165f3b01d041bf46f297ec1c1e9f01c4b32d31a3
 P44UTILS_FILE:=p44utils-$(P44UTILS_VERSION).gz
 P44UTILS_SUBDIR:=p44utils-$(P44UTILS_VERSION)
 define Download/p44utils
