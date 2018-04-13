@@ -51,6 +51,7 @@ class ExternalDeviceApp : public CmdLineApp
   int sunlightSensorIndex;
   int daylightSensorIndex;
   int windSensorIndex;
+  int gustSensorIndex;
   // input indices
   int twilightInputIndex;
   int rainInputIndex;
@@ -243,6 +244,18 @@ public:
     s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
     windSensorIndex = sensors->arrayLength();
     sensors->arrayAppend(s);
+    //   - gust speed sensor [4]
+    s = JsonObject::newObj();
+    s->add("sensortype", JsonObject::newInt32(23)); // 23=gust speed
+    s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
+    s->add("group", JsonObject::newInt32(3)); // 3=blue/climate
+    s->add("hardwarename", JsonObject::newString("Gust Speed"));
+    s->add("min", JsonObject::newDouble(0));
+    s->add("max", JsonObject::newDouble(99));
+    s->add("resolution", JsonObject::newDouble(0.1));
+    s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
+    gustSensorIndex = sensors->arrayLength();
+    sensors->arrayAppend(s);
     //   - add to init message
     initMsg->add("sensors", sensors);
     // Send init message
@@ -356,6 +369,7 @@ public:
                 (telegram[17]-'0')*1 +
                 (telegram[19]-'0')*0.1;
               reportSensor(windSensorIndex, wind);
+              reportSensor(gustSensorIndex, wind);
               // - rain
               bool rain = telegram[20]=='J';
               reportInput(rainInputIndex, rain);
