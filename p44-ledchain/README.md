@@ -28,7 +28,7 @@ Where
 - *inverted* can be 0 for non-inverted and 1 for inverted operation.
 - *numberofleds* is the number of LEDs in the chain
 - *ledtype* selects the correct timing and byte order for different LED types:
-  - 0 : **WS2811** RGB LED driver (separate chip, rather ancient)
+  - 0 : **WS2811** RGB LED driver (separate chip, rather ancient). Note: some WS2811 chips reportedly (thanks @Marti-MG!) do not work in this mode - but work fine in WS2813 mode.
   - 1 : **WS2812** and **WS2812B** RGB LEDs
   - 2 : **WS2813** RGB LED with relaxed timing and single failed LED bridging
   - 3 : **P9823** RGB LED in standard 3mm and 5mm LED case, similar timing as WS2812 but different byte order (RGB rather than GRB)
