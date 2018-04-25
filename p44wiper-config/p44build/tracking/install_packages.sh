@@ -15,7 +15,6 @@
 ./scripts/feeds install -p p44i serialfwd
 ./scripts/feeds install -p p44i sqfloatswapper
 ./scripts/feeds install -p p44i vdcd
-./scripts/feeds install -p p44i vdsm
 ./scripts/feeds update packages
 ./scripts/feeds install -p packages alsa-lib
 ./scripts/feeds install -p packages alsa-utils
