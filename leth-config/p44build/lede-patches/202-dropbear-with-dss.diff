@@ -1,0 +1,18 @@
+--- a/package/network/services/dropbear/patches/120-openwrt_options.patch
++++ b/package/network/services/dropbear/patches/120-openwrt_options.patch
+@@ -51,15 +51,6 @@
+  #define DROPBEAR_MD5_HMAC
+  
+  /* You can also disable integrity. Don't bother disabling this if you're
+-@@ -146,7 +146,7 @@ If you test it please contact the Dropbe
+-  * Removing either of these won't save very much space.
+-  * SSH2 RFC Draft requires dss, recommends rsa */
+- #define DROPBEAR_RSA
+--#define DROPBEAR_DSS
+-+/*#define DROPBEAR_DSS*/
+- /* ECDSA is significantly faster than RSA or DSS. Compiling in ECC
+-  * code (either ECDSA or ECDH) increases binary size - around 30kB
+-  * on x86-64 */
+ @@ -194,7 +194,7 @@ If you test it please contact the Dropbe
+  
+  /* Whether to print the message of the day (MOTD). This doesn't add much code

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+
+    <title id="html_title_model">LETH</title>
+
+    <style type="text/css"><!--
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      span.error    { background-color: #ff0000; }
+
+      span.errortext { color: #e80000; }
+      span.warningtext { color: #ff9e00; }
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+      .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
+      .p44-mini-input-end { clear: right; }
+
+      #settingsTable * td { padding-top:0; padding-bottom:0; vertical-align:middle; }
+
+      #settingsTable { min-width: 100%; margin-left: 0; margin-right: 0; }
+
+      #settingsTable .desccol { width: 50%; }
+      #settingsTable .valuecol { width: 300px; }
+
+
+
+      /* simplistic p44 progress bar */
+
+      div.p44_progressbar {
+        position: relative;
+        margin: 0;
+        margin-top: 20px;
+        width: 100%;
+        height: 21px;
+        padding: 0px;
+        background-color:#d0d0d0;
+        border-radius: 15px;
+        border: 1px solid black;
+      }
+
+      div.p44_progressbar_text {
+        position: absolute;
+        width: 100%;
+        padding: 2px;
+        text-align: center;
+        font-family: sans-serif;
+        font-weight: bold;
+        text-shadow: none;
+      }
+
+      div.p44_progressbar_gauge {
+        background-color: #4e98ff;
+        padding: 0px;
+        margin-left: 0px;
+        margin-right: -2px; /* needed to avoid gauge enlarging bar */
+        margin-top: 0px;
+        margin-bottom: 1px;
+        width: 22px;
+        border-radius: 15px;
+        height: 21px;
+      }
+
+    --></style>
+
+
+    <script type="text/javascript"><!--
+
+      var restartLocation = window.location.href;
+
+      var tickDiff = false;
+
+      // request validation token
+      var rqvaltok = "";
+
+      /* simplistic p44 progress bar */
+
+      function setProgressBar(progBar, percentage)
+      {
+        if (percentage<0) percentage = 0;
+        else if (percentage>100) percentage = 100;
+        percentage = Math.round(percentage);
+        var w = progBar.width()/100*percentage;
+        if (w<progBar.height()) w = progBar.height();
+        progBar.find('.p44_progressbar_gauge').width(w);
+        progBar.find('.p44_progressbar_text').html(percentage.toString()+'%');
+      }
+
+
+      function startTimeProgress(progBar, waitTime)
+      {
+        setProgressBar(progBar, 0);
+        var progressStart = (new Date).getTime(); // MS since 1970
+        var i = setInterval(function() {
+          var nowtime = (new Date).getTime(); // MS since 1970
+          var percentage = (nowtime-progressStart)/waitTime*100;
+          setProgressBar(progBar, percentage);
+          if (percentage>=100) clearInterval(i); // stop
+        }, waitTime/100);
+      }
+
+
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+      function openDialog(dialog)
+      {
+        $(dialog).popup("open", { positionTo:"window" });
+      }
+
+
+      function closeDialog(dialog)
+      {
+        $(dialog).popup("close");
+      }
+
+
+      $(function()
+      {
+        // Initialize
+
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+        }).fail(function(response, status) {
+          console.log('TOK error ' + response.error.message);
+        });
+
+        // Handlers
+
+        // load latest log tails when log pane is opened
+        $("#logs").on('pageshow', function(event) {
+          refresh_log();
+        });
+
+        // load current settings list when page is opened
+        $("#settings").on('pageshow', function(event) {
+          refresh_settings();
+        });
+
+
+      });
+
+
+      // Common utils
+
+      function sendAction(context, action, doneCB)
+      {
+        $.ajax({
+          url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ action:action })
+        })
+        .done(function(response) {
+          if (doneCB) doneCB(response);
+        });
+      }
+
+
+      // Settings Page
+      // =============
+
+      function refresh_settings(doneCB)
+      {
+/*
+        $.mobile.loading( "show", {
+          text: "reloading settings list...",
+          textVisible: true,
+          theme: "b"
+        });
+*/
+/*
+        // query list
+        $.getJSON( '/api/json/settings?rqvaltok=' + rqvaltok )
+        .done(function(response) {
+          // table header
+          var tableHtml =
+            '<table data-role="table" id="settingsTable" data-mode="reflow"'+
+            ' class="ui-body-d ui-shadow table-stripe ui-responsive" data-column-btn-theme="b"' +
+            ' >' +
+            '<thead>' +
+             '<tr class="ui-bar-d">' +
+               '<th>Name</th>' +
+               '<th>Description</th>' +
+               '<th>Range</th>' +
+               '<th>Value</th>' +
+             '</tr>' +
+            '</thead>' +
+            '<tbody>';
+          // iterate rows
+          for (var fieldname in response) {
+            var fld = response[fieldname];
+            tableHtml +=
+              '<tr class="settingsrow">' +
+              '<td>' + fieldname + '</td>' +
+              '<td class="desccol">' + fld.title + '</td>';
+            if (fld.min!=undefined) {
+              var res = 1;
+              if (fld.res!=undefined) res = fld.res;
+              tableHtml +=
+                '<td>' + fld.min.toString() + '..' + fld.max.toString() + '</td>' +
+                '<td class="valuecol"><input type="range" name="' + fieldname + '_slider" id="' + fieldname +'_slider"' +
+                ' min="' + fld.min.toString() + '" max="' + fld.max.toString() + '" step="' + res.toString() + '" value="' + fld.value.toString() + '"></td>'
+            }
+            else {
+              tableHtml +=
+                '<td>&nbsp;</td>' +
+                '<td class="valuecol"><input type="text" name="' + fieldname + '_edit" id="' + fieldname +'_edit"' +
+                ' value="' + fld.value.toString() + '"></td>'
+            }
+            tableHtml +=
+              '</tr>';
+          }
+          // finalisation of table
+          tableHtml +=
+            '</tbody>' +
+            '</table>';
+          $("#settingsList").html(tableHtml).trigger('create');
+          // attach handlers
+          for (var fieldname in response) {
+            var fld = response[fieldname];
+            if (fld.min!=undefined) {
+              // Slider
+              settingsFieldChangeAttachEvent(fieldname, 'slider');
+            }
+            else {
+              // Text field
+              settingsFieldChangeAttachEvent(fieldname, 'edit');
+            }
+          }
+//           $.mobile.loading( "hide" );
+          if (doneCB) doneCB();
+        });
+      }
+
+
+      function settingsFieldChangeAttachEvent(fieldname, suffix)
+      {
+        $('#' + fieldname + '_' + suffix).off("change");
+        $('#' + fieldname + '_' + suffix).on("change", function(event, ui) { changedField(event, fieldname, $('#' + fieldname + '_' + suffix).val()); });
+      }
+
+
+      function changedField(event, fieldname, value)
+      {
+        $.ajax({
+          url: '/api/json/settings?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify({ field:fieldname, value:value })
+        })
+        .done(function(response) {
+          // NOP
+        });
+      }
+
+*/
+
+      // Log page
+      // ========
+
+      function refresh_log()
+      {
+        $.get("tail_log.txt", function(data) {
+          $("#tail_log").html(data);
+        });
+      }
+
+
+      function set_loglevel(i)
+      {
+        $.getJSON( '/api/json/log?rqvaltok=' + rqvaltok + '&level=' + String(i) )
+        .done(function(response) {
+          // refresh log
+          refresh_log();
+        });
+      }
+
+
+
+    --></script>
+
+  </head>
+
+  <body>
+
+    <div id="title" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title" class="ui-btn-active">About</a></li>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div>
+          <div class="centered" data-role="content">
+            <h1 id="about_title_model">LETH</h1>
+            <h2 id="about_model_description">OpenWrt/LEDE driven LED controller</h2>
+            <p>© <span id="about_copyright_years">2018</span> by <a id="about_copyright_link" href="http://hardturm.ch/luz" target="_blank">luz</a></p>
+          </div>
+
+          <h3>Opensource:</h3>
+          <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
+          data-iconpos="right">
+
+            <div id="opensource_openwrt" style="display:none" data-role="collapsible">
+              <h3>OpenWrt/LEDE - © OpenWrt/LEDE Project, GPL v2</h3>
+
+              <h4><a href="http://openwrt.org" target="_blank">OpenWrt/LEDE</a> -  Linux distribution for embedded devices</h4>
+
+              <p>OpenWrt/LEDE is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, version 2 of the License.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+              <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+              <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining
+              a copy of this software and associated documentation files (the
+              "Software"), to deal in the Software without restriction, including
+              without limitation the rights to use, copy, modify, merge, publish,
+              distribute, sublicense, and/or sell copies of the Software, and to
+              permit persons to whom the Software is furnished to do so, subject to
+              the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be
+              included in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+              LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+              OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+              WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
+              <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
+              <p>Copyright (c) 2004 avahi.org</p>
+
+              <p>avahi is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>avahi is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+              <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+              <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+              <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+              Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"),
+              to deal in the Software without restriction, including without limitation
+              the rights to use, copy, modify, merge, publish, distribute, sublicense,
+              and/or sell copies of the Software, and to permit persons to whom the
+              Software is furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included
+              in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+              SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+              <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+              <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="control" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div data-role="content">
+          <h2>Operation</h2>
+          <button type="button" id="off" onclick="sendAction('/operation', 'off');" data-inline="true" data-theme="c">Off</button>
+          <button type="button" id="auto" onclick="sendAction('/operation', 'auto');" data-inline="true" data-theme="c">Auto</button>
+          <button type="button" id="always" onclick="sendAction('/operation', 'always');" data-inline="true" data-theme="c">Always</button>
+          <h2>Calibrate</h2>
+          <button type="button" id="rezero" onclick="sendAction('/operation', 'findzero');" data-inline="true" data-theme="c">Find zero</button>
+          <button type="button" id="calibrate" onclick="sendAction('/operation', 'calibrate');" data-inline="true" data-theme="c">Calibrate</button>
+        </div>
+      </div>
+
+      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Restarting controller - please wait...</h3>
+        <p>Page will reload automatically</p>
+        <div id="restartWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restart</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to restart the controller?</h3>
+          <p>Note: it will take a little while until the pixels are all ready again</p>
+          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="settings" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings" class="ui-btn-active">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Settings</h2>
+        <div id="settingsList">
+        </div>
+        <button type="button" id="refresh" onclick="refresh_settings();" data-inline="true" data-theme="c">Refresh list</button>
+        <button type="button" id="save" onclick="sendAction('/settings', 'save');" data-inline="true" data-theme="c">Save Settings</button>
+        <button type="button" id="reload" onclick="sendAction('/settings', 'reload', function() { refresh_settings(); });" data-inline="true" data-theme="c">Reload saved settings</button>
+        <button type="button" id="defaults" onclick="sendAction('/settings', 'defaults', function() { refresh_settings(); });" data-inline="true" data-theme="c">Load default values</button>
+      </div>
+    </div>
+
+    <div id="logs" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div id="logcontent" data-role="content">
+          <h2>Logs</h2>
+          <div id="logs">
+            <h3>vdcd - complete <a target="_blank" href="current_log.txt">current</a> /
+            <a target="_blank" href="previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_log();">refresh</a>) -
+            set loglevel
+            <a title="debug" href="javascript:set_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
+            </h3>
+            <pre id="tail_log"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </body>
+
+</html>

@@ -1,0 +1,43 @@
+ul, li {
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif;
+}
+.sapling-list li {
+	clear: left;
+	display: inline-block;
+	float: left;
+	list-style: none;
+	position: relative;
+	padding-left: 17px;
+}
+.sapling-list ul {
+	display: none;
+}
+.sapling-list .sapling-item {
+	cursor: pointer;
+	padding-left: 0;
+}
+.sapling-list .sapling-item:before {
+	background-image: url('images/icons-18-black.png');
+	background-repeat: no-repeat;
+	background-position: 0px,0px;
+	content: "";
+	display: inline-block;
+	font-size: .8em;
+	height: 12px;
+	padding-right: 5px;
+	width: 12px;
+}
+.sapling-list .sapling-item.sapling-expanded:before {
+	background-image: url('images/icons-18-black.png');
+	background-repeat: no-repeat;
+	background-position: -36px,0px;
+}
+.sapling-list .sapling-item ul {
+	padding-left: 17px;
+}
+.sapling-list .sapling-item.sapling-expanded > ul {
+	cursor: default;
+	display: block;
+}

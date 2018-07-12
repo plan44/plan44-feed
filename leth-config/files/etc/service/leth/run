@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=lethd
+LOGLEVEL=6
+EXTRAOPTS=
+
+# basic config Omega2 on ledcontroller v1
+# - PWM0 for LED dimming FET with 320uS = 3kHz period
+PWM_LED_FET_PIN=pwmchip0.0.320000
+# - LED chain
+LEDCHAIN_DEVICE1=/dev/ledchain1
+LEDCHAIN_DEVICE2=/dev/ledchain2
+LEDCHAIN_DEVICE3=/dev/ledchain3
+
+# - Analog input
+ADC_INPUT_CH0=spi327661.MCP3002@0.0
+ADC_INPUT_CH1=spi327661.MCP3002@0.1
+
+# - Button
+BUTTON_PIN=gpio.38
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+# configure the GPIO mux
+omega2-ctrl gpiomux set uart1 pwm01
+omega2-ctrl gpiomux set i2s gpio
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --pwmdimmer ${PWM_OUTPUT_PIN} \
+  --ledchain ${LEDCHAIN_DEVICE1} \
+  --sensor ${ADC_INPUT_CH0}
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
+  --datapath /flash \
+  --jsonapiport 8090 \
+  --jsonapinonlocal \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null
