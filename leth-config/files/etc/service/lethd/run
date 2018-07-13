@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=lethd
+LOGLEVEL=6
+EXTRAOPTS=
+
+# basic config Omega2 on ledcontroller v1
+# - PWM0 for LED dimming FET with 320uS = 3kHz period
+PWM_LED_FET_PIN=pwmchip0.0.320000
+# - LED chain
+LEDCHAIN_DEVICE1=/dev/ledchain1
+
+# - Analog input (/dev/spidev0.0 software SPI)
+ADC_INPUT_CH0=spi0.MCP3002@0.0
+ADC_INPUT_CH1=spi0.MCP3002@0.1
+
+# - Button
+BUTTON_PIN=gpio.38
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+# LED chain 1
+# - we need PWM1 on GPIO45/46
+omega2-ctrl gpiomux set uart1 pwm01
+# first ledchain for 504 LEDs on GPIO46
+insmod p44-ledchain ledchain1=0,504,2
+
+# other LED chains
+# - we might want to use pwm2 and 3 as well
+omega2-ctrl gpiomux set uart2 pwm23
+#insmod p44-ledchain ledchain2=0,100,2
+#insmod p44-ledchain ledchain3=0,100,2
+
+
+# PWM for LED dimmer: pwm0 on GPIO45
+# - no config needed except pwm01 exposed, done for LED chain above already
+#   (p44utils will export the pwm pin)
+
+# SPI for MCP3002
+# - we need the i2s pins for software SPI
+omega2-ctrl gpiomux set i2s gpio
+# - use software SPI (HW SPI does not work reliably on MT7688) for MCP3002
+#   bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
+insmod spi-gpio-custom bus0=0,1,2,3,0,100000,0
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --pwmdimmer ${PWM_LED_FET_PIN} \
+  --ledchain ${LEDCHAIN_DEVICE1} \
+  --sensor ${ADC_INPUT_CH0} \
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
+  --datapath /flash \
+  --jsonapiport 8090 \
+  --jsonapinonlocal \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null
