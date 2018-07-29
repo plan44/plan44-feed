@@ -49,7 +49,8 @@ insmod spi-gpio-custom bus0=0,1,2,3,0,100000,0
 exec ${EXECUTABLE} \
   --pwmdimmer ${PWM_LED_FET_PIN} \
   --ledchain ${LEDCHAIN_DEVICE1} \
-  --sensor ${ADC_INPUT_CH0} \
+  --sensor0 ${ADC_INPUT_CH0} \
+  --sensor1 ${ADC_INPUT_CH1} \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \

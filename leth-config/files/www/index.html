@@ -140,6 +140,14 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
+          // get brightness
+          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok , {
+          }).done( function(response) {
+            $('#text_brightness').val(response.text).slider("refresh");
+            $('#light_brightness').val(response.light).slider("refresh");
+          });
+
+
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
@@ -155,6 +163,22 @@
         $("#settings").on('pageshow', function(event) {
           refresh_settings();
         });
+
+        // brightness sliders
+        $('#text_brightness').on("change", function(event, ui) {
+          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok + '&text=' + ($('#text_brightness').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+        $('#light_brightness').on("change", function(event, ui) {
+          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok + '&light=' + ($('#light_brightness').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+
+
 
 
       });
@@ -176,104 +200,44 @@
       }
 
 
+
+      // Control Page
+      // =============
+
+
+      function sendMessage()
+      {
+        var msg = $('#messageText').val();
+        var cmd = { "message":msg };
+        $.ajax({
+          url: '/api/json/text?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmd)
+        }).done(function(response) {
+          // NOP for now
+        });
+      }
+
+
+      function setTextColor()
+      {
+        var col = $('#messageColor').val();
+        var cmd = { "color":col };
+        $.ajax({
+          url: '/api/json/text?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmd)
+        }).done(function(response) {
+          // NOP for now
+        });
+      }
+
+
       // Settings Page
       // =============
 
-      function refresh_settings(doneCB)
-      {
-/*
-        $.mobile.loading( "show", {
-          text: "reloading settings list...",
-          textVisible: true,
-          theme: "b"
-        });
-*/
-/*
-        // query list
-        $.getJSON( '/api/json/settings?rqvaltok=' + rqvaltok )
-        .done(function(response) {
-          // table header
-          var tableHtml =
-            '<table data-role="table" id="settingsTable" data-mode="reflow"'+
-            ' class="ui-body-d ui-shadow table-stripe ui-responsive" data-column-btn-theme="b"' +
-            ' >' +
-            '<thead>' +
-             '<tr class="ui-bar-d">' +
-               '<th>Name</th>' +
-               '<th>Description</th>' +
-               '<th>Range</th>' +
-               '<th>Value</th>' +
-             '</tr>' +
-            '</thead>' +
-            '<tbody>';
-          // iterate rows
-          for (var fieldname in response) {
-            var fld = response[fieldname];
-            tableHtml +=
-              '<tr class="settingsrow">' +
-              '<td>' + fieldname + '</td>' +
-              '<td class="desccol">' + fld.title + '</td>';
-            if (fld.min!=undefined) {
-              var res = 1;
-              if (fld.res!=undefined) res = fld.res;
-              tableHtml +=
-                '<td>' + fld.min.toString() + '..' + fld.max.toString() + '</td>' +
-                '<td class="valuecol"><input type="range" name="' + fieldname + '_slider" id="' + fieldname +'_slider"' +
-                ' min="' + fld.min.toString() + '" max="' + fld.max.toString() + '" step="' + res.toString() + '" value="' + fld.value.toString() + '"></td>'
-            }
-            else {
-              tableHtml +=
-                '<td>&nbsp;</td>' +
-                '<td class="valuecol"><input type="text" name="' + fieldname + '_edit" id="' + fieldname +'_edit"' +
-                ' value="' + fld.value.toString() + '"></td>'
-            }
-            tableHtml +=
-              '</tr>';
-          }
-          // finalisation of table
-          tableHtml +=
-            '</tbody>' +
-            '</table>';
-          $("#settingsList").html(tableHtml).trigger('create');
-          // attach handlers
-          for (var fieldname in response) {
-            var fld = response[fieldname];
-            if (fld.min!=undefined) {
-              // Slider
-              settingsFieldChangeAttachEvent(fieldname, 'slider');
-            }
-            else {
-              // Text field
-              settingsFieldChangeAttachEvent(fieldname, 'edit');
-            }
-          }
-//           $.mobile.loading( "hide" );
-          if (doneCB) doneCB();
-        });
-      }
-
-
-      function settingsFieldChangeAttachEvent(fieldname, suffix)
-      {
-        $('#' + fieldname + '_' + suffix).off("change");
-        $('#' + fieldname + '_' + suffix).on("change", function(event, ui) { changedField(event, fieldname, $('#' + fieldname + '_' + suffix).val()); });
-      }
-
-
-      function changedField(event, fieldname, value)
-      {
-        $.ajax({
-          url: '/api/json/settings?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify({ field:fieldname, value:value })
-        })
-        .done(function(response) {
-          // NOP
-        });
-      }
-
-*/
 
       // Log page
       // ========
@@ -303,14 +267,113 @@
 
   <body>
 
+    <div id="control" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div data-role="content">
+          <h2>Brightness</h2>
+          <label for="text_brightness">Text:</label>
+          <input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="100" step="1" />
+          <label for="music_volume">Light:</label>
+          <input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="100" step="1" />
+
+          <h2>Message</h2>
+          <input type="text" autocomplete="off" id="messageText" name="messageText"/>
+          <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+          <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rrggbb web color"/>
+          <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+        </div>
+      </div>
+
+      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
+        <h3>Restarting controller - please wait...</h3>
+        <p>Page will reload automatically</p>
+        <div id="restartWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
+        <div data-role="header" data-theme="a" class="ui-corner-top">
+          <h1>Restart</h1>
+        </div>
+        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to restart the controller?</h3>
+          <p>Note: it will take a little while until the pixels are all ready again</p>
+          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
+          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="settings" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings" class="ui-btn-active">Settings</a></li>
+            <li><a href="#logs">Logs</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Settings</h2>
+        <div id="settingsList">
+        </div>
+      </div>
+    </div>
+
+    <div id="logs" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div id="logcontent" data-role="content">
+          <h2>Logs</h2>
+          <div id="logs">
+            <h3>lethd - complete <a target="_blank" href="current_log.txt">current</a> /
+            <a target="_blank" href="previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_log();">refresh</a>) -
+            set loglevel
+            <a title="debug" href="javascript:set_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
+            </h3>
+            <pre id="tail_log"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="title" data-role="page">
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
-            <li><a href="#title" class="ui-btn-active">About</a></li>
             <li><a href="#control">Control</a></li>
             <li><a href="#settings">Settings</a></li>
             <li><a href="#logs">Logs</a></li>
+            <li><a href="#title" class="ui-btn-active">About</a></li>
           </ul>
         </div>
       </div>
@@ -326,12 +389,12 @@
           <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
           data-iconpos="right">
 
-            <div id="opensource_openwrt" style="display:none" data-role="collapsible">
-              <h3>OpenWrt/LEDE - © OpenWrt/LEDE Project, GPL v2</h3>
+            <div data-role="collapsible">
+              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
 
-              <h4><a href="http://openwrt.org" target="_blank">OpenWrt/LEDE</a> -  Linux distribution for embedded devices</h4>
+              <h4><a href="http://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded devices</h4>
 
-              <p>OpenWrt/LEDE is free software: you can redistribute it and/or modify
+              <p>OpenWrt is free software: you can redistribute it and/or modify
               it under the terms of the GNU General Public License as published by
               the Free Software Foundation, version 2 of the License.</p>
 
@@ -366,13 +429,16 @@
             </div>
 
             <div data-role="collapsible">
-              <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
+              <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
 
-              <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
+              <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+              <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
               <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+              <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+              <p>Copyright (c) 2013 F-Secure Corporation</p>
 
               <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-              of this software and associated documentation files (the "Software"), to deal
+              of this software and associated documentation files (the Software), to deal
               in the Software without restriction, including without limitation the rights
               to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
               copies of the Software, and to permit persons to whom the Software is
@@ -381,7 +447,7 @@
               <p>The above copyright notice and this permission notice shall be included in
               all copies or substantial portions of the Software.</p>
 
-              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
               IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
               FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
               AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -469,105 +535,6 @@
               <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
             </div>
 
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="control" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a href="#logs">Logs</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <div data-role="content">
-          <h2>Operation</h2>
-          <button type="button" id="off" onclick="sendAction('/operation', 'off');" data-inline="true" data-theme="c">Off</button>
-          <button type="button" id="auto" onclick="sendAction('/operation', 'auto');" data-inline="true" data-theme="c">Auto</button>
-          <button type="button" id="always" onclick="sendAction('/operation', 'always');" data-inline="true" data-theme="c">Always</button>
-          <h2>Calibrate</h2>
-          <button type="button" id="rezero" onclick="sendAction('/operation', 'findzero');" data-inline="true" data-theme="c">Find zero</button>
-          <button type="button" id="calibrate" onclick="sendAction('/operation', 'calibrate');" data-inline="true" data-theme="c">Calibrate</button>
-        </div>
-      </div>
-
-      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
-        <h3>Restarting controller - please wait...</h3>
-        <p>Page will reload automatically</p>
-        <div id="restartWaitProgress" class="p44_progressbar">
-          <div class="p44_progressbar_text">-</div>
-          <div class="p44_progressbar_gauge"></div>
-        </div>
-      </div>
-
-
-      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
-        <div data-role="header" data-theme="a" class="ui-corner-top">
-          <h1>Restart</h1>
-        </div>
-        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
-          <h3 class="ui-title">Do you want to restart the controller?</h3>
-          <p>Note: it will take a little while until the pixels are all ready again</p>
-          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
-          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
-        </div>
-      </div>
-
-    </div>
-
-    <div id="settings" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#settings" class="ui-btn-active">Settings</a></li>
-            <li><a href="#logs">Logs</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Settings</h2>
-        <div id="settingsList">
-        </div>
-        <button type="button" id="refresh" onclick="refresh_settings();" data-inline="true" data-theme="c">Refresh list</button>
-        <button type="button" id="save" onclick="sendAction('/settings', 'save');" data-inline="true" data-theme="c">Save Settings</button>
-        <button type="button" id="reload" onclick="sendAction('/settings', 'reload', function() { refresh_settings(); });" data-inline="true" data-theme="c">Reload saved settings</button>
-        <button type="button" id="defaults" onclick="sendAction('/settings', 'defaults', function() { refresh_settings(); });" data-inline="true" data-theme="c">Load default values</button>
-      </div>
-    </div>
-
-    <div id="logs" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#settings">Settings</a></li>
-            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <div id="logcontent" data-role="content">
-          <h2>Logs</h2>
-          <div id="logs">
-            <h3>vdcd - complete <a target="_blank" href="current_log.txt">current</a> /
-            <a target="_blank" href="previous_log.txt">previous</a> log -
-            last lines (<a href="javascript:refresh_log();">refresh</a>) -
-            set loglevel
-            <a title="debug" href="javascript:set_loglevel(7);">7</a>
-            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
-            <a title="standard" href="javascript:set_loglevel(5);">5</a>
-            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
-            </h3>
-            <pre id="tail_log"></pre>
           </div>
         </div>
       </div>
