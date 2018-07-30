@@ -6,8 +6,10 @@ LOGLEVEL=6
 EXTRAOPTS=
 
 # basic config Omega2 on ledcontroller v1
+
 # - PWM0 for LED dimming FET with 320uS = 3kHz period
 PWM_LED_FET_PIN=pwmchip0.0.320000
+
 # - LED chain
 LEDCHAIN_DEVICE1=/dev/ledchain1
 
@@ -20,6 +22,18 @@ BUTTON_PIN=gpio.38
 # - LEDs
 GREENLED_PIN="led.p44:green:status1"
 REDLED_PIN="led.p44:red:status2"
+
+
+# Allow overriding options (such as LOGLEVEL or EXTRAOPTS)
+# - override from flash
+if [ -f /flash/lethd_cfg ]; then
+  source /flash/lethd_cfg
+fi
+# - override from tmp
+if [ -f /tmp/lethd_cfg ]; then
+  source /tmp/lethd_cfg
+fi
+
 
 # LED chain 1
 # - we need PWM1 on GPIO45/46
