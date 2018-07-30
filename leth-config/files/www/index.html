@@ -235,6 +235,21 @@
       }
 
 
+      function setBackgroundColor()
+      {
+        var col = $('#backgroundColor').val();
+        var cmd = { "backgroundcolor":col };
+        $.ajax({
+          url: '/api/json/text?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(cmd)
+        }).done(function(response) {
+          // NOP for now
+        });
+      }
+
+
       // Settings Page
       // =============
 
@@ -289,8 +304,10 @@
           <h2>Message</h2>
           <input type="text" autocomplete="off" id="messageText" name="messageText"/>
           <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
-          <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rrggbb web color"/>
+          <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
           <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+          <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
+          <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
         </div>
       </div>
 
