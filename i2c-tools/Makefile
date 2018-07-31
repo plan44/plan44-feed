@@ -9,12 +9,14 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=i2c-tools
-PKG_VERSION:=3.0.3
-PKG_RELEASE:=1
+PKG_VERSION:=3.1.2
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://dl.lm-sensors.org/i2c-tools/releases
-#PKG_MD5SUM:=f15019e559e378c6e9d5d6299a00df21
+PKG_SOURCE_URL:=http://dl.lm-sensors.org/i2c-tools/releases/ \
+                http://fossies.org/linux/misc/
+PKG_HASH:=db5e69f2e2a6e3aa2ecdfe6a5f490b149c504468770f58921c8c5b8a7860a441
+
 
 include $(INCLUDE_DIR)/package.mk
 $(call include_mk, python-package.mk)
