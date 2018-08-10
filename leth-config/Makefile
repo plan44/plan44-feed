@@ -17,7 +17,7 @@ PKG_CHECK_FORMAT_SECURITY:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+mg44 +lethd
+	DEPENDS:=+mg44 +lethd +kmod-p44-ledchain +kmod-pwm-mediatek-ramips
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=custom
