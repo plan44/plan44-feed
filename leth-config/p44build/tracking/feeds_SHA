@@ -1,10 +1,9 @@
 # feed giturl:gitref
-luci https://git.openwrt.org/project/luci.git:09ae638e4b4eb6ee11fd718caf209c6c983a6e0e
-onion https://github.com/OnionIoT/OpenWRT-Packages.git:0a47b3cac1efde100e28f475d8c1d0c63077019b
+luci https://git.openwrt.org/project/luci.git:6df9a57ef0773c7158dadbb5054a58cb3d70c621
+onion https://github.com/OnionIoT/OpenWRT-Packages.git:696949eb5e2f509a1334379aa4910925dae391c7
 p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git:335f62d964ebcf848230c05ef21258306e6d1418
-packages https://git.openwrt.org/feed/packages.git:89370e23dfce44e2f97fa708048deddeb85e1277
-plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:b1ce71b7990fba5756a351411a8eb1e92a2af862
-raspberry https://github.com/rpi-openwrt/rpi-packages.git:37896f56d892e44788a57d726234cbab06565de7
-routing https://git.openwrt.org/feed/routing.git:190f1b079f1c585134d6a521165db14b63e99315
+packages https://git.openwrt.org/feed/packages.git:8bf5fc17db6072549a4e3bd8230d7962364f2043
+plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:4550500eedba9ce4839b5c27aa38f66b0de25569
+routing https://git.openwrt.org/feed/routing.git:1b9d1c419f0ecefda51922a7845ab2183d6acd76
 stintel https://github.com/stintel/lede-wip.git:b6a2903d94d84fd959180956ff9d83e6275e4b15
-telephony https://git.openwrt.org/feed/telephony.git:5bc38b4a1eee4d12725d748d4ab31d3b6eb4e9ed
+telephony https://git.openwrt.org/feed/telephony.git:88b12368f11f3feeefcd4dcbe54f21159b8356c1
