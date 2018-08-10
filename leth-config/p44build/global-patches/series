@@ -6,5 +6,5 @@
 206-omega2-dtsi-pwm-enable.diff
 207-uboot-envtools-config-init-for-omega2.diff
 210-mt7621-spi-intelligent-halfduplex.diff
-290-omega2-dtsi-p44-button-and-leds.diff
+291-omega2S-dtsi-p44-button-and-leds.diff
 301-files-etc-shadow--no-root-login.diff
