@@ -12,6 +12,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h> // printk()
 #include <linux/slab.h> // kzalloc()
+#include <linux/uaccess.h> // copy_to_user()
 #include <linux/moduleparam.h>
 #include <linux/stat.h>
 
