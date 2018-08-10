@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=lethd
 # version of what we are downloading
-PKG_VERSION:=0.5
+PKG_VERSION:=0.7
 # version of this makefile
-PKG_RELEASE:=5
+PKG_RELEASE:=7
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
