@@ -14,9 +14,9 @@ PWM_LED_FET_PIN="pwmchip0.0.320000"
 LEDCHAIN_NAME="ledchain1"
 LEDCHAIN_NUMLEDS=518
 
-# - Analog input (/dev/spidev0.0 software SPI)
-ADC_INPUT_CH0="spi0.MCP3002@0.0"
-ADC_INPUT_CH1="spi0.MCP3002@0.1"
+# - Analog input (/dev/spidev1.0 software SPI)
+ADC_INPUT_CH0="spi10.MCP3002@0.0"
+ADC_INPUT_CH1="spi10.MCP3002@0.1"
 
 # - Button
 BUTTON_PIN="gpio.38"
@@ -59,7 +59,8 @@ omega2-ctrl gpiomux set uart2 pwm23
 omega2-ctrl gpiomux set i2s gpio
 # - use software SPI (HW SPI does not work reliably on MT7688) for MCP3002
 #   bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
-insmod spi-gpio-custom bus0=0,1,2,3,0,100000,0
+#   Note: devid 0 (bus 0) is already in use by HW SPI, so we take 1
+insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
 
 # run the daemon
 exec ${EXECUTABLE} \
