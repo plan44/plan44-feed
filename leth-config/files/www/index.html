@@ -145,6 +145,16 @@
           }).done( function(response) {
             $('#text_brightness').val(response.text).slider("refresh");
             $('#light_brightness').val(response.light).slider("refresh");
+            // get text/scroll params
+            $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok , {
+            }).done( function(response) {
+              $('#messageText').val(response.text);
+              $('#backgroundColor').val(response.backgroundcolor);
+              $('#messageColor').val(response.color);
+              $('#text_scrollsteptime').val(response.scrollsteptime).slider("refresh");
+              $('#text_scrollstepx').val(response.scrollstepx).slider("refresh");
+              $('#text_scrolloffsety').val(response.scrolloffsety).slider("refresh");
+            });
           });
 
 
@@ -178,6 +188,31 @@
           });
         });
 
+        // scroll sliders
+        $('#text_scrollsteptime').on("change", function(event, ui) {
+          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollsteptime=' + ($('#text_scrollsteptime').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+        $('#text_scrollstepx').on("change", function(event, ui) {
+          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollstepx=' + ($('#text_scrollstepx').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+        $('#text_scrolloffsety').on("change", function(event, ui) {
+          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrolloffsety=' + ($('#text_scrolloffsety').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
+        $('#text_scrolloffsetx').on("change", function(event, ui) {
+          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollsteps=0&scrolloffsetx=' + ($('#text_scrolloffsetx').val()).toString() )
+          .done(function(response) {
+            // NOP for now
+          });
+        });
 
 
 
@@ -308,6 +343,17 @@
           <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
           <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
           <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+
+          <h2>Scroll</h2>
+          <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label>
+          <input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="0" max="200" step="1" />
+          <label for="text_scrollstepx">Pixels per Step:</label>
+          <input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="5" step="0.05" />
+          <label for="text_scrolloffsety">Vertical scroll position:</label>
+          <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.2" />
+          <label for="text_scrolloffsetx">Horizontal scroll position:</label>
+          <input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-20" max="50" step="0.2" />
+
         </div>
       </div>
 
