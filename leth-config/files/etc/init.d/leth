@@ -35,7 +35,7 @@ boot() {
 
   # update host name if needed
   MAC=$(ip link | sed -n -E -e '/eth0/{n;s/.*ether *([0-9a-fA-F:]*).*$/\1/;s/://g;p;}')
-  UNIT_HOSTNAME="leth_$MAC"
+  UNIT_HOSTNAME="leth-$MAC"
   HN=$(uci get system.@system[0].hostname)
   if [ ! "${HN}" = "${UNIT_HOSTNAME}" ]; then
     uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
