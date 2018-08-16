@@ -72,7 +72,15 @@
         }
         selectHtml +=
           '<option disabled>templates</option>' +
-          '<option value="1000">{ "cmd":"init" }</option>';
+          '<option value="1000">{ "cmd":"now" }</option>' +
+          '<option value="1000">{ "cmd":"init", "light":1 }</option>' +
+          '<option value="1000">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250 } }</option>' +
+          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orentiation": 0 } ] }</option>' +
+          '<option value="1000">{ "feature":"light", "cmd":"fade", "from":0, "to":100, "t":5000 }</option>' +
+          '<option value="1000">{ "feature":"text", "backgroundcolor":"000" }</option>' +
+          '<option value="1000">{ "feature":"text", "cmd":"fade", "to":100, "t":5000 }</option>';
+
+
         $('#jsonExamples').html(selectHtml).trigger('create');
         $('#jsonExamples').val(0).selectmenu('refresh');
       }
@@ -161,12 +169,10 @@
       <div data-role="content">
         <div style="margin-bottom: 20px;">
           <label for="apiPath">Enter API Path:</label>
-          <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json" data-theme="d">
+          <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
           <select onclick="javascript:apiSelected();" name="apiExamples" id="apiExamples">
-            <option value="1">api/json/log</option>
-            <option value="3">api/json/brightness</option>
-            <option value="3">api/json/text</option>
-            <option value="3">api/json/inputs</option>
+            <option value="1">api/json/lethd</option>
+            <option value="3">api/json/log</option>
             <option value="99">tok/json</option>
           </select>
           <label for="jsonText">Enter JSON API Query:</label>

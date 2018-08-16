@@ -141,13 +141,11 @@
         }).done( function(response) {
           rqvaltok = response;
           // get brightness
-          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok , {
-          }).done( function(response) {
-            $('#text_brightness').val(response.text).slider("refresh");
-            $('#light_brightness').val(response.light).slider("refresh");
+          sendApiCmd('/lethd', { "feature":"light", "cmd":"status" }, function(response) {
+            $('#light_brightness').val(response.brightness).slider("refresh");
             // get text/scroll params
-            $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok , {
-            }).done( function(response) {
+            sendApiCmd('/lethd', { "feature":"text", "cmd":"status" }, function(response) {
+              $('#text_brightness').val(response.brightness).slider("refresh");
               $('#messageText').val(response.text);
               $('#backgroundColor').val(response.backgroundcolor);
               $('#messageColor').val(response.color);
@@ -156,8 +154,6 @@
               $('#text_scrolloffsety').val(response.scrolloffsety).slider("refresh");
             });
           });
-
-
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
@@ -176,58 +172,49 @@
 
         // brightness sliders
         $('#text_brightness').on("change", function(event, ui) {
-          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok + '&text=' + ($('#text_brightness').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          var bri = floatVal($('#text_brightness').val());
+          sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
         });
         $('#light_brightness').on("change", function(event, ui) {
-          $.getJSON( '/api/json/brightness?rqvaltok=' + rqvaltok + '&light=' + ($('#light_brightness').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          var bri = floatVal($('#light_brightness').val());
+          sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
         });
 
         // scroll sliders
         $('#text_scrollsteptime').on("change", function(event, ui) {
-          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollsteptime=' + ($('#text_scrollsteptime').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          newScroll();
         });
         $('#text_scrollstepx').on("change", function(event, ui) {
-          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollstepx=' + ($('#text_scrollstepx').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          newScroll();
         });
         $('#text_scrolloffsety').on("change", function(event, ui) {
-          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrolloffsety=' + ($('#text_scrolloffsety').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          var scrolloffsety = floatVal($('#text_scrolloffsety').val());
+          sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
         });
         $('#text_scrolloffsetx').on("change", function(event, ui) {
-          $.getJSON( '/api/json/text?rqvaltok=' + rqvaltok + '&scrollsteps=0&scrolloffsetx=' + ($('#text_scrolloffsetx').val()).toString() )
-          .done(function(response) {
-            // NOP for now
-          });
+          var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
+          sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
         });
-
-
-
       });
 
 
       // Common utils
 
-      function sendAction(context, action, doneCB)
+      function floatVal(a)
+      {
+        var f = parseFloat(a);
+        if (Number.isNaN(f)) f = 0;
+        return f;
+      }
+
+
+      function sendApiCmd(context, command, doneCB)
       {
         $.ajax({
           url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
           type: 'post',
           dataType: 'json',
-          data: JSON.stringify({ action:action })
+          data: JSON.stringify(command)
         })
         .done(function(response) {
           if (doneCB) doneCB(response);
@@ -240,48 +227,38 @@
       // =============
 
 
+      function newScroll()
+      {
+        var scrollsteptime = floatVal($('#text_scrollsteptime').val());
+        var scrollstepx = floatVal($('#text_scrollstepx').val());
+        sendApiCmd('/lethd', { "feature":"text", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
+      }
+
+
+      function stopScroll()
+      {
+        sendApiCmd('/lethd', { "feature":"text", "cmd":"stopscroll" });
+      }
+
+
       function sendMessage()
       {
         var msg = $('#messageText').val();
-        var cmd = { "message":msg };
-        $.ajax({
-          url: '/api/json/text?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
+        sendApiCmd('/lethd', { "feature":"text", "text":msg });
       }
 
 
       function setTextColor()
       {
         var col = $('#messageColor').val();
-        var cmd = { "color":col };
-        $.ajax({
-          url: '/api/json/text?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
+        sendApiCmd('/lethd', { "feature":"text", "color":col });
       }
 
 
       function setBackgroundColor()
       {
         var col = $('#backgroundColor').val();
-        var cmd = { "backgroundcolor":col };
-        $.ajax({
-          url: '/api/json/text?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
+        sendApiCmd('/lethd', { "feature":"text", "backgroundcolor":col });
       }
 
 
@@ -302,8 +279,7 @@
 
       function set_loglevel(i)
       {
-        $.getJSON( '/api/json/log?rqvaltok=' + rqvaltok + '&level=' + String(i) )
-        .done(function(response) {
+        sendApiCmd('/log', { "level":i }, function(response) {
           // refresh log
           refresh_log();
         });
@@ -345,6 +321,7 @@
           <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
 
           <h2>Scroll</h2>
+          <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop</button>
           <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label>
           <input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
           <label for="text_scrollstepx">Pixels per Step:</label>
