@@ -11,8 +11,12 @@ EXTRAOPTS=
 PWM_LED_FET_PIN="pwmchip0.0.320000"
 
 # - LED chain
-LEDCHAIN_NAME="ledchain1"
-LEDCHAIN_NUMLEDS=518
+LEDCHAIN_NAME_1="ledchain1"
+LEDCHAIN_NAME_2="ledchain2"
+LEDCHAIN_NAME_3="ledchain3"
+LEDCHAIN_NUMLEDS_1=518
+LEDCHAIN_NUMLEDS_2=182
+LEDCHAIN_NUMLEDS_3=100
 
 # - Analog input (/dev/spidev1.0 software SPI)
 ADC_INPUT_CH0="spi10.MCP3002@0.0"
@@ -36,18 +40,16 @@ if [ -f /tmp/lethd_cfg ]; then
 fi
 
 
-# LED chain for text
-LEDCHAIN_DEVICE="/dev/${LEDCHAIN_NAME}"
+# LED chains
+LEDCHAIN_DEVICE_1="/dev/${LEDCHAIN_NAME_1}"
+LEDCHAIN_DEVICE_2="/dev/${LEDCHAIN_NAME_2}"
+LEDCHAIN_DEVICE_3="/dev/${LEDCHAIN_NAME_3}"
 # - we need PWM1 on GPIO45/46
 omega2-ctrl gpiomux set uart1 pwm01
-# first ledchain for LEDs on GPIO46
-insmod p44-ledchain ${LEDCHAIN_NAME}=0,${LEDCHAIN_NUMLEDS},2
-
-# other LED chains
-# - we might want to use pwm2 and 3 as well
+# - we need pwm2 and 3 as well
 omega2-ctrl gpiomux set uart2 pwm23
-#insmod p44-ledchain ledchain2=0,100,2
-#insmod p44-ledchain ledchain3=0,100,2
+# load driver
+insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2 ${LEDCHAIN_NAME_2}=0,${LEDCHAIN_NUMLEDS_2},2 ${LEDCHAIN_NAME_3}=0,${LEDCHAIN_NUMLEDS_3},2
 
 
 # PWM for LED dimmer: pwm0 on GPIO45
@@ -65,7 +67,9 @@ insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
 # run the daemon
 exec ${EXECUTABLE} \
   --pwmdimmer ${PWM_LED_FET_PIN} \
-  --ledchain ${LEDCHAIN_DEVICE} \
+  --ledchain1 ${LEDCHAIN_DEVICE_1} \
+  --ledchain2 ${LEDCHAIN_DEVICE_2} \
+  --ledchain3 ${LEDCHAIN_DEVICE_3} \
   --sensor0 ${ADC_INPUT_CH0} \
   --sensor1 ${ADC_INPUT_CH1} \
   --button ${BUTTON_PIN} \
@@ -74,6 +78,7 @@ exec ${EXECUTABLE} \
   --datapath /flash \
   --jsonapiport 8090 \
   --jsonapinonlocal \
+  --lethdapiport 11200 \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
