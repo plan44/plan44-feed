@@ -7,7 +7,7 @@ git push -f origin LETH/0.9/leth-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/lethd.git lethd
 pushd lethd
-git tag -f LETH/0.9/leth-omega2 2c9950a41844523f54ab53e94ee531be436c72c4
+git tag -f LETH/0.9/leth-omega2 24e1c74f5e80d277759de05da498d6124b5856da
 git push -f origin LETH/0.9/leth-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch HEAD https://github.com/OnionIoT/omega2-ctrl.git omega2-ctrl
