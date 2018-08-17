@@ -9,7 +9,7 @@ PKG_NAME:=lethd
 # version of what we are downloading
 PKG_VERSION:=0.9
 # version of this makefile
-PKG_RELEASE:=11
+PKG_RELEASE:=12
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
