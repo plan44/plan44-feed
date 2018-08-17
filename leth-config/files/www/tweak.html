@@ -75,10 +75,12 @@
           '<option value="1000">{ "cmd":"now" }</option>' +
           '<option value="1000">{ "cmd":"init", "light":1 }</option>' +
           '<option value="1000">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250 } }</option>' +
-          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orentiation": 0 } ] }</option>' +
+          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
+          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 24, "offset": 0, "orientation": 0 }, { "cols": 47, "offset": 24, "orientation": 0 } ] }</option>' +
           '<option value="1000">{ "feature":"light", "cmd":"fade", "from":0, "to":100, "t":5000 }</option>' +
           '<option value="1000">{ "feature":"text", "backgroundcolor":"000" }</option>' +
-          '<option value="1000">{ "feature":"text", "cmd":"fade", "to":100, "t":5000 }</option>';
+          '<option value="1000">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
+          '<option value="1000">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>';
 
 
         $('#jsonExamples').html(selectHtml).trigger('create');

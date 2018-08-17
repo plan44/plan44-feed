@@ -86,6 +86,8 @@
 
       var tickDiff = false;
 
+      var noUpdate = false;
+
       // request validation token
       var rqvaltok = "";
 
@@ -140,11 +142,14 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
-          // get brightness
+          // get light
           sendApiCmd('/lethd', { "feature":"light", "cmd":"status" }, function(response) {
+            noUpdate = true;
             $('#light_brightness').val(response.brightness).slider("refresh");
+            noUpdate = false;
             // get text/scroll params
             sendApiCmd('/lethd', { "feature":"text", "cmd":"status" }, function(response) {
+              noUpdate = true;
               $('#text_brightness').val(response.brightness).slider("refresh");
               $('#messageText').val(response.text);
               $('#backgroundColor').val(response.backgroundcolor);
@@ -152,6 +157,7 @@
               $('#text_scrollsteptime').val(response.scrollsteptime).slider("refresh");
               $('#text_scrollstepx').val(response.scrollstepx).slider("refresh");
               $('#text_scrolloffsety').val(response.scrolloffsety).slider("refresh");
+              noUpdate = false;
             });
           });
         }).fail(function(response, status) {
@@ -172,28 +178,40 @@
 
         // brightness sliders
         $('#text_brightness').on("change", function(event, ui) {
-          var bri = floatVal($('#text_brightness').val());
-          sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
+          if (!noUpdate) {
+            var bri = floatVal($('#text_brightness').val());
+            sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
+          }
         });
         $('#light_brightness').on("change", function(event, ui) {
-          var bri = floatVal($('#light_brightness').val());
-          sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
+          if (!noUpdate) {
+            var bri = floatVal($('#light_brightness').val());
+            sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
+          }
         });
 
         // scroll sliders
         $('#text_scrollsteptime').on("change", function(event, ui) {
-          newScroll();
+          if (!noUpdate) {
+            newScroll();
+          }
         });
         $('#text_scrollstepx').on("change", function(event, ui) {
-          newScroll();
+          if (!noUpdate) {
+            newScroll();
+          }
         });
         $('#text_scrolloffsety').on("change", function(event, ui) {
-          var scrolloffsety = floatVal($('#text_scrolloffsety').val());
-          sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
+          if (!noUpdate) {
+            var scrolloffsety = floatVal($('#text_scrolloffsety').val());
+            sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
+          }
         });
         $('#text_scrolloffsetx').on("change", function(event, ui) {
-          var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
-          sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
+          if (!noUpdate) {
+            var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
+            sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
+          }
         });
       });
 
