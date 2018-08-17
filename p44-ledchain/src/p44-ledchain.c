@@ -124,9 +124,11 @@ int seq_trace_idx;
 #define SEQ_TRACE_CLEAR() { seq_traceinfo[0]=0; seq_trace_idx=0; }
 #define SEQ_TRACE(c) { if(seq_trace_idx<SEQ_TRACE_MAX-1) seq_traceinfo[seq_trace_idx++] = c; seq_traceinfo[seq_trace_idx] = 0; }
 #define SEQ_TRACE_SHOW() { printk(KERN_INFO LOGPREFIX "sequence trace = %s\n", seq_traceinfo); }
+#define SEQ_HEXBYTE(b) { char c; SEQ_TRACE('$'); c = ((b>>4)&0xF)+'0'; if (c>'9') c+=7; SEQ_TRACE(c); c = (b&0xF)+'0'; if (c>'9') c+=7; SEQ_TRACE(c); }
 #else
 #define SEQ_TRACE_CLEAR()
 #define SEQ_TRACE(c)
+#define SEQ_HEXBYTE(b)
 #define SEQ_TRACE_SHOW()
 #endif
 
@@ -363,6 +365,7 @@ void startSendingPatterns(devPtr_t dev)
   iowrite32(ioread32(PWM_ENABLE) & ~(1<<dev->pwm_channel), PWM_ENABLE); // disable PWM
   // - set up the PWM for new pattern
   if (dev->numPWMPatterns>0) {
+    u32 intEnable;
     SEQ_TRACE('>');
     dev->updates++;
     dev->notReady = 1;
@@ -370,7 +373,9 @@ void startSendingPatterns(devPtr_t dev)
     dev->last_timeout_ns = 0;
     dev->max_irq_delay = 0;
     // - enable PWM IRQ
-    iowrite32(0x03<<(dev->pwm_channel*2), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
+    intEnable = ioread32(PWM_INT_ENABLE); // currently enabled PWM IRQs
+    SEQ_HEXBYTE(intEnable);
+    iowrite32(intEnable | (0x03<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
     // - set up PWM for one output sequence
     iowrite32(0x7E08 | (dev->inverted ? 0x0180 : 0x0000), PWM_CHAN(dev->pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
     iowrite32(dev->ledTypeDesc->T0Active_nS/25, PWM_CHAN(dev->pwm_channel, dev->inverted ? PWMLDUR : PWMHDUR)); // bit active time
@@ -389,7 +394,9 @@ static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
   unsigned long irqflags;
 
   spin_lock_irqsave(&dev->updatelock, irqflags);
+  SEQ_TRACE(' ');
   SEQ_TRACE('T');
+  SEQ_TRACE('0'+dev->pwm_channel);
   if (dev->notReady) {
     SEQ_TRACE('!');
     // still in progress
@@ -404,6 +411,7 @@ static enum hrtimer_restart p44ledchain_timer_func(struct hrtimer *timer)
       startSendingPatterns(dev);
     }
   }
+  SEQ_TRACE(' ');
   spin_unlock_irqrestore(&dev->updatelock, irqflags);
   // done
   return HRTIMER_NORESTART;
@@ -423,8 +431,10 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   devPtr_t dev;
 
   local_irq_save(irqflags);
+  SEQ_TRACE(' ');
   SEQ_TRACE('I');
   irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
+  SEQ_HEXBYTE(irqStatus);
   now = ktime_to_ns(ktime_get());
   irqMask = 0x03;
   for (i=0; i<NUM_DEVICES; i++) {
@@ -483,6 +493,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
     // next PWM
     irqMask <<= 2;
   }
+  SEQ_TRACE(' ');
   local_irq_restore(irqflags);
   // return handled status
   return ret;
@@ -501,6 +512,7 @@ static int stopSendingPatterns(devPtr_t dev)
   spin_lock_irqsave(&dev->updatelock, irqflags);
   SEQ_TRACE('X');
   nrdy = dev->notReady;
+  SEQ_TRACE('0'+nrdy);
   // prevent any more pattern sending
   dev->remainingPWMPatterns = 0;
   dev->numPWMPatterns = 0;
@@ -697,7 +709,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   // limit to max
   if (leds>dev->num_leds) leds=dev->num_leds;
   #if STAT_INFO
-  printk(KERN_INFO LOGPREFIX "Received %d bytes -> data for %d LEDs with %d bytes each\n", len, leds, ncomp);
+  printk(KERN_INFO LOGPREFIX "#%d: Received %d bytes -> data for %d LEDs with %d bytes each\n", dev->pwm_channel, len, leds, ncomp);
   #endif
   inPtr = (u8 *)buff;
   #if DATA_DUMP
@@ -717,7 +729,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
     // was not ready yet
     dev->overruns++;
     #if STAT_INFO
-    printk(KERN_INFO LOGPREFIX "was still busy sending data -> aborted and start again with new data");
+    printk(KERN_INFO LOGPREFIX "#%d: was still busy sending data -> aborted and start again with new data", dev->pwm_channel);
     #endif
   }
   // generate data into buffer
@@ -751,11 +763,11 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   // information
   SEQ_TRACE_SHOW()
   #if STAT_INFO
-  printk(KERN_INFO LOGPREFIX "Previous update had %d repeats, last timeout=%d nS, max irq=%d nS.\n", dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay);
-  printk(KERN_INFO LOGPREFIX "Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u\n", dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count);
+  printk(KERN_INFO LOGPREFIX "#%d: Previous update had %d repeats, last timeout=%d nS, max irq=%d nS.\n", dev->pwm_channel, dev->sendRepeats, dev->last_timeout_ns, dev->max_irq_delay);
+  printk(KERN_INFO LOGPREFIX "#%d: Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u\n", dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count);
   #else
   if (dev->sendRepeats>dev->maxSendRepeats) {
-    printk(KERN_INFO LOGPREFIX "Previous update failed (%d repeats) - Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
+    printk(KERN_INFO LOGPREFIX "#%d: Previous update failed (%d repeats) - Totals: updates=%u, retries=%u, errors=%u, irqs=%u\n", dev->pwm_channel, dev->sendRepeats, dev->updates, dev->retries, dev->errors, dev->irq_count);
   }
   #endif
   // start sending now or schedule start when reset time is over
@@ -974,6 +986,7 @@ err:
 static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *devP)
 {
   devPtr_t dev;
+  u32 intEnable;
 
 	BUG_ON(class==NULL || devP==NULL);
   dev = *devP;
@@ -981,6 +994,9 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
 	// cancel sending
 	stopSendingPatterns(dev);
 	hrtimer_cancel(&dev->starttimer);
+	// disable PWM interrupts
+  intEnable = ioread32(PWM_INT_ENABLE); // currently enabled PWM IRQs
+  iowrite32(intEnable & ~(0x03<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // disable interrupts
 	// destroy device
 	device_destroy(class, MKDEV(p44ledchain_major, minor));
 	// delete cdev
