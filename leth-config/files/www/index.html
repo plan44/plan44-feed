@@ -16,12 +16,14 @@
     <title id="html_title_model">LETH</title>
 
     <style type="text/css"><!--
-      h1 { font-family:Helvetica; font-size:42pt; }
-      h2 { font-family:Helvetica; font-size:21pt; }
+      h1 { font-family:Helvetica; font-size:24pt; }
+      h2 { font-family:Helvetica; font-size:18pt; }
 
       .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
 
-      span.error    { background-color: #ff0000; }
+      .ui-content { padding: 5px; }
+
+      span.error { background-color: #ff0000; }
 
       span.errortext { color: #e80000; }
       span.warningtext { color: #ff9e00; }
@@ -31,13 +33,6 @@
 
       .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
       .p44-mini-input-end { clear: right; }
-
-      #settingsTable * td { padding-top:0; padding-bottom:0; vertical-align:middle; }
-
-      #settingsTable { min-width: 100%; margin-left: 0; margin-right: 0; }
-
-      #settingsTable .desccol { width: 50%; }
-      #settingsTable .valuecol { width: 300px; }
 
 
 
@@ -142,24 +137,8 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
-          // get light
-          sendApiCmd('/lethd', { "feature":"light", "cmd":"status" }, function(response) {
-            noUpdate = true;
-            $('#light_brightness').val(response.brightness).slider("refresh");
-            noUpdate = false;
-            // get text/scroll params
-            sendApiCmd('/lethd', { "feature":"text", "cmd":"status" }, function(response) {
-              noUpdate = true;
-              $('#text_brightness').val(response.brightness).slider("refresh");
-              $('#messageText').val(response.text);
-              $('#backgroundColor').val(response.backgroundcolor);
-              $('#messageColor').val(response.color);
-              $('#text_scrollsteptime').val(response.scrollsteptime).slider("refresh");
-              $('#text_scrollstepx').val(response.scrollstepx).slider("refresh");
-              $('#text_scrolloffsety').val(response.scrolloffsety).slider("refresh");
-              noUpdate = false;
-            });
-          });
+          refresh_controls();
+          refresh_log();
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
@@ -172,8 +151,8 @@
         });
 
         // load current settings list when page is opened
-        $("#settings").on('pageshow', function(event) {
-          refresh_settings();
+        $("#control").on('pageshow', function(event) {
+          refresh_controls();
         });
 
         // brightness sliders
@@ -280,6 +259,78 @@
       }
 
 
+      function fireNeuron()
+      {
+        sendApiCmd('/lethd', { "feature":"neuron", "cmd":"fire" });
+      }
+
+
+      function initLight()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "light":true });
+        refresh_controls();
+      }
+
+
+      function initNeuron()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
+        refresh_controls();
+      }
+
+
+      function initText()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "text":[ { "cols": 72, "offset": 0, "orientation": 0 } ] });
+        refresh_controls();
+      }
+
+
+
+
+
+      function refresh_controls()
+      {
+        // get status
+        sendApiCmd('/lethd', { "cmd":"status" }, function(response) {
+          noUpdate = true;
+          // global
+          $('#macaddress').html(response.macaddress);
+          $('#ipv4').html(response.ipv4);
+          $('#appVersion').html(response.version);
+          // features
+          var features = response.features;
+          if (features.light===false) {
+            $("#light").hide();
+          }
+          else {
+            $("#light").show();
+            $('#light_brightness').val(features.light.brightness).slider("refresh");
+          }
+          if (features.text===false) {
+            $("#text").hide();
+          }
+          else {
+            $("#text").show();
+            $('#text_brightness').val(features.text.brightness).slider("refresh");
+            $('#messageText').val(features.text.text);
+            $('#backgroundColor').val(features.text.backgroundcolor);
+            $('#messageColor').val(features.text.color);
+            $('#text_scrollsteptime').val(features.text.scrollsteptime).slider("refresh");
+            $('#text_scrollstepx').val(features.text.scrollstepx).slider("refresh");
+            $('#text_scrolloffsety').val(features.text.scrolloffsety).slider("refresh");
+          }
+          if (features.neuron==false) {
+            $("#neuron").hide();
+          }
+          else {
+            $("#neuron").show();
+          }
+          noUpdate = false;
+        });
+      }
+
+
       // Settings Page
       // =============
 
@@ -316,7 +367,6 @@
         <div data-role="navbar">
           <ul>
             <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#settings">Settings</a></li>
             <li><a href="#logs">Logs</a></li>
             <li><a href="#title">About</a></li>
           </ul>
@@ -324,72 +374,41 @@
       </div>
       <div data-role="content">
         <div data-role="content">
-          <h2>Brightness</h2>
-          <label for="text_brightness">Text:</label>
-          <input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
-          <label for="music_volume">Light:</label>
-          <input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="1" step="0.01" />
+          <h1 id="macaddress">MAC</h1>
+          <p><b>IPv4: </b><span id="ipv4"></span></p>
+          <p><b>Version: </b><span id="appVersion"></span></p>
 
-          <h2>Message</h2>
-          <input type="text" autocomplete="off" id="messageText" name="messageText"/>
-          <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
-          <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
-          <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
-          <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
-          <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+          <div id="light">
+            <h2>Light</h2>
+            <label for="music_volume">Brightness:</label><input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="1" step="0.01" />
+          </div>
 
-          <h2>Scroll</h2>
-          <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop</button>
-          <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label>
-          <input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
-          <label for="text_scrollstepx">Pixels per Step:</label>
-          <input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="5" step="0.05" />
-          <label for="text_scrolloffsety">Vertical scroll position:</label>
-          <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.1" />
-          <label for="text_scrolloffsetx">Horizontal scroll position:</label>
-          <input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-10" max="10" step="0.1" />
+          <div id="text">
+            <h2>Text</h2>
+            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <input type="text" autocomplete="off" id="messageText" name="messageText"/>
+            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+            <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
+            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+            <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
+            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+            <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
+            <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
+            <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />
+            <label for="text_scrolloffsety">Vertical scroll position:</label> <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.1" />
+            <label for="text_scrolloffsetx">Horizontal scroll position:</label><input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-10" max="10" step="0.1" />
+          </div>
 
-        </div>
-      </div>
+          <div id="neuron">
+            <h2>Neuron</h2>
+            <button id="fireButton" onclick="fireNeuron();" data-theme="a">Fire</button>
+          </div>
 
-      <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
-        <h3>Restarting controller - please wait...</h3>
-        <p>Page will reload automatically</p>
-        <div id="restartWaitProgress" class="p44_progressbar">
-          <div class="p44_progressbar_text">-</div>
-          <div class="p44_progressbar_gauge"></div>
-        </div>
-      </div>
+          <h2>(Re)Init Features</h2>
+          <button id="initLightButton" onclick="initLight();" data-theme="a">Init Light</button>
+          <button id="initTextButton" onclick="initText();" data-theme="a">Init Text</button>
+          <button id="initNeuronButton" onclick="initNeuron();" data-theme="a">Init Neuron</button>
 
-
-      <div data-role="popup" id="restartConfirm" data-overlay-theme="a" data-theme="c" data-dismissible="false" style="max-width:420px;" class="ui-corner-all">
-        <div data-role="header" data-theme="a" class="ui-corner-top">
-          <h1>Restart</h1>
-        </div>
-        <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
-          <h3 class="ui-title">Do you want to restart the controller?</h3>
-          <p>Note: it will take a little while until the pixels are all ready again</p>
-          <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
-          <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
-        </div>
-      </div>
-
-    </div>
-
-    <div id="settings" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#settings" class="ui-btn-active">Settings</a></li>
-            <li><a href="#logs">Logs</a></li>
-            <li><a href="#title">About</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Settings</h2>
-        <div id="settingsList">
         </div>
       </div>
     </div>
@@ -399,7 +418,6 @@
         <div data-role="navbar">
           <ul>
             <li><a href="#control">Control</a></li>
-            <li><a href="#settings">Settings</a></li>
             <li><a href="#logs" class="ui-btn-active">Logs</a></li>
             <li><a href="#title">About</a></li>
           </ul>
@@ -429,7 +447,6 @@
         <div data-role="navbar">
           <ul>
             <li><a href="#control">Control</a></li>
-            <li><a href="#settings">Settings</a></li>
             <li><a href="#logs">Logs</a></li>
             <li><a href="#title" class="ui-btn-active">About</a></li>
           </ul>

@@ -74,9 +74,10 @@
           '<option disabled>templates</option>' +
           '<option value="1000">{ "cmd":"now" }</option>' +
           '<option value="1000">{ "cmd":"init", "light":1 }</option>' +
-          '<option value="1000">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250 } }</option>' +
+          '<option value="1000">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
           '<option value="1000">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
-          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 24, "offset": 0, "orientation": 0 }, { "cols": 47, "offset": 24, "orientation": 0 } ] }</option>' +
+          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 47, "offset": 0, "orientation": 0 }, { "cols": 24, "offset": 47, "orientation": 0 } ] }</option>' +
+          '<option value="1000">{ "cmd":"init", "text": [ { "cols": 72, "offset": 71, "orientation": 0 } ] }</option>' +
           '<option value="1000">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
           '<option value="1000">{ "feature":"text", "backgroundcolor":"000" }</option>' +
           '<option value="1000">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
