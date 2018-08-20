@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=leth-config
 # version of what we are downloading
-PKG_VERSION:=1.0
+PKG_VERSION:=1.1
 # version of this makefile
-PKG_RELEASE:=14
+PKG_RELEASE:=15
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
