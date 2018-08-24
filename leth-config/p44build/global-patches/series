@@ -8,3 +8,4 @@
 210-mt7621-spi-intelligent-halfduplex.diff
 291-omega2S-dtsi-p44-button-and-leds.diff
 301-files-etc-shadow--no-root-login.diff
+211-mt7621-spi-buggy-dt-message-fix.diff
