@@ -29,7 +29,7 @@ endef
 
 
 define Package/$(PKG_NAME)/description
- contains the configuration setup for P44-BANDIT
+ contains the configuration setup for P44-WIPER
 endef
 
 

@@ -21,7 +21,7 @@ define Package/$(PKG_NAME)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=custom
-	TITLE:=P44-WIPER configuration setup
+	TITLE:=LETH configuration setup
 	URL:=https://plan44.ch/automation
 	MAINTAINER:=luz@plan44.ch
 	MENU:=1
@@ -29,7 +29,7 @@ endef
 
 
 define Package/$(PKG_NAME)/description
- contains the configuration setup for P44-BANDIT
+ contains the configuration setup for LETH
 endef
 
 
