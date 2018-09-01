@@ -1,7 +1,7 @@
 # configuration for plan44 variant of mongoose (mg44)
 
 ssl_certificate /etc/mongoose/mg.crt
-listening_ports 80,443s
+listening_ports +80,+443s
 # need 2 threads at least to be able to abort running requests
 num_threads 2
 document_root /www

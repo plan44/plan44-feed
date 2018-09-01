@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=mg44
 # version of what we are downloading
-PKG_VERSION:=3.3
+PKG_VERSION:=3.4
 # version of this makefile
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -36,9 +36,9 @@ define Package/$(PKG_NAME)
 endef
 
 define Package/$(PKG_NAME)/description
- mg44 is a simple webserver based on libmongoose (which in turn is based on mongoose)
- with a built-in JSON proxy for accessing TCP socket based JSON APIs and JSON-processing
- command line tools.
+  mg44 is a simple webserver based on civetweb (which in turn is a fork of an older mongoose version)
+  It has a built-in JSON proxy for accessing TCP socket based JSON APIs and JSON-processing
+  command line tools.
 endef
 
 define Package/$(PKG_NAME)/install
