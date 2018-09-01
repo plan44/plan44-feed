@@ -275,7 +275,6 @@
 ./scripts/feeds install -p plan44 libpng
 ./scripts/feeds install -p plan44 lora_gateway
 ./scripts/feeds install -p plan44 messagetorch
-./scripts/feeds install -p plan44 mg44
 ./scripts/feeds install -p plan44 p44-extdev-elsner
 ./scripts/feeds install -p plan44 kmod-p44-ledchain
 ./scripts/feeds install -p plan44 p44ayabd
