@@ -298,6 +298,7 @@
           $('#macaddress').html(response.macaddress);
           $('#ipv4').html(response.ipv4);
           $('#appVersion').html(response.version);
+          $('#gridcoordinate').html(response.gridcoordinate);
           // features
           var features = response.features;
           if (features.light===false) {
@@ -375,6 +376,7 @@
       <div data-role="content">
         <div data-role="content">
           <h1 id="macaddress">MAC</h1>
+          <p><b>Grid Coordinate: </b><span id="gridcoordinate"></span></p>
           <p><b>IPv4: </b><span id="ipv4"></span></p>
           <p><b>Version: </b><span id="appVersion"></span></p>
 

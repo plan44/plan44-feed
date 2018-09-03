@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# - must have single host name or IP
+if [[ $# -ne 1 ]]; then
+  echo "Must specify IPv6 (no scope id!)"
+  exit 1
+fi
+IPV6=$1
+
+
+# - set up hosts entry
+HOSTSFILE="/etc/hosts"
+SCOPEID="eth0"
+if ! grep -q leths-host "${HOSTSFILE}"; then
+  # no entry yet
+  echo -e "\n${IPV6}%${SCOPEID}\tleths-host" >>"${HOSTSFILE}"
+else
+  # entry exists, update
+  sed -i -r -e "/leths-host/s/^[^\t]*/${IPV6}%${SCOPEID}/" "${HOSTSFILE}"
+fi
+
+
+# - set up ntp to use leths-host as ONLY time server
+if ! grep -q leths-host /etc/config/system; then
+  uci set system.ntp.server=
+  uci add_list system.ntp.server='leths-host'
+  uci commit
+fi
+
+# anyway, reload
+/etc/init.d/sysntpd reload
