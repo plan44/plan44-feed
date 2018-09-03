@@ -1,0 +1,9 @@
+{ "type":"animator", "wrapmode":3, "x":0, "y":0, "dx":1126, "dy":7, "fullframe":true, "start":true, "repeat":true, "steps":[
+  { "view": { "type":"image", "file":"images/rain_01.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_02.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_03.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_04.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_05.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_06.png" }, "showtime":100 },
+  { "view": { "type":"image", "file":"images/rain_07.png" }, "showtime":100 }
+] }

@@ -1,0 +1,7 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "dx":70, "dy":7, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "orientation":0, "textcolor":"FFF", "x":16, "y":0, "dx":60  , "dy":7, "text":"Step Up"} },
+  { "view":{ "type":"scroller", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true,
+    "scrolledview": { "type":"image", "file":"images/up.png", "wrapmode":12 },
+    "offsety":0, "stepy":-0.5, "interval":40
+  } }
+] }

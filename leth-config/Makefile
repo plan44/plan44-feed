@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=leth-config
 # version of what we are downloading
-PKG_VERSION:=1.5
+PKG_VERSION:=1.6
 # version of this makefile
-PKG_RELEASE:=22
+PKG_RELEASE:=23
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -63,6 +63,7 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/flash
 	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_DIR) $(1)/usr/share/pixelboard
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/config_p44defaults
@@ -72,6 +73,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
+	$(CP) $(PKG_BUILD_DIR)/resources/* $(1)/usr/share/leth
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-leth $(1)/lib/upgrade/keep.d/leth
 endef

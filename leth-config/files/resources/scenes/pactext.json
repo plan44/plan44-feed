@@ -1,0 +1,13 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "dx":40, "dy":7, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "orientation":0, "textcolor":"FFF", "x":13, "y":0, "dx":30, "dy":7, "text":"ETH"} },
+  { "view": { "type":"animator", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true, "start":true, "repeat":true, "steps":[
+    { "view": { "type":"image", "file":"images/pac_01.png", "orientation":2 }, "showtime":300 },
+    { "view": { "type":"image", "file":"images/pac_02.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_03.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_04.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_05.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_04.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_03.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_02.png", "orientation":2 }, "showtime":100 }
+  ] } }
+] }

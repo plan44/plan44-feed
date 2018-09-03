@@ -76,6 +76,7 @@ exec ${EXECUTABLE} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
   --datapath /flash \
+  --resourcepath /usr/share/leth \
   --jsonapiport 8090 \
   --jsonapinonlocal \
   --lethdapiport 11200 \
