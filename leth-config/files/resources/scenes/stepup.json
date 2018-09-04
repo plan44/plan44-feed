@@ -1,7 +1,7 @@
-{ "type":"stack", "wrapmode":3, "x":0, "y":0, "dx":70, "dy":7, "fullframe":true, "layers": [
-  { "view":{ "type":"text", "orientation":0, "textcolor":"FFF", "x":16, "y":0, "dx":60  , "dy":7, "text":"Step Up"} },
-  { "view":{ "type":"scroller", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true,
-    "scrolledview": { "type":"image", "file":"images/up.png", "wrapmode":12 },
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "label":"STEPTEXT", "orientation":0, "color":"FFF", "x":0, "y":0, "sizetocontent":true, "text":"STEP UP!"} },
+  { "view":{ "type":"scroller", "label":"SCROLLER", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true,
+    "scrolledview": { "type":"image", "label":"SPRITE", "file":"images/up.png", "wrapmode":12, "mask":true, "color":"#FF0" },
     "offsety":0, "stepy":-0.5, "interval":40
-  } }
+  }, "positioning":2, "spacing":4 }
 ] }
