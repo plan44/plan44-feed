@@ -1,0 +1,21 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+  { "view": { "type":"stack", "dx":10, "dy":7, "fullframe":true, "layers": [
+    { "view": { "type":"image", "file":"images/ghost_eyes.png", "orientation":2 }},
+    { "view": { "type":"animator", "label":"GHOST", "dx":12, "dy":7, "fullframe":true, "mask":true, "color":"#00F", "start":true, "repeat":true, "steps":[
+      { "view": { "type":"image", "file":"images/ghost_01.png", "orientation":0 }, "showtime":600 },
+      { "view": { "type":"image", "file":"images/ghost_02.png", "orientation":0 }, "showtime":600 }
+    ] } }
+  ] }, "positioning":2, "spacing":5 },
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FFF", "x":0, "y":0, "sizetocontent":true, "text":"huhu!"}, "positioning":2, "spacing":5 },
+  { "view": { "type":"animator", "label":"PACMAN", "dx":7, "dy":7, "fullframe":true, "start":true, "repeat":true, "mask":true, "color":"#FFD700", "steps":[
+    { "view": { "type":"image", "file":"images/pac_01.png", "orientation":2 }, "showtime":300 },
+    { "view": { "type":"image", "file":"images/pac_02.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_03.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_04.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_05.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_04.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_03.png", "orientation":2 }, "showtime":100 },
+    { "view": { "type":"image", "file":"images/pac_02.png", "orientation":2 }, "showtime":100 }
+  ] }, "positioning":2, "spacing":5 },
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FFF", "x":0, "y":0, "sizetocontent":true, "text":"ETH"}, "positioning":2, "spacing":5 }
+] }

@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=leth-config
 # version of what we are downloading
-PKG_VERSION:=1.6
+PKG_VERSION:=1.7
 # version of this makefile
-PKG_RELEASE:=23
+PKG_RELEASE:=24
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -63,7 +63,7 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/flash
 	$(INSTALL_DIR) $(1)/www
-	$(INSTALL_DIR) $(1)/usr/share/pixelboard
+	$(INSTALL_DIR) $(1)/usr/share/leth
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/config_p44defaults
