@@ -22,8 +22,8 @@ LEDCHAIN_NUMLEDS_3=100
 ADC_INPUT_CH0="spi10.MCP3002@0.0"
 ADC_INPUT_CH1="spi10.MCP3002@0.1"
 
-# - Button
-BUTTON_PIN="gpio.38"
+# - Button (not soldered, open input, must not use it!)
+BUTTON_PIN="missing"
 # - LEDs
 GREENLED_PIN="led.p44:green:status1"
 REDLED_PIN="led.p44:red:status2"
