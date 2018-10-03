@@ -1,0 +1,26 @@
+#!/bin/sh
+
+LOGFILE="/var/log/hermeld/current"
+
+# check options
+DUMP=0
+LOGLEVEL=0
+BACKLOG=10
+LOGCHANGE=0
+for OPT in $@ ; do
+  case "${OPT}" in
+    "-d"|"--dump") DUMP=1;;
+    "-n"|"--new") BACKLOG=0;;
+    *) if [ $(($OPT)) -ne 0 ]; then LOGLEVEL=$((${OPT})); LOGCHANGE=1; else echo "unknown option $OPT"; return 1; fi;;
+  esac
+done
+
+if [ "${LOGCHANGE}" -eq "1" ]; then
+  echo "{ 'method': 'POST', 'uri': 'log', 'data': { 'level': ${LOGLEVEL} } }" | nc localhost 8090 >/dev/null
+fi
+
+if [ "${DUMP}" -ne "0" ]; then
+  cat "${LOGFILE}"
+else
+  tail -F -n "$(($BACKLOG+$LOGCHANGE))" "${LOGFILE}"
+fi

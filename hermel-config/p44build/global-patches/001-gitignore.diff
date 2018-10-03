@@ -1,0 +1,20 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -12,7 +12,7 @@
+ /logs
+ /feeds
+ /feeds.conf
+-/files
++#/files
+ /overlay
+ /package/feeds
+ /package/openwrt-packages
+@@ -27,3 +27,8 @@ TAGS*~
+ git-src
+ .project
+ .cproject
++# p44build additions
++/patches
++/.pc
++/.p44build
++p44b

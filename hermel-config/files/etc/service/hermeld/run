@@ -1,0 +1,86 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=hermeld
+LOGLEVEL=6
+EXTRAOPTS=
+
+# basic config Omega2 on ledcontroller v1
+
+# - PWM0 for LED dimming FET with 320uS = 3kHz period
+PWM_LED_FET_PIN="pwmchip0.0.320000"
+
+# - LED chain
+LEDCHAIN_NAME_1="ledchain1"
+LEDCHAIN_NUMLEDS_1=518
+
+# - Hermeldon ball bumpers
+PWM_LEFT_BUMPER=pwmchip0.2.320000
+PWM_RIGHT_BUMPER=pwmchip0.3.320000
+
+# - Analog input (/dev/spidev1.0 software SPI)
+ADC_INPUT_CH0="spi10.MCP3002@0.0"
+ADC_INPUT_CH1="spi10.MCP3002@0.1"
+
+# - Button (not soldered, open input, must not use it!)
+BUTTON_PIN="missing"
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+
+# Allow overriding options (such as LOGLEVEL or EXTRAOPTS)
+# - override from flash
+if [ -f /flash/hermeld_cfg ]; then
+  source /flash/hermeld_cfg
+fi
+# - override from tmp
+if [ -f /tmp/hermeld_cfg ]; then
+  source /tmp/hermeld_cfg
+fi
+
+
+# LED chain
+LEDCHAIN_DEVICE_1="/dev/${LEDCHAIN_NAME_1}"
+# - we need PWM1 on GPIO45/46
+omega2-ctrl gpiomux set uart1 pwm01
+# load driver
+insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2
+
+
+# PWM for LED dimmer: pwm0 on GPIO45
+# - no config needed except pwm01 exposed, done for LED chain above already
+#   (p44utils will export the pwm pin)
+
+# PWM for Bumpers: pwm2,3
+# - we need pwm2 and 3 exposed on uart2 pins
+omega2-ctrl gpiomux set uart2 pwm23
+
+
+# SPI for MCP3002
+# - we need the i2s pins for software SPI
+omega2-ctrl gpiomux set i2s gpio
+# - use software SPI (HW SPI does not work reliably on MT7688) for MCP3002
+#   bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
+#   Note: devid 0 (bus 0) is already in use by HW SPI, so we take 1
+insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --pwmdimmer ${PWM_LED_FET_PIN} \
+  --ledchain1 ${LEDCHAIN_DEVICE_1} \
+  --pwmleft ${PWM_LEFT_BUMPER} \
+  --pwmright ${PWM_RIGHT_BUMPER} \
+  --sensor0 ${ADC_INPUT_CH0} \
+  --sensor1 ${ADC_INPUT_CH1} \
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
+  --datapath /flash \
+  --resourcepath /usr/share/hermel \
+  --jsonapiport 8090 \
+  --jsonapinonlocal \
+  --lethdapiport 11200 \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null

@@ -1,0 +1,14 @@
+--- a/include/download.mk
++++ b/include/download.mk
+@@ -166,7 +166,10 @@ define DownloadMethod/git
+ 		[ \! -d $(SUBDIR) ] && \
+ 		git clone $(OPTS) $(URL) $(SUBDIR) && \
+ 		(cd $(SUBDIR) && git checkout $(VERSION) && \
+-		git submodule update --init --recursive) && \
++		git submodule update --init --recursive && \
++		echo "$(URL)" >.gitdownload_url && \
++		echo "$(VERSION)" >.gitdownload_version && \
++		git rev-parse HEAD >.gitdownload_rev) && \
+ 		echo "Packing checkout..." && \
+ 		export TAR_TIMESTAMP=`cd $(SUBDIR) && git log -1 --format='@%ct'` && \
+ 		rm -rf $(SUBDIR)/.git && \

@@ -1,0 +1,18 @@
+# configuration for plan44 variant of mongoose (mg44)
+
+ssl_certificate /etc/mongoose/mg.crt
+listening_ports +80,+443s
+# need 2 threads at least to be able to abort running requests
+num_threads 2
+document_root /www
+enable_directory_listing no
+authentication_domain ##PRODUCTNAME##
+global_auth_file /flash/webui_authfile
+ssi_pattern **.shtml$|**.txt$
+jsoncsrf_path /tok/json
+jsonapi_path /api/json/
+jsonapi_host localhost
+jsonapi_port 8090
+jsonupload_path /cfg/upload
+jsonapiupload_path /api/upload
+uploaddir /tmp
