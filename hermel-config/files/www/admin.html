@@ -35,8 +35,6 @@
       .p44-mini-input-end { clear: right; }
 
 
-      #cam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
-
 
       /* simplistic p44 progress bar */
 
@@ -139,17 +137,61 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
+          refresh_controls();
+          refresh_log();
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
 
-        // Camera image
-        var newPort="8080"
-        if (window.location.port=="22281") {
-          newPort="22288";
-        }
-        $('#cam').html('<img src="http://' + window.location.hostname + ':' + newPort + '?action=stream" />');
+        // Handlers
 
+        // load latest log tails when log pane is opened
+        $("#logs").on('pageshow', function(event) {
+          refresh_log();
+        });
+
+        // load current settings list when page is opened
+        $("#control").on('pageshow', function(event) {
+          refresh_controls();
+        });
+
+        // brightness sliders
+        $('#text_brightness').on("change", function(event, ui) {
+          if (!noUpdate) {
+            var bri = floatVal($('#text_brightness').val());
+            sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
+          }
+        });
+        $('#light_brightness').on("change", function(event, ui) {
+          if (!noUpdate) {
+            var bri = floatVal($('#light_brightness').val());
+            sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
+          }
+        });
+
+        // scroll sliders
+        $('#text_scrollsteptime').on("change", function(event, ui) {
+          if (!noUpdate) {
+            newScroll();
+          }
+        });
+        $('#text_scrollstepx').on("change", function(event, ui) {
+          if (!noUpdate) {
+            newScroll();
+          }
+        });
+        $('#text_scrolloffsety').on("change", function(event, ui) {
+          if (!noUpdate) {
+            var scrolloffsety = floatVal($('#text_scrolloffsety').val());
+            sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
+          }
+        });
+        $('#text_scrolloffsetx').on("change", function(event, ui) {
+          if (!noUpdate) {
+            var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
+            sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
+          }
+        });
       });
 
 
@@ -182,11 +224,155 @@
       // =============
 
 
+      function newScroll()
+      {
+        var scrollsteptime = floatVal($('#text_scrollsteptime').val());
+        var scrollstepx = floatVal($('#text_scrollstepx').val());
+        sendApiCmd('/lethd', { "feature":"text", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
+      }
+
+
+      function stopScroll()
+      {
+        sendApiCmd('/lethd', { "feature":"text", "cmd":"stopscroll" });
+      }
+
+
+      function sendMessage()
+      {
+        var msg = $('#messageText').val();
+        sendApiCmd('/lethd', { "feature":"text", "text":msg });
+      }
+
+
+      function setTextColor()
+      {
+        var col = $('#messageColor').val();
+        sendApiCmd('/lethd', { "feature":"text", "color":col });
+      }
+
+
+      function setBackgroundColor()
+      {
+        var col = $('#backgroundColor').val();
+        sendApiCmd('/lethd', { "feature":"text", "backgroundcolor":col });
+      }
+
+
+      function fireNeuron()
+      {
+        sendApiCmd('/lethd', { "feature":"neuron", "cmd":"fire" });
+      }
+
+
+      function initLight()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "light":true });
+        refresh_controls();
+      }
+
+
+      function initNeuron()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
+        refresh_controls();
+      }
+
+
+      function initText()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "text":[ { "cols": 72, "offset": 0, "orientation": 0 } ] });
+        refresh_controls();
+      }
+
+
+      function initHermel()
+      {
+        sendApiCmd('/lethd', { "cmd":"init", "hermel":true });
+        refresh_controls();
+      }
+
+
       function shoot()
       {
         var angle = floatVal($('#shoot_angle').val());
         sendApiCmd('/lethd', { "feature":"hermel", "cmd":"shoot", "angle":angle });
       }
+
+
+
+      function refresh_controls()
+      {
+        // get status
+        sendApiCmd('/lethd', { "cmd":"status" }, function(response) {
+          noUpdate = true;
+          // global
+          $('#macaddress').html(response.macaddress);
+          $('#ipv4').html(response.ipv4);
+          $('#appVersion').html(response.version);
+          $('#gridcoordinate').html(response.gridcoordinate);
+          // features
+          var features = response.features;
+          if (features.hermel===false) {
+            $("#hermel").hide();
+          }
+          else {
+            $("#hermel").show();
+          }
+          if (features.light===false) {
+            $("#light").hide();
+          }
+          else {
+            $("#light").show();
+            $('#light_brightness').val(features.light.brightness).slider("refresh");
+          }
+          if (features.text===false) {
+            $("#text").hide();
+          }
+          else {
+            $("#text").show();
+            $('#text_brightness').val(features.text.brightness).slider("refresh");
+            $('#messageText').val(features.text.text);
+            $('#backgroundColor').val(features.text.backgroundcolor);
+            $('#messageColor').val(features.text.color);
+            $('#text_scrollsteptime').val(features.text.scrollsteptime).slider("refresh");
+            $('#text_scrollstepx').val(features.text.scrollstepx).slider("refresh");
+            $('#text_scrolloffsety').val(features.text.scrolloffsety).slider("refresh");
+          }
+          if (features.neuron==false) {
+            $("#neuron").hide();
+          }
+          else {
+            $("#neuron").show();
+          }
+          noUpdate = false;
+        });
+      }
+
+
+      // Settings Page
+      // =============
+
+
+      // Log page
+      // ========
+
+      function refresh_log()
+      {
+        $.get("tail_log.txt", function(data) {
+          $("#tail_log").html(data);
+        });
+      }
+
+
+      function set_loglevel(i)
+      {
+        sendApiCmd('/log', { "level":i }, function(response) {
+          // refresh log
+          refresh_log();
+        });
+      }
+
 
 
     --></script>
@@ -195,27 +381,91 @@
 
   <body>
 
-    <div id="hermel" data-role="page">
+    <div id="control" data-role="page">
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
-            <li><a href="#hermel" class="ui-btn-active">Hermeldon Grand Slam 2018</a></li>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+            <li><a href="#logs">Logs</a></li>
             <li><a href="#title">About</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
         <div data-role="content">
-
-          <div id="cam">
-            <img id="camimage" src="http://192.168.59.52:8080?action=stream" />
-          </div>
+          <h1 id="macaddress">MAC</h1>
+          <p><b>Grid Coordinate: </b><span id="gridcoordinate"></span></p>
+          <p><b>IPv4: </b><span id="ipv4"></span></p>
+          <p><b>Version: </b><span id="appVersion"></span></p>
 
           <div id="hermel">
+            <h2>Hermeldon remote player</h2>
             <label for="shoot_angle">Angle:</label><input type="range" data-highlight="true" name="shoot_angle" id="shoot_angle" min="-1" max="1" step="0.02" />
             <button id="shoot_button" onclick="shoot();" data-theme="a">Shoot</button>
           </div>
 
+
+          <div id="light">
+            <h2>Light</h2>
+            <label for="music_volume">Brightness:</label><input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="1" step="0.01" />
+          </div>
+
+          <div id="text">
+            <h2>Text</h2>
+            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <input type="text" autocomplete="off" id="messageText" name="messageText"/>
+            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+            <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
+            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+            <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
+            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+            <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
+            <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
+            <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />
+            <label for="text_scrolloffsety">Vertical scroll position:</label> <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.1" />
+            <label for="text_scrolloffsetx">Horizontal scroll position:</label><input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-10" max="10" step="0.1" />
+          </div>
+
+          <div id="neuron">
+            <h2>Neuron</h2>
+            <button id="fireButton" onclick="fireNeuron();" data-theme="a">Fire</button>
+          </div>
+
+          <h2>(Re)Init Features</h2>
+          <button id="initHermelButton" onclick="initHermel();" data-theme="a">Init Hermeldon remote player</button>
+          <button id="initLightButton" onclick="initLight();" data-theme="a">Init Light</button>
+          <button id="initTextButton" onclick="initText();" data-theme="a">Init Text</button>
+          <button id="initNeuronButton" onclick="initNeuron();" data-theme="a">Init Neuron</button>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="logs" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
+            <li><a href="#title">About</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div id="logcontent" data-role="content">
+          <h2>Logs</h2>
+          <div id="logs">
+            <h3>hermeld - complete <a target="_blank" href="current_log.txt">current</a> /
+            <a target="_blank" href="previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_log();">refresh</a>) -
+            set loglevel
+            <a title="debug" href="javascript:set_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
+            </h3>
+            <pre id="tail_log"></pre>
+          </div>
         </div>
       </div>
     </div>
@@ -224,7 +474,8 @@
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
-            <li><a href="#hermel">Hermeldon Grand Slam 2018</a></li>
+            <li><a href="#control">Control</a></li>
+            <li><a href="#logs">Logs</a></li>
             <li><a href="#title" class="ui-btn-active">About</a></li>
           </ul>
         </div>
@@ -233,7 +484,7 @@
         <div>
           <div class="centered" data-role="content">
             <h1 id="about_title_model">HERMEL</h1>
-            <h2 id="about_model_description">OpenWrt driven LED controller and Croquet ball launcher</h2>
+            <h2 id="about_model_description">OpenWrt driven LED controller</h2>
             <p>© <span id="about_copyright_years">2018</span> by <a href="https://plan44.ch/custom" target="_blank">plan44/luz</a> / <a href="https://github.com/ulai" target="_blank">ulai</a></p>
           </div>
 

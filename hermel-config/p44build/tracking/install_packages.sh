@@ -110,6 +110,8 @@
 ./scripts/feeds install -p packages libpam
 ./scripts/feeds install -p packages libpng
 ./scripts/feeds install -p packages libtasn1
+./scripts/feeds install -p packages libv4l
+#./scripts/feeds install -p packages v4l-utils
 ./scripts/feeds install -p packages libxml2
 ./scripts/feeds install -p packages libmariadbclient
 #./scripts/feeds install -p packages mariadb-client
@@ -156,6 +158,7 @@
 #./scripts/feeds install -p packages mariadb-server-plugin-simple-password-check
 #./scripts/feeds install -p packages mariadb-server-plugin-sql-errlog
 #./scripts/feeds install -p packages mariadb-server-plugin-wsrep-info
+./scripts/feeds install -p packages mjpg-streamer
 ./scripts/feeds install -p packages libnetsnmp
 #./scripts/feeds install -p packages snmp-mibs
 #./scripts/feeds install -p packages snmp-utils

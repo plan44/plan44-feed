@@ -71,6 +71,7 @@ exec ${EXECUTABLE} \
   --ledchain1 ${LEDCHAIN_DEVICE_1} \
   --pwmleft ${PWM_LEFT_BUMPER} \
   --pwmright ${PWM_RIGHT_BUMPER} \
+  --hermel \
   --sensor0 ${ADC_INPUT_CH0} \
   --sensor1 ${ADC_INPUT_CH1} \
   --button ${BUTTON_PIN} \
