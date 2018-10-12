@@ -142,15 +142,25 @@
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
-
-        // Camera image
-        var newPort="8080"
-        if (window.location.port=="22281") {
-          newPort="22288";
-        }
-        $('#cam').html('<img src="http://' + window.location.hostname + ':' + newPort + '?action=stream" />');
+        loadStream();
 
       });
+
+
+      function loadStream()
+      {
+        setTimeout(function() {
+          $('#cam').html('<h2>connecting...</h2>');
+          setTimeout(function() {
+            // Switch to camera image
+            var newPort="8080"
+            if (window.location.port=="22281") {
+              newPort="22288";
+            }
+            $('#cam').html('<img src="http://' + window.location.hostname + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
+          }, 1000);
+        }, 200);
+      }
 
 
       // Common utils
