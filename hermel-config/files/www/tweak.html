@@ -174,7 +174,7 @@
         <div style="margin-bottom: 20px;">
           <label for="apiPath">Enter API Path:</label>
           <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
-          <select onclick="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+          <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
             <option value="1">api/json/lethd</option>
             <option value="3">api/json/log</option>
             <option value="99">tok/json</option>
