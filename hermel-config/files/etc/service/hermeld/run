@@ -69,11 +69,7 @@ insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
 exec ${EXECUTABLE} \
   --pwmdimmer ${PWM_LED_FET_PIN} \
   --ledchain1 ${LEDCHAIN_DEVICE_1} \
-  --pwmleft ${PWM_LEFT_BUMPER} \
-  --pwmright ${PWM_RIGHT_BUMPER} \
-  --hermel \
-  --sensor0 ${ADC_INPUT_CH0} \
-  --sensor1 ${ADC_INPUT_CH1} \
+  --mixloop \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
