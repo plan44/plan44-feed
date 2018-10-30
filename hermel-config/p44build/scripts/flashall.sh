@@ -8,6 +8,7 @@ BUILDROOT="$(pwd -P)"
 
 if [[ $# -ne 3 ]]; then
   echo "Usage: $0 <ethernet-if> <probe_cmd> <probe_result>"
+  echo " Note: on Mac, use 'networksetup -listallhardwareports' to find ethernet interface name"
   exit 1
 fi
 ETH_IF=$1
