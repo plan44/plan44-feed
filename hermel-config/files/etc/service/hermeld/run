@@ -2,7 +2,7 @@
 
 # default features
 EXECUTABLE=hermeld
-LOGLEVEL=6
+LOGLEVEL=5
 EXTRAOPTS=
 
 # basic config Omega2 on ledcontroller v1
@@ -11,8 +11,13 @@ EXTRAOPTS=
 PWM_LED_FET_PIN="pwmchip0.0.320000"
 
 # - LED chain
+# - LED chain
 LEDCHAIN_NAME_1="ledchain1"
+LEDCHAIN_NAME_2="ledchain2"
+LEDCHAIN_NAME_3="ledchain3"
 LEDCHAIN_NUMLEDS_1=518
+LEDCHAIN_NUMLEDS_2=200
+LEDCHAIN_NUMLEDS_3=200
 
 # - Hermeldon ball bumpers
 PWM_LEFT_BUMPER=pwmchip0.2.320000
@@ -40,12 +45,16 @@ if [ -f /tmp/hermeld_cfg ]; then
 fi
 
 
-# LED chain
+# LED chains
 LEDCHAIN_DEVICE_1="/dev/${LEDCHAIN_NAME_1}"
+LEDCHAIN_DEVICE_2="/dev/${LEDCHAIN_NAME_2}"
+LEDCHAIN_DEVICE_3="/dev/${LEDCHAIN_NAME_3}"
 # - we need PWM1 on GPIO45/46
 omega2-ctrl gpiomux set uart1 pwm01
+# - we need pwm2 and 3 as well
+omega2-ctrl gpiomux set uart2 pwm23
 # load driver
-insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2
+insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2 ${LEDCHAIN_NAME_2}=0,${LEDCHAIN_NUMLEDS_2},2 ${LEDCHAIN_NAME_3}=0,${LEDCHAIN_NUMLEDS_3},2
 
 
 # PWM for LED dimmer: pwm0 on GPIO45
@@ -69,6 +78,8 @@ insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
 exec ${EXECUTABLE} \
   --pwmdimmer ${PWM_LED_FET_PIN} \
   --ledchain1 ${LEDCHAIN_DEVICE_1} \
+  --ledchain2 ${LEDCHAIN_DEVICE_2} \
+  --ledchain3 ${LEDCHAIN_DEVICE_3} \
   --mixloop \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \

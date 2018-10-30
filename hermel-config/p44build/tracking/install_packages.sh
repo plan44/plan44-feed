@@ -271,7 +271,7 @@
 #./scripts/feeds install -p packages zoneinfo-europe
 #./scripts/feeds install -p packages zoneinfo-india
 ./scripts/feeds update plan44
-./scripts/feeds install -p plan44 leth-config
+./scripts/feeds install -p plan44 hermel-config
 ./scripts/feeds install -p plan44 hermeld
 ./scripts/feeds install -p plan44 i2c-tools
 ./scripts/feeds install -p plan44 leth-config
