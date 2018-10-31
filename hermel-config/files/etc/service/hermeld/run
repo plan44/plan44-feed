@@ -80,7 +80,7 @@ exec ${EXECUTABLE} \
   --ledchain1 ${LEDCHAIN_DEVICE_1} \
   --ledchain2 ${LEDCHAIN_DEVICE_2} \
   --ledchain3 ${LEDCHAIN_DEVICE_3} \
-  --mixloop \
+  --initjson initcmds.json \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \

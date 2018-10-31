@@ -1,5 +1,5 @@
 { "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
-  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FFF", "x":0, "y":0, "sizetocontent":true, "text":"STEP UP!"} },
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FA0", "x":0, "y":0, "sizetocontent":true, "text":"MixLoop!"} },
   { "view":{ "type":"scroller", "label":"SCROLLER", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true,
     "scrolledview": { "type":"image", "label":"SPRITE", "file":"images/up.png", "wrapmode":12, "mask":true, "color":"#F00" },
     "offsety":0, "stepy":-0.5, "interval":50

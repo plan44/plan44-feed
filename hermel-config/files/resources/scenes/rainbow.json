@@ -1,10 +1,10 @@
 { "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
-  { "positioning":2, "view":{ "type":"text", "color":"#FFFFFF", "sizetocontent":true, "text":"Follow the "} },
-  { "positioning":2, "view":{ "type":"text", "color":"#FF0000", "sizetocontent":true, "text":"R"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#FF7F00", "sizetocontent":true, "text":"A"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#FFFF00", "sizetocontent":true, "text":"I"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#00FF00", "sizetocontent":true, "text":"N"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#00FF7F", "sizetocontent":true, "text":"B"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#0000FF", "sizetocontent":true, "text":"O"} },
-  { "positioning":2, "view":{ "type":"text", "color":"#8B00FF", "sizetocontent":true, "text":"W "} },
+  { "positioning":2, "view":{ "type":"text", "color":"#FFFFFF", "sizetocontent":true, "text":"Bunte Mischung: "} },
+  { "positioning":2, "view":{ "type":"text", "color":"#FF0000", "sizetocontent":true, "text":"M"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#FF7F00", "sizetocontent":true, "text":"i"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#FFFF00", "sizetocontent":true, "text":"x"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#00FF00", "sizetocontent":true, "text":"W"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#00FF7F", "sizetocontent":true, "text":"e"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#0000FF", "sizetocontent":true, "text":"r"} },
+  { "positioning":2, "view":{ "type":"text", "color":"#8B00FF", "sizetocontent":true, "text":"k "} },
 ] }

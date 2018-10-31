@@ -1,0 +1,52 @@
+[
+  {
+    "cmd": "init",
+    "text": [{
+      "cols": 72,
+      "offset": 0,
+      "orientation": 0
+    }]
+  },
+  {
+    "feature":"text",
+    "backgroundcolor": "00000000",
+    "color": "FFAA00",
+    "alpha": 255,
+    "text": "MixLoop +++ ",
+    "spacing": 2
+  },
+  {
+    "feature":"text",
+    "scene":"scenes/mixloop.json",
+    "brightness": 0.6
+  },
+  {
+    "feature": "text",
+    "cmd": "startscroll",
+    "stepx": 1,
+    "interval": 25,
+    "start": null
+  },
+  {
+    "cmd": "init",
+    "mixloop": 1
+  },
+  {
+    "accelThreshold": 1,
+    "interval": 33,
+    "accelChangeCutoff": 10,
+    "accelMaxChange": 50,
+    "accelIntegrationGain": 0.16,
+    "integralFadeOffset": 1.5,
+    "integralFadeScaling": 0.95,
+    "maxIntegral": 300,
+    "hitStartMinIntegral": 15,
+    "hitWindowStart": 1200,
+    "hitWindowDuration": 2500,
+    "hitMinAccelChange": 300,
+    "numLeds": 52,
+    "integralDispOffset": 0,
+    "integralDispScaling": 0.01,
+    "hitFlashTime": 666
+  }
+]

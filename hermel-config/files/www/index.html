@@ -245,6 +245,13 @@
       }
 
 
+      function callScene()
+      {
+        var sname = $('#sceneName').val();
+        sendApiCmd('/lethd', { "feature":"text", "scene":"scenes/"+sname+".json" });
+      }
+
+
       function setTextColor()
       {
         var col = $('#messageColor').val();
@@ -301,7 +308,7 @@
 
       function whoop()
       {
-        sendApiCmd('/lethd', { "feature":"mixloop", "cmd":"trigger" });
+        sendApiCmd('/lethd', { "feature":"mixloop", "cmd":"hit" });
       }
 
 
@@ -429,12 +436,14 @@
           <div id="text">
             <h2>Text</h2>
             <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <input type="text" autocomplete="off" id="sceneName" name="sceneName" value="" placeholder="scene name"/>
+            <button id="callSceneButton" onclick="callScene();" data-theme="a">Call Scene</button>
             <input type="text" autocomplete="off" id="messageText" name="messageText"/>
-            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Set Text</button>
             <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set Text Color</button>
             <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set BG Color</button>
             <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
             <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
             <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />
