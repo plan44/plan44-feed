@@ -34,9 +34,13 @@
       .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
       .p44-mini-input-end { clear: right; }
 
-
       #cam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
 
+      #camimage { width:640px; height:480px; }
+
+      .ui-page {
+          background:#F09D53;
+      }
 
       /* simplistic p44 progress bar */
 
@@ -157,7 +161,7 @@
             if (window.location.port=="22281") {
               newPort="22288";
             }
-            $('#cam').html('<img src="http://' + window.location.hostname + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
+            $('#cam').html('<img id="camimage" src="http://' + window.location.hostname + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
           }, 1000);
         }, 200);
       }

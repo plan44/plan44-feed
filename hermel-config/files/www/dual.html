@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+
+    <title id="html_title_model">HERMEL</title>
+
+    <style type="text/css"><!--
+      h1 { font-family:Helvetica; font-size:24pt; }
+      h2 { font-family:Helvetica; font-size:18pt; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      .ui-content { padding: 5px; }
+
+      span.error { background-color: #ff0000; }
+
+      span.errortext { color: #e80000; }
+      span.warningtext { color: #ff9e00; }
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+      .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
+      .p44-mini-input-end { clear: right; }
+
+      body { background-color: #F0A968; }
+
+      #remotecam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
+      #localcam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
+
+      #hermel { max-width: 500px; margin-left: auto; margin-right: auto;}
+      #logo { width:520px; margin-left: auto; margin-right: auto; }
+
+      .camimage { width:640px; height:480px; background-color: grey; }
+
+
+      .ui-page {
+          background:#F0A968;
+      }
+
+
+      /* simplistic p44 progress bar */
+
+      div.p44_progressbar {
+        position: relative;
+        margin: 0;
+        margin-top: 20px;
+        width: 100%;
+        height: 21px;
+        padding: 0px;
+        background-color:#d0d0d0;
+        border-radius: 15px;
+        border: 1px solid black;
+      }
+
+      div.p44_progressbar_text {
+        position: absolute;
+        width: 100%;
+        padding: 2px;
+        text-align: center;
+        font-family: sans-serif;
+        font-weight: bold;
+        text-shadow: none;
+      }
+
+      div.p44_progressbar_gauge {
+        background-color: #4e98ff;
+        padding: 0px;
+        margin-left: 0px;
+        margin-right: -2px; /* needed to avoid gauge enlarging bar */
+        margin-top: 0px;
+        margin-bottom: 1px;
+        width: 22px;
+        border-radius: 15px;
+        height: 21px;
+      }
+
+    --></style>
+
+
+    <script type="text/javascript"><!--
+
+      var restartLocation = window.location.href;
+
+      var tickDiff = false;
+
+      var noUpdate = false;
+
+      // request validation token
+      var rqvaltok = "";
+
+      /* simplistic p44 progress bar */
+
+      function setProgressBar(progBar, percentage)
+      {
+        if (percentage<0) percentage = 0;
+        else if (percentage>100) percentage = 100;
+        percentage = Math.round(percentage);
+        var w = progBar.width()/100*percentage;
+        if (w<progBar.height()) w = progBar.height();
+        progBar.find('.p44_progressbar_gauge').width(w);
+        progBar.find('.p44_progressbar_text').html(percentage.toString()+'%');
+      }
+
+
+      function startTimeProgress(progBar, waitTime)
+      {
+        setProgressBar(progBar, 0);
+        var progressStart = (new Date).getTime(); // MS since 1970
+        var i = setInterval(function() {
+          var nowtime = (new Date).getTime(); // MS since 1970
+          var percentage = (nowtime-progressStart)/waitTime*100;
+          setProgressBar(progBar, percentage);
+          if (percentage>=100) clearInterval(i); // stop
+        }, waitTime/100);
+      }
+
+
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+      function openDialog(dialog)
+      {
+        $(dialog).popup("open", { positionTo:"window" });
+      }
+
+
+      function closeDialog(dialog)
+      {
+        $(dialog).popup("close");
+      }
+
+
+      function findGetParameter(parameterName) {
+          var result = null,
+              tmp = [];
+          location.search
+              .substr(1)
+              .split("&")
+              .forEach(function (item) {
+                tmp = item.split("=");
+                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+              });
+          return result;
+      }
+
+
+
+      $(function()
+      {
+        // Initialize
+
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+        }).fail(function(response, status) {
+          console.log('TOK error ' + response.error.message);
+        });
+        loadStream();
+
+      });
+
+
+      function loadStream()
+      {
+        setTimeout(function() {
+          var loc = findGetParameter("loc");
+          if (loc=="CH") {
+            $('#localtitle').html('Ижевск, Россия - Izhevsk, Russia');
+            $('#remotetitle').html('Zürich, Switzerland - Цюрих, Швейцария');
+          }
+          else {
+            $('#remotetitle').html('Ижевск, Россия - Izhevsk, Russia');
+            $('#localtitle').html('Zürich, Switzerland - Цюрих, Швейцария');
+          }
+          $('#localcam').html('<h2 class="camimage">connecting...</h2>');
+          $('#remotecam').html('<h2 class="camimage">connecting...</h2>');
+          setTimeout(function() {
+            // Switch to camera image
+            // - local cam
+            var newPort="8080"
+            if (window.location.port=="22281") {
+              newPort="22288";
+            }
+            $('#localcam').html('<img class="camimage" src="http://' + window.location.hostname + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
+            // - also show a second cam
+            var cam2host = findGetParameter("cam2");
+            if (cam2host.length>0) {
+              var newPort="8080"
+              if (cam2host.indexOf("devices.plan44.ch")>=0) {
+                newPort="22288";
+              }
+              $('#remotecam').html('<img class="camimage" src="http://' + cam2host + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
+            }
+            else {
+              $('#remotecam').html('<div class="camimage">not available</div>');
+            }
+          }, 1000);
+        }, 200);
+      }
+
+
+      // Common utils
+
+      function floatVal(a)
+      {
+        var f = parseFloat(a);
+        if (Number.isNaN(f)) f = 0;
+        return f;
+      }
+
+
+      function sendApiCmd(context, command, doneCB)
+      {
+        $.ajax({
+          url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
+          type: 'post',
+          dataType: 'json',
+          data: JSON.stringify(command)
+        })
+        .done(function(response) {
+          if (doneCB) doneCB(response);
+        });
+      }
+
+
+
+      // Control Page
+      // =============
+
+
+      function shoot()
+      {
+        var angle = floatVal($('#shoot_angle').val());
+        sendApiCmd('/lethd', { "feature":"hermel", "cmd":"shoot", "angle":angle });
+      }
+
+
+    --></script>
+
+  </head>
+
+  <body bgcolor="#F09D53">
+    <div class="ui-grid-a">
+      <div class="ui-block-a">
+        <h1 id="localtitle" class="centered">There</h1>
+        <div id="localcam">
+          <div class="camimage"></div>
+        </div>
+        <div id="hermel">
+          <input type="range" data-highlight="true" name="shoot_angle" id="shoot_angle" min="-1" max="1" step="0.02" />
+          <button id="shoot_button" onclick="shoot();" data-theme="a">Shoot</button>
+        </div>
+      </div>
+      <div class="ui-block-b">
+        <h1 id="remotetitle" class="centered">Here</h1>
+        <div id="remotecam">
+          <div class="camimage"></div>
+        </div>
+        <div id="logo">
+          <img src="media/hs2018banner.png"/>
+        </div>
+      </div>
+    </div>
+  </body>
+
+</html>
