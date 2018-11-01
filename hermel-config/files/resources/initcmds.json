@@ -18,7 +18,12 @@
   {
     "feature":"text",
     "scene":"scenes/mixloop.json",
-    "brightness": 0.6
+  },
+  {
+    "feature":"text",
+    "cmd":"fade",
+    "to":0.5,
+    "t":500
   },
   {
     "feature": "text",
