@@ -1,0 +1,5 @@
+[
+  {"feature":"text", "scene":"scenes/mixloop.json"},
+  {"feature":"text", "cmd":"fade", "to":0.5, "t":444},
+  {"feature":"text", "cmd":"startscroll", "stepx":1, "interval":25}
+]

@@ -1,0 +1,7 @@
+[
+  {"feature":"text", "cmd":"stopscroll" },
+  {"feature":"text", "offsetx":0, "scene":"scenes/hit.json"},
+  {"feature":"text", "cmd":"fade", "to":1, "t":0},
+  {"delayby":2000,"feature":"text", "cmd":"fade", "to":0, "t":3000},
+  {"delayby":3000, "callscript":"scripts/normal.json"}
+]
