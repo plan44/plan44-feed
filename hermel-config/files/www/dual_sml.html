@@ -20,6 +20,7 @@
       h2 { font-family:Helvetica; font-size:18pt; }
 
       .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+      .centered_s { margin-left:auto; margin-right:auto; max-width: 320px; text-align: center; }
 
       .ui-content { padding: 5px; }
 
@@ -34,16 +35,18 @@
       .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
       .p44-mini-input-end { clear: right; }
 
-      #remotecam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
       #localcam { max-width: 640px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
+      #remotecam { max-width: 320px; text-align: center; margin-right: auto; margin-left: auto; margin-top: 20px; margin-bottom: 20px; }
 
       #hermel { max-width: 500px; margin-left: auto; margin-right: auto;}
-      #logo { width:640px; margin-left: auto; margin-right: auto; }
-
-      #spacer { height:18px; }
+      #logo { width:320px; margin-left: auto; margin-right: auto; }
+      #banner { max-width: 320px; }
 
       .camimage { width:640px; height:480px; background-color: grey; }
+      .camimage_s { width:320px; height:240px; background-color: grey; }
 
+      .ui-grid-a .ui-block-a { margin-left:10px; width:auto; }
+      .ui-grid-a>:nth-child(n) { margin-right:14px; width:auto; }
 
       .ui-page {
           background:#FAA964;
@@ -187,7 +190,7 @@
             $('#localtitle').html('Zürich, Switzerland - Цюрих, Швейцария');
           }
           $('#localcam').html('<h2 class="camimage">connecting...</h2>');
-          $('#remotecam').html('<h2 class="camimage">connecting...</h2>');
+          $('#remotecam').html('<h2 class="camimage_s">connecting...</h2>');
           setTimeout(function() {
             // Switch to camera image
             // - local cam
@@ -203,10 +206,10 @@
               if (cam2host.indexOf("devices.plan44.ch")>=0) {
                 newPort="22288";
               }
-              $('#remotecam').html('<img class="camimage" src="http://' + cam2host + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
+              $('#remotecam').html('<img class="camimage_s" src="http://' + cam2host + ':' + newPort + '?action=stream&date=' + new Date().getTime().toString() + '" />');
             }
             else {
-              $('#remotecam').html('<div class="camimage">not available</div>');
+              $('#remotecam').html('<div class="camimage_s">not available</div>');
             }
           }, 1000);
         }, 200);
@@ -262,17 +265,16 @@
         </div>
         <div id="hermel">
           <input type="range" data-highlight="true" name="shoot_angle" id="shoot_angle" min="-1" max="1" step="0.02" />
-          <div id="spacer"></div>
           <button id="shoot_button" onclick="shoot();" data-theme="a">Shoot</button>
         </div>
       </div>
       <div class="ui-block-b">
-        <h1 id="remotetitle" class="centered">Here</h1>
+        <h1 id="remotetitle" class="centered_s">Here</h1>
         <div id="remotecam">
-          <div class="camimage"></div>
+          <div class="camimage_s"></div>
         </div>
         <div id="logo">
-          <img src="media/hs2018banner.png"/>
+          <img id="banner" src="media/hs2018_sml.png"/>
         </div>
       </div>
     </div>
