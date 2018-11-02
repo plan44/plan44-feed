@@ -1,0 +1,7 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FA0", "x":0, "y":0, "sizetocontent":true, "text":"MixLoop!"} },
+  { "view":{ "type":"scroller", "label":"SCROLLER", "x":0, "y":0, "dx":7, "dy":7, "fullframe":true,
+    "scrolledview": { "type":"image", "label":"SPRITE", "file":"images/ball2.png", "wrapmode":12, "mask":false },
+    "offsety":0, "stepy":-0.5, "interval":50
+  }, "positioning":2, "spacing":4 }
+] }
