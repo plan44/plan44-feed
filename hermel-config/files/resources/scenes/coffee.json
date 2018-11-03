@@ -1,0 +1,5 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FA0", "x":0, "y":0, "sizetocontent":true, "text":"MixWerk"} },
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"AF0", "sizetocontent":true, "text":"OpenStudio"}, "positioning":2, "spacing":5 },
+  { "view":{ "type":"image", "label":"SPRITE", "file":"images/kaffeekuchen.png", "dx":21, "dy":7, "wrapmode":0 } , "positioning":2, "spacing":5 }
+] }
