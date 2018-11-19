@@ -1,0 +1,4 @@
+[
+  {"delayby":3000, "feature":"text", "cmd":"fade", "to":0, "t":3000},
+  {"delayby":7000, "callscript":"scripts/normal.json"}
+]

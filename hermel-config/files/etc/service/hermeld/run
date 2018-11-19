@@ -19,6 +19,17 @@ LEDCHAIN_NUMLEDS_1=518
 LEDCHAIN_NUMLEDS_2=200
 LEDCHAIN_NUMLEDS_3=200
 
+# - WiFi interface
+WIFI_MONITOR_IF="moni0"
+
+if ! ip link | grep -q "${WIFI_MONITOR_IF}"; then
+  # add minitor interface
+  iw phy phy0 interface add "${WIFI_MONITOR_IF}" type monitor
+  # activate it
+  ip link set "${WIFI_MONITOR_IF}" up
+fi
+
+
 # - Hermeldon ball bumpers
 PWM_LEFT_BUMPER=pwmchip0.2.320000
 PWM_RIGHT_BUMPER=pwmchip0.3.320000
@@ -80,6 +91,7 @@ exec ${EXECUTABLE} \
   --ledchain1 ${LEDCHAIN_DEVICE_1} \
   --ledchain2 ${LEDCHAIN_DEVICE_2} \
   --ledchain3 ${LEDCHAIN_DEVICE_3} \
+  --wifimonif ${WIFI_MONITOR_IF} \
   --initjson initcmds.json \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \

@@ -327,8 +327,8 @@ CONFIG_TARGET_INIT_ENV=""
 CONFIG_TARGET_INIT_CMD="/sbin/init"
 CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
 CONFIG_VERSIONOPT=y
-CONFIG_VERSION_DIST="MIXLOOP"
-CONFIG_VERSION_NUMBER="1.91"
+CONFIG_VERSION_DIST="35C3"
+CONFIG_VERSION_NUMBER="1.92"
 CONFIG_VERSION_CODE=""
 CONFIG_VERSION_REPO="http://swupd.plan44.ch/owfeeds"
 CONFIG_VERSION_MANUFACTURER="plan44.ch"
@@ -2237,7 +2237,7 @@ CONFIG_PACKAGE_ubus=y
 CONFIG_PACKAGE_ubusd=y
 CONFIG_PACKAGE_uci=y
 CONFIG_PACKAGE_usign=y
-# CONFIG_PACKAGE_wireless-tools is not set
+CONFIG_PACKAGE_wireless-tools=m
 # CONFIG_PACKAGE_zram-swap is not set
 
 #
@@ -3184,6 +3184,7 @@ CONFIG_PACKAGE_libgdbm=y
 CONFIG_PACKAGE_libiwinfo=y
 CONFIG_PACKAGE_libjpeg=y
 CONFIG_PACKAGE_libjson-c=y
+# CONFIG_PACKAGE_libkmod is not set
 # CONFIG_PACKAGE_libltdl is not set
 # CONFIG_PACKAGE_liblua is not set
 # CONFIG_PACKAGE_liblzo is not set
@@ -3205,8 +3206,8 @@ CONFIG_PACKAGE_libncurses=y
 # CONFIG_PACKAGE_libnftnl is not set
 # CONFIG_PACKAGE_libnghttp2 is not set
 # CONFIG_PACKAGE_libnl is not set
-# CONFIG_PACKAGE_libnl-core is not set
-# CONFIG_PACKAGE_libnl-genl is not set
+CONFIG_PACKAGE_libnl-core=m
+CONFIG_PACKAGE_libnl-genl=m
 # CONFIG_PACKAGE_libnl-nf is not set
 # CONFIG_PACKAGE_libnl-route is not set
 CONFIG_PACKAGE_libnl-tiny=y
@@ -3215,7 +3216,13 @@ CONFIG_PACKAGE_libnl-tiny=y
 # CONFIG_PACKAGE_libp8-platform is not set
 CONFIG_PACKAGE_libpagekite=y
 # CONFIG_PACKAGE_libpam is not set
-# CONFIG_PACKAGE_libpcap is not set
+CONFIG_PACKAGE_libpcap=y
+
+#
+# Configuration
+#
+# CONFIG_PCAP_HAS_USB is not set
+# CONFIG_PCAP_HAS_NETFILTER is not set
 # CONFIG_PACKAGE_libpcre is not set
 # CONFIG_PACKAGE_libpcre16 is not set
 # CONFIG_PACKAGE_libpcrecpp is not set
@@ -3468,13 +3475,20 @@ CONFIG_PACKAGE_avahi-utils=y
 # CONFIG_PACKAGE_sockd is not set
 # CONFIG_PACKAGE_socksify is not set
 # CONFIG_PACKAGE_uhttpd is not set
+
+#
+# wireless
+#
+CONFIG_PACKAGE_aircrack-ng=m
+CONFIG_PACKAGE_airmon-ng=m
 # CONFIG_PACKAGE_6in4 is not set
 # CONFIG_PACKAGE_6rd is not set
 # CONFIG_PACKAGE_6to4 is not set
 # CONFIG_PACKAGE_chat is not set
 # CONFIG_PACKAGE_ds-lite is not set
 # CONFIG_PACKAGE_eapol-test is not set
-# CONFIG_PACKAGE_ethtool is not set
+CONFIG_PACKAGE_ethtool=m
+# CONFIG_ETHTOOL_PRETTY_DUMP is not set
 # CONFIG_PACKAGE_gre is not set
 # CONFIG_PACKAGE_hostapd is not set
 CONFIG_PACKAGE_hostapd-common=y
@@ -3524,7 +3538,7 @@ CONFIG_PACKAGE_pagekitec=y
 # CONFIG_PACKAGE_snmpd-static is not set
 # CONFIG_PACKAGE_snmptrapd is not set
 # CONFIG_PACKAGE_soloscli is not set
-# CONFIG_PACKAGE_tcpdump is not set
+CONFIG_PACKAGE_tcpdump=y
 # CONFIG_PACKAGE_tcpdump-mini is not set
 CONFIG_PACKAGE_uclient-fetch=y
 # CONFIG_PACKAGE_umbim is not set
@@ -3780,6 +3794,7 @@ CONFIG_PACKAGE_dbus=y
 # CONFIG_PACKAGE_iwcap is not set
 CONFIG_PACKAGE_iwinfo=y
 CONFIG_PACKAGE_jshn=y
+# CONFIG_PACKAGE_kmod is not set
 CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_logger is not set
 # CONFIG_PACKAGE_look is not set
@@ -3794,7 +3809,25 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_openldap-utils is not set
 # CONFIG_PACKAGE_openssl-util is not set
 # CONFIG_PACKAGE_owipcalc is not set
+# CONFIG_PACKAGE_pciutils is not set
 # CONFIG_PACKAGE_prlimit is not set
+CONFIG_PACKAGE_procps-ng=m
+CONFIG_PACKAGE_procps-ng-free=m
+CONFIG_PACKAGE_procps-ng-kill=m
+CONFIG_PACKAGE_procps-ng-pgrep=m
+CONFIG_PACKAGE_procps-ng-pkill=m
+CONFIG_PACKAGE_procps-ng-pmap=m
+CONFIG_PACKAGE_procps-ng-ps=m
+CONFIG_PACKAGE_procps-ng-pwdx=m
+CONFIG_PACKAGE_procps-ng-skill=m
+CONFIG_PACKAGE_procps-ng-slabtop=m
+CONFIG_PACKAGE_procps-ng-snice=m
+CONFIG_PACKAGE_procps-ng-tload=m
+CONFIG_PACKAGE_procps-ng-top=m
+CONFIG_PACKAGE_procps-ng-uptime=m
+CONFIG_PACKAGE_procps-ng-vmstat=m
+CONFIG_PACKAGE_procps-ng-w=m
+CONFIG_PACKAGE_procps-ng-watch=m
 # CONFIG_PACKAGE_rename is not set
 CONFIG_PACKAGE_spidev-test=y
 # CONFIG_PACKAGE_sshpass is not set

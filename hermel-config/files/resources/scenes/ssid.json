@@ -1,0 +1,4 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+  { "positioning":2, "view":{ "type":"text", "color":"#FFCC00", "sizetocontent":true, "text":">"} },
+  { "positioning":2, "view":{ "label":"TEXT", "type":"text", "color":"#FF0000", "sizetocontent":true, "text":"???????????????"} },
+] }

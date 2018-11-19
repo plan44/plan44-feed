@@ -73,16 +73,19 @@
         selectHtml +=
           '<option disabled>templates</option>' +
           '<option value="1000">{ "cmd":"status" }</option>' +
-          '<option value="1002">{ "feature":"mixloop", "cmd":"status" }</option>' +
-          '<option value="1003">{ "feature":"mixloop", "ppp":vvv }</option>' +
-          '<option value="1004">{ "cmd":"init", "light":1 }</option>' +
-          '<option value="1005">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
-          '<option value="1006">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
-          '<option value="1007">{ "feature":"text", "backgroundcolor":"000" }</option>' +
-          '<option value="1008">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
-          '<option value="1009">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
-          '<option value="1010">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
-          '<option value="1010">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>';
+          '<option value="1010">{ "feature":"wifitrack", "cmd":"save" }</option>' +
+          '<option value="1010">{ "feature":"wifitrack", "cmd":"dump" }</option>' +
+          '<option value="1020">{ "feature":"mixloop", "cmd":"status" }</option>' +
+          '<option value="1021">{ "feature":"mixloop", "ppp":vvv }</option>' +
+          '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
+          '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
+          '<option value="1040">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
+          '<option value="1041">{ "feature":"text", "backgroundcolor":"000" }</option>' +
+          '<option value="1042">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
+          '<option value="1043">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
+          '<option value="1044">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
+          '<option value="1045">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>';
+          '<option value="1200">{ "level":6 }</option>';
 
         $('#jsonExamples').html(selectHtml).trigger('create');
         $('#jsonExamples').val(0).selectmenu('refresh');
@@ -174,6 +177,7 @@
           <label for="apiPath">Enter API Path:</label>
           <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
           <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+            <option value="0">- select template -</option>
             <option value="1">api/json/lethd</option>
             <option value="3">api/json/log</option>
             <option value="99">tok/json</option>

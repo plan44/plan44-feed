@@ -17,7 +17,7 @@
   },
   {
     "feature":"text",
-    "scene":"scenes/mixloop.json",
+    "scene":"scenes/wifitrack.json",
   },
   {
     "feature":"text",
@@ -34,24 +34,13 @@
   },
   {
     "cmd": "init",
-    "mixloop": 1
+    "wifitrack": 1
   },
   {
-    "accelThreshold": 1,
-    "interval": 33,
-    "accelChangeCutoff": 10,
-    "accelMaxChange": 50,
-    "accelIntegrationGain": 0.16,
-    "integralFadeOffset": 1.5,
-    "integralFadeScaling": 0.95,
-    "maxIntegral": 300,
-    "hitStartMinIntegral": 15,
-    "hitWindowStart": 1200,
-    "hitWindowDuration": 2500,
-    "hitMinAccelChange": 300,
-    "numLeds": 52,
-    "integralDispOffset": 0,
-    "integralDispScaling": 0.01,
-    "hitFlashTime": 666
+    "feature": "wifitrack",
+    "minShowInterval": 180000,
+    "rememberWithoutSsid": false
   }
+
+
 ]

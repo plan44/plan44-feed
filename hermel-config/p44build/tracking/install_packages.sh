@@ -24,6 +24,8 @@
 ./scripts/feeds install -p p44i vdcd
 ./scripts/feeds install -p p44i vdsm
 ./scripts/feeds update packages
+./scripts/feeds install -p packages aircrack-ng
+#./scripts/feeds install -p packages airmon-ng
 ./scripts/feeds install -p packages alsa-lib
 ./scripts/feeds install -p packages alsa-utils
 #./scripts/feeds install -p packages alsa-utils-seq
@@ -93,6 +95,8 @@
 #./scripts/feeds install -p packages libgnutls
 ./scripts/feeds install -p packages icu
 ./scripts/feeds install -p packages intltool
+./scripts/feeds install -p packages kmod
+#./scripts/feeds install -p packages libkmod
 ./scripts/feeds install -p packages libaio
 ./scripts/feeds install -p packages libdaemon
 ./scripts/feeds install -p packages libev
@@ -182,6 +186,7 @@
 ./scripts/feeds install -p packages p11-kit
 ./scripts/feeds install -p packages pagekitec
 #./scripts/feeds install -p packages libpagekite
+./scripts/feeds install -p packages pciutils
 ./scripts/feeds install -p packages libpcre
 #./scripts/feeds install -p packages libpcre16
 #./scripts/feeds install -p packages libpcrecpp
@@ -237,6 +242,23 @@
 #./scripts/feeds install -p packages pgsql-cli
 #./scripts/feeds install -p packages pgsql-cli-extra
 #./scripts/feeds install -p packages pgsql-server
+./scripts/feeds install -p packages procps-ng-free
+#./scripts/feeds install -p packages procps-ng-kill
+#./scripts/feeds install -p packages procps-ng-pgrep
+#./scripts/feeds install -p packages procps-ng-pkill
+#./scripts/feeds install -p packages procps-ng-pmap
+#./scripts/feeds install -p packages procps-ng-ps
+#./scripts/feeds install -p packages procps-ng-pwdx
+#./scripts/feeds install -p packages procps-ng-skill
+#./scripts/feeds install -p packages procps-ng-slabtop
+#./scripts/feeds install -p packages procps-ng-snice
+#./scripts/feeds install -p packages procps-ng-tload
+#./scripts/feeds install -p packages procps-ng-top
+#./scripts/feeds install -p packages procps-ng-uptime
+#./scripts/feeds install -p packages procps-ng-vmstat
+#./scripts/feeds install -p packages procps-ng-w
+#./scripts/feeds install -p packages procps-ng-watch
+#./scripts/feeds install -p packages procps-ng
 ./scripts/feeds install -p packages protobuf
 ./scripts/feeds install -p packages libprotobuf-c
 ./scripts/feeds install -p packages python-pip-conf
