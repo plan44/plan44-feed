@@ -12,18 +12,12 @@
     "backgroundcolor": "00000000",
     "color": "FFAA00",
     "alpha": 255,
-    "text": "MixLoop +++ ",
+    "text": "WiFiTrack +++ ",
     "spacing": 2
   },
   {
     "feature":"text",
     "scene":"scenes/wifitrack.json",
-  },
-  {
-    "feature":"text",
-    "cmd":"fade",
-    "to":0.5,
-    "t":500
   },
   {
     "feature": "text",
@@ -39,7 +33,8 @@
   {
     "feature": "wifitrack",
     "minShowInterval": 180000,
-    "rememberWithoutSsid": false
+    "rememberWithoutSsid": false,
+    "minRssi": -70
   }
 
 

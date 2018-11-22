@@ -1,5 +1,0 @@
-[
-  {"feature":"text", "cmd":"stopscroll" },
-  {"feature":"text", "offsetx":0, "scene":"scenes/ssid.json"},
-  {"feature":"text", "cmd":"fade", "to":1, "t":0},
-]
