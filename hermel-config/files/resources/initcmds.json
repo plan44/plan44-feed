@@ -35,6 +35,7 @@
     "minShowInterval": 180000,
     "rememberWithoutSsid": false,
     "minRssi": -99,
+    "minShowRssi": -77,
     "tooCommonMacCount": 20,
     "minCommonSsidCount": 3
   }

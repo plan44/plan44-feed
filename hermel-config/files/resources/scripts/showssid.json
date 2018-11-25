@@ -1,4 +1,11 @@
 [
-  {"feature":"text", "text":" @{MSG}" },
-  {"delayby":13000, "feature":"text", "text":"" }
+  {"feature":"text", "cmd":"reconfigure", "view":"STACK", "config":{
+    "positioningmode":2,
+    "layers":[
+      { "view": { "type":"text", "label":"INTRO", "orientation":0, "color":"F00", "sizetocontent":true, "text":"@{INTRO}"}, "spacing":4 },
+      { "view": { "type":"image", "file":"images/pers_@{IMGIDX}.png", "color":"@{COLOR}", "mask":true, "sizetocontent":true }, "spacing":4 },
+      { "view": { "type":"text", "label":"NAME", "orientation":0, "color":"@{COLOR}", "sizetocontent":true, "text":"@{NAME}"}, "spacing":4 }
+    ]
+  } },
+  {"delayby":13000, "feature":"text", "scene":"scenes/wifitrack.json" }
 ]
