@@ -1,3 +1,4 @@
 [
+  {"feature":"text", "text":" @{MSG}" },
   {"delayby":13000, "feature":"text", "text":"" }
 ]
