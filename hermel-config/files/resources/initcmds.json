@@ -33,9 +33,10 @@
   {
     "feature": "wifitrack",
     "minShowInterval": 180000,
+    "ouiNames": true,
     "rememberWithoutSsid": false,
     "minRssi": -99,
-    "minShowRssi": -77,
+    "minShowRssi": -99,
     "tooCommonMacCount": 20,
     "minCommonSsidCount": 3
   }
