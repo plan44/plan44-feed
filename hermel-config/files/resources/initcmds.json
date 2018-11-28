@@ -24,7 +24,7 @@
     "cmd": "startscroll",
     "stepx": 1,
     "interval": 25,
-    "start": null
+    "start": 0
   },
   {
     "cmd": "init",

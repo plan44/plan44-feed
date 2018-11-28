@@ -1,8 +1,3 @@
-{ "type":"stack", "label":"STACK", "wrapmode":3, "x":0, "y":0, "positioningmode":2, "layers": [
-  { "view":{ "type":"plain", "dx":0 }},
-  { "view":{ "type":"scroller", "label":"SCROLLER", "alpha":144, "dx":14, "dy":14, "fullframe":true,
-    "scrolledview": { "type":"image", "label":"SPRITE", "file":"images/wifi.png", "wrapmode":12, "mask":false },
-    "offsety":0, "stepy":-0.5, "interval":50
-  }, "spacing":4 },
-  { "view":{ "type":"text", "label":"IDLE", "orientation":0, "color":"FA0", "alpha":128, "sizetocontent":true, "text":"chatty WiFi"}, "spacing":4 }
+{ "type":"stack", "label":"STACK", "x":0, "y":0, "sizetocontent":true, "positioningmode":2, "layers": [
+  { "view":{ "type":"text", "label":"RADARTXT", "orientation":0, "color":"F00", "alpha":255, "sizetocontent":true, "text":"WiFi Radar: "}, "spacing":0 }
 ] }

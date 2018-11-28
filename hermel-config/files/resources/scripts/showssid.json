@@ -2,12 +2,14 @@
   {"feature":"text", "cmd":"reconfigure", "view":"STACK", "config":{
     "positioningmode":2,
     "layers":[
-      { "view": { "type":"text", "orientation":0, "color":"FFF", "sizetocontent":true, "text":" +++ "}, "spacing":4 },
-      { "view": { "type":"text", "label":"INTRO", "orientation":0, "color":"F00", "sizetocontent":true, "text":"@{INTRO}"}, "spacing":4 },
-      { "view": { "type":"image", "file":"images/pers_@{IMGIDX}.png", "color":"@{COLOR}", "mask":true, "sizetocontent":true }, "spacing":4 },
-      { "view": { "type":"text", "label":"NAME", "orientation":0, "color":"@{COLOR}", "sizetocontent":true, "text":"@{NAME}"}, "spacing":4 },
-      { "view": { "type":"text", "label":"BRAND", "orientation":0, "color":"F00", "sizetocontent":true, "text":" @{BRAND}"}, "spacing":4 }
+      { "view": { "type":"text", "orientation":0, "color":"FFF", "sizetocontent":true, "text":"*"}, "spacing":4 },
+      { "view": { "type":"text", "orientation":0, "color":"F00", "sizetocontent":true, "text":"@{INTRO}"}, "spacing":4 },
+      { "view": { "type":"image", "file":"images/pers_@{IMGIDX}.png", "color":"@{COLOR}", "mask":true, "sizetocontent":true }, "spacing":5 },
+      { "view": { "type":"text", "orientation":0, "color":"@{COLOR}", "sizetocontent":true, "visible":@{HASNAME}, "text":" @{NAME}"}, "spacing":0 },
+      { "view": { "type":"text", "orientation":0, "color":"F00", "sizetocontent":true, "visible":@{HASTARGET}, "text":" looking for "}, "spacing":0 },
+      { "view": { "type":"text", "orientation":0, "color":"@{COLOR}", "sizetocontent":true, "visible":@{HASTARGET}, "text":"@{TARGET}"}, "spacing":0 },
+      { "view": { "type":"text", "orientation":0, "color":"F00", "sizetocontent":true, "visible":@{HASTARGET}, "text":"?"}, "spacing":0 },
+      { "view": { "type":"text", "orientation":0, "color":"888", "sizetocontent":true, "visible":@{HASBRAND}, "text":" (@{BRAND})"}, "spacing":0 }
     ]
-  } },
-  {"delayby":13000, "feature":"text", "scene":"scenes/wifitrack.json" }
+  } }
 ]
