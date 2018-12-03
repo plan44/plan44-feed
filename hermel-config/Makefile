@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=hermel-config
 # version of what we are downloading
-PKG_VERSION:=1.94
+PKG_VERSION:=1.95
 # version of this makefile
-PKG_RELEASE:=32
+PKG_RELEASE:=33
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

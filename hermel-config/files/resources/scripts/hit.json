@@ -1,7 +1,16 @@
 [
-  {"feature":"text", "cmd":"stopscroll" },
-  {"feature":"text", "offsetx":0, "scene":"scenes/hit.json"},
-  {"feature":"text", "cmd":"fade", "to":1, "t":0},
-  {"delayby":2000,"feature":"text", "cmd":"fade", "to":0, "t":3000},
-  {"delayby":3000, "callscript":"scripts/normal.json"}
+  {"feature":"text", "cmd":"reconfigure", "view":"STACK", "config": {
+    "positioningmode":2,
+    "layers": [
+      { "view":{ "type":"text", "color":"#FF0000", "sizetocontent":true, "text":"T"}, "spacing":7 },
+      { "view":{ "type":"text", "color":"#FF7F00", "sizetocontent":true, "text":"R"} },
+      { "view":{ "type":"text", "color":"#FFFF00", "sizetocontent":true, "text":"E"} },
+      { "view":{ "type":"text", "color":"#00FF00", "sizetocontent":true, "text":"F"} },
+      { "view":{ "type":"text", "color":"#00FF7F", "sizetocontent":true, "text":"F"} },
+      { "view":{ "type":"text", "color":"#0000FF", "sizetocontent":true, "text":"E"} },
+      { "view":{ "type":"text", "color":"#8B00FF", "sizetocontent":true, "text":"R"} },
+      { "view":{ "type":"text", "color":"#EEEEEE", "sizetocontent":true, "text":"?"} },
+      { "view":{ "type":"plain", "dx":0 }, "spacing":7 },
+    ]
+  } }
 ]

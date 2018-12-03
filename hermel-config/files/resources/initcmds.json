@@ -27,18 +27,29 @@
     "start": 0
   },
   {
+    "feature": "text",
+    "cmd": "reconfigure",
+    "view": "DISPSCROLLER",
+    "config": {
+      "syncscroll": false
+    }
+  },
+  {
     "cmd": "init",
-    "wifitrack": 1
+    "wifitrack": 1,
+    "mixloop":null
   },
   {
     "feature": "wifitrack",
-    "minShowInterval": 180000,
+    "minShowInterval": 180,
     "ouiNames": true,
     "rememberWithoutSsid": false,
     "minRssi": -99,
     "minShowRssi": -99,
     "tooCommonMacCount": 20,
-    "minCommonSsidCount": 3
+    "minCommonSsidCount": 3,
+    "saveTempInterval": 600,
+    "saveDataInterval": 86400
   }
 
 

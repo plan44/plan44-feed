@@ -1,4 +1,2 @@
 [
-  {"feature":"text", "scene":"scenes/wifitrack.json"},
-  {"feature":"text", "cmd":"startscroll", "stepx":1, "interval":25}
 ]

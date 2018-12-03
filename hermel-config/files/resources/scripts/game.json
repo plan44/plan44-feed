@@ -1,4 +1,2 @@
 [
-  {"feature": "text", "cmd":"stopscroll" },
-  {"feature": "text", "cmd":"fade", "to":0, "t":500 }
 ]
