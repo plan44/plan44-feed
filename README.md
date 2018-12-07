@@ -2,7 +2,7 @@
 
 This is my source feed for building various OpenWrt packages I wrote for projects on Onion Omega1 and Omega2.
 
-If you have a LEDE or OpenWrt build environment set up, you can use the plan44 feed by adding the line
+If you have a OpenWrt (or LEDE) build environment set up, you can use the plan44 feed by adding the line
 
     src-git plan44 https://github.com/plan44/plan44-feed.git;master
 
@@ -24,19 +24,20 @@ The following packages are of general usefulness right now:
 
 ## complete projects
 
-The **\*-config** packages are "umbrella" packages to be used with the [p44b script](https://github.com/plan44/p44build) for various projects of mine. Note that these projects are currently based on LEDE 17.01.4:
+The **\*-config** packages are "umbrella" packages to be used with the [p44b script](https://github.com/plan44/p44build) for various projects of mine. The older projects are still based on LEDE 17.01.4, the newer ones on OpenWrt 18.06.1.
 
 - **p44ttngw**: a port of a The Things Network (TTN) LoRA gateway to the Omega2, for use with the RAK831 radio.
 - **pixelboard**: a lounge table with a Omega2 based tetris and game of life built into the table plate itself.
 - **p44sbb**: a clock based on Swiss railway splitflap displays
 - **p44wiper**: a DC motor controller for smooth "wiping" movements of a DC motor with a single reed contact to avoid drift.
 - **p44bandit**: a serial interface controller for a old BANDIT CN milling machine.
-
+- **hermel** and **leth**: firmware for a Omega2S based controller using the PWM outputs for driving WS2813 LED chains for some effects and a scrolling text ticker, and a 2-channel A/D converter for sensor input, used for exhibition objects.
+ 
 ## Work in progress!
 
 There is and will always be some work-in-progress in this feed, so don't expect everything turnkey ready.
 
-Note that *i2c-tools* and *libpng* are also available in the standard feeds, but in slightly different variations - I needed some modifications for my own projects so I duplicated the packages. Fortunately, OpenWrt/LEDE source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
+Note that *i2c-tools* and *libpng* are also available in the standard feeds, but in slightly different variations - I needed some modifications for my own projects so I duplicated the packages. Fortunately, OpenWrt source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
 
     ./scripts/feeds update plan44
     ./scripts/feeds install -p plan44 libpng
