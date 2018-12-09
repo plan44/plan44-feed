@@ -253,6 +253,21 @@
       }
 
 
+      function WThide()
+      {
+        var mac = $('#WTMAC').val();
+        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
+      }
+
+
+      function WTrename()
+      {
+        var mac = $('#WTMAC').val();
+        var name = $('#WTpersonName').val();
+        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
+      }
+
+
 
       function callScene()
       {
@@ -436,9 +451,14 @@
 
           <div id="wifitrack">
             <h2>WiFi Probe request visualisation</h2>
+            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
             <input type="text" autocomplete="off" id="WTmessageText" name="WTmessageText"/>
             <input type="text" autocomplete="off" id="WTmessageColor" name="WTmessageColor" value="FFF" placeholder="rgb or rrggbb web color"/>
             <button id="WTmsg_button" onclick="WTmessage();" data-theme="a">Send message to scroller</button>
+            <input type="text" autocomplete="off" id="WTMAC" name="WTMAC" placeholder="aa:bb:cc:dd:ee:ff MAC address"/>
+            <button id="WThide_button" onclick="WThide();" data-theme="a">Hide person using specified MAC</button>
+            <input type="text" autocomplete="off" id="WTpersonName" name="WTpersonName" placeholder="new person name"/>
+            <button id="WTrename_button" onclick="WTrename();" data-theme="a">Rename person using specified MAC</button>
           </div>
 
           <div id="hermel">
