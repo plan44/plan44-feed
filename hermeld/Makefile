@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=hermeld
 # version of what we are downloading
-PKG_VERSION:=1.96
+PKG_VERSION:=1.97
 # version of this makefile
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=hermeld
