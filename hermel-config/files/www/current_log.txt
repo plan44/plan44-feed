@@ -1,1 +1,1 @@
-<!--#include file="/var/log/hermeld/current"-->
+<!--#include abspath="/var/log/hermeld/current"-->

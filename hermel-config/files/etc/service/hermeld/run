@@ -11,7 +11,6 @@ EXTRAOPTS=
 PWM_LED_FET_PIN="pwmchip0.0.320000"
 
 # - LED chain
-# - LED chain
 LEDCHAIN_NAME_1="ledchain1"
 LEDCHAIN_NAME_2="ledchain2"
 LEDCHAIN_NAME_3="ledchain3"
@@ -23,7 +22,7 @@ LEDCHAIN_NUMLEDS_3=200
 WIFI_MONITOR_IF="moni0"
 
 if ! ip link | grep -q "${WIFI_MONITOR_IF}"; then
-  # add minitor interface
+  # add monitor interface
   iw phy phy0 interface add "${WIFI_MONITOR_IF}" type monitor
   # activate it
   ip link set "${WIFI_MONITOR_IF}" up
