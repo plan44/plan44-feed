@@ -7,13 +7,19 @@ config interface 'loopback'
 config globals 'globals'
 	option ula_prefix 'fd1d:48c4:7633::/48'
 
-# station mode WiFi
+# station mode WiFi v4
 config interface 'wlan'
 	option proto 'dhcp'
 	option hostname 'leth-WiFi'
 	option enabled '1'
 
-# Ethernet
+# station mode WiFi v6
+config interface 'wlanv6'
+	option proto 'dhcpv6'
+	option hostname 'leth-WiFi-v6'
+	option enabled '1'
+
+# Ethernet v4
 config interface 'lan'
 	option ifname 'eth0'
 	option proto 'dhcp'

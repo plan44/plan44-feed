@@ -1,0 +1,4 @@
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "positioningmode":2, "fullframe":true, "layers": [
+  { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FA0", "sizetocontent":true, "text":"coffee and cake"}, "spacing":5 },
+  { "view":{ "type":"image", "label":"SPRITE", "file":"images/kaffeekuchen.png", "dx":28, "dy":7, "wrapmode":0 }, "spacing":5 }
+] }

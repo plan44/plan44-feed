@@ -1,0 +1,15 @@
+[
+  {"feature":"text", "cmd":"reconfigure", "view":"STACK", "config":{
+    "positioningmode":2,
+    "layers":[
+      { "view": { "type":"stack", "x":0, "y":0, "sizetocontent":true, "positioningmode":2, "layers": [
+        { "view":{ "type":"plain", "dx":0 }},
+        { "view":{ "type":"scroller", "label":"SPRITESCROLLER", "alpha":144, "dx":14, "dy":7, "fullframe":true,
+          "scrolledview": { "type":"image", "label":"SPRITE", "file":"images/wifi.png", "sizetocontent":true, "wrapmode":12, "mask":false },
+          "offsety":0, "stepy":-0.5, "interval":50
+        }, "spacing":4 },
+        { "view":{ "type":"text", "label":"IDLE", "orientation":0, "color":"FA0", "alpha":128, "sizetocontent":true, "text":"chatty WiFi"}, "spacing":4 }
+      ] }, "spacing":0 }
+    ]
+  } }
+]

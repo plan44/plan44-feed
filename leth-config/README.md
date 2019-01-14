@@ -31,7 +31,7 @@ Assuming that you've created and mounted a **case sensitive volume named `OpenWr
 
 ### Get the p44build script
 
-Note: this is a script that helps managing differently configured OpenWrt/LEDE targets on top of an unpolluted OpenWrt/LEDE original tree.
+Note: this is a script that helps managing differently configured OpenWrt targets on top of an unpolluted OpenWrt original tree.
 
     git clone -o github https://github.com/plan44/p44build.git
 
@@ -57,7 +57,7 @@ Note: I'm using the latest official release tagged `v18.06.0`
 
 #### recommended: Unshallow plan44 feed to be able to work with tools like GitX in it
 
-LEDE clones only a shallow (no history) copy of the feed repository. This saves space, but limits git operations (and crashes tools like GitX). The following steps convert the feed into a regular repository:
+OpenWrt clones only a shallow (no history) copy of the feed repository. This saves space, but limits git operations (and crashes tools like GitX). The following steps convert the feed into a regular repository:
 
     pushd feeds/plan44
     git fetch --unshallow
@@ -70,7 +70,7 @@ LEDE clones only a shallow (no history) copy of the feed repository. This saves 
     TARGET_CFG_PACKAGE="plan44/leth-config"
     ../p44build/p44b init feeds/${TARGET_CFG_PACKAGE}/p44build
 
-#### Prepare (patch) the OpenWrt/LEDE tree for leth
+#### Prepare (patch) the OpenWrt tree for LETH
 
     p44b prepare
 

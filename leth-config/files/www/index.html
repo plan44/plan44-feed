@@ -245,6 +245,37 @@
       }
 
 
+      function WTmessage()
+      {
+        var msg = $('#WTmessageText').val();
+        var col = $('#WTmessageColor').val();
+        sendApiCmd('/lethd', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
+      }
+
+
+      function WThide()
+      {
+        var mac = $('#WTMAC').val();
+        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
+      }
+
+
+      function WTrename()
+      {
+        var mac = $('#WTMAC').val();
+        var name = $('#WTpersonName').val();
+        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
+      }
+
+
+
+      function callScene()
+      {
+        var sname = $('#sceneName').val();
+        sendApiCmd('/lethd', { "feature":"text", "scene":"scenes/"+sname+".json" });
+      }
+
+
       function setTextColor()
       {
         var col = $('#messageColor').val();
@@ -286,9 +317,6 @@
       }
 
 
-
-
-
       function refresh_controls()
       {
         // get status
@@ -301,6 +329,12 @@
           $('#gridcoordinate').html(response.gridcoordinate);
           // features
           var features = response.features;
+          if (features.wifitrack===false) {
+            $("#wifitrack").hide();
+          }
+          else {
+            $("#wifitrack").show();
+          }
           if (features.light===false) {
             $("#light").hide();
           }
@@ -380,6 +414,18 @@
           <p><b>IPv4: </b><span id="ipv4"></span></p>
           <p><b>Version: </b><span id="appVersion"></span></p>
 
+          <div id="wifitrack">
+            <h2>WiFi Probe request visualisation</h2>
+            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <input type="text" autocomplete="off" id="WTmessageText" name="WTmessageText"/>
+            <input type="text" autocomplete="off" id="WTmessageColor" name="WTmessageColor" value="FFF" placeholder="rgb or rrggbb web color"/>
+            <button id="WTmsg_button" onclick="WTmessage();" data-theme="a">Send message to scroller</button>
+            <input type="text" autocomplete="off" id="WTMAC" name="WTMAC" placeholder="aa:bb:cc:dd:ee:ff MAC address"/>
+            <button id="WThide_button" onclick="WThide();" data-theme="a">Hide person using specified MAC</button>
+            <input type="text" autocomplete="off" id="WTpersonName" name="WTpersonName" placeholder="new person name"/>
+            <button id="WTrename_button" onclick="WTrename();" data-theme="a">Rename person using specified MAC</button>
+          </div>
+
           <div id="light">
             <h2>Light</h2>
             <label for="music_volume">Brightness:</label><input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="1" step="0.01" />
@@ -388,12 +434,14 @@
           <div id="text">
             <h2>Text</h2>
             <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <input type="text" autocomplete="off" id="sceneName" name="sceneName" value="" placeholder="scene name"/>
+            <button id="callSceneButton" onclick="callScene();" data-theme="a">Call Scene</button>
             <input type="text" autocomplete="off" id="messageText" name="messageText"/>
-            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Send</button>
+            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Set Text</button>
             <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set</button>
+            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set Text Color</button>
             <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set</button>
+            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set BG Color</button>
             <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
             <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
             <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />

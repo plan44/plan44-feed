@@ -1,1 +1,1 @@
-<!--#include file="/var/log/lethd/current"-->
+<!--#include abspath="/var/log/lethd/current"-->

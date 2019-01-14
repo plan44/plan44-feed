@@ -18,6 +18,20 @@ LEDCHAIN_NUMLEDS_1=518
 LEDCHAIN_NUMLEDS_2=182
 LEDCHAIN_NUMLEDS_3=100
 
+# - WiFi interface
+#WIFI_MONITOR_IF="moni0"
+WIFITRACK=
+if [ -n "${WIFI_MONITOR_IF}" ]; then
+  if ! ip link | grep -q "${WIFI_MONITOR_IF}"; then
+    # add monitor interface
+    iw phy phy0 interface add "${WIFI_MONITOR_IF}" type monitor
+    # activate it
+    ip link set "${WIFI_MONITOR_IF}" up
+  fi
+  WIFITRACK="--wifimonif ${WIFI_MONITOR_IF}"
+fi
+
+
 # - Analog input (/dev/spidev1.0 software SPI)
 ADC_INPUT_CH0="spi10.MCP3002@0.0"
 ADC_INPUT_CH1="spi10.MCP3002@0.1"
@@ -72,6 +86,7 @@ exec ${EXECUTABLE} \
   --ledchain3 ${LEDCHAIN_DEVICE_3} \
   --sensor0 ${ADC_INPUT_CH0} \
   --sensor1 ${ADC_INPUT_CH1} \
+  ${WIFITRACK} \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \

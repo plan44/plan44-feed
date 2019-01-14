@@ -3,7 +3,7 @@
 ssl_certificate /etc/mongoose/mg.crt
 listening_ports +80,+443s
 # need 2 threads at least to be able to abort running requests
-num_threads 2
+num_threads 12
 document_root /www
 enable_directory_listing no
 authentication_domain ##PRODUCTNAME##

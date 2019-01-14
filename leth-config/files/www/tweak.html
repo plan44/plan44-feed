@@ -72,18 +72,32 @@
         }
         selectHtml +=
           '<option disabled>templates</option>' +
-          '<option value="1000">{ "cmd":"now" }</option>' +
-          '<option value="1001">{ "cmd":"init", "light":1 }</option>' +
-          '<option value="1002">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
-          '<option value="1003">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
-          '<option value="1004">{ "cmd":"init", "text": [ { "cols": 47, "offset": 0, "orientation": 0 }, { "cols": 24, "offset": 47, "orientation": 0 } ] }</option>' +
-          '<option value="1005">{ "cmd":"init", "text": [ { "cols": 72, "offset": 71, "orientation": 0 } ] }</option>' +
-          '<option value="1006">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
-          '<option value="1007">{ "feature":"text", "backgroundcolor":"000" }</option>' +
-          '<option value="1008">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
-          '<option value="1009">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
-          '<option value="1010">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
-          '<option value="1010">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>';
+          '<option value="1000">{ "cmd":"status" }</option>' +
+          '<option value="1001">{ "cmd":"now" }</option>' +
+          '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
+          '<option value="1010">{ "feature":"wifitrack", "cmd":"dump", "persons":true, "personssids":true, "macs":true, "ouinames":true, "ssids":true }</option>' +
+          '<option value="1011">{ "feature":"wifitrack", "cmd":"save" }</option>' +
+          '<option value="1012">{ "feature":"wifitrack", "cmd":"save", "path":"wifitrack_state.json" }</option>' +
+          '<option value="1013">{ "feature":"wifitrack", "cmd":"hide", "ssid":"sss", "hide":true }</option>' +
+          '<option value="1014">{ "feature":"wifitrack", "cmd":"hide", "mac":"mmm", "withperson":false, "hide":true }</option>' +
+          '<option value="1015">{ "feature":"wifitrack", "cmd":"rename", "mac":"mmm", "name":"nnn" }</option>' +
+          '<option value="1016">{ "feature":"wifitrack", "cmd":"rename", "mac":"mmm", "name":"nnn", "color":"#F00", "imgidx":0 }</option>' +
+          '<option value="1017">{ "feature":"wifitrack", "cmd":"test", "msg":"hello", "imgidx":0, "color":"#0F0" }</option>' +
+          '<option value="1020">{ "feature":"wifitrack", "cmd":"status" }</option>' +
+          '<option value="1020">{ "feature":"mixloop", "cmd":"status" }</option>' +
+          '<option value="1021">{ "feature":"mixloop", "ppp":vvv }</option>' +
+          '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
+          '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
+          '<option value="1040">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
+          '<option value="1041">{ "cmd":"init", "text": [ { "cols": 47, "offset": 0, "orientation": 0 }, { "cols": 24, "offset": 47, "orientation": 0 } ] }</option>' +
+          '<option value="1042">{ "cmd":"init", "text": [ { "cols": 72, "offset": 71, "orientation": 0 } ] }</option>' +
+          '<option value="1045">{ "feature":"text", "backgroundcolor":"000" }</option>' +
+          '<option value="1046">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
+          '<option value="1047">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
+          '<option value="1048">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
+          '<option value="1049">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>' +
+          '<option value="1002">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
+          '<option value="1200">{ "level":6 }</option>';
 
         $('#jsonExamples').html(selectHtml).trigger('create');
         $('#jsonExamples').val(0).selectmenu('refresh');
@@ -174,14 +188,15 @@
         <div style="margin-bottom: 20px;">
           <label for="apiPath">Enter API Path:</label>
           <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
-          <select onclick="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+          <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+            <option value="0">- select template -</option>
             <option value="1">api/json/lethd</option>
             <option value="3">api/json/log</option>
             <option value="99">tok/json</option>
           </select>
           <label for="jsonText">Enter JSON API Query:</label>
           <input type="text" name="jsonText" id="jsonText" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="" data-theme="d">
-          <select onclick="javascript:exampleSelected();" name="jsonExamples" id="jsonExamples">
+          <select onchange="javascript:exampleSelected();" name="jsonExamples" id="jsonExamples">
           </select>
           <button type="button" id="sendAPI" data-inline="true" data-theme="c">Send JSON to API</button>
           <textarea id="jsonResult"></textarea>
