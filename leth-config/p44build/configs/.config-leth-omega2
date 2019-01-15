@@ -328,7 +328,7 @@ CONFIG_TARGET_INIT_CMD="/sbin/init"
 CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
 CONFIG_VERSIONOPT=y
 CONFIG_VERSION_DIST="LETH"
-CONFIG_VERSION_NUMBER="1.8"
+CONFIG_VERSION_NUMBER="1.9.1"
 CONFIG_VERSION_CODE=""
 CONFIG_VERSION_REPO="http://swupd.plan44.ch/owfeeds"
 CONFIG_VERSION_MANUFACTURER="plan44.ch"
@@ -2237,7 +2237,7 @@ CONFIG_PACKAGE_ubus=y
 CONFIG_PACKAGE_ubusd=y
 CONFIG_PACKAGE_uci=y
 CONFIG_PACKAGE_usign=y
-# CONFIG_PACKAGE_wireless-tools is not set
+CONFIG_PACKAGE_wireless-tools=m
 # CONFIG_PACKAGE_zram-swap is not set
 
 #
@@ -2505,10 +2505,10 @@ CONFIG_PACKAGE_kmod-i2c-gpio-custom=y
 #
 # Input modules
 #
-# CONFIG_PACKAGE_kmod-hid is not set
-# CONFIG_PACKAGE_kmod-hid-generic is not set
+CONFIG_PACKAGE_kmod-hid=y
+CONFIG_PACKAGE_kmod-hid-generic=y
 CONFIG_PACKAGE_kmod-input-core=y
-# CONFIG_PACKAGE_kmod-input-evdev is not set
+CONFIG_PACKAGE_kmod-input-evdev=y
 # CONFIG_PACKAGE_kmod-input-gpio-encoder is not set
 # CONFIG_PACKAGE_kmod-input-gpio-keys is not set
 # CONFIG_PACKAGE_kmod-input-gpio-keys-polled is not set
@@ -2748,6 +2748,7 @@ CONFIG_PACKAGE_kmod-slhc=y
 # CONFIG_PACKAGE_kmod-bmp085-spi is not set
 # CONFIG_PACKAGE_kmod-btmrvl is not set
 # CONFIG_PACKAGE_kmod-button-hotplug is not set
+CONFIG_PACKAGE_kmod-dma-buf=y
 CONFIG_PACKAGE_kmod-dma-ralink=y
 # CONFIG_PACKAGE_kmod-echo is not set
 CONFIG_PACKAGE_kmod-eeprom-93cx6=y
@@ -2840,7 +2841,7 @@ CONFIG_PACKAGE_kmod-usb-core=y
 # CONFIG_PACKAGE_kmod-usb-dwc2 is not set
 # CONFIG_PACKAGE_kmod-usb-dwc3 is not set
 CONFIG_PACKAGE_kmod-usb-ehci=y
-# CONFIG_PACKAGE_kmod-usb-hid is not set
+CONFIG_PACKAGE_kmod-usb-hid=y
 CONFIG_PACKAGE_kmod-usb-ledtrig-usbport=y
 # CONFIG_PACKAGE_kmod-usb-net is not set
 CONFIG_PACKAGE_kmod-usb-ohci=y
@@ -2871,7 +2872,7 @@ CONFIG_PACKAGE_kmod-usb-serial-pl2303=y
 CONFIG_PACKAGE_kmod-usb-storage=y
 # CONFIG_PACKAGE_kmod-usb-storage-extras is not set
 # CONFIG_PACKAGE_kmod-usb-storage-uas is not set
-# CONFIG_PACKAGE_kmod-usb-uhci is not set
+CONFIG_PACKAGE_kmod-usb-uhci=y
 # CONFIG_PACKAGE_kmod-usb-wdm is not set
 # CONFIG_PACKAGE_kmod-usb-yealink is not set
 CONFIG_PACKAGE_kmod-usb2=y
@@ -2885,7 +2886,12 @@ CONFIG_PACKAGE_kmod-usb2=y
 #
 # Video Support
 #
-# CONFIG_PACKAGE_kmod-video-core is not set
+CONFIG_PACKAGE_kmod-video-core=y
+# CONFIG_PACKAGE_kmod-video-cpia2 is not set
+# CONFIG_PACKAGE_kmod-video-gspca-core is not set
+# CONFIG_PACKAGE_kmod-video-pwc is not set
+CONFIG_PACKAGE_kmod-video-uvc=y
+CONFIG_PACKAGE_kmod-video-videobuf2=y
 
 #
 # Virtualization
@@ -3176,8 +3182,9 @@ CONFIG_PACKAGE_libgdbm=y
 # CONFIG_PACKAGE_libintl-full is not set
 # CONFIG_PACKAGE_libiw is not set
 CONFIG_PACKAGE_libiwinfo=y
-# CONFIG_PACKAGE_libjpeg is not set
+CONFIG_PACKAGE_libjpeg=y
 CONFIG_PACKAGE_libjson-c=y
+# CONFIG_PACKAGE_libkmod is not set
 # CONFIG_PACKAGE_libltdl is not set
 # CONFIG_PACKAGE_liblua is not set
 # CONFIG_PACKAGE_liblzo is not set
@@ -3199,8 +3206,8 @@ CONFIG_PACKAGE_libncurses=y
 # CONFIG_PACKAGE_libnftnl is not set
 # CONFIG_PACKAGE_libnghttp2 is not set
 # CONFIG_PACKAGE_libnl is not set
-# CONFIG_PACKAGE_libnl-core is not set
-# CONFIG_PACKAGE_libnl-genl is not set
+CONFIG_PACKAGE_libnl-core=m
+CONFIG_PACKAGE_libnl-genl=m
 # CONFIG_PACKAGE_libnl-nf is not set
 # CONFIG_PACKAGE_libnl-route is not set
 CONFIG_PACKAGE_libnl-tiny=y
@@ -3209,7 +3216,13 @@ CONFIG_PACKAGE_libnl-tiny=y
 # CONFIG_PACKAGE_libp8-platform is not set
 CONFIG_PACKAGE_libpagekite=y
 # CONFIG_PACKAGE_libpam is not set
-# CONFIG_PACKAGE_libpcap is not set
+CONFIG_PACKAGE_libpcap=y
+
+#
+# Configuration
+#
+# CONFIG_PCAP_HAS_USB is not set
+# CONFIG_PCAP_HAS_NETFILTER is not set
 # CONFIG_PACKAGE_libpcre is not set
 # CONFIG_PACKAGE_libpcre16 is not set
 # CONFIG_PACKAGE_libpcrecpp is not set
@@ -3232,12 +3245,13 @@ CONFIG_PACKAGE_libuci=y
 # CONFIG_PACKAGE_libuci-lua is not set
 CONFIG_PACKAGE_libuclient=y
 # CONFIG_PACKAGE_libunwind is not set
-CONFIG_PACKAGE_libusb-1.0=m
+CONFIG_PACKAGE_libusb-1.0=y
 # CONFIG_PACKAGE_libusb-compat is not set
 # CONFIG_PACKAGE_libustream-mbedtls is not set
 # CONFIG_PACKAGE_libustream-openssl is not set
 # CONFIG_PACKAGE_libustream-wolfssl is not set
 # CONFIG_PACKAGE_libuuid is not set
+# CONFIG_PACKAGE_libv4l is not set
 # CONFIG_PACKAGE_libxml2 is not set
 # CONFIG_PACKAGE_linux-atm is not set
 # CONFIG_PACKAGE_p11-kit is not set
@@ -3251,6 +3265,18 @@ CONFIG_PACKAGE_zlib=y
 # Configuration
 #
 # CONFIG_ZLIB_OPTIMIZE_SPEED is not set
+
+#
+# Multimedia
+#
+CONFIG_PACKAGE_mjpg-streamer=y
+# CONFIG_MJPG_STREAMER_V4L2 is not set
+# CONFIG_MJPG_STREAMER_INPUT_FILE is not set
+CONFIG_MJPG_STREAMER_INPUT_UVC=y
+# CONFIG_MJPG_STREAMER_INPUT_TESTPICTURE is not set
+# CONFIG_MJPG_STREAMER_OUTPUT_FILE is not set
+CONFIG_MJPG_STREAMER_OUTPUT_HTTP=y
+# CONFIG_MJPG_STREAMER_WWW is not set
 
 #
 # Network
@@ -3449,13 +3475,20 @@ CONFIG_PACKAGE_avahi-utils=y
 # CONFIG_PACKAGE_sockd is not set
 # CONFIG_PACKAGE_socksify is not set
 # CONFIG_PACKAGE_uhttpd is not set
+
+#
+# wireless
+#
+CONFIG_PACKAGE_aircrack-ng=m
+CONFIG_PACKAGE_airmon-ng=m
 # CONFIG_PACKAGE_6in4 is not set
 # CONFIG_PACKAGE_6rd is not set
 # CONFIG_PACKAGE_6to4 is not set
 # CONFIG_PACKAGE_chat is not set
 # CONFIG_PACKAGE_ds-lite is not set
 # CONFIG_PACKAGE_eapol-test is not set
-# CONFIG_PACKAGE_ethtool is not set
+CONFIG_PACKAGE_ethtool=m
+# CONFIG_ETHTOOL_PRETTY_DUMP is not set
 # CONFIG_PACKAGE_gre is not set
 # CONFIG_PACKAGE_hostapd is not set
 CONFIG_PACKAGE_hostapd-common=y
@@ -3505,7 +3538,7 @@ CONFIG_PACKAGE_pagekitec=y
 # CONFIG_PACKAGE_snmpd-static is not set
 # CONFIG_PACKAGE_snmptrapd is not set
 # CONFIG_PACKAGE_soloscli is not set
-# CONFIG_PACKAGE_tcpdump is not set
+CONFIG_PACKAGE_tcpdump=y
 # CONFIG_PACKAGE_tcpdump-mini is not set
 CONFIG_PACKAGE_uclient-fetch=y
 # CONFIG_PACKAGE_umbim is not set
@@ -3611,6 +3644,8 @@ CONFIG_PACKAGE_mg44=y
 #
 # toys
 #
+# CONFIG_PACKAGE_hermel-config is not set
+# CONFIG_PACKAGE_hermeld is not set
 CONFIG_PACKAGE_messagetorch=y
 # CONFIG_PACKAGE_p44sbb-config is not set
 # CONFIG_PACKAGE_p44sbbd is not set
@@ -3759,6 +3794,7 @@ CONFIG_PACKAGE_dbus=y
 # CONFIG_PACKAGE_iwcap is not set
 CONFIG_PACKAGE_iwinfo=y
 CONFIG_PACKAGE_jshn=y
+# CONFIG_PACKAGE_kmod is not set
 CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_logger is not set
 # CONFIG_PACKAGE_look is not set
@@ -3773,7 +3809,25 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_openldap-utils is not set
 # CONFIG_PACKAGE_openssl-util is not set
 # CONFIG_PACKAGE_owipcalc is not set
+# CONFIG_PACKAGE_pciutils is not set
 # CONFIG_PACKAGE_prlimit is not set
+CONFIG_PACKAGE_procps-ng=m
+CONFIG_PACKAGE_procps-ng-free=m
+CONFIG_PACKAGE_procps-ng-kill=m
+CONFIG_PACKAGE_procps-ng-pgrep=m
+CONFIG_PACKAGE_procps-ng-pkill=m
+CONFIG_PACKAGE_procps-ng-pmap=m
+CONFIG_PACKAGE_procps-ng-ps=m
+CONFIG_PACKAGE_procps-ng-pwdx=m
+CONFIG_PACKAGE_procps-ng-skill=m
+CONFIG_PACKAGE_procps-ng-slabtop=m
+CONFIG_PACKAGE_procps-ng-snice=m
+CONFIG_PACKAGE_procps-ng-tload=m
+CONFIG_PACKAGE_procps-ng-top=m
+CONFIG_PACKAGE_procps-ng-uptime=m
+CONFIG_PACKAGE_procps-ng-vmstat=m
+CONFIG_PACKAGE_procps-ng-w=m
+CONFIG_PACKAGE_procps-ng-watch=m
 # CONFIG_PACKAGE_rename is not set
 CONFIG_PACKAGE_spidev-test=y
 # CONFIG_PACKAGE_sshpass is not set
@@ -3783,7 +3837,8 @@ CONFIG_PACKAGE_spidev-test=y
 # CONFIG_PACKAGE_unshare is not set
 # CONFIG_PACKAGE_usb-modeswitch is not set
 # CONFIG_PACKAGE_usbreset is not set
-CONFIG_PACKAGE_usbutils=m
+CONFIG_PACKAGE_usbutils=y
 # CONFIG_PACKAGE_uuidd is not set
 # CONFIG_PACKAGE_uuidgen is not set
+# CONFIG_PACKAGE_v4l-utils is not set
 # CONFIG_PACKAGE_whereis is not set
