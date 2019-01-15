@@ -9,7 +9,7 @@ PKG_NAME:=leth-config
 # version of what we are downloading
 PKG_VERSION:=1.9.1
 # version of this makefile
-PKG_RELEASE:=26
+PKG_RELEASE:=27
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

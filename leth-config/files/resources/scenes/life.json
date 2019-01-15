@@ -1,5 +1,5 @@
-{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "positioningmode":2, "layers": [
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "sizetocontent":true, "positioningmode":2, "layers": [
   { "view":{ "type":"text", "label":"TEXT", "orientation":0, "color":"FFF", "sizetocontent":true, "text":"GAME OF LIFE"} },
-  { "view":{ "type":"life", "label":"LIFE","dx":30, "dy":30, "y":-12, "fullframe":true, "generationinterval":800, "addrandom":168 }, "spacing":3 },
-  { "view":{ "type":"plain" }, "spacing":3 }
+  { "view":{ "type":"life", "label":"LIFE","dx":30, "dy":30, "y":-12, "bgcolor":"040", "fullframe":true, "generationinterval":800, "addrandom":168 }, "spacing":3 },
+  { "view":{ "type":"plain" }, "spacing":5 }
 ] }

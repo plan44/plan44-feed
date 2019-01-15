@@ -1,4 +1,4 @@
-{ "type":"stack", "wrapmode":3, "x":0, "y":0, "fullframe":true, "layers": [
+{ "type":"stack", "wrapmode":3, "x":0, "y":0, "sizetocontent":true, "positioningmode":2, "layers": [
   { "positioning":2, "view":{ "type":"text", "color":"#FFFFFF", "sizetocontent":true, "text":"Follow the "} },
   { "positioning":2, "view":{ "type":"text", "color":"#FF0000", "sizetocontent":true, "text":"R"} },
   { "positioning":2, "view":{ "type":"text", "color":"#FF7F00", "sizetocontent":true, "text":"A"} },

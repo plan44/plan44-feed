@@ -1,0 +1,20 @@
+[
+  {
+    "cmd": "init",
+    "wifitrack": { "directDisplay":false, "apiNotify":true },
+  },
+  {
+    "feature": "wifitrack",
+    "minShowInterval": 180,
+    "ouiNames": true,
+    "rememberWithoutSsid": false,
+    "minRssi": -80,
+    "minShowRssi": -70,
+    "tooCommonMacCount": 20,
+    "minCommonSsidCount": 3,
+    "saveTempInterval": 600,
+    "saveDataInterval": 86400
+  }
+]
+
+

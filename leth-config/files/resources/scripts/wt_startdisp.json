@@ -1,0 +1,16 @@
+[
+  {
+    "feature":"text",
+    "scene":"scenes/wifitrack.json",
+  },
+  {
+    "feature": "text",
+    "cmd": "reconfigure",
+    "view": "DISPSCROLLER",
+    "config": {
+      "syncscroll": true
+    }
+  },
+]
+
+

@@ -19,9 +19,9 @@ LEDCHAIN_NUMLEDS_2=182
 LEDCHAIN_NUMLEDS_3=100
 
 # - WiFi interface
-#WIFI_MONITOR_IF="moni0"
+WIFI_MONITOR_IF="moni0"
 WIFITRACK=
-if [ -n "${WIFI_MONITOR_IF}" ]; then
+if [ -f "/flash/wifitrack" ]; then
   if ! ip link | grep -q "${WIFI_MONITOR_IF}"; then
     # add monitor interface
     iw phy phy0 interface add "${WIFI_MONITOR_IF}" type monitor
@@ -87,6 +87,7 @@ exec ${EXECUTABLE} \
   --sensor0 ${ADC_INPUT_CH0} \
   --sensor1 ${ADC_INPUT_CH1} \
   ${WIFITRACK} \
+  --initjson initcmds.json \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \

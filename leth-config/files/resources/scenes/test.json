@@ -1,6 +1,6 @@
-{ "type":"stack", "wrapmode":3, "dx":10, "dy":7, "fullframe":true, "layers": [
+{ "type":"stack", "wrapmode":3, "dx":14, "dy":7, "fullframe":true, "layers": [
   { "view": { "type":"image", "file":"images/ghost_eyes.png", "orientation":2 }},
-  { "view": { "type":"animator", "wrapmode":3, "label":"GHOST", "dx":12, "dy":7, "fullframe":true, "mask":true, "color":"#0F0", "start":true, "repeat":true, "steps":[
+  { "view": { "type":"animator", "label":"GHOST", "dx":12, "dy":7, "fullframe":true, "mask":true, "color":"#0F0", "start":true, "repeat":true, "steps":[
     { "view": { "type":"image", "file":"images/ghost_01.png", "orientation":0 }, "showtime":600 },
     { "view": { "type":"image", "file":"images/ghost_02.png", "orientation":0 }, "showtime":600 }
   ] } }
