@@ -1,0 +1,95 @@
+--- a/package/kernel/linux/modules/video.mk
++++ b/package/kernel/linux/modules/video.mk
+@@ -182,6 +182,92 @@ endef
+ 
+ $(eval $(call KernelPackage,fb-sys-fops))
+ 
++
++
++define KernelPackage/fbtft-support
++  SUBMENU:=$(VIDEO_MENU)
++  TITLE:=Framebuffer TFT and OLED support (p44/luz)
++  DEPENDS:=\
++  +kmod-fb \
++  +kmod-fb-cfb-imgblt \
++  +kmod-fb-cfb-copyarea \
++  +kmod-fb-cfb-fillrect \
++  +kmod-fb-sys-fops
++  KCONFIG:= \
++  CONFIG_FB \
++	CONFIG_FB_SYS_FILLRECT \
++	CONFIG_FB_SYS_COPYAREA \
++	CONFIG_FB_SYS_IMAGEBLIT \
++  CONFIG_FB_FLEX \
++  CONFIG_FB_MODE_HELPERS=y \
++  CONFIG_FB_BACKLIGHT=y \
++  CONFIG_FB_TILEBLITTING=y \
++  CONFIG_FB_BOTH_ENDIAN=y \
++  CONFIG_FB_CMDLINE=y \
++  CONFIG_FB_DEFERRED_IO=y \
++  CONFIG_FB_FOREIGN_ENDIAN=y \
++  CONFIG_FB_PROVIDE_GET_FB_UNMAPPED_AREA=n \
++  CONFIG_BACKLIGHT_LCD_SUPPORT=y \
++  CONFIG_LCD_CLASS_DEVICE=y \
++  CONFIG_LCD_PLATFORM=y \
++  CONFIG_BACKLIGHT_CLASS_DEVICE=y \
++  CONFIG_STAGING_BOARD=y \
++  CONFIG_FB_TFT \
++  CONFIG_FB_TFT_FBTFT_DEVICE=y \
++  CONFIG_FB_TFT_ILI9340 \
++  CONFIG_FB_TFT_ILI9341 \
++  CONFIG_FB_TFT_SSD1306 \
++  CONFIG_FB_TFT_SSD1331 \
++  CONFIG_FB_TFT_AGM1264K_FL=n \
++  CONFIG_FB_TFT_BD663474=n \
++  CONFIG_FB_TFT_HX8340BN=n \
++  CONFIG_FB_TFT_HX8347D=n \
++  CONFIG_FB_TFT_HX8353D=n \
++  CONFIG_FB_TFT_HX8357D=n \
++  CONFIG_FB_TFT_ILI9163=n \
++  CONFIG_FB_TFT_ILI9320=n \
++  CONFIG_FB_TFT_ILI9325=n \
++  CONFIG_FB_TFT_ILI9481=n \
++  CONFIG_FB_TFT_ILI9486=n \
++  CONFIG_FB_TFT_PCD8544=n \
++  CONFIG_FB_TFT_RA8875=n \
++  CONFIG_FB_TFT_S6D02A1=n \
++  CONFIG_FB_TFT_S6D1121=n \
++  CONFIG_FB_TFT_SH1106=n \
++  CONFIG_FB_TFT_SSD1289=n \
++  CONFIG_FB_TFT_SSD1305=n \
++  CONFIG_FB_TFT_SSD1325=n \
++  CONFIG_FB_TFT_SSD1351=n \
++  CONFIG_FB_TFT_ST7735R=n \
++  CONFIG_FB_TFT_ST7789V=n \
++  CONFIG_FB_TFT_TINYLCD=n \
++  CONFIG_FB_TFT_TLS8204=n \
++  CONFIG_FB_TFT_UC1611=n \
++  CONFIG_FB_TFT_UC1701=n \
++  CONFIG_FB_TFT_UPD161704=n \
++  CONFIG_FB_TFT_WATTEROTT=n
++  FILES:= \
++	$(LINUX_DIR)/drivers/video/fbdev/core/syscopyarea.ko \
++	$(LINUX_DIR)/drivers/video/fbdev/core/sysfillrect.ko \
++	$(LINUX_DIR)/drivers/video/fbdev/core/sysimgblt.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fbtft.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fb_ili9340.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fb_ili9341.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fb_ssd1306.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fb_ssd1331.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/flexfb.ko \
++  $(LINUX_DIR)/drivers/staging/fbtft/fbtft_device.ko
++endef
++
++define KernelPackage/fbtft-support/description
++ Framebuffer TFT and OLED support (p44/luz)
++ These are drivers from staging!
++endef
++
++$(eval $(call KernelPackage,fbtft-support))
++
++
++
+ define KernelPackage/drm
+   SUBMENU:=$(VIDEO_MENU)
+   TITLE:=Direct Rendering Manager (DRM) support
