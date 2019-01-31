@@ -5,7 +5,7 @@ config interface 'loopback'
 	option netmask '255.0.0.0'
 
 config globals 'globals'
-	option ula_prefix 'fd1d:48c4:7633::/48'
+	option ula_prefix 'auto'
 
 # station mode WiFi
 config interface 'wlan'
