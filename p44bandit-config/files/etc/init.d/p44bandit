@@ -33,13 +33,23 @@ boot() {
   done
   cd ${PREV}
 
-  # update host name if needed
+  # make sure no dhcp services (v4, v6) or RA are running at all
+  # - in case a dhcp section exists for lan
+  uci set dhcp.lan.dhcpv4=disabled
+  uci set dhcp.lan.dhcpv6=disabled
+  uci set dhcp.lan.ra=disabled
+  uci set dhcp.lan.ignore=1
+  # - in case a dhcp section exists for wlan
+  uci set dhcp.wlan.dhcpv4=disabled
+  uci set dhcp.wlan.dhcpv6=disabled
+  uci set dhcp.wlan.ra=disabled
+  uci set dhcp.wlan.ignore=1
+  uci commit dhcp
+
+  # update host name
   UNIT_HOSTNAME="p44bandit"
-  HN=$(uci get system.@system[0].hostname)
-  if [ ! "${HN}" = "${UNIT_HOSTNAME}" ]; then
-    uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
-    uci commit system
-  fi
+  uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
+  uci commit system
 
   # start runit
   /sbin/runsvdir-start &
