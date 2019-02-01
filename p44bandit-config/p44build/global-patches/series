@@ -12,3 +12,4 @@
 302-uci-defaults-disable-dhcp-and-ra.diff
 230-fbtft-kernel-drivers-enable.diff
 231-ssd1307fb-i2c-driver-enable.diff
+292-omega2-dtsi-i2c-ssd1306-OLED.diff
