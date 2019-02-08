@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Lukas Zeller <luz@plan44.ch> (RGBW support)
+# Copyright (C) 2017-2019 Lukas Zeller <luz@plan44.ch> (RGBW support)
 # See LICENSE for more information.
 #
 # Completely rewritten, but made compatible with and partially based on code snippets from

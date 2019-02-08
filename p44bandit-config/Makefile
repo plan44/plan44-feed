@@ -1,4 +1,4 @@
-# Copyright (c) 2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2017-2019 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 

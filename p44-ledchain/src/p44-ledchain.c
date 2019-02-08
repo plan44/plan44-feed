@@ -1,7 +1,7 @@
 /*
  *  p44-ledchain.c - A MT7688 SoC hardware PWM based kernel module for driving serial LEDs (WS28xx, SK68xx, ...)
  *
- *  Copyright (C) 2017 Lukas Zeller <luz@plan44.ch>
+ *  Copyright (C) 2017-2019 Lukas Zeller <luz@plan44.ch>
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.
