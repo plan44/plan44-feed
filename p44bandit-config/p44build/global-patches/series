@@ -11,3 +11,4 @@
 301-files-etc-shadow--no-root-login.diff
 302-uci-defaults-disable-dhcp-and-ra.diff
 230-fbtft-kernel-drivers-enable.diff
+240-mt76x8-no-vga-console.diff
