@@ -1,5 +1,5 @@
 # feed/package giturl:gitref
-p44i/mg44 ssh://plan44@plan44.ch/home/plan44/sharedgit/mg44.git:4edf2903b6c77c92c84d3a7bbfd3d19530df6cab
+p44i/mg44 ssh://plan44@plan44.ch/home/plan44/sharedgit/mg44.git:87d807c0ba3b782f92dbc8bb6a0bbacaaf2c6ea0
 p44i/serialfwd ssh://plan44@plan44.ch/home/plan44/gitrepositories/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
 plan44/p44banditd https://github.com/plan44/p44banditd.git:554a2eb5c11d3f1b8a8a0e276a97939a9c062ff7
 onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:fa0425d861abbcc34bacd6edc3c7b531ad32c4d9
