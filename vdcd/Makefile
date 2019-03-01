@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=4.0
+PKG_VERSION:=2.0.0.7
 # version of this makefile
-PKG_RELEASE:=26
+PKG_RELEASE:=27
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
