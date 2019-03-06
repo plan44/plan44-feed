@@ -328,9 +328,10 @@ CONFIG_TARGET_INIT_CMD="/sbin/init"
 CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
 CONFIG_VERSIONOPT=y
 CONFIG_VERSION_DIST="LETH"
-CONFIG_VERSION_NUMBER="1.9.1"
+CONFIG_VERSION_NUMBER="1.9.2"
 CONFIG_VERSION_CODE=""
 CONFIG_VERSION_REPO="http://swupd.plan44.ch/owfeeds"
+CONFIG_VERSION_HOME_URL=""
 CONFIG_VERSION_MANUFACTURER="plan44.ch"
 CONFIG_VERSION_MANUFACTURER_URL="http://plan44.ch/automation"
 CONFIG_VERSION_BUG_URL=""
@@ -2202,6 +2203,8 @@ CONFIG_DROPBEAR_ECC=y
 # CONFIG_PACKAGE_ead is not set
 # CONFIG_PACKAGE_firewall is not set
 CONFIG_PACKAGE_fstools=y
+# CONFIG_FSTOOLS_OVL_MOUNT_FULL_ACCESS_TIME is not set
+# CONFIG_FSTOOLS_OVL_MOUNT_COMPRESS_ZLIB is not set
 CONFIG_PACKAGE_fwtool=y
 CONFIG_PACKAGE_jsonfilter=y
 # CONFIG_PACKAGE_libatomic is not set
@@ -2629,6 +2632,7 @@ CONFIG_PACKAGE_kmod-nf-reject6=y
 # CONFIG_PACKAGE_kmod-nft-core is not set
 # CONFIG_PACKAGE_kmod-nft-nat is not set
 # CONFIG_PACKAGE_kmod-nft-nat6 is not set
+# CONFIG_PACKAGE_kmod-nft-netdev is not set
 # CONFIG_PACKAGE_kmod-nft-offload is not set
 
 #
@@ -2729,6 +2733,7 @@ CONFIG_PACKAGE_kmod-pppox=y
 # CONFIG_PACKAGE_kmod-sit is not set
 CONFIG_PACKAGE_kmod-slhc=y
 # CONFIG_PACKAGE_kmod-slip is not set
+# CONFIG_PACKAGE_kmod-tcp-bbr is not set
 # CONFIG_PACKAGE_kmod-trelay is not set
 # CONFIG_PACKAGE_kmod-tun is not set
 # CONFIG_PACKAGE_kmod-veth is not set
@@ -2960,7 +2965,12 @@ CONFIG_PACKAGE_kmod-mt76=y
 CONFIG_PACKAGE_kmod-mt76-core=y
 # CONFIG_PACKAGE_kmod-mt7601u is not set
 CONFIG_PACKAGE_kmod-mt7603=y
+CONFIG_PACKAGE_kmod-mt76x02-common=y
+# CONFIG_PACKAGE_kmod-mt76x0e is not set
+# CONFIG_PACKAGE_kmod-mt76x0u is not set
 CONFIG_PACKAGE_kmod-mt76x2=y
+CONFIG_PACKAGE_kmod-mt76x2-common=y
+# CONFIG_PACKAGE_kmod-mt76x2u is not set
 # CONFIG_PACKAGE_kmod-mwifiex-pcie is not set
 # CONFIG_PACKAGE_kmod-mwifiex-sdio is not set
 # CONFIG_PACKAGE_kmod-mwl8k is not set
@@ -3012,6 +3022,15 @@ CONFIG_PACKAGE_kmod-rt2x00-pci=y
 # CONFIG_PACKAGE_luac is not set
 
 #
+# Node.js
+#
+
+#
+# Module Selection
+#
+# CONFIG_NODEJS_ICU is not set
+
+#
 # PHP
 #
 # CONFIG_PACKAGE_php7 is not set
@@ -3019,7 +3038,57 @@ CONFIG_PACKAGE_kmod-rt2x00-pci=y
 #
 # Python
 #
+# CONFIG_PACKAGE_python is not set
+# CONFIG_PACKAGE_python-base is not set
+# CONFIG_PACKAGE_python-base-src is not set
+# CONFIG_PACKAGE_python-codecs is not set
+# CONFIG_PACKAGE_python-codecs-src is not set
+# CONFIG_PACKAGE_python-compiler is not set
+# CONFIG_PACKAGE_python-compiler-src is not set
+# CONFIG_PACKAGE_python-ctypes is not set
+# CONFIG_PACKAGE_python-ctypes-src is not set
+# CONFIG_PACKAGE_python-db is not set
+# CONFIG_PACKAGE_python-db-src is not set
+# CONFIG_PACKAGE_python-decimal is not set
+# CONFIG_PACKAGE_python-decimal-src is not set
+# CONFIG_PACKAGE_python-dev is not set
+# CONFIG_PACKAGE_python-dev-src is not set
+# CONFIG_PACKAGE_python-distutils is not set
+# CONFIG_PACKAGE_python-distutils-src is not set
+# CONFIG_PACKAGE_python-email is not set
+# CONFIG_PACKAGE_python-email-src is not set
+# CONFIG_PACKAGE_python-gdbm is not set
+# CONFIG_PACKAGE_python-gdbm-src is not set
+# CONFIG_PACKAGE_python-lib2to3 is not set
+# CONFIG_PACKAGE_python-lib2to3-src is not set
+# CONFIG_PACKAGE_python-light is not set
+
+#
+# Configuration
+#
+# CONFIG_PYTHON_BLUETOOTH_SUPPORT is not set
+# CONFIG_PACKAGE_python-light-src is not set
+# CONFIG_PACKAGE_python-logging is not set
+# CONFIG_PACKAGE_python-logging-src is not set
+# CONFIG_PACKAGE_python-multiprocessing is not set
+# CONFIG_PACKAGE_python-multiprocessing-src is not set
+# CONFIG_PACKAGE_python-ncurses is not set
+# CONFIG_PACKAGE_python-ncurses-src is not set
+# CONFIG_PACKAGE_python-openssl is not set
+# CONFIG_PACKAGE_python-openssl-src is not set
+# CONFIG_PACKAGE_python-pip is not set
 # CONFIG_PACKAGE_python-pip-conf is not set
+# CONFIG_PACKAGE_python-pip-src is not set
+# CONFIG_PACKAGE_python-pydoc is not set
+# CONFIG_PACKAGE_python-pydoc-src is not set
+# CONFIG_PACKAGE_python-setuptools is not set
+# CONFIG_PACKAGE_python-setuptools-src is not set
+# CONFIG_PACKAGE_python-sqlite3 is not set
+# CONFIG_PACKAGE_python-sqlite3-src is not set
+# CONFIG_PACKAGE_python-unittest is not set
+# CONFIG_PACKAGE_python-unittest-src is not set
+# CONFIG_PACKAGE_python-xml is not set
+# CONFIG_PACKAGE_python-xml-src is not set
 
 #
 # Libraries
@@ -3149,6 +3218,7 @@ CONFIG_PACKAGE_libavahi-dbus-support=y
 # CONFIG_PACKAGE_libbfd is not set
 # CONFIG_PACKAGE_libblkid is not set
 CONFIG_PACKAGE_libblobmsg-json=y
+# CONFIG_PACKAGE_libbsd is not set
 # CONFIG_PACKAGE_libcec is not set
 # CONFIG_PACKAGE_libcharset is not set
 # CONFIG_PACKAGE_libcomerr is not set
@@ -3487,13 +3557,18 @@ CONFIG_PACKAGE_airmon-ng=m
 # CONFIG_PACKAGE_chat is not set
 # CONFIG_PACKAGE_ds-lite is not set
 # CONFIG_PACKAGE_eapol-test is not set
+# CONFIG_PACKAGE_eapol-test-openssl is not set
+# CONFIG_PACKAGE_eapol-test-wolfssl is not set
+# CONFIG_PACKAGE_etherwake is not set
 CONFIG_PACKAGE_ethtool=m
 # CONFIG_ETHTOOL_PRETTY_DUMP is not set
 # CONFIG_PACKAGE_gre is not set
 # CONFIG_PACKAGE_hostapd is not set
 CONFIG_PACKAGE_hostapd-common=y
 # CONFIG_PACKAGE_hostapd-mini is not set
+# CONFIG_PACKAGE_hostapd-openssl is not set
 # CONFIG_PACKAGE_hostapd-utils is not set
+# CONFIG_PACKAGE_hostapd-wolfssl is not set
 # CONFIG_PACKAGE_iftop is not set
 # CONFIG_PACKAGE_iperf is not set
 # CONFIG_PACKAGE_iperf3 is not set
@@ -3510,6 +3585,7 @@ CONFIG_PACKAGE_hostapd-common=y
 # CONFIG_PACKAGE_iputils-tracepath6 is not set
 # CONFIG_PACKAGE_iputils-traceroute6 is not set
 CONFIG_PACKAGE_iw=y
+# CONFIG_PACKAGE_iw-full is not set
 # CONFIG_PACKAGE_libipset is not set
 # CONFIG_PACKAGE_map is not set
 CONFIG_PACKAGE_odhcp6c=y
@@ -3550,16 +3626,23 @@ CONFIG_PACKAGE_uclient-fetch=y
 # CONFIG_WPA_SUPPLICANT_NO_TIMESTAMP_CHECK is not set
 # CONFIG_WPA_RFKILL_SUPPORT is not set
 CONFIG_WPA_MSG_MIN_PRIORITY=3
+# CONFIG_WPA_WOLFSSL is not set
 # CONFIG_DRIVER_WEXT_SUPPORT is not set
 CONFIG_DRIVER_11N_SUPPORT=y
 CONFIG_DRIVER_11AC_SUPPORT=y
 CONFIG_DRIVER_11W_SUPPORT=y
-# CONFIG_PACKAGE_wpa-supplicant-mesh is not set
+# CONFIG_PACKAGE_wpa-supplicant-mesh-openssl is not set
+# CONFIG_PACKAGE_wpa-supplicant-mesh-wolfssl is not set
 # CONFIG_PACKAGE_wpa-supplicant-mini is not set
+# CONFIG_PACKAGE_wpa-supplicant-openssl is not set
 # CONFIG_PACKAGE_wpa-supplicant-p2p is not set
+# CONFIG_PACKAGE_wpa-supplicant-wolfssl is not set
 # CONFIG_PACKAGE_wpad is not set
-# CONFIG_PACKAGE_wpad-mesh is not set
+# CONFIG_PACKAGE_wpad-mesh-openssl is not set
+# CONFIG_PACKAGE_wpad-mesh-wolfssl is not set
 CONFIG_PACKAGE_wpad-mini=y
+# CONFIG_PACKAGE_wpad-openssl is not set
+# CONFIG_PACKAGE_wpad-wolfssl is not set
 # CONFIG_PACKAGE_wpan-tools is not set
 # CONFIG_PACKAGE_wwan is not set
 
@@ -3608,7 +3691,6 @@ CONFIG_PACKAGE_lethd=y
 #
 # internal
 #
-# CONFIG_PACKAGE_p44-extdev-cecbutton is not set
 # CONFIG_PACKAGE_p44-extdev-htscreen is not set
 # CONFIG_PACKAGE_p44-maint-keys is not set
 CONFIG_PACKAGE_p44pagekite=y
@@ -3651,10 +3733,6 @@ CONFIG_PACKAGE_messagetorch=y
 # CONFIG_PACKAGE_p44sbbd is not set
 # CONFIG_PACKAGE_pixelboard-config is not set
 # CONFIG_PACKAGE_pixelboardd is not set
-
-#
-# Raspberry Pi
-#
 
 #
 # Sound
