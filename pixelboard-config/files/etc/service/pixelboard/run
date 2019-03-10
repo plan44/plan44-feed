@@ -6,9 +6,25 @@ LOGLEVEL=5
 EXTRAOPTS=
 MESSAGE=
 
+# resources (images, sounds)
+RESOURCEPATH="/usr/share/pixelboard"
+DATAPATH="/flash"
+
 # platform params (Omega2, v3 board)
 PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain1"
 PLATFORM_LEDCHAIN_NUMLEDS="200"
+
+# ALSA sound (note we need our own .asoundrc for that)
+PLATFORM_SOUND_DEVICE="sound"
+PLATFORM_MUSIC_DEVICE="music"
+DEFAULT_SOUND_VOLUME="100"
+DEFAULT_MUSIC_VOLUME="60"
+
+# init sound
+alsactl init
+# - make sure controls exist
+aplay -D "${PLATFORM_SOUND_DEVICE}" "${RESOURCEPATH}/sounds/silence.wav"
+aplay -D "${PLATFORM_MUSIC_DEVICE}" "${RESOURCEPATH}/sounds/silence.wav"
 
 # Allow overriding options
 # - override from flash
@@ -96,11 +112,17 @@ exec ${EXECUTABLE} \
   --touchreset "gpio.15" \
   --touchdetect "/gpio.19" \
   --ledchain "${PLATFORM_LEDCHAIN_DEVICE}" \
+  --sound "${PLATFORM_SOUND_DEVICE}" \
+  --soundvol "${DEFAULT_SOUND_VOLUME}" \
+  --music "${PLATFORM_MUSIC_DEVICE}" \
+  --musicvol "${DEFAULT_MUSIC_VOLUME}" \
   --jsonapiport 8090 \
   --defaultpage display \
   --defaultmode 1 \
-  --image /www/images/default.png \
+  --image ${RESOURCEPATH}/images/default.png \
   --message "${MESSAGE}" \
+  --resourcepath "${RESOURCEPATH}" \
+  --datapath "${DATAPATH}" \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null

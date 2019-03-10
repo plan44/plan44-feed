@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=pixelboard-config
 # version of what we are downloading
-PKG_VERSION:=0.4
+PKG_VERSION:=0.14
 # version of this makefile
-PKG_RELEASE:=6
+PKG_RELEASE:=16
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -17,7 +17,7 @@ PKG_CHECK_FORMAT_SECURITY:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+mg44 +pixelboardd
+	DEPENDS:=+mg44 +pixelboardd +kmod-p44-ledchain
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=toys
@@ -63,6 +63,7 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/flash
 	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_DIR) $(1)/usr/share/pixelboard
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/config_p44defaults
@@ -72,6 +73,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
+	$(CP) $(PKG_BUILD_DIR)/resources/* $(1)/usr/share/pixelboard
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-pixelboard $(1)/lib/upgrade/keep.d/pixelboard
 endef
