@@ -11,14 +11,16 @@ PKG_VERSION:=2.13.0
 # version of this makefile
 PKG_RELEASE:=1
 
-PKG_SOURCE:=TiMidity++-$(PKG_VERSION).tar.gz
+PKG_DOWNLOAD_NAME:=TiMidity++-$(PKG_VERSION)
+PKG_SOURCE:=$(PKG_DOWNLOAD_NAME).tar.gz
 PKG_SOURCE_URL:=@SF/timidity
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_MD5SUM:=a006fad0432b12772d5e0937f0bb51ba
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+#PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_DOWNLOAD_NAME)
 
 PKG_FIXUP:=autoreconf
 
@@ -28,7 +30,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-#  DEPENDS:=+this +that $(CXX_DEPENDS)
+  DEPENDS:=+alsa-lib $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=sound
@@ -52,7 +54,7 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/$(PKG_NAME) $(1)/usr/bin/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/timidity/$(PKG_NAME) $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
