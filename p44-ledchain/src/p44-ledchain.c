@@ -950,7 +950,7 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
     * sizeof(PWMPattern_t);
   dev->outBuf = kzalloc(dev->outBufSize, GFP_KERNEL);
   if (!dev->outBuf) {
-    printk(KERN_WARNING LOGPREFIX "Cannot allocated PWM data buffer of %d bytes for %s\n", dev->outBufSize, devname);
+    printk(KERN_WARNING LOGPREFIX "Cannot allocate PWM data buffer of %d bytes for %s\n", dev->outBufSize, devname);
     err = -ENOMEM;
     goto err_free;
   }
