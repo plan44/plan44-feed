@@ -1,0 +1,38 @@
+--- a/interface/wrdt_tty.c
++++ b/interface/wrdt_tty.c
+@@ -66,7 +66,7 @@ static int inkey_flag;
+ 
+ static int wrdt_open(char *dummy)
+ {
+-  
++
+     wrdt.opened = 1;
+     inkey_flag = 0;
+     return 0;
+@@ -118,7 +118,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	len = strlen(p);
+ 	text = (char *)new_segment(&tmpbuffer, SAFE_CONVERT_LENGTH(len));
+ 
+-	/*This must be not good thing,but as far as I know no wrd file 
++	/*This must be not good thing,but as far as I know no wrd file
+ 	  written in EUC-JP code found*/
+ 
+ 	code_convert(p, text, SAFE_CONVERT_LENGTH(len), "SJIS", (char *)-1);
+@@ -287,7 +287,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	  fillbuf[0]=0x1b;
+ 	  fillbuf[1]='7';
+ 	  fillbuf[2]=0;
+-	  printf(fillbuf);
++	  printf("%s", fillbuf);
+ 
+ 	  /* 0-7: normal, 8-16: reverse */
+ 	  if(wrd_args[4] <= 7)
+@@ -303,7 +303,7 @@ static void wrdt_apply(int cmd, int wrd_
+ 	  fillbuf[0]=0x1b;
+ 	  fillbuf[1]='8';
+ 	  fillbuf[2]=0;
+-	  printf(fillbuf);
++	  printf("%s", fillbuf);
+ 	  printf("\033[%dm",txtclr_preserve);
+ 	  fflush(stdout);
+ 	}
