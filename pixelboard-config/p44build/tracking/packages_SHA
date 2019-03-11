@@ -1,4 +1,5 @@
 # feed/package giturl:gitref
+plan44/pixelboardd https://github.com/plan44/pixelboardd.git:54d5a4a64ec635e38ef7a0eb885c315ecc3136fd
 p44i/mg44 ssh://plan44@plan44.ch/home/plan44/sharedgit/mg44.git:87d807c0ba3b782f92dbc8bb6a0bbacaaf2c6ea0
 p44i/serialfwd ssh://plan44@plan44.ch/home/plan44/gitrepositories/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
 # onion/omega2-ctrl: build SHA differs from current 'git ls-remote ... HEAD' (e7152ba869b1af10e3c4d22938100962eb1d9b0e) - could be due to commits happening since build
