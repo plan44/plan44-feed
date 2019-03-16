@@ -1,6 +1,49 @@
 --- /dev/null
-+++ b/target/linux/ramips/patches-4.4/9999-spi-mt7621.patch
-@@ -0,0 +1,276 @@
++++ b/target/linux/ramips/patches-4.14/9998-spi-mt7621-remove-macros.patch
+@@ -0,0 +1,40 @@
++--- a/drivers/spi/spi-mt7621.c	2018-11-28 03:31:10.704736754 +0530
+++++ b/drivers/spi/spi-mt7621.c	2018-11-28 03:33:00.540732160 +0530
++@@ -90,11 +90,9 @@
++
++ 	master |= 7 << 29;
++ 	master |= 1 << 2;
++-#ifdef CONFIG_SOC_MT7620
++ 	if (duplex)
++ 		master |= 1 << 10;
++ 	else
++-#endif
++ 		master &= ~(1 << 10);
++
++ 	mt7621_spi_write(rs, MT7621_SPI_MASTER, master);
++@@ -269,7 +267,6 @@
++ 	return 0;
++ }
++
++-#ifdef CONFIG_SOC_MT7620
++ static int mt7621_spi_transfer_full_duplex(struct spi_master *master,
++ 					   struct spi_message *m)
++ {
++@@ -354,18 +351,15 @@
++
++ 	return 0;
++ }
++-#endif
++
++ static int mt7621_spi_transfer_one_message(struct spi_master *master,
++ 					   struct spi_message *m)
++ {
++ 	struct spi_device *spi = m->spi;
++-#ifdef CONFIG_SOC_MT7620
++ 	int cs = spi->chip_select;
++
++ 	if (cs)
++ 		return mt7621_spi_transfer_full_duplex(master, m);
++-#endif
++ 	return mt7621_spi_transfer_half_duplex(master, m);
++ }
+--- /dev/null
++++ b/target/linux/ramips/patches-4.14/9999-spi-mt7621.patch
+@@ -0,0 +1,275 @@
 +From 4d4411a2204fa865647aa33568f20bc8eabdc5a8 Mon Sep 17 00:00:00 2001
 +From: =?UTF-8?q?Bernhard=20W=C3=B6rndl-Aichriedler?= <bwa@xdevelop.at>
 +Date: Thu, 13 Oct 2016 23:52:12 +0200
@@ -21,8 +64,8 @@
 +index 0a7ccc0..0831f38 100644
 +--- a/drivers/spi/spi-mt7621.c
 ++++ b/drivers/spi/spi-mt7621.c
-+@@ -91,10 +91,13 @@ static void mt7621_spi_reset(struct mt7621_spi *rs, int duplex)
-+ 
++@@ -90,10 +90,13 @@ static void mt7621_spi_reset(struct mt7621_spi *rs, int duplex)
++
 + 	master |= 7 << 29;
 + 	master |= 1 << 2;
 +-	if (duplex)
@@ -33,16 +76,16 @@
 ++	//	master |= 1 << 10;
 ++	//else
 ++	//	master &= ~(1 << 10);
-++	
+++
 ++	//Only half duplex works properly!
 ++	master &= ~(1 << 10);
-+ 
++
 + 	mt7621_spi_write(rs, MT7621_SPI_MASTER, master);
 + }
-+@@ -266,85 +269,182 @@ msg_done:
++@@ -267,85 +270,182 @@ msg_done:
 + 	return 0;
 + }
-+ 
++
 +-static int mt7621_spi_transfer_full_duplex(struct spi_master *master,
 +-					   struct spi_message *m)
 +-{
@@ -55,14 +98,14 @@
 +-	int rx_len = 0;
 +-	u32 data[9] = { 0 };
 +-	u32 val = 0;
-+ 
++
 +-	mt7621_spi_wait_till_ready(spi);
 ++#define MT7621_MAX_TX_BUFFER	36		//Dont change, limited by hardware!
 ++#define MT7621_MAX_RX_BUFFER	32		//Dont change, limited by hardware!
-+ 
++
 +-	list_for_each_entry(t, &m->transfers, transfer_list) {
 +-		const u8 *buf = t->tx_buf;
-+ 
++
 +-		if (t->rx_buf)
 +-			rx_len += t->len;
 ++/**
@@ -77,12 +120,12 @@
 ++			buf >>= (4 - bytesused) * 8;
 ++	}
 ++	mt7621_spi_write(rs, MT7621_SPI_OPCODE+(regindex*4), buf);
-+ 
++
 +-		if (!buf)
 +-			continue;
 ++	return 0;
 ++}
-+ 
++
 +-		if (WARN_ON(len + t->len > 16)) {
 +-			status = -EIO;
 +-			goto msg_done;
@@ -93,11 +136,11 @@
 ++ */
 ++static int mt7621_spi_transmit(struct spi_device *spi, struct mt7621_spi *rs, const u8 *buf, int len)
 ++{
-++	int i, regindex; 
-++	u32 tmp, val; 
+++	int i, regindex;
+++	u32 tmp, val;
 ++
 ++	//Too long for us to send
-++	if(len > MT7621_MAX_TX_BUFFER) {return -1;}  
+++	if(len > MT7621_MAX_TX_BUFFER) {return -1;}
 ++
 ++	//Write all data to the buffer
 ++	regindex = 0;
@@ -118,7 +161,7 @@
 + 	}
 ++	if(len%4 != 0)
 ++		mt7621_spi_write_buffer(rs, regindex, tmp, len);
-+ 
++
 +-	if (WARN_ON(rx_len > 16)) {
 +-		status = -EIO;
 +-		goto msg_done;
@@ -128,7 +171,7 @@
 ++	if (len > 4)
 ++		val |= (len - 4) * 8;
 ++	mt7621_spi_write(rs, MT7621_SPI_MOREBUF, val);
-+ 
++
 +-	if (mt7621_spi_prepare(spi, speed)) {
 +-		status = -EIO;
 +-		goto msg_done;
@@ -137,28 +180,28 @@
 ++	val = mt7621_spi_read(rs, MT7621_SPI_TRANS);
 ++	val |= SPI_CTL_START;
 ++	mt7621_spi_write(rs, MT7621_SPI_TRANS, val);
-+ 
++
 +-	for (i = 0; i < len; i += 4)
 +-		mt7621_spi_write(rs, MT7621_SPI_DATA0 + i, data[i / 4]);
 ++	mt7621_spi_wait_till_ready(spi);
-+ 
++
 +-	val |= len * 8;
 +-	val |= (rx_len * 8) << 12;
 +-	mt7621_spi_write(rs, MT7621_SPI_MOREBUF, val);
 ++	return 0;
 ++}
-+ 
++
 +-	mt7621_spi_set_cs(spi, 1);
 ++static int mt7621_spi_receive(struct spi_device *spi, struct mt7621_spi *rs, u8 *buf, int len)
 ++{
-++	int i; 
-++	u32 tmp, val; 
+++	int i;
+++	u32 tmp, val;
 ++
 ++	//Too long for us to send
-++	if(len > MT7621_MAX_RX_BUFFER) {return -1;} 
+++	if(len > MT7621_MAX_RX_BUFFER) {return -1;}
 ++
 ++	//Set how many bits should be read
-+ 
++
 ++	val = (len * 8) << 12;
 ++	//val |= len * 8;
 ++	mt7621_spi_write(rs, MT7621_SPI_MOREBUF, val);
@@ -167,21 +210,21 @@
 + 	val = mt7621_spi_read(rs, MT7621_SPI_TRANS);
 + 	val |= SPI_CTL_START;
 + 	mt7621_spi_write(rs, MT7621_SPI_TRANS, val);
-+ 
++
 + 	mt7621_spi_wait_till_ready(spi);
-+ 
++
 +-	mt7621_spi_set_cs(spi, 0);
 ++	//Read the buffer of the SPI module
 ++	for (i = 0; i < len; i+=4)
 ++	{
 ++		tmp = mt7621_spi_read(rs, MT7621_SPI_DATA0 + i);
-+ 
++
 +-	for (i = 0; i < rx_len; i += 4)
 +-		data[i / 4] = mt7621_spi_read(rs, MT7621_SPI_DATA4 + i);
 ++		//Yes this could be optimized - Anyone?
 ++		buf[i+0] = (tmp >> 0) & 0xFF;
 ++		if(i+1 < len) buf[i+1] = (tmp >> 8) & 0xFF;
-++		if(i+2 < len) buf[i+2] = (tmp >> 16) & 0xFF; 
+++		if(i+2 < len) buf[i+2] = (tmp >> 16) & 0xFF;
 ++		if(i+3 < len) buf[i+3] = (tmp >> 24) & 0xFF;
 ++
 ++		//printk(KERN_INFO "RX Tmp: %08x %02x\n", tmp, buf[i]);
@@ -193,22 +236,22 @@
 ++		printk(KERN_INFO "RX %i: %08x\n", i, tmp);
 ++	}
 ++	*/
-++	
-++	return 0;		
+++
+++	return 0;
 ++}
-+ 
++
 +-	m->actual_length = rx_len;
-+ 
++
 +-	len = 0;
-++/* 
+++/*
 ++ * The SPI core of the MT76xx is utterly broken,
 ++ * and a full duplex transfer will mess up the MSB of the transaction
 ++ * by setting it to the MSB-1 bit aka a 0x40 will be a 0xC0
 ++ * this means, that "real" full duplex SPI cannot be used
 ++ *
-++ * As most drivers (also the driver we use), only does 
+++ * As most drivers (also the driver we use), only does
 ++ * "quasi-full-duplex" aka. one transfer in and one transfer out
-++ * this function will handle this just fine 
+++ * this function will handle this just fine
 ++ */
 ++static int mt7621_spi_transfer_full_duplex(struct spi_master *master,
 ++					   struct spi_message *m)
@@ -228,13 +271,13 @@
 +-		u8 *buf = t->rx_buf;
 ++		if(t->speed_hz < speed){speed = t->speed_hz;}
 ++	}
-+ 
++
 +-		if (!buf)
 +-			continue;
 ++	if (mt7621_spi_prepare(spi, speed)) {
 ++		return -1;
 ++	}
-+ 
++
 +-		for (i = 0; i < t->len; i++, len++)
 +-			buf[i] = data[len / 4] >> (8 * (len & 3));
 ++	m->actual_length = 0;
@@ -246,12 +289,12 @@
 ++		//We don't support full duplex
 ++		//but in most cases, this is not necessary anyay
 ++		if(t->tx_buf && t->rx_buf){
-++			printk(KERN_ERR "The MT7621-SPI does not support full bidirectional SPI, only doing TX!");
+++			//printk(KERN_ERR "The MT7621-SPI does not support full bidirectional SPI, only doing TX!");
 ++			//There are ways to overcome this limitation partially, but no really clean solution
 ++		}
-++		
-++		if(t->tx_buf) {			
-++			const u8 *buf = t->tx_buf; 
+++
+++		if(t->tx_buf) {
+++			const u8 *buf = t->tx_buf;
 ++			//printk(KERN_INFO "Doing TX");
 ++			m->actual_length += t->len;
 ++
@@ -259,7 +302,7 @@
 ++				mt7621_spi_transmit(spi, rs, buf+i, min_t(int, t->len-i, MT7621_MAX_TX_BUFFER));
 ++		}
 ++		else if(t->rx_buf) {
-++			u8 *buf = t->rx_buf; 
+++			u8 *buf = t->rx_buf;
 ++			//printk(KERN_INFO "Doing RX");
 ++			m->actual_length += t->len;
 ++			for(i = 0; i < t->len; i+=MT7621_MAX_RX_BUFFER)
@@ -267,13 +310,12 @@
 ++		}
 ++		//We don't transfer if we neither got read or write buffer, is that ok?!
 + 	}
-+ 
++
 +-msg_done:
 ++	mt7621_spi_set_cs(spi, 0);
 ++
 + 	m->status = status;
 + 	spi_finalize_current_message(master);
-+ 
-+-- 
-+1.9.1
 +
++--
++1.9.1

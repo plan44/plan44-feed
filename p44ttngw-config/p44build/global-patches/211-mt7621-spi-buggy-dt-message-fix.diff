@@ -1,0 +1,26 @@
+--- /dev/null
++++ b/target/linux/ramips/patches-4.14/0086-spidev-buggy-DT.patch
+@@ -0,0 +1,23 @@
++--- a/drivers/spi/spidev.c	2018-07-25 17:28:00.820206896 +0530
+++++ b/drivers/spi/spidev.c	2018-07-25 17:27:29.090678348 +0530
++@@ -696,6 +696,7 @@
++ 	{ .compatible = "rohm,dh2228fv" },
++ 	{ .compatible = "lineartechnology,ltc2488" },
++ 	{ .compatible = "siliconlabs,si3210" },
+++	{ .compatible = "spidev" },
++ 	{},
++ };
++ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
++@@ -714,10 +715,10 @@
++ 	 * compatible string, it is a Linux implementation thing
++ 	 * rather than a description of the hardware.
++ 	 */
++-	if (spi->dev.of_node && !of_match_device(spidev_dt_ids, &spi->dev)) {
+++	if (spi->dev.of_node && of_match_device(spidev_dt_ids, &spi->dev)) {
++ 		dev_err(&spi->dev, "buggy DT: spidev listed directly in DT\n");
++ 		WARN_ON(spi->dev.of_node &&
++-			!of_match_device(spidev_dt_ids, &spi->dev));
+++			of_match_device(spidev_dt_ids, &spi->dev));
++ 	}
++ 
++ 	/* Allocate driver data */

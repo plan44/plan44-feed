@@ -9,13 +9,12 @@
  /overlay
  /package/feeds
  /package/openwrt-packages
-@@ -25,3 +25,9 @@ key-build*
- .emacs.desktop*
- TAGS*~
+@@ -27,3 +27,8 @@ TAGS*~
  git-src
+ .project
+ .cproject
 +# p44build additions
 +/patches
 +/.pc
 +/.p44build
 +p44b
-+

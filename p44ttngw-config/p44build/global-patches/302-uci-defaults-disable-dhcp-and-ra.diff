@@ -1,0 +1,36 @@
+--- a/package/network/services/odhcpd/files/odhcpd.defaults
++++ b/package/network/services/odhcpd/files/odhcpd.defaults
+@@ -4,18 +4,21 @@ touch /etc/config/dhcp
+ 
+ . /usr/share/libubox/jshn.sh
+ 
+-json_load "$(cat /etc/board.json)"
+-json_select network
+-json_select lan
+-json_get_vars protocol
+-json_select ..
+-json_select ..
+-
+-case "$protocol" in
+-# only enable server mode on statically addressed lan ports
+-"static") [ -e /proc/sys/net/ipv6 ] && MODE=server || MODE=disabled ;;
+-*) MODE=disabled ;;
+-esac
++# always disable DHCP server of any kind by default in a non-router setup
++# - original codejson_load "$(cat /etc/board.json)"
++# json_select network
++# json_select lan
++# json_get_vars protocol
++# json_select ..
++# json_select ..
++#
++# case "$protocol" in
++# # only enable server mode on statically addressed lan ports
++# "static") [ -e /proc/sys/net/ipv6 ] && MODE=server || MODE=disabled ;;
++# *) MODE=disabled ;;
++# esac
++# - simply disabled
++MODE=disabled
+ 
+ uci batch <<EOF
+ set dhcp.odhcpd=odhcpd
