@@ -6,16 +6,17 @@ include $(TOPDIR)/rules.mk
 
 # name
 PKG_NAME:=packet_forwarder
-# version of what we are downloading
-PKG_VERSION:=2.1.0
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 # - original
+# version of what we are downloading
+PKG_VERSION:=2.1.0
 PKG_SOURCE_URL:=https://github.com/TheThingsNetwork/packet_forwarder.git
 PKG_SOURCE_VERSION:=legacy
-# - kersing multi-protocol (MP)
+# - kersing multi-protocol (MP) - does not compile yet, has path dependency beyond its own source
+#PKG_VERSION:=3.0.20
 #PKG_SOURCE_URL:=https://github.com/kersing/packet_forwarder.git
 #PKG_SOURCE_VERSION:=master
 
@@ -43,11 +44,11 @@ endef
 
 TARGET_CFLAGS += $(FPIC) -O2 -Wall -Wextra -std=c99 -Iinc -I. -lm
 
-APP_NAME="basic_pkt_fwd"
-
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/${APP_NAME}/${APP_NAME} $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gps_pkt_fwd/gps_pkt_fwd $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/basic_pkt_fwd/basic_pkt_fwd $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/beacon_pkt_fwd/beacon_pkt_fwd $(1)/usr/bin
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
