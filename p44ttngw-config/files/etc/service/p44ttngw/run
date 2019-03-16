@@ -31,6 +31,15 @@ else
   sed -i -r -e "s/##EXTRA_GW_CONF##//" ${RUNCONF}/local_conf.json
 fi
 
+# current lora_gateway lib for Mediatek (berkutta version) is hard-wired to /dev/spidev32766.1
+# which is no longer available on newer OpenWrt-
+if [ ! -e /dev/spidev32766.1 ]; then
+  # create hard link to actual SPI device to use
+  if [ -c /dev/spidev0.1 ]; then
+    ln /dev/spidev0.1 /dev/spidev32766.1
+  fi
+fi
+
 # perform RAK reset
 echo "${RAK831_RESET_GPIO}" >/sys/class/gpio/export
 echo "out" >/sys/class/gpio/gpio${RAK831_RESET_GPIO}/direction

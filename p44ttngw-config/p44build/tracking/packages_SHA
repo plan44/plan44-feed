@@ -1,4 +1,5 @@
 # feed/package giturl:gitref
+# onion/omega2-ctrl: build SHA differs from current 'git ls-remote ... HEAD' (e7152ba869b1af10e3c4d22938100962eb1d9b0e) - could be due to commits happening since build
 onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:fa0425d861abbcc34bacd6edc3c7b531ad32c4d9
 plan44/lora_gateway https://github.com/berkutta/lora_gateway.git:0d624e9af330915e68c5347d10d887a537aa91c0
-plan44/packet_forwarder https://github.com/TheThingsNetwork/packet_forwarder.git:884bb13504137bb2af32ce487698d30a10952c86
+plan44/packet_forwarder https://github.com/TheThingsNetwork/packet_forwarder.git:90a1d7e1d2101689e4ec9b7d6bcd80f311fe9e25
