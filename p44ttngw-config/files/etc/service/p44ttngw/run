@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# which forwarder binary to call
+APP_NAME="gps_pkt_fwd"
+
 # RAK831 reset pin GPIO
 RAK831_RESET_GPIO=0
 
@@ -32,4 +35,4 @@ sleep 1
 
 # run the packet forwarder, all output goes to log
 cd ${RUNCONF}
-exec basic_pkt_fwd 2>&1
+exec ${APP_NAME} 2>&1
