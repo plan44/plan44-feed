@@ -9,6 +9,7 @@ RAK831_RESET_GPIO=0
 # static config (template) dir
 CONFSRC="/etc/lora"
 RUNCONF="/tmp/loracfg"
+EXTRAGWCONF="/flash/extra_gw_conf.json"
 
 # calculate EUI from MAC
 # - MAC with FFFE in the middle
@@ -22,6 +23,13 @@ mkdir -p "${RUNCONF}"
 cp -f ${CONFSRC}/* ${RUNCONF}
 # - substitute gateway EUI
 sed -i -r -e "s/##GATEWAY_EUI##/${GATEWAY_EUI}/" ${RUNCONF}/local_conf.json
+
+# - insert fake GPS coordinates if we happen to have them
+if [ -f ${EXTRAGWCONF} ]; then
+  sed -i -r -e "/##EXTRA_GW_CONF##/r/flash/extra_gw_conf.json" -e "s/##EXTRA_GW_CONF##/,/" ${RUNCONF}/local_conf.json
+else
+  sed -i -r -e "s/##EXTRA_GW_CONF##//" ${RUNCONF}/local_conf.json
+fi
 
 # perform RAK reset
 echo "${RAK831_RESET_GPIO}" >/sys/class/gpio/export

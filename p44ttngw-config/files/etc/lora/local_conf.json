@@ -10,5 +10,6 @@
       }
     ],
     "description": "P44-TTNGW - DIY Omega2 based Gateway"
+    ##EXTRA_GW_CONF##
   }
 }
