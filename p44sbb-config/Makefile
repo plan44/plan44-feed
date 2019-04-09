@@ -7,12 +7,15 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44sbb-config
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.5
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
+
+PKG_CONFIG_DEPENDS := \
+	CONFIG_VERSION_NUMBER
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -20,7 +23,7 @@ define Package/$(PKG_NAME)
 	DEPENDS:=+mg44 +p44sbbd
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=toys
+	SUBMENU:=maker
 	TITLE:=P44SBB configuration setup
 	URL:=https://plan44.ch/automation
 	MAINTAINER:=luz@plan44.ch
@@ -40,16 +43,10 @@ endif
 ifeq ($(CONFIG_TARGET_ar71xx_generic_OMEGA),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=onion-omega
 endif
-ifeq ($(CONFIG_TARGET_ar71xx_generic_CARAMBOLA2),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=carambola2
-endif
 ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
-ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_omega2),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
-endif
-ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_P44DSBOmega2),y)
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_P44DSBOmega2),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
 endif
 
@@ -58,10 +55,6 @@ define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
 	# Replace contents of /files with stuff we want to have there
-	# (is ugly, but works assuming only one xxx-config package is enabled -
-	# fair enough, because these packages ARE meant to be overall target config packages)
-	rm -r $(TOPDIR)/files/* ||:
-	#$(CP) -r ./into-buildroot-files/* $(TOPDIR)/files
 endef
 
 
