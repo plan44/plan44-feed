@@ -1,4 +1,4 @@
-# Copyright (c) 2017 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2017-2019 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -42,9 +42,6 @@ ifeq ($(CONFIG_TARGET_brcm2708_bcm2708_RaspberryPi),y)
 endif
 ifeq ($(CONFIG_TARGET_ar71xx_generic_OMEGA),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=onion-omega
-endif
-ifeq ($(CONFIG_TARGET_ramips_mt7688_DEVICE_omega2),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
 ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=omega2

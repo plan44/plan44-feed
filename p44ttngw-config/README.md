@@ -1,4 +1,4 @@
-# How to build the P44-TTNGW firmware image based on LEDE
+# How to build the P44-TTNGW firmware image based on OpenWrt
 
 ## Preparations
 
