@@ -1,0 +1,23 @@
+#!/bin/sh /etc/rc.common
+
+START=13
+
+USE_PROCD=1
+NAME=p44devd
+PROG=/sbin/p44devd
+
+start_service() {
+	local socket=$(uci -q get rpcd.@rpcd[0].socket)
+
+	procd_open_instance
+	procd_set_param command "$PROG" ${socket:+-s "$socket"}
+	procd_close_instance
+}
+
+stop() {
+	service_stop /sbin/p44devd
+}
+
+reload() {
+	service_reload /sbin/p44devd
+}
