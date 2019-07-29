@@ -1,7 +1,28 @@
 #!/bin/sh
 
-# name of serial port device connected to Elsner P03 RS485
-SERIALPORT=/dev/ttyUSB0
+EXECUTABLE=p44extdevelsner
 LOGLEVEL=5
+EXTRAOPTS=
 
-exec /usr/bin/p44extdevelsner --logtoapi --loglevel ${LOGLEVEL} --serialport ${SERIALPORT}
+# name of serial port device connected to Elsner P03 or P04 via RS485
+SERIALPORT="/dev/ttyUSB0"
+# enable this if your weather station does not have 3 separate sun directions
+#SINGLESUNSENSOR="--singlesunsensor"
+
+# Allow overriding options
+# - override from flash
+if [ -e /flash/${EXECUTABLE}_debug ]; then
+  source /flash/${EXECUTABLE}_debug
+fi
+# - override from tmp
+if [ -e /tmp/${EXECUTABLE}_debug ]; then
+  source /tmp/${EXECUTABLE}_debug
+fi
+
+exec ${EXECUTABLE} \
+  --logtoapi \
+  --loglevel ${LOGLEVEL} \
+  --serialport ${SERIALPORT} \
+  ${SINGLESUNSENSOR} \
+  ${EXTRAOPTS} \
+  </dev/null

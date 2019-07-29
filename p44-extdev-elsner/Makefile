@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44-extdev-elsner
 # version of what we are downloading
-PKG_VERSION:=1.02
+PKG_VERSION:=2.0
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=5
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -26,18 +26,18 @@ define Package/$(PKG_NAME)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
-	TITLE:=p44 external device for Elsner P03 weather station
+	TITLE:=p44 external device for Elsner P03/P04 weather station
 	MAINTAINER:=luz@plan44.ch
 endef
 
 define Package/$(PKG_NAME)/description
-  p44 external device for Elsner P03 weather station - installable on P44-DSB devices
+  p44 external device for Elsner P03/P04 weather station - installable on P44-DSB devices
 endef
 
 
 P44UTILS_PROTO:=git
 P44UTILS_URL:=https://github.com/plan44/p44utils.git
-P44UTILS_VERSION:=165f3b01d041bf46f297ec1c1e9f01c4b32d31a3
+P44UTILS_VERSION:=aaf0f22468c0c98f50775128cb8a5b45ee183b7f
 P44UTILS_FILE:=p44utils-$(P44UTILS_VERSION).gz
 P44UTILS_SUBDIR:=p44utils-$(P44UTILS_VERSION)
 define Download/p44utils

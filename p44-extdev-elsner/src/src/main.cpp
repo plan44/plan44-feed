@@ -17,7 +17,6 @@
 #include "serialcomm.hpp"
 #include "jsoncomm.hpp"
 
-
 using namespace p44;
 
 // set this to a unique string for your particular app or use --uniqueid command line parameter
@@ -43,12 +42,17 @@ class ExternalDeviceApp : public CmdLineApp
   SerialCommPtr serial;
   int telegramIndex;
   int checksum;
-  static const size_t numTelegramBytes = 40;
-  uint8_t telegram[numTelegramBytes];
+  static const size_t maxTelegramBytes = 100; // max known: Elsner P04/3-RS485-GPS has 61, but reserve some for future versions
+  uint8_t telegram[maxTelegramBytes];
+
+  // config
+  bool hasSunDirections;
 
   // sensor indices
   int temperatureSensorIndex;
   int sunlightSensorIndex;
+  int sunWestSensorIndex;
+  int sunEastSensorIndex;
   int daylightSensorIndex;
   int windSensorIndex;
   int gustSensorIndex;
@@ -74,7 +78,8 @@ class ExternalDeviceApp : public CmdLineApp
 
 public:
 
-  ExternalDeviceApp()
+  ExternalDeviceApp() :
+    hasSunDirections(true)
   {
   }
 
@@ -84,15 +89,16 @@ public:
     "Usage: %1$s [options]\n";
     const CmdLineOptionDescriptor options[] = {
       // specific to P03 weather station example
-      { 's', "serialport",    true,  "serialport;serial port to which the Elsner P03 weather station is connected" },
+      { 's', "serialport",      true,  "serialport;serial port to which the Elsner P03 or P04 weather station is connected" },
+      { 0  , "singlesunsensor", false, "weather station only has singe sun sensor" },
       // generic
-      { 'h', "apihost",       true,  "hostname/IP;specifies vdcd external device API host to connect to, defaults to " DEFAULT_API_HOST },
-      { 'p', "apiport",       true,  "port;external device API port or local socket name, defaults to " DEFAULT_API_SERVICE },
-      { 'i', "unqiueid",      true,  "UUID/unique string;device's dSUID is derived from this, if UUID is used, it must be globally unique, "
-                                     "if other string is used it must be unique for the vdcd it connects to. Defaults to " DEFAULT_UNIQUE_ID },
-      { 'l', "loglevel",      true,  "level;set max level of log message detail to show on stdout" },
-      { 0  , "logtoapi",      false, "log via API log command, so log messages will appear in vdcd log" },
-      { 'h', "help",          false, "show this text" },
+      { 'h', "apihost",         true,  "hostname/IP;specifies vdcd external device API host to connect to, defaults to " DEFAULT_API_HOST },
+      { 'p', "apiport",         true,  "port;external device API port or local socket name, defaults to " DEFAULT_API_SERVICE },
+      { 'i', "unqiueid",        true,  "UUID/unique string;device's dSUID is derived from this, if UUID is used, it must be globally unique, "
+                                       "if other string is used it must be unique for the vdcd it connects to. Defaults to " DEFAULT_UNIQUE_ID },
+      { 'l', "loglevel",        true,  "level;set max level of log message detail to show on stdout" },
+      { 0  , "logtoapi",        false, "log via API log command, so log messages will appear in vdcd log" },
+      { 'h', "help",            false, "show this text" },
       { 0, NULL } // list terminator
     };
 
@@ -124,6 +130,8 @@ public:
     getStringOption("unqiueid", uniqueId);
     // - get serial port
     getStringOption("serialport", weatherStationSerialPort);
+    // - sun directions?
+    hasSunDirections = !getOption("singlesunsensor");
     // run
     return run();
   };
@@ -170,12 +178,12 @@ public:
     // - primary group: 8 = black
     initMsg->add("group", JsonObject::newInt32(8));
     // - model and name
-    initMsg->add("modelname", JsonObject::newString("Elsner P03"));
-    initMsg->add("name", JsonObject::newString("Elsner P03 via RS485"));
+    initMsg->add("modelname", JsonObject::newString("Elsner P03/P04"));
+    initMsg->add("name", JsonObject::newString("Elsner P03/P04 via RS485"));
     // - binary inputs
     JsonObjectPtr inputs = JsonObject::newArray();
     JsonObjectPtr i;
-    //   - twilight [0]
+    //   - twilight indicator
     i = JsonObject::newObj();
     i->add("inputtype", JsonObject::newInt32(4)); // 4=twilight sensor
     i->add("usage", JsonObject::newInt32(2)); // 2=outdoors
@@ -183,7 +191,7 @@ public:
     i->add("hardwarename", JsonObject::newString("Twilight"));
     twilightInputIndex = inputs->arrayLength();
     inputs->arrayAppend(i);
-    //   - rain [1]
+    //   - rain indicator
     i = JsonObject::newObj();
     i->add("inputtype", JsonObject::newInt32(9)); // 9=rain detector
     i->add("usage", JsonObject::newInt32(2)); // 2=outdoors
@@ -196,7 +204,19 @@ public:
     // - sensors
     JsonObjectPtr sensors = JsonObject::newArray();
     JsonObjectPtr s;
-    //   - outdoor temperature [0]
+    //   - low daylight sensor, only up to 999lx
+    s = JsonObject::newObj();
+    s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
+    s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
+    s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
+    s->add("hardwarename", JsonObject::newString("Low Daylight"));
+    s->add("min", JsonObject::newDouble(0));
+    s->add("max", JsonObject::newDouble(999));
+    s->add("resolution", JsonObject::newDouble(1));
+    s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
+    daylightSensorIndex = sensors->arrayLength();
+    sensors->arrayAppend(s);
+    //   - outdoor temperature
     s = JsonObject::newObj();
     s->add("sensortype", JsonObject::newInt32(1)); // 1=temperature
     s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
@@ -208,31 +228,7 @@ public:
     s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
     temperatureSensorIndex = sensors->arrayLength();
     sensors->arrayAppend(s);
-    //   - sunlight sensor [1]
-    s = JsonObject::newObj();
-    s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
-    s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
-    s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
-    s->add("hardwarename", JsonObject::newString("Sunlight"));
-    s->add("min", JsonObject::newDouble(0));
-    s->add("max", JsonObject::newDouble(99000));
-    s->add("resolution", JsonObject::newDouble(1000));
-    s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
-    sunlightSensorIndex = sensors->arrayLength();
-    sensors->arrayAppend(s);
-    //   - daylight sensor [2]
-    s = JsonObject::newObj();
-    s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
-    s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
-    s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
-    s->add("hardwarename", JsonObject::newString("Daylight"));
-    s->add("min", JsonObject::newDouble(0));
-    s->add("max", JsonObject::newDouble(999));
-    s->add("resolution", JsonObject::newDouble(1));
-    s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
-    daylightSensorIndex = sensors->arrayLength();
-    sensors->arrayAppend(s);
-    //   - wind speed sensor [3]
+    //   - wind speed sensor
     s = JsonObject::newObj();
     s->add("sensortype", JsonObject::newInt32(13)); // 13=wind speed
     s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
@@ -244,7 +240,7 @@ public:
     s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
     windSensorIndex = sensors->arrayLength();
     sensors->arrayAppend(s);
-    //   - gust speed sensor [4]
+    //   - gust speed sensor
     s = JsonObject::newObj();
     s->add("sensortype", JsonObject::newInt32(23)); // 23=gust speed
     s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
@@ -256,6 +252,47 @@ public:
     s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
     gustSensorIndex = sensors->arrayLength();
     sensors->arrayAppend(s);
+    //   - sunlight (south or general sun when there is no east and west)
+    s = JsonObject::newObj();
+    s->add("id", JsonObject::newString(hasSunDirections ? "sun_south" : "sunlight"));
+    s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
+    s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
+    s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
+    s->add("hardwarename", JsonObject::newString(hasSunDirections ? "Sun South" : "Sunlight"));
+    s->add("min", JsonObject::newDouble(0));
+    s->add("max", JsonObject::newDouble(99000));
+    s->add("resolution", JsonObject::newDouble(1000));
+    s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
+    sunlightSensorIndex = sensors->arrayLength();
+    sensors->arrayAppend(s);
+    if (hasSunDirections) {
+      // - sun west
+      s = JsonObject::newObj();
+      s->add("id", JsonObject::newString("sun_west"));
+      s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
+      s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
+      s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
+      s->add("hardwarename", JsonObject::newString("Sun West"));
+      s->add("min", JsonObject::newDouble(0));
+      s->add("max", JsonObject::newDouble(99999));
+      s->add("resolution", JsonObject::newDouble(1000));
+      s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
+      sunWestSensorIndex = sensors->arrayLength();
+      sensors->arrayAppend(s);
+      // - sun east
+      s = JsonObject::newObj();
+      s->add("id", JsonObject::newString("sun_east"));
+      s->add("sensortype", JsonObject::newInt32(3)); // 3=illumination
+      s->add("usage", JsonObject::newInt32(2)); // 2=outdoors
+      s->add("group", JsonObject::newInt32(1)); // 1=yellow/light
+      s->add("hardwarename", JsonObject::newString("Sun East"));
+      s->add("min", JsonObject::newDouble(0));
+      s->add("max", JsonObject::newDouble(99999));
+      s->add("resolution", JsonObject::newDouble(1000));
+      s->add("updateinterval", JsonObject::newInt32(3)); // updates every 3 seconds
+      sunEastSensorIndex = sensors->arrayLength();
+      sensors->arrayAppend(s);
+    }
     //   - add to init message
     initMsg->add("sensors", sensors);
     // Send init message
@@ -267,7 +304,6 @@ public:
     serial->establishConnection();
     telegramIndex = -1;
   }
-
 
 
   void jsonMessageHandler(ErrorPtr aError, JsonObjectPtr aJsonObject)
@@ -331,49 +367,93 @@ public:
         else {
           LOG(LOG_DEBUG, "- processing byte 0x%02X '%c' ", byte, byte<0x20 || byte>0x7E ? '.' : (char)byte);
           if (telegramIndex<0) {
-            // wait for start of telegram
-            if (byte=='W') {
+            // wait for start of telegram (G for P04/3-RS485-GPS, W for all other models)
+            if (byte=='W' || byte=='G') {
               telegramIndex = 0;
+              telegram[telegramIndex++] = byte;
               LOG(LOG_DEBUG, "Found beginning of telegram");
             }
           }
-          if (telegramIndex>=0 && telegramIndex<numTelegramBytes) {
-            telegram[telegramIndex++] = byte;
-            if (telegramIndex>=numTelegramBytes) {
-              LOG(LOG_DEBUG, "Entire telegram (%zu bytes) received - evaluate now", numTelegramBytes);
-              // evaluate
-              // TODO: checksum
-              // - temperature
-              double temp =
-                (telegram[2]-'0')*10 +
-                (telegram[3]-'0')*1 +
-                (telegram[5]-'0')*0.1;
-              reportSensor(temperatureSensorIndex, temp);
-              // - sun
-              double sun =
-                (telegram[6]-'0')*10000 +
-                (telegram[7]-'0')*1000;
-              reportSensor(sunlightSensorIndex, sun);
-              // - twilight
-              bool isTwilight = telegram[12]=='J';
-              reportInput(twilightInputIndex, isTwilight);
-              // - daylight
-              double daylight =
-                (telegram[13]-'0')*100 +
-                (telegram[14]-'0')*10 +
-                (telegram[15]-'0')*1;
-              reportSensor(daylightSensorIndex, daylight);
-              // - wind
-              double wind =
-                (telegram[16]-'0')*10 +
-                (telegram[17]-'0')*1 +
-                (telegram[19]-'0')*0.1;
-              reportSensor(windSensorIndex, wind);
-              reportSensor(gustSensorIndex, wind);
-              // - rain
-              bool rain = telegram[20]=='J';
-              reportInput(rainInputIndex, rain);
-              // reset index
+          else {
+            // within telegram
+            if (byte!=0x03) {
+              if (telegramIndex<maxTelegramBytes) {
+                // just accumulate
+                telegram[telegramIndex++] = byte;
+              }
+              else {
+                // too long -> discard
+                LOG(LOG_WARNING, "Telegram too long, (%d bytes) -> discard", telegramIndex);
+                telegramIndex = -1;
+              }
+            }
+            else {
+              LOG(LOG_DEBUG, "Found end of telegram (ETX) at index %d", telegramIndex);
+              // verify checksum: all bytes excluding start byte, end byte and checksum itself
+              int checksum = 0;
+              for (int i=0; i<telegramIndex-4; ++i) {
+                checksum += telegram[i];
+              }
+              int repchecksum =
+                (telegram[telegramIndex-4]-'0')*1000 +
+                (telegram[telegramIndex-3]-'0')*100 +
+                (telegram[telegramIndex-2]-'0')*10 +
+                (telegram[telegramIndex-1]-'0');
+              if (repchecksum!=checksum) {
+                LOG(LOG_WARNING, "Telegram checksum wrong: expected %04d, received %04d -> discarded", checksum, repchecksum);
+              }
+              else if (telegramIndex<21) {
+                LOG(LOG_ERR, "Telegram with correct checksum, but too short (only %d bytes, unknown P0x version?) -> discarded", telegramIndex);
+              }
+              else {
+                LOG(LOG_DEBUG, "Telegram with correct checksum received -> analyze now");
+                // evaluate
+                // TODO: checksum
+                // - temperature
+                double temp =
+                  (telegram[2]-'0')*10 +
+                  (telegram[3]-'0')*1 +
+                  (telegram[5]-'0')*0.1;
+                if (telegram[1]=='-') temp = -temp;
+                reportSensor(temperatureSensorIndex, temp);
+                // - sun (south)
+                double sun =
+                  (telegram[6]-'0')*10000 +
+                  (telegram[7]-'0')*1000;
+                reportSensor(sunlightSensorIndex, sun);
+                if (hasSunDirections) {
+                  // - sun west
+                  sun =
+                    (telegram[8]-'0')*10000 +
+                    (telegram[9]-'0')*1000;
+                  reportSensor(sunWestSensorIndex, sun);
+                  // - sun east
+                  sun =
+                    (telegram[10]-'0')*10000 +
+                    (telegram[11]-'0')*1000;
+                  reportSensor(sunEastSensorIndex, sun);
+                }
+                // - twilight indicator
+                bool isTwilight = telegram[12]=='J';
+                reportInput(twilightInputIndex, isTwilight);
+                // - (low, <999lx) daylight
+                double daylight =
+                  (telegram[13]-'0')*100 +
+                  (telegram[14]-'0')*10 +
+                  (telegram[15]-'0')*1;
+                reportSensor(daylightSensorIndex, daylight);
+                // - wind
+                double wind =
+                  (telegram[16]-'0')*10 +
+                  (telegram[17]-'0')*1 +
+                  (telegram[19]-'0')*0.1;
+                reportSensor(windSensorIndex, wind);
+                reportSensor(gustSensorIndex, wind);
+                // - rain
+                bool rain = telegram[20]=='J';
+                reportInput(rainInputIndex, rain);
+              }
+              // telegram consumed, wait for next
               telegramIndex = -1;
             }
           }
