@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.0.0.7
+PKG_VERSION:=2.0.2.9
 # version of this makefile
-PKG_RELEASE:=27
+PKG_RELEASE:=92
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -26,7 +26,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola $(CXX_DEPENDS)
+  DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json +VDCD_RRDB:librrd1 $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
@@ -45,15 +45,13 @@ define Package/$(PKG_NAME)/config
 	source "$(SOURCE)/Config.in"
 endef
 
-# further possibilities to pass flags would be:
-#TARGET_CFLAGS +=
-#TARGET_CPPFLAGS += $(if $(CONFIG_VDCD_OLA),-DOLA=1,)
-#TARGET_LDFLAGS += -Wl,--gc-sections
 
 CONFIGURE_ARGS += \
 	--enable-p44buildow \
 	$(call autoconf_bool,CONFIG_VDCD_OLA,ola) \
-	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x)
+	$(call autoconf_bool,CONFIG_VDCD_UBUS,ubus) \
+	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x) \
+	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb)
 
 
 define Package/$(PKG_NAME)/install

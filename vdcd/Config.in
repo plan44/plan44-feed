@@ -8,6 +8,19 @@ config VDCD_OLA
     Enabling this includes support for OLA (Open Lighting Architecture).
     If enabled, vdcd depends on package ola
 
+config VDCD_UBUS
+	bool "Include ubus Support"
+	default n
+  help
+    Enabling this includes support for ubus API
+
+config VDCD_RRDB
+	bool "Include rrd(tool) support for logging sensor data"
+	default n
+  help
+    Enabling this includes support for librrd (round robin database, rrdtool).
+    If enabled, vdcd depends on package librrd1
+
 config VDCD_RPIWS281X
   depends on TARGET_brcm2708_bcm2708_DEVICE_rpi || TARGET_brcm2708_bcm2709_DEVICE_rpi-2 || TARGET_brcm2708_bcm2710_DEVICE_rpi-3
 	bool "Include support for WS281x LED-chains"
