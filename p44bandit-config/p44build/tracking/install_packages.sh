@@ -18,6 +18,9 @@
 ./scripts/feeds install -p p44i p44lc-config
 ./scripts/feeds install -p p44i p44lc-webui
 ./scripts/feeds install -p p44i p44maintd
+./scripts/feeds install -p p44i p44mbc-config
+./scripts/feeds install -p p44i p44mbcd
+#./scripts/feeds install -p p44i p44mbutil
 ./scripts/feeds install -p p44i p44pagekite
 ./scripts/feeds install -p p44i serialfwd
 ./scripts/feeds install -p p44i sqfloatswapper
@@ -86,6 +89,9 @@
 ./scripts/feeds install -p packages libdbus
 #./scripts/feeds install -p packages dbus
 #./scripts/feeds install -p packages dbus-utils
+./scripts/feeds install -p packages dtc
+#./scripts/feeds install -p packages fdt-utils
+#./scripts/feeds install -p packages libfdt
 ./scripts/feeds install -p packages etherwake
 ./scripts/feeds install -p packages libexpat
 ./scripts/feeds install -p packages libfreetype
@@ -101,6 +107,7 @@
 ./scripts/feeds install -p packages libaio
 ./scripts/feeds install -p packages libdaemon
 ./scripts/feeds install -p packages libev
+./scripts/feeds install -p packages libevdev
 ./scripts/feeds install -p packages libffi
 ./scripts/feeds install -p packages libgcrypt
 ./scripts/feeds install -p packages libgpg-error
@@ -112,9 +119,12 @@
 ./scripts/feeds install -p packages libmcrypt
 ./scripts/feeds install -p packages libmicrohttpd
 #./scripts/feeds install -p packages libmicrohttpd-no-ssl
+./scripts/feeds install -p packages libmodbus
 ./scripts/feeds install -p packages libpam
-./scripts/feeds install -p packages libpng
+./scripts/feeds install -p packages libssh2
 ./scripts/feeds install -p packages libtasn1
+./scripts/feeds install -p packages libupnp
+#./scripts/feeds install -p packages libupnp-sample
 ./scripts/feeds install -p packages libv4l
 #./scripts/feeds install -p packages v4l-utils
 ./scripts/feeds install -p packages libxml2
@@ -163,6 +173,7 @@
 #./scripts/feeds install -p packages mariadb-server-plugin-simple-password-check
 #./scripts/feeds install -p packages mariadb-server-plugin-sql-errlog
 #./scripts/feeds install -p packages mariadb-server-plugin-wsrep-info
+./scripts/feeds install -p packages mc
 ./scripts/feeds install -p packages mjpg-streamer
 ./scripts/feeds install -p packages libnetsnmp
 #./scripts/feeds install -p packages snmp-mibs
@@ -317,7 +328,11 @@
 #./scripts/feeds install -p packages sqlite3-cli
 ./scripts/feeds install -p packages sudo
 ./scripts/feeds install -p packages tinc
+./scripts/feeds install -p packages tree
+./scripts/feeds install -p packages u2pnpd
 ./scripts/feeds install -p packages uw-imap
+./scripts/feeds install -p packages vsftpd
+#./scripts/feeds install -p packages vsftpd-tls
 ./scripts/feeds install -p packages xz-utils
 #./scripts/feeds install -p packages liblzma
 #./scripts/feeds install -p packages lzmadec
@@ -343,6 +358,7 @@
 ./scripts/feeds update plan44
 ./scripts/feeds install -p plan44 hermel-config
 ./scripts/feeds install -p plan44 hermeld
+./scripts/feeds install -p plan44 hxcmodplayer
 ./scripts/feeds install -p plan44 i2c-tools
 ./scripts/feeds install -p plan44 leth-config
 ./scripts/feeds install -p plan44 lethd
@@ -355,9 +371,11 @@
 ./scripts/feeds install -p plan44 p44ayabd
 ./scripts/feeds install -p plan44 p44bandit-config
 ./scripts/feeds install -p plan44 p44banditd
+./scripts/feeds install -p plan44 p44devd
 ./scripts/feeds install -p plan44 p44sbb-config
 ./scripts/feeds install -p plan44 p44sbbd
 ./scripts/feeds install -p plan44 p44ttngw-config
+./scripts/feeds install -p plan44 p44utils-lvgl-sample
 ./scripts/feeds install -p plan44 p44wiper-config
 ./scripts/feeds install -p plan44 p44wiperd
 ./scripts/feeds install -p plan44 packet_forwarder

@@ -322,19 +322,25 @@
 
       function uploadFile()
       {
-        var file = $('#imageFile').get(0).files[0];
+        var file = $('#bandituploadfile').get(0).files[0];
         var data = new FormData();
         data.append("upload_file", file);
         $.ajax({
-          url: '/api/upload/?rqvaltok=' + rqvaltok + '&cmd=imageupload',
+          url: '/api/upload/?rqvaltok=' + rqvaltok + '&cmd=banditfileupload',
           data: data,
           contentType: false, // important!
           processData: false,
           method: 'POST'
         }).done(function(response) {
-          alert('Image uploaded');
+          if (response.error) {
+            alert('File upload failed: ' + response.error);
+          }
+          else {
+            $('#bandituploadfile').val('');
+            refresh_files();
+          }
         }).fail(function() {
-          alert('Image upload failed');
+          alert('File upload failed (API failure)');
         });
       }
 
@@ -382,25 +388,25 @@
         <div>
           <div class="centered" data-role="content">
             <h1 id="about_title_model">P44BANDIT</h1>
-            <h2 id="about_model_description">OpenWrt/LEDE driven controller for BANDIT CNC controller</h2>
-            <p>© <span id="about_copyright_years">2017</span> by <a id="about_copyright_link" href="https://plan44.ch/custom" target="_blank">plan44.ch/luz</a></p>
+            <h2 id="about_model_description">OpenWrt driven controller for BANDIT CNC controller</h2>
+            <p>© <span id="about_copyright_years">2017-2019</span> by <a id="about_copyright_link" href="https://plan44.ch/custom" target="_blank">plan44.ch/luz</a></p>
           </div>
 
           <h3>Opensource:</h3>
           <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
           data-iconpos="right">
 
-            <div id="opensource_openwrt" style="display:none" data-role="collapsible">
-              <h3>OpenWrt/LEDE - © OpenWrt/LEDE Project, GPL v2</h3>
+            <div data-role="collapsible">
+              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
 
-              <h4><a href="http://openwrt.org" target="_blank">OpenWrt/LEDE</a> -  Linux distribution for embedded devices</h4>
+              <h4><a href="https://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded network devices</h4>
 
-              <p>OpenWrt/LEDE is free software: you can redistribute it and/or modify
+              <p>OpenWrt is free software: you can redistribute it and/or modify
               it under the terms of the GNU General Public License as published by
               the Free Software Foundation, version 2 of the License.</p>
 
               <p>You should have received a copy of the GNU General Public License
-              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
             </div>
 
             <div data-role="collapsible">
@@ -430,13 +436,16 @@
             </div>
 
             <div data-role="collapsible">
-              <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
+              <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
 
-              <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
+              <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+              <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
               <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+              <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+              <p>Copyright (c) 2013 F-Secure Corporation</p>
 
               <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-              of this software and associated documentation files (the "Software"), to deal
+              of this software and associated documentation files (the Software), to deal
               in the Software without restriction, including without limitation the rights
               to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
               copies of the Software, and to permit persons to whom the Software is
@@ -445,33 +454,13 @@
               <p>The above copyright notice and this permission notice shall be included in
               all copies or substantial portions of the Software.</p>
 
-              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
               IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
               FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
               AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
               LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
               OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
               THE SOFTWARE.</p>
-            </div>
-
-            <div data-role="collapsible">
-              <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
-
-              <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
-              <p>Copyright (c) 2004 avahi.org</p>
-
-              <p>avahi is free software; you can redistribute it and/or modify it
-              under the terms of the GNU Lesser General Public License as
-              published by the Free Software Foundation; either version 2.1 of the
-              License, or (at your option) any later version.</p>
-
-              <p>avahi is distributed in the hope that it will be useful, but WITHOUT
-              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
-              Public License for more details.</p>
-
-              <p>You should have received a copy of the GNU Lesser General Public
-              License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
             </div>
 
             <div data-role="collapsible">
@@ -554,7 +543,37 @@
           <h2>Files</h2>
           <div id="filesList">
           </div>
-          <button type="button" id="refresh" onclick="refresh_files();" data-icon="refresh" data-inline="true" data-theme="c">Refresh list</button>
+          <button type="button" id="refresh" onclick="refresh_files();" data-icon="refresh" data-inline="false" data-theme="c">Refresh list</button>
+          <label for="configArchiveFile">Upload file:</label>
+          <input type="file" id="bandituploadfile" name="bandituploadfile" accept=".txt,.nc,text/plain"/>
+          <button type="button" id="upload" onclick="uploadFile();" data-inline="false">Upload now...</button>
+          <div style="display:flex;">
+            <div style="width:50%; flex:1;">
+              <h3>Programm aus Bandit speichern</h3>
+              <ul>
+                <li>BANDIT: Drehschalter Mode Ext</li>
+                <li>BANDIT: Reset</li>
+                <li>BANDIT: CE</li>
+                <li>BANDIT: / T (/ wenn mit Zeilennummern)</li>
+                <li>BANDIT: Anzahl Befehle</li>
+                <li>BANDIT: START</li>
+                <li><b>p44Bandit liest automatich ein</b></li>
+                <li>Refresh List drücken um neues File zu sehen</li>
+              </ul>
+            </div>
+            <div style="width:50%; flex:1;">
+              <h3>File an Bandit senden</h3>
+              <ul>
+                <li>File selektieren (gelb unterlegt)</li>
+                <li>BANDIT: Drehschalter Mode Ext</li>
+                <li>BANDIT: CE</li>
+                <li>BANDIT: START - grüne Lampe im Startknopf geht aus!</li>
+                <li>Knopf am P44bandit-Kästchen drücken</li>
+                <li><b>Programm wird eingespielt (sichtbar am Display)</b></li>
+                <li>grüne Lampe im Startknopf leuchtet wieder wenn fertig</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 

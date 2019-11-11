@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44banditd
 # version of what we are downloading
-PKG_VERSION:=0.4
+PKG_VERSION:=0.5
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -26,7 +26,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools $(CXX_DEPENDS)
+  DEPENDS:=+libstdcpp +libpthread +librt +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=custom

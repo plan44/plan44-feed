@@ -33,7 +33,7 @@ exec ${EXECUTABLE} \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
-  --datadir ${DATADIR}
+  --datapath ${DATADIR}
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
