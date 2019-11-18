@@ -12,7 +12,7 @@ git push -f origin P44BANDIT/0.6/p44bandit-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/p44banditd.git p44banditd
 pushd p44banditd
-git tag -f P44BANDIT/0.6/p44bandit-omega2 af7f6c0714b7a604297d36a2b0813b00b1a10fb4
+git tag -f P44BANDIT/0.6/p44bandit-omega2 83bb355371b4c844d5463c378e8c29544022fb23
 git push -f origin P44BANDIT/0.6/p44bandit-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch HEAD https://github.com/OnionIoT/omega2-ctrl.git omega2-ctrl
