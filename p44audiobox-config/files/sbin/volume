@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+  # show volume
+  amixer sget PCM
+  echo "Usage:"
+  echo " $0 - display volume"
+  echo " $0 <volume in percent 0..100>  - set volume"
+else
+  VOLUME=$1
+  amixer sset PCM "${VOLUME}%"
+fi

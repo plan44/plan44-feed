@@ -1,0 +1,8 @@
+src-git packages https://git.openwrt.org/feed/packages.git^340d5ce71ee60c1d699e7e0ead9422bed6f8519f
+src-git luci https://git.openwrt.org/project/luci.git^bc17ef673f734ea8e7e696ba5735588da9111dcd
+src-git routing https://git.openwrt.org/feed/routing.git^c52779c05a4cf838c736327d8b042ee59f782331
+src-git telephony https://git.openwrt.org/feed/telephony.git^06a5323734038c3866f507787256581dba3d8522
+src-git p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git;master
+src-git plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git;master
+src-git onion https://github.com/OnionIoT/OpenWRT-Packages.git
+src-git stintel https://github.com/stintel/lede-wip.git^b6a2903d94d84fd959180956ff9d83e6275e4b15

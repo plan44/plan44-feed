@@ -1,0 +1,79 @@
+# Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+#
+# Author: Lukas Zeller <luz@plan44.ch>
+
+include $(TOPDIR)/rules.mk
+
+# name
+PKG_NAME:=p44audiobox-config
+# version of what we are downloading
+PKG_VERSION:=1.0
+# version of this makefile
+PKG_RELEASE:=2
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_CHECK_FORMAT_SECURITY:=0
+
+PKG_CONFIG_DEPENDS := \
+	CONFIG_VERSION_NUMBER
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+	DEPENDS:=+p44-maint-keys
+	SECTION:=plan44
+	CATEGORY:=plan44
+	SUBMENU:=custom
+	TITLE:=P44 Audiobox configuration setup
+	URL:=https://plan44.ch/automation
+	MAINTAINER:=luz@plan44.ch
+	MENU:=1
+endef
+
+
+define Package/$(PKG_NAME)/description
+ contains the configuration setup for the P44 Audiobox
+endef
+
+
+# derive P44 platform identifier
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_P44DSBOmega2),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
+endif
+ifeq ($(CONFIG_TARGET_brcm2708_bcm2708_DEVICE_rpi),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
+endif
+ifeq ($(CONFIG_TARGET_brcm2708_bcm2709_DEVICE_rpi-2),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-2
+endif
+ifeq ($(CONFIG_TARGET_ar71xx_generic_OMEGA),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=onion-omega
+endif
+
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)/etc
+	$(CP) ./files/* $(PKG_BUILD_DIR)/
+endef
+
+
+define Package/$(PKG_NAME)/install
+	$(INSTALL_DIR) $(1)/flash
+#	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DIR) $(1)/etc/config_p44defaults
+	$(INSTALL_DIR) $(1)/usr/share/p44audiobox
+	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
+	$(CP) $(PKG_BUILD_DIR)/etc/* $(1)/etc
+	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
+	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
+#	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
+	$(CP) $(PKG_BUILD_DIR)/resources/* $(1)/usr/share/p44audiobox
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-p44audiobox_${P44_CONFIG_PLATFORM_IDENTIFIER} $(1)/lib/upgrade/keep.d/p44audiobox
+endef
+
+
+$(eval $(call BuildPackage,$(PKG_NAME)))

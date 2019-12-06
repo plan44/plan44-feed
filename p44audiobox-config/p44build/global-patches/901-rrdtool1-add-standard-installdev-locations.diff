@@ -1,0 +1,23 @@
+--- a/feeds/packages/utils/rrdtool1/Makefile
++++ b/feeds/packages/utils/rrdtool1/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=rrdtool1
+ PKG_VERSION:=1.0.50
+-PKG_RELEASE:=2
++PKG_RELEASE:=3
+ 
+ PKG_BUILD_DIR:=$(BUILD_DIR)/rrdtool-$(PKG_VERSION)
+ PKG_SOURCE:=rrdtool-$(PKG_VERSION).tar.gz
+@@ -128,6 +128,11 @@ define Build/InstallDev
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/include/rrd.h $(1)/usr/lib/rrdtool-1.0/include/
+ 	$(INSTALL_DIR)  $(1)/usr/lib/rrdtool-1.0/lib
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librrd.{a,so*} $(1)/usr/lib/rrdtool-1.0/lib/
++  # also install in more reasonable locations so automake can find it
++	$(INSTALL_DIR) $(1)/usr/include
++	$(CP) $(PKG_INSTALL_DIR)/usr/include/rrd.h $(1)/usr/include/
++	$(INSTALL_DIR) $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librrd.{a,so*} $(1)/usr/lib/
+ endef
+ 
+ $(eval $(call BuildPackage,librrd1))

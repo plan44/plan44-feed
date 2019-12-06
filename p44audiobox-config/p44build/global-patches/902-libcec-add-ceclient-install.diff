@@ -1,0 +1,33 @@
+--- a/feeds/stintel/libcec/Makefile
++++ b/feeds/stintel/libcec/Makefile
+@@ -26,8 +26,8 @@ define Package/libcec
+   CATEGORY:=Libraries
+   TITLE:=libcec
+   DEPENDS:= \
+-	+TARGET_brcm2708:raspberrypi-userland \
+-	+libstdcpp
++	  +TARGET_brcm2708:raspberrypi-userland \
++	  +libstdcpp
+   URL:=http://libcec.pulse-eight.com/
+   MAINTAINER:=Stijn Tintel <stijn@linux-ipv6.be>
+ endef
+@@ -43,4 +43,19 @@ define Package/libcec/install
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/*.so* $(1)/usr/lib/
+ endef
+ 
++
++define Package/cec-client
++  SECTION:=utils
++  CATEGORY:=Utilities
++  TITLE:=cec-client
++  DEPENDS:=+libcec
++endef
++
++define Package/cec-client/install
++	$(INSTALL_DIR) $(1)/usr/bin
++	$(CP) -L $(PKG_BUILD_DIR)/src/cec-client/cec-client $(1)/usr/bin/
++endef
++
++
+ $(eval $(call BuildPackage,libcec))
++$(eval $(call BuildPackage,cec-client))

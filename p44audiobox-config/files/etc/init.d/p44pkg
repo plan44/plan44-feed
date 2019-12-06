@@ -1,0 +1,33 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2018 plan44.ch/luz
+START=98
+
+boot() {
+  if [ -e /flash/fw_updated ]; then
+    # only after firmware update...
+    echo "[p44pkg] checking for extra packages to be re-installed"
+    EXTRA_PKG_LIST="/flash/extra_packages"
+    INSTALL_LOG="/tmp/extra_package_install.log"
+    OPKG_UPDATED=""
+    if [ -f "${EXTRA_PKG_LIST}" ]; then
+      # we have extra packages, check if these are installed
+      PKGS=$(cat "${EXTRA_PKG_LIST}")
+      for PKG in ${PKGS}; do
+        echo "checking package ${PKG}..."
+        opkg status "${PKG}" | grep -q "${PKG}"
+        if [ $? -ne 0 ]; then
+          echo "- package ${PKG} is not installed"
+          # make sure opkg sources are available
+          if [ -z "${OPKG_UPDATED}" ]; then
+            echo "###### $(date): need to re-install extra packages" >>"${INSTALL_LOG}"
+            OPKG_UPDATED="yes"
+            opkg update >>"${INSTALL_LOG}" 2>&1
+          fi
+          # install extra package
+          echo "- installing ${PKG} now"
+          opkg install "${PKG}" >>"${INSTALL_LOG}" 2>&1
+        fi
+      done
+    fi
+  fi
+}

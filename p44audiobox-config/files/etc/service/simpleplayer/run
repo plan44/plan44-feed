@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# default features
+STARTGPIO=23
+STARTACTIVE=0
+AUDIONAME="audio.mp3"
+VOLUMENAME="volume.txt"
+
+# first: stop ongoing play
+killall madplay
+
+# can be in /boot or /flash
+AUDIOFILE="/boot/${AUDIONAME}"
+if [ ! -f "${AUDIOFILE}" ]; then
+  AUDIOFILE="/flash/${AUDIONAME}"
+fi
+echo "Audio file path ${AUDIOFILE}"
+
+# can be in /boot or /flash
+VOLUMEFILE="/boot/${VOLUMENAME}"
+if [ ! -f "${VOLUMEFILE}" ]; then
+  VOLUMEFILE="/flash/${VOLUMENAME}"
+fi
+echo "Volume control file path ${VOLUMEFILE}"
+
+if [ -f "${VOLUMEFILE}" ]; then
+  read VOLUME <"${VOLUMEFILE}"
+else
+  VOLUME="85"
+fi
+echo "Setting volume to ${VOLUME}%"
+volume "${VOLUME}"
+
+
+# setup button input
+echo ${STARTGPIO} >/sys/class/gpio/export
+echo in >/sys/class/gpio/gpio${STARTGPIO}/direction
+STARTBUTTON="/sys/class/gpio/gpio${STARTGPIO}/value"
+
+while true; do
+
+  # wait for button released (to make sure)
+  BUTTONSTATE="${STARTACTIVE}"
+  while [ "${BUTTONSTATE}" = "${STARTACTIVE}" ]; do
+    usleep 10000
+    BUTTONSTATE=$(cat ${STARTBUTTON})
+  done
+  echo "- button is RELEASED"
+  # do not react too fast
+  sleep 1
+
+  # wait for button pressed
+  while [ "${BUTTONSTATE}" != "${STARTACTIVE}" ]; do
+    usleep 10000
+    BUTTONSTATE=$(cat ${STARTBUTTON})
+  done
+  # Button is pressed now
+  echo "- button is PRESSED"
+  BUTTONPRESSTIME=$(date +%s)
+
+  # wait for button released (again), measure press down time
+  BUTTONSTATE="${STARTACTIVE}"
+  LONGPRESS=""
+  while [ "${BUTTONSTATE}" = "${STARTACTIVE}" ]; do
+    usleep 10000
+    BUTTONSTATE=$(cat ${STARTBUTTON})
+    HELDDOWN=$(($(date +%s) - ${BUTTONPRESSTIME}))
+    if [ $((${HELDDOWN}>5)) = "1" ]; then
+      LONGPRESS="yes"
+      break;
+    fi
+  done
+  # button is released now
+  echo "- button is PRESSED for ${HELDDOWN} seconds now"
+
+
+  # - kill running player
+  echo "Stopping ongoing play"
+  killall madplay
+  usleep 100000
+  if [ -z ${LONGPRESS} ]; then
+    echo "Starting playing ${AUDIOFILE}"
+    # - start new
+    nohup madplay "${AUDIOFILE}" &
+    # do not react too fast
+    sleep 2
+  fi
+
+done
+
+

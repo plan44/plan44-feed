@@ -1,0 +1,283 @@
+--- a/target/linux/ramips/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/base-files/etc/board.d/02_network
+@@ -57,6 +57,7 @@ ramips_setup_interfaces()
+ 	ncs601w|\
+ 	omega2 | \
+ 	omega2p | \
++	p44dsbomega2 | \
+ 	timecloud|\
+ 	w150m|\
+ 	widora,neo-16m|\
+@@ -507,7 +508,8 @@ ramips_setup_macs()
+ 		lan_mac=$(macaddr_add "$lan_mac" 2)
+ 		;;
+ 	omega2|\
+-	omega2p)
++	omega2p|\
++	p44dsbomega2)
+ 		wan_mac=$(mtd_get_mac_binary factory 4)
+ 		lan_mac=$(mtd_get_mac_binary factory 46)
+ 		;;
+--- a/target/linux/ramips/base-files/etc/diag.sh
++++ b/target/linux/ramips/base-files/etc/diag.sh
+@@ -228,7 +228,8 @@ get_status_led() {
+ 		status_led="$boardname:blue:status"
+ 		;;
+ 	omega2| \
+-	omega2p)
++	omega2p| \
++	p44dsbomega2)
+ 		status_led="$boardname:amber:system"
+ 		;;
+ 	oy-0001|\
+--- a/target/linux/ramips/base-files/lib/ramips.sh
++++ b/target/linux/ramips/base-files/lib/ramips.sh
+@@ -385,6 +385,9 @@ ramips_board_detect() {
+ 	*"OY-0001")
+ 		name="oy-0001"
+ 		;;
++	*"P44 DSB Omega2")
++		name="p44dsbomega2"
++		;;
+ 	*"PBR-D1")
+ 		name="pbr-d1"
+ 		;;
+--- a/target/linux/ramips/base-files/lib/upgrade/platform.sh
++++ b/target/linux/ramips/base-files/lib/upgrade/platform.sh
+@@ -120,6 +120,7 @@ platform_check_image() {
+ 	omega2|\
+ 	omega2p|\
+ 	oy-0001|\
++	p44dsbomega2|\
+ 	pbr-d1|\
+ 	pbr-m1|\
+ 	phicomm,k2g|\
+--- a/target/linux/ramips/image/mt76x8.mk
++++ b/target/linux/ramips/image/mt76x8.mk
+@@ -106,6 +106,15 @@ define Device/omega2p
+ endef
+ TARGET_DEVICES += omega2p
+ 
++define Device/P44DSBOmega2
++  DTS := P44-DSB-OMEGA2
++  IMAGE_SIZE := $(ralink_default_fw_size_16M)
++  SUPPORTED_DEVICES := p44dsbomega2 omega2 omega2p
++  DEVICE_TITLE := P44-DSB Omega2
++  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
++endef
++TARGET_DEVICES += P44DSBOmega2
++
+ define Device/pbr-d1
+   DTS := PBR-D1
+   IMAGE_SIZE := $(ralink_default_fw_size_16M)
+--- /dev/null
++++ b/target/linux/ramips/dts/P44-DSB-OMEGA2.dts
+@@ -0,0 +1,198 @@
++/dts-v1/;
++
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++
++/ {
++	compatible = "plan44,p44dsb", "mediatek,mt7628an-soc";
++	model = "P44 DSB Omega2";
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x4000000>;
++	};
++
++	bootstrap {
++		compatible = "mediatek,linkit";
++
++		status = "okay";
++	};
++
++	gpio-leds {
++		compatible = "gpio-leds";
++
++		system {
++			label = "onion:amber:system";
++			gpios = <&gpioc 44 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++		};
++
++		status1 {
++			label = "p44:green:status1";
++			gpios = <&gpioc 19 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++		status2 {
++			label = "p44:red:status2";
++			gpios = <&gpioc 18 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++	};
++
++};
++
++&pinctrl {
++	state_default: pinctrl0 {
++		gpio {
++			ralink,group = "gpio";
++			ralink,function = "gpio";
++		};
++
++		perst {
++			ralink,group = "perst";
++			ralink,function = "gpio";
++		};
++
++		refclk {
++			ralink,group = "refclk";
++			ralink,function = "gpio";
++		};
++
++		i2s {
++			ralink,group = "i2s";
++			ralink,function = "gpio";
++		};
++
++		spis {
++			ralink,group = "spis";
++			ralink,function = "gpio";
++		};
++
++		wled_kn {
++			ralink,group = "wled_kn";
++			ralink,function = "gpio";
++		};
++
++		wled_an {
++			ralink,group = "wled_an";
++			ralink,function = "gpio";
++		};
++
++		wdt {
++			ralink,group = "wdt";
++			ralink,function = "gpio";
++		};
++
++		pwm0 {
++			ralink,group = "pwm0";
++			ralink,function = "gpio";
++		};
++
++		pwm1 {
++			ralink,group = "pwm1";
++			ralink,function = "gpio";
++		};
++
++    uart1 {
++      ralink,group = "uart1";
++      ralink,function = "gpio";
++    };
++
++    uart2 {
++      ralink,group = "uart2";
++      ralink,function = "gpio";
++    };
++
++	};
++};
++
++&gpioc {
++	status = "okay";
++};
++
++&wmac {
++	status = "okay";
++};
++
++&spi0 {
++	status = "okay";
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi_pins>, <&spi_cs1_pins>;
++
++	m25p80@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		linux,modalias = "m25p80", "mx25l25635e";
++		spi-max-frequency = <40000000>;
++		m25p,chunked-io = <31>;
++
++		partition@0 {
++			label = "u-boot";
++			reg = <0x0 0x30000>;
++			read-only;
++		};
++
++		partition@30000 {
++			label = "u-boot-env";
++			reg = <0x30000 0x10000>;
++		};
++
++		factory: partition@40000 {
++			label = "factory";
++			reg = <0x40000 0x10000>;
++			read-only;
++		};
++
++		partition@50000 {
++			label = "firmware";
++			reg = <0x50000 0x1fb0000>;
++		};
++	};
++
++	spidev@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "linux,spidev";
++		reg = <1>;
++		spi-max-frequency = <40000000>;
++	};
++};
++
++&i2c {
++	status = "okay";
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&pwm {
++	status = "okay";
++};
++
++&ethernet {
++	mtd-mac-address = <&factory 0x28>;
++};
++
++&sdhci {
++	status = "okay";
++	mediatek,cd-low;
++};
++
++&wmac {
++	status = "okay";
++};
+--- a/package/boot/uboot-envtools/files/ramips
++++ b/package/boot/uboot-envtools/files/ramips
+@@ -26,6 +26,7 @@ all5002)
+ linkits7688|\
+ omega2|\
+ omega2p|\
++p44dsbomega2|\
+ miwifi-nano|\
+ sk-wb8|\
+ wsr-1166|\
