@@ -1,5 +1,5 @@
 [
-  {"feature":"text", "cmd":"reconfigure", "view":"STACK", "config":{
+  {"feature":"dispmatrix", "cmd":"configure", "view":"STACK", "config":{
     "positioningmode":2,
     "layers":[
       { "view": { "type":"text", "orientation":0, "color":"FFF", "sizetocontent":true, "text":"*"}, "spacing":4 },

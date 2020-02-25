@@ -73,7 +73,12 @@
         selectHtml +=
           '<option disabled>templates</option>' +
           '<option value="1000">{ "cmd":"status" }</option>' +
+          '<option value="1001">{ "cmd":"now" }</option>' +
           '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
+          '<option value="1030">{ "cmd":"init", "rfids":{ "readers":[0,1,2,3,4,5] } }</option>' +
+          '<option value="1030">{ "cmd":"init", "indicators":1 }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "effect":"pulse" }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "t":5, "effect":"test_effect.json" }</option>' +
           '<option value="1010">{ "feature":"wifitrack", "cmd":"dump", "persons":true, "personssids":true, "macs":true, "ouinames":true, "ssids":true }</option>' +
           '<option value="1011">{ "feature":"wifitrack", "cmd":"save" }</option>' +
           '<option value="1012">{ "feature":"wifitrack", "cmd":"save", "path":"wifitrack_state.json" }</option>' +
@@ -87,12 +92,13 @@
           '<option value="1021">{ "feature":"mixloop", "ppp":vvv }</option>' +
           '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
           '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
-          '<option value="1040">{ "cmd":"init", "text": [ { "cols": 72, "offset": 0, "orientation": 0 } ] }</option>' +
-          '<option value="1041">{ "feature":"text", "backgroundcolor":"000" }</option>' +
-          '<option value="1042">{ "feature":"text", "cmd":"fade", "to":0, "t":5000 }</option>' +
-          '<option value="1043">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
-          '<option value="1044">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
-          '<option value="1045">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>';
+          '<option value="1040">{ "cmd":"init", "dispmatrix": [ { "installationX": 72, "installationY": 0 } ] }</option>' +
+          '<option value="1045">{ "feature":"dispmatrix", "backgroundcolor":"000" }</option>' +
+          '<option value="1046">{ "feature":"dispmatrix", "cmd":"fade", "to":0, "t":5000 }</option>' +
+          '<option value="1047">{ "feature":"dispmatrix", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
+          '<option value="1048">{ "feature":"dispmatrix", "scene":"scenes/stepup.json" }</option>' +
+          '<option value="1049">{ "feature":"dispmatrix", "cmd":"configure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>' +
+          '<option value="1002">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
           '<option value="1200">{ "level":6 }</option>';
 
         $('#jsonExamples').html(selectHtml).trigger('create');
@@ -183,10 +189,10 @@
       <div data-role="content">
         <div style="margin-bottom: 20px;">
           <label for="apiPath">Enter API Path:</label>
-          <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
+          <input type="text" name="apiPath" id="apiPath" placeholder='api/json/featureapi' value="api/json/featureapi" data-theme="d">
           <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
             <option value="0">- select template -</option>
-            <option value="1">api/json/lethd</option>
+            <option value="1">api/json/featureapi</option>
             <option value="3">api/json/log</option>
             <option value="99">tok/json</option>
           </select>

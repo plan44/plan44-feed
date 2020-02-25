@@ -159,13 +159,13 @@
         $('#text_brightness').on("change", function(event, ui) {
           if (!noUpdate) {
             var bri = floatVal($('#text_brightness').val());
-            sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
+            sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"fade", "to":bri, "t":0 });
           }
         });
         $('#light_brightness').on("change", function(event, ui) {
           if (!noUpdate) {
             var bri = floatVal($('#light_brightness').val());
-            sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
+            sendApiCmd('/featureapi', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
           }
         });
 
@@ -183,13 +183,13 @@
         $('#text_scrolloffsety').on("change", function(event, ui) {
           if (!noUpdate) {
             var scrolloffsety = floatVal($('#text_scrolloffsety').val());
-            sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
+            sendApiCmd('/featureapi', { "feature":"dispmatrix", "offsety":scrolloffsety });
           }
         });
         $('#text_scrolloffsetx').on("change", function(event, ui) {
           if (!noUpdate) {
             var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
-            sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
+            sendApiCmd('/featureapi', { "feature":"dispmatrix", "offsetx":scrolloffsetx });
           }
         });
       });
@@ -228,20 +228,20 @@
       {
         var scrollsteptime = floatVal($('#text_scrollsteptime').val());
         var scrollstepx = floatVal($('#text_scrollstepx').val());
-        sendApiCmd('/lethd', { "feature":"text", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
+        sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
       }
 
 
       function stopScroll()
       {
-        sendApiCmd('/lethd', { "feature":"text", "cmd":"stopscroll" });
+        sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"stopscroll" });
       }
 
 
       function sendMessage()
       {
         var msg = $('#messageText').val();
-        sendApiCmd('/lethd', { "feature":"text", "text":msg });
+        sendApiCmd('/featureapi', { "feature":"text", "text":msg });
       }
 
 
@@ -249,14 +249,14 @@
       {
         var msg = $('#WTmessageText').val();
         var col = $('#WTmessageColor').val();
-        sendApiCmd('/lethd', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
+        sendApiCmd('/featureapi', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
       }
 
 
       function WThide()
       {
         var mac = $('#WTMAC').val();
-        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
+        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
       }
 
 
@@ -264,7 +264,7 @@
       {
         var mac = $('#WTMAC').val();
         var name = $('#WTpersonName').val();
-        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
+        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
       }
 
 
@@ -272,54 +272,54 @@
       function callScene()
       {
         var sname = $('#sceneName').val();
-        sendApiCmd('/lethd', { "feature":"text", "scene":"scenes/"+sname+".json" });
+        sendApiCmd('/featureapi', { "feature":"dispmatrix", "scene":"scenes/"+sname+".json" });
       }
 
 
       function setTextColor()
       {
         var col = $('#messageColor').val();
-        sendApiCmd('/lethd', { "feature":"text", "color":col });
+        sendApiCmd('/featureapi', { "feature":"dispmatrix", "color":col });
       }
 
 
       function setBackgroundColor()
       {
         var col = $('#backgroundColor').val();
-        sendApiCmd('/lethd', { "feature":"text", "backgroundcolor":col });
+        sendApiCmd('/featureapi', { "feature":"dispmatrix", "bgcolor":col });
       }
 
 
       function fireNeuron()
       {
-        sendApiCmd('/lethd', { "feature":"neuron", "cmd":"fire" });
+        sendApiCmd('/featureapi', { "feature":"neuron", "cmd":"fire" });
       }
 
 
       function initLight()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "light":true });
+        sendApiCmd('/featureapi', { "cmd":"init", "light":true });
         refresh_controls();
       }
 
 
       function initNeuron()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
+        sendApiCmd('/featureapi', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
         refresh_controls();
       }
 
 
       function initText()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "text":[ { "cols": 72, "offset": 0, "orientation": 0 } ] });
+        sendApiCmd('/featureapi', { "cmd":"init", "dispmatrix":{} });
         refresh_controls();
       }
 
 
       function initHermel()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "hermel":true });
+        sendApiCmd('/featureapi', { "cmd":"init", "hermel":true });
         refresh_controls();
       }
 
@@ -327,12 +327,12 @@
       function shoot()
       {
         var angle = floatVal($('#shoot_angle').val());
-        sendApiCmd('/lethd', { "feature":"hermel", "cmd":"shoot", "angle":angle });
+        sendApiCmd('/featureapi', { "feature":"hermel", "cmd":"shoot", "angle":angle });
       }
 
       function whoop()
       {
-        sendApiCmd('/lethd', { "feature":"mixloop", "cmd":"hit" });
+        sendApiCmd('/featureapi', { "feature":"mixloop", "cmd":"hit" });
       }
 
 
@@ -341,13 +341,13 @@
       function refresh_controls()
       {
         // get status
-        sendApiCmd('/lethd', { "cmd":"status" }, function(response) {
+        sendApiCmd('/featureapi', { "cmd":"status" }, function(response) {
           noUpdate = true;
           // global
           $('#macaddress').html(response.macaddress);
           $('#ipv4').html(response.ipv4);
           $('#appVersion').html(response.version);
-          $('#gridcoordinate').html(response.gridcoordinate);
+          $('#devicelabel').html(response.devicelabel);
           // features
           var features = response.features;
           if (features.wifitrack===false) {
@@ -380,13 +380,13 @@
           }
           else {
             $("#text").show();
-            $('#text_brightness').val(features.text.brightness).slider("refresh");
-            $('#messageText').val(features.text.text);
-            $('#backgroundColor').val(features.text.backgroundcolor);
-            $('#messageColor').val(features.text.color);
-            $('#text_scrollsteptime').val(features.text.scrollsteptime).slider("refresh");
-            $('#text_scrollstepx').val(features.text.scrollstepx).slider("refresh");
-            $('#text_scrolloffsety').val(features.text.scrolloffsety).slider("refresh");
+            $('#text_brightness').val(features.dispmatrix.brightness).slider("refresh");
+            $('#messageText').val(features.dispmatrix.text);
+            $('#backgroundColor').val(features.dispmatrix.bgcolor);
+            $('#messageColor').val(features.dispmatrix.color);
+            $('#text_scrollsteptime').val(features.dispmatrix.scrollsteptime).slider("refresh");
+            $('#text_scrollstepx').val(features.dispmatrix.scrollstepx).slider("refresh");
+            $('#text_scrolloffsety').val(features.dispmatrix.scrolloffsety).slider("refresh");
           }
           if (features.neuron==false) {
             $("#neuron").hide();
@@ -444,14 +444,14 @@
         <div data-role="content">
           <div id="identification" style="display:none">
             <h1 id="macaddress">MAC</h1>
-            <p><b>Grid Coordinate: </b><span id="gridcoordinate"></span></p>
+            <p><b>Device Label: </b><span id="devicelabel"></span></p>
             <p><b>IPv4: </b><span id="ipv4"></span></p>
             <p><b>Version: </b><span id="appVersion"></span></p>
           </div>
 
           <div id="wifitrack">
             <h2>WiFi Probe request visualisation</h2>
-            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
+            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="255" step="1" />
             <input type="text" autocomplete="off" id="WTmessageText" name="WTmessageText"/>
             <input type="text" autocomplete="off" id="WTmessageColor" name="WTmessageColor" value="FFF" placeholder="rgb or rrggbb web color"/>
             <button id="WTmsg_button" onclick="WTmessage();" data-theme="a">Send message to scroller</button>
@@ -489,7 +489,7 @@
             <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
             <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set BG Color</button>
             <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
-            <label for="text_scrollsteptime">Speed of scroll (time for one step in milliseconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="18" max="200" step="1" />
+            <label for="text_scrollsteptime">Speed of scroll (time for one step in seconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="0.018" max="0.2" step="0.01" />
             <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />
             <label for="text_scrolloffsety">Vertical scroll position:</label> <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.1" />
             <label for="text_scrolloffsetx">Horizontal scroll position:</label><input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-10" max="10" step="0.1" />
@@ -577,7 +577,7 @@
             </div>
 
             <div data-role="collapsible">
-              <h3>p44utils - © 2013-2018 by plan44.ch, GPLv3</h3>
+              <h3>p44utils - © 2013-2020 by plan44.ch, GPLv3</h3>
 
               <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - C++ utility framework for automation daemons</h4>
 
@@ -593,6 +593,25 @@
 
               <p>You should have received a copy of the GNU General Public License
               along with p44utils. If not, see <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>p44lrgraphics - © 2019-2020 by plan44.ch, GPLv3</h3>
+
+              <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - C++ framework for Lo-Res LED graphics</h4>
+
+              <p>p44lrgraphics is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, either version 3 of the License, or
+              (at your option) any later version.</p>
+
+              <p>p44lrgraphics is distributed in the hope that it will be useful,
+              but WITHOUT ANY WARRANTY; without even the implied warranty of
+              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+              GNU General Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with p44lrgraphics. If not, see <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
             </div>
 
 

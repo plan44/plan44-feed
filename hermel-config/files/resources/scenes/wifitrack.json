@@ -1,3 +1,6 @@
 { "type":"stack", "label":"STACK", "x":0, "y":0, "sizetocontent":true, "positioningmode":2, "layers": [
-  { "view":{ "type":"text", "label":"RADARTXT", "orientation":0, "color":"F00", "alpha":255, "sizetocontent":true, "text":"WiFi Radar: "}, "spacing":0 }
+  { "view":{
+    "type":"text", "label":"RADARTXT", "orientation":0, "color":"F00", "alpha":255, "sizetocontent":true, "text":"WiFi Radar: ",
+    "animate" : { "property":"color.hue", "to":360, "time":5, "function":"easeinout", "autoreverse":false, "cycles":0 }
+  }, "spacing":0 }
 ] }

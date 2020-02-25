@@ -1,34 +1,34 @@
 [
   {
     "cmd": "init",
-    "text": [{
-      "cols": 72,
-      "offset": 0,
-      "orientation": 0
-    }]
+    "indicators": {
+      "installationX": 0,
+      "installationY": 0
+    }
+  },
+
+  /*
+  {
+    "cmd": "init",
+    "dispmatrix": {
+      "installationX": 0,
+      "installationY": 0
+    }
   },
   {
-    "feature":"text",
-    "backgroundcolor": "00000000",
-    "color": "FFAA00",
-    "alpha": 255,
-    "text": "WiFiTrack +++ ",
-    "spacing": 2
+    "feature":"dispmatrix",
+    "scene":"./scenes/wifitrack.json",
   },
   {
-    "feature":"text",
-    "scene":"scenes/wifitrack.json",
-  },
-  {
-    "feature": "text",
+    "feature": "dispmatrix",
     "cmd": "startscroll",
     "stepx": 1,
-    "interval": 25,
+    "interval": 0.025,
     "start": 0
   },
   {
-    "feature": "text",
-    "cmd": "reconfigure",
+    "feature": "dispmatrix",
+    "cmd": "configure",
     "view": "DISPSCROLLER",
     "config": {
       "syncscroll": false
@@ -51,6 +51,5 @@
     "saveTempInterval": 600,
     "saveDataInterval": 86400
   }
-
-
+  */
 ]

@@ -1,4 +1,4 @@
-{ "type":"animator", "wrapmode":3, "x":0, "y":0, "dx":13, "dy":7, "fullframe":true, "start":true, "repeat":true, "mask":true, "color":"#FFD700", "steps":[
+{ "type":"sequencer", "wrapmode":3, "x":0, "y":0, "dx":13, "dy":7, "fullframe":true, "start":true, "repeat":true, "mask":true, "color":"#FFD700", "steps":[
   { "view": { "type":"image", "file":"images/pac_01.png", "orientation":2 }, "showtime":300 },
   { "view": { "type":"image", "file":"images/pac_02.png", "orientation":2 }, "showtime":100 },
   { "view": { "type":"image", "file":"images/pac_03.png", "orientation":2 }, "showtime":100 },
