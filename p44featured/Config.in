@@ -1,0 +1,10 @@
+# p44featured configuration
+if PACKAGE_p44featured
+
+config P44FEATURED_UBUS
+	bool "Include ubus Support"
+	default y
+  help
+    Enabling this includes support for ubus API
+
+endif
