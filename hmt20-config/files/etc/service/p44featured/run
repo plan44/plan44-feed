@@ -1,0 +1,152 @@
+#!/bin/sh
+
+# default features
+EXECUTABLE=p44featured
+LOGLEVEL=5
+EXTRAOPTS=
+
+# basic config Omega2 on p44-rfid-controller v1
+
+# - LED chain
+#   - The chains to install the kernel driver for
+LEDCHAIN_NAME_0="ledchain0"
+LEDCHAIN_NUMLEDS_0=288
+LEDCHAIN_NAME_1="ledchain1"
+LEDCHAIN_NUMLEDS_1=288
+#LEDCHAIN_NAME_2="ledchain2"
+#LEDCHAIN_NUMLEDS_2=288
+#LEDCHAIN_NAME_3="ledchain3"
+#LEDCHAIN_NUMLEDS_3=288
+#   - The chains to use in the ledchain arrangement,
+#     (standard full chain linear mapping if empty string)
+LEDCHAIN_LAYOUT_0=""
+#LEDCHAIN_LAYOUT_1=""
+#LEDCHAIN_LAYOUT_2=""
+#LEDCHAIN_LAYOUT_3=""
+
+
+# - WiFi interface
+WIFI_MONITOR_IF="moni0"
+WIFITRACK=
+if [ -f "/flash/wifitrack" ]; then
+  if ! ip link | grep -q "${WIFI_MONITOR_IF}"; then
+    # add monitor interface
+    iw phy phy0 interface add "${WIFI_MONITOR_IF}" type monitor
+    # activate it
+    ip link set "${WIFI_MONITOR_IF}" up
+  fi
+  WIFITRACK="--wifimonif ${WIFI_MONITOR_IF}"
+fi
+
+
+# - Button (not soldered, open input, must not use it!)
+BUTTON_PIN="missing"
+# - LEDs
+GREENLED_PIN="led.p44:green:status1"
+REDLED_PIN="led.p44:red:status2"
+
+
+# Allow overriding options (such as LOGLEVEL or EXTRAOPTS)
+# - override from flash
+if [ -f /flash/p44featured_cfg ]; then
+  source /flash/p44featured_cfg
+fi
+# - override from tmp
+if [ -f /tmp/p44featured_cfg ]; then
+  source /tmp/p44featured_cfg
+fi
+
+
+# LED chains
+# - we need PWM1 on GPIO45/46
+omega2-ctrl gpiomux set uart1 pwm01
+# - we need pwm2 and 3 as well
+omega2-ctrl gpiomux set uart2 pwm23
+# load driver
+# ledchain<PWMno>=<inverted>,<numberofleds>,<ledtype>
+LEDCHAIN_INSMOD="insmod p44-ledchain"
+LEDCHAIN_ARRANGEMENT=""
+LEDOFFSET=0;
+if [ -n "${LEDCHAIN_NAME_0}" ]; then
+  LEDCHAIN_INSMOD="${LEDCHAIN_INSMOD} ${LEDCHAIN_NAME_0}=0,${LEDCHAIN_NUMLEDS_0},2"
+  if [ -n "${LEDCHAIN_LAYOUT_0+x}" ]; then
+    if [ -z "${LEDCHAIN_LAYOUT_0}" ]; then LEDCHAIN_LAYOUT_0="${LEDOFFSET}:${LEDCHAIN_NUMLEDS_0}"; fi
+    LEDCHAIN_ARRANGEMENT="${LEDCHAIN_ARRANGEMENT} --ledchain WS2813:/dev/${LEDCHAIN_NAME_0}:${LEDCHAIN_NUMLEDS_0}:${LEDCHAIN_LAYOUT_0}";
+    LEDOFFSET=$((LEDOFFSET + ${LEDCHAIN_NUMLEDS_0}))
+  fi
+fi
+if [ -n "${LEDCHAIN_NAME_1}" ]; then
+  LEDCHAIN_INSMOD="${LEDCHAIN_INSMOD} ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2"
+  if [ -n "${LEDCHAIN_LAYOUT_1+x}" ]; then
+    if [ -z "${LEDCHAIN_LAYOUT_1}" ]; then LEDCHAIN_LAYOUT_1="${LEDOFFSET}:${LEDCHAIN_NUMLEDS_1}"; fi
+    LEDCHAIN_ARRANGEMENT="${LEDCHAIN_ARRANGEMENT} --ledchain WS2813:/dev/${LEDCHAIN_NAME_1}:${LEDCHAIN_NUMLEDS_1}:${LEDCHAIN_LAYOUT_1}";
+    LEDOFFSET=$((LEDOFFSET + ${LEDCHAIN_NUMLEDS_1}))
+  fi
+fi
+if [ -n "${LEDCHAIN_NAME_2}" ]; then
+  LEDCHAIN_INSMOD="${LEDCHAIN_INSMOD} ${LEDCHAIN_NAME_2}=0,${LEDCHAIN_NUMLEDS_2},2"
+  if [ -n "${LEDCHAIN_LAYOUT_2+x}" ]; then
+    if [ -z "${LEDCHAIN_LAYOUT_2}" ]; then LEDCHAIN_LAYOUT_2="${LEDOFFSET}:${LEDCHAIN_NUMLEDS_2}"; fi
+    LEDCHAIN_ARRANGEMENT="${LEDCHAIN_ARRANGEMENT} --ledchain WS2813:/dev/${LEDCHAIN_NAME_2}:${LEDCHAIN_NUMLEDS_2}:${LEDCHAIN_LAYOUT_2}";
+    LEDOFFSET=$((LEDOFFSET + ${LEDCHAIN_NUMLEDS_2}))
+  fi
+fi
+if [ -n "${LEDCHAIN_NAME_3}" ]; then
+  LEDCHAIN_INSMOD="${LEDCHAIN_INSMOD} ${LEDCHAIN_NAME_3}=0,${LEDCHAIN_NUMLEDS_3},2"
+  if [ -n "${LEDCHAIN_LAYOUT_3+x}" ]; then
+    if [ -z "${LEDCHAIN_LAYOUT_3}" ]; then LEDCHAIN_LAYOUT_3="${LEDOFFSET}:${LEDCHAIN_NUMLEDS_3}"; fi
+    LEDCHAIN_ARRANGEMENT="${LEDCHAIN_ARRANGEMENT} --ledchain WS2813:/dev/${LEDCHAIN_NAME_3}:${LEDCHAIN_NUMLEDS_3}:${LEDCHAIN_LAYOUT_3}";
+    LEDOFFSET=$((LEDOFFSET + ${LEDCHAIN_NUMLEDS_3}))
+  fi
+fi
+${LEDCHAIN_INSMOD}
+
+# SPI for RFID readers
+# - we need the i2c pins for software SPI
+omega2-ctrl gpiomux set i2c gpio
+# - we need the GPIO11/RefClk pin for SPI SCK
+omega2-ctrl refclk set i2c gpio
+# - we need the i2s pins for SEL3/4 and RST
+omega2-ctrl gpiomux set i2s gpio
+# - we need the spis pins for SEL0/1/2 and IRQ
+omega2-ctrl gpiomux set spi_s gpio
+# - use software SPI (HW SPI does not work reliably on MT7688) for MCP3002
+#   bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
+#   Note: devid 0 (bus 0) is already in use by HW SPI, so we take 1
+insmod spi-gpio-custom bus0=2,1,2,3,0,100000,0
+# - SCK  : GPIO11
+# - MOSI : GPIO5
+# - MISO : GPIO4
+# - CS   : GPIO23 (not really used because we select via SEL0..4)
+insmod spi-gpio-custom bus0=2,11,5,4,0,100000,23
+RFID_SPI_BUSNO="20"
+RFID_RESET_PIN="gpio.0"
+RFID_IRQ_PIN="gpio.14"
+# selector pins
+RFID_SELECT0_GPIO="15"
+RFID_SELECT1_GPIO="16"
+RFID_SELECT2_GPIO="17"
+RFID_SELECT3_GPIO="2"
+RFID_SELECT4_GPIO="3"
+
+# run the daemon
+exec ${EXECUTABLE} \
+  --rfidselectgpios ${RFID_SELECT0_GPIO},${RFID_SELECT1_GPIO},${RFID_SELECT2_GPIO},${RFID_SELECT3_GPIO},${RFID_SELECT4_GPIO} \
+  --rfidspibus ${RFID_SPI_BUSNO} \
+  --rfidreset ${RFID_RESET_PIN} \
+  --rfidirq ${RFID_IRQ_PIN} \
+  ${LEDCHAIN_ARRANGEMENT} \
+  ${WIFITRACK} \
+  --initjson initcmds.json \
+  --button ${BUTTON_PIN} \
+  --greenled ${GREENLED_PIN} \
+  --redled ${REDLED_PIN} \
+  --datapath /flash \
+  --resourcepath /usr/share/hmt20 \
+  --jsonapiport 8090 \
+  --jsonapinonlocal \
+  --featureapiport 11200 \
+  --ubusapi \
+  -l ${LOGLEVEL} \
+  ${EXTRAOPTS} \
+  </dev/null

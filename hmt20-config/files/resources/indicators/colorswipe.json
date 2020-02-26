@@ -1,0 +1,12 @@
+{ "type":"lightspot", "fullframe":true,
+  "color":"F00",
+  /* "hue_gradient":360, "hue_mode":2, */
+  "brightness_gradient":-1, "brightness_mode":2,
+  "extent_x":20, "radial":false,
+  "rel_content_x":0, "rel_content_y":0,
+  "animate" : [
+     { "property":"alpha", "from":100, "to":255, "time":1, "function":"easeinout", "cycles":2, "autoreverse":true },
+     { "property":"color.hue", "to":180, "time":2, "function":"easeinout" },
+     { "property":"rel_center_x", "from":-0.75, "to":0.75, "time":2, "function":"linear" },
+  ]
+}

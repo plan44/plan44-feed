@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# obtain system information vars
+PRODUCT_MODEL="HMT20"
+PRODUCT_WEBADMIN_USER="hmt20"
+
+# mg44's dynamic SSL loader needs basic library names
+cd /usr/lib
+if [ ! -e libssl.so ]; then
+  ln -s libssl.so.* libssl.so
+fi
+if [ ! -e libcrypto.so ]; then
+  ln -s libcrypto.so.* libcrypto.so
+fi
+cd /
+
+
+# create config file in /tmp from template
+sed -r -e "s/##PRODUCTNAME##/${PRODUCT_MODEL}/" /etc/mongoose/mg44.conf_template >/tmp/mg44.conf
+
+# check if name of the product appears in the password file, if not, we need to reset it anyway
+grep -q ${PRODUCT_MODEL} /flash/webui_authfile
+if [ $? == 1 ]; then
+  # auth file does not have an entry for this product, delete it to force default authfile generation
+  rm -f /flash/webui_authfile
+fi
+
+# check if we have a non-zero password file, if not, create default
+if [ ! -s /flash/webui_authfile ]; then
+  mg44 -A /flash/webui_authfile ${PRODUCT_MODEL} ${PRODUCT_WEBADMIN_USER} ${PRODUCT_WEBADMIN_USER}
+fi
+
+# start mg44, using config file from /tmp
+exec mg44 /tmp/mg44.conf >/dev/null 2>&1

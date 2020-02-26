@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+# start mjpeg-streamer
+exec mjpg_streamer -i "input_uvc.so -f 15 -r 640*480" -o "output_http.so -p 8080 -n"
