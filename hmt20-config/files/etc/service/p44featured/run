@@ -112,8 +112,6 @@ omega2-ctrl gpiomux set i2s gpio
 omega2-ctrl gpiomux set spi_s gpio
 # - use software SPI (HW SPI does not work reliably on MT7688) for MCP3002
 #   bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
-#   Note: devid 0 (bus 0) is already in use by HW SPI, so we take 1
-insmod spi-gpio-custom bus0=2,1,2,3,0,100000,0
 # - SCK  : GPIO11
 # - MOSI : GPIO5
 # - MISO : GPIO4

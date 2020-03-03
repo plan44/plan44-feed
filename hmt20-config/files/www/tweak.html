@@ -77,8 +77,8 @@
           '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
           '<option value="1030">{ "cmd":"init", "rfids":{ "readers":[0,1,2,3,4,5] } }</option>' +
           '<option value="1030">{ "cmd":"init", "indicators":1 }</option>' +
-          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "effect":"pulse" }</option>' +
-          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "t":5, "effect":"test_effect.json" }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "effect":"pulse", "dx":15 }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "t":5, "effect":"colorswipe.json", "t":5 }</option>' +
           '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
           '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
           '<option value="1040">{ "cmd":"init", "dispmatrix": [ { "installationX": 72, "installationY": 0 } ] }</option>' +

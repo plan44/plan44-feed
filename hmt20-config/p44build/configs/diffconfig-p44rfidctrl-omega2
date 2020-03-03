@@ -33,11 +33,10 @@ CONFIG_BUSYBOX_CONFIG_SV=y
 CONFIG_BUSYBOX_CONFIG_SVLOGD=y
 CONFIG_BUSYBOX_CONFIG_SV_DEFAULT_SERVICE_DIR="/etc/service"
 CONFIG_BUSYBOX_CONFIG_UEVENT=y
-# CONFIG_DISPLAY_SUPPORT is not set
 CONFIG_DROPBEAR_ECC=y
+# CONFIG_FEED_luci is not set
 # CONFIG_FEED_packages is not set
 # CONFIG_FEED_routing is not set
-# CONFIG_FEED_luci is not set
 # CONFIG_FEED_telephony is not set
 CONFIG_GNUTLS_ALPN=y
 CONFIG_GNUTLS_ANON=y
@@ -56,9 +55,9 @@ CONFIG_OPENSSL_WITH_EC=y
 CONFIG_OPENSSL_WITH_NPN=y
 CONFIG_OPENSSL_WITH_PSK=y
 CONFIG_OPENSSL_WITH_SRP=y
+CONFIG_P44FEATURED_UBUS=y
 CONFIG_PACKAGE_aircrack-ng=m
 CONFIG_PACKAGE_airmon-ng=m
-CONFIG_P44FEATURED_UBUS=y
 CONFIG_PACKAGE_alsa-lib=y
 CONFIG_PACKAGE_avahi-autoipd=m
 CONFIG_PACKAGE_avahi-daemon-service-http=y
@@ -76,6 +75,7 @@ CONFIG_PACKAGE_ethtool=m
 # CONFIG_PACKAGE_firewall is not set
 CONFIG_PACKAGE_gdbserver=y
 CONFIG_PACKAGE_glib2=y
+CONFIG_PACKAGE_hmt20-config=y
 CONFIG_PACKAGE_i2c-tools=y
 CONFIG_PACKAGE_kmod-crypto-acompress=y
 CONFIG_PACKAGE_kmod-dma-buf=y
@@ -102,7 +102,6 @@ CONFIG_PACKAGE_kmod-ledtrig-transient=y
 CONFIG_PACKAGE_kmod-lib-crc-itu-t=y
 CONFIG_PACKAGE_kmod-lib-lzo=y
 # CONFIG_PACKAGE_kmod-nf-conntrack6 is not set
-# CONFIG_PACKAGE_kmod-nf-flow is not set
 CONFIG_PACKAGE_kmod-nls-cp437=y
 CONFIG_PACKAGE_kmod-nls-iso8859-1=y
 CONFIG_PACKAGE_kmod-nls-utf8=y
@@ -133,8 +132,6 @@ CONFIG_PACKAGE_kmod-video-core=y
 CONFIG_PACKAGE_kmod-video-uvc=y
 CONFIG_PACKAGE_kmod-video-videobuf2=y
 CONFIG_PACKAGE_libattr=y
-CONFIG_PACKAGE_hmt20-config=y
-CONFIG_PACKAGE_p44featured=y
 CONFIG_PACKAGE_libavahi-client=y
 CONFIG_PACKAGE_libavahi-dbus-support=y
 CONFIG_PACKAGE_libblkid=y
@@ -171,7 +168,7 @@ CONFIG_PACKAGE_libupnp=y
 CONFIG_PACKAGE_libusb-1.0=y
 CONFIG_PACKAGE_libuuid=y
 CONFIG_PACKAGE_mg44=y
-CONFIG_PACKAGE_mjpg-streamer=y
+CONFIG_PACKAGE_mjpg-streamer=m
 CONFIG_PACKAGE_netdata=m
 CONFIG_PACKAGE_node=m
 CONFIG_PACKAGE_node-npm=m
@@ -181,9 +178,27 @@ CONFIG_PACKAGE_odhcpd_full_ext_cer_id=0
 CONFIG_PACKAGE_omega2-ctrl=y
 CONFIG_PACKAGE_openssh-sftp-avahi-service=y
 CONFIG_PACKAGE_openssh-sftp-server=y
+CONFIG_PACKAGE_p44featured=y
 CONFIG_PACKAGE_p44pagekite=y
 CONFIG_PACKAGE_pagekitec=y
 # CONFIG_PACKAGE_ppp is not set
+CONFIG_PACKAGE_procps-ng=m
+CONFIG_PACKAGE_procps-ng-free=m
+CONFIG_PACKAGE_procps-ng-kill=m
+CONFIG_PACKAGE_procps-ng-pgrep=m
+CONFIG_PACKAGE_procps-ng-pkill=m
+CONFIG_PACKAGE_procps-ng-pmap=m
+CONFIG_PACKAGE_procps-ng-ps=m
+CONFIG_PACKAGE_procps-ng-pwdx=m
+CONFIG_PACKAGE_procps-ng-skill=m
+CONFIG_PACKAGE_procps-ng-slabtop=m
+CONFIG_PACKAGE_procps-ng-snice=m
+CONFIG_PACKAGE_procps-ng-tload=m
+CONFIG_PACKAGE_procps-ng-top=m
+CONFIG_PACKAGE_procps-ng-uptime=m
+CONFIG_PACKAGE_procps-ng-vmstat=m
+CONFIG_PACKAGE_procps-ng-w=m
+CONFIG_PACKAGE_procps-ng-watch=m
 CONFIG_PACKAGE_rpcd=y
 CONFIG_PACKAGE_rpcd-mod-iwinfo=y
 CONFIG_PACKAGE_rrdcgi1=m
@@ -193,16 +208,16 @@ CONFIG_PACKAGE_serialfwd=y
 CONFIG_PACKAGE_socat=m
 CONFIG_PACKAGE_spidev-test=y
 CONFIG_PACKAGE_sqlite3-cli=y
-CONFIG_PACKAGE_tcpdump=y
 CONFIG_PACKAGE_sshpass=m
 CONFIG_PACKAGE_sudo=m
 CONFIG_PACKAGE_sysstat=m
+CONFIG_PACKAGE_tcpdump=y
 CONFIG_PACKAGE_terminfo=y
 CONFIG_PACKAGE_tree=y
 CONFIG_PACKAGE_u2pnpd=y
 # CONFIG_PACKAGE_uboot-envtools is not set
-CONFIG_PACKAGE_uhttpd=y
-CONFIG_PACKAGE_uhttpd-mod-ubus=y
+CONFIG_PACKAGE_uhttpd=m
+CONFIG_PACKAGE_uhttpd-mod-ubus=m
 CONFIG_PACKAGE_usbutils=y
 CONFIG_PACKAGE_wireless-tools=m
 CONFIG_PACKAGE_zlib=y
@@ -228,7 +243,6 @@ CONFIG_boost-static-and-shared-libs=y
 CONFIG_boost-variant-release=y
 CONFIG_PACKAGE_kmod-ipt-nat=y
 # CONFIG_PACKAGE_kmod-mppe is not set
-CONFIG_PACKAGE_kmod-nf-conntrack=y
 CONFIG_PACKAGE_kmod-nf-nat=y
 CONFIG_PACKAGE_kmod-ppp=y
 # CONFIG_PACKAGE_kmod-ppp-synctty is not set
