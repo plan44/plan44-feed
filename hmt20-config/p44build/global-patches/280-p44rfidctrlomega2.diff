@@ -36,7 +36,7 @@
  	*"OY-0001")
  		name="oy-0001"
  		;;
-+	*"P44 RFIDCtrl Omega2")
++	*"P44 RFIDCTRL Omega2")
 +		name="p44rfidctrlomega2"
 +		;;
  	*"PBR-D1")
