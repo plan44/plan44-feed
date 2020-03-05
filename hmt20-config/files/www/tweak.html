@@ -72,6 +72,8 @@
         }
         selectHtml +=
           '<option disabled>templates</option>' +
+          '<option value="1000">{ "run":"log(5,\"script run from API\")" }</option>' +
+          '<option value="1000">{ "eventscript":"log(5,message())" }</option>' +
           '<option value="1000">{ "cmd":"status" }</option>' +
           '<option value="1001">{ "cmd":"now" }</option>' +
           '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
@@ -79,6 +81,7 @@
           '<option value="1030">{ "cmd":"init", "indicators":1 }</option>' +
           '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "effect":"pulse", "dx":15 }</option>' +
           '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "t":5, "effect":"colorswipe.json", "t":5 }</option>' +
+          '<option value="1030">{ "cmd":"init", "inputs":{ "keyX":{ "pin":"sim.xbutton" } } }</option>' +
           '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
           '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
           '<option value="1040">{ "cmd":"init", "dispmatrix": [ { "installationX": 72, "installationY": 0 } ] }</option>' +
