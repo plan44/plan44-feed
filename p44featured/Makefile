@@ -13,8 +13,8 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=p44featured
-#PKG_SOURCE_URL:=https://github.com/plan44/lethd.git
-PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/lethd.git
+#PKG_SOURCE_URL:=https://github.com/plan44/p44featured.git
+PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/p44featured.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
