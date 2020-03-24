@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=hmt20-config
 # version of what we are downloading
-PKG_VERSION:=0.2
+PKG_VERSION:=0.4
 # version of this makefile
 PKG_RELEASE:=3
 
