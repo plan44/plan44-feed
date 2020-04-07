@@ -42,7 +42,7 @@ But especially in case of WS2812, some chips might need more tight timing. Note 
 So, the following command will create a `/dev/ledchain0` device, which can drive 200 WS2813 LEDs connected without inverter to PWM0.
 
     insmod p44-ledchain ledchain0=0,200,2
-    
+
 Of course, the pin multiplexer must be set such that PWM0 is actually output on the pin:
 
     omega2-ctrl gpiomux set pwm0 pwm
@@ -56,14 +56,14 @@ This should make the first two LEDs bright red.
 Another example: a "difficult" old WS2812 chain might be used on `/dev/ledchain1` with:
 
     insmod p44-ledchain ledchain1=0,200,1,10,5100
-    
+
 It will have a reduced frame rate, because it will probably need a lot of retries to meet the 5100nS maximum idle time between bits.
 
 ## Notes:
 
 - Writing to the ledchain device will never block. Every write triggers an update of all LEDs starting with the first LED. In case the previous update is still in progress when the ledchain device is written again, it will be aborted and a new update cycle with the newly written data will be started.
 
-- You should use a 3.3V to 5V level shifter between the Omgea2/MT7688 PWM pin and the LED chain for reliable operation. Direct connection sometimes works, but the high level from the 3.3V output seems to be just on the minimum edge of what a 5V WS281x recognizes as high. Tiny differences in supply voltage for the LED chain can make it work or not.
+- You should use a 3.3V to 5V level shifter between the Omega2/MT7688 PWM pin and the LED chain for reliable operation. Direct connection sometimes works, but the high level from the 3.3V output seems to be just on the minimum edge of what a 5V WS281x recognizes as high. Tiny differences in supply voltage for the LED chain can make it work or not.
 
 - To check if the driver has completed applying the previous updates, and to see some statistics, the ledchain device can be read: `cat /dev/ledchain0`. The meanings of the values shown are:
     - The first line shows either "Ready" (when updating LEDs is complete) or "Busy" when an update is in progress.
