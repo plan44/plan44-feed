@@ -8,6 +8,8 @@ EXTRAOPTS=
 # basic config Omega2 on p44-rfid-controller v1
 
 # - LED chain
+#   - the overall power limit in mW (approx)
+LED_POWER="20000"
 #   - The chains to install the kernel driver for
 LEDCHAIN_NAME_0="ledchain0"
 LEDCHAIN_NUMLEDS_0=288
@@ -65,7 +67,7 @@ omega2-ctrl gpiomux set uart2 pwm23
 # load driver
 # ledchain<PWMno>=<inverted>,<numberofleds>,<ledtype>
 LEDCHAIN_INSMOD="insmod p44-ledchain"
-LEDCHAIN_ARRANGEMENT=""
+LEDCHAIN_ARRANGEMENT=" --ledpowerlimit ${LED_POWER}"
 LEDOFFSET=0;
 if [ -n "${LEDCHAIN_NAME_0}" ]; then
   LEDCHAIN_INSMOD="${LEDCHAIN_INSMOD} ${LEDCHAIN_NAME_0}=0,${LEDCHAIN_NUMLEDS_0},2"
