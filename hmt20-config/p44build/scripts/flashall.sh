@@ -7,7 +7,7 @@ shopt -s extglob
 BUILDROOT="$(pwd -P)"
 
 # %%%%%%%%%%%
-echo "!!!! Last used for LETH, CHECK IF STILL OK FIRST, or use generic omega2flash"
+echo "!!!! Last used for LETH, CHECK IF STILL OK FIRST"
 exit 1
 
 

@@ -4,6 +4,7 @@
 EXECUTABLE=p44featured
 LOGLEVEL=5
 EXTRAOPTS=
+INITOPTS="--initjson initcmds.json"
 
 # basic config Omega2 on p44-rfid-controller v1
 
@@ -137,7 +138,6 @@ exec ${EXECUTABLE} \
   --rfidirq ${RFID_IRQ_PIN} \
   ${LEDCHAIN_ARRANGEMENT} \
   ${WIFITRACK} \
-  --initjson initcmds.json \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
@@ -147,6 +147,7 @@ exec ${EXECUTABLE} \
   --jsonapinonlocal \
   --featureapiport 11200 \
   --ubusapi \
+  ${INITOPTS} \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
