@@ -1,9 +1,9 @@
 --- a/package/network/services/odhcpd/files/odhcpd.defaults
 +++ b/package/network/services/odhcpd/files/odhcpd.defaults
 @@ -4,18 +4,21 @@ touch /etc/config/dhcp
- 
+
  . /usr/share/libubox/jshn.sh
- 
+
 -json_load "$(cat /etc/board.json)"
 -json_select network
 -json_select lan
@@ -31,6 +31,6 @@
 +# esac
 +# - simply disabled
 +MODE=disabled
- 
+
  uci batch <<EOF
  set dhcp.odhcpd=odhcpd

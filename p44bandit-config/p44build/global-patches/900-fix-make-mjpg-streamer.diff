@@ -1,0 +1,123 @@
+--- a/feeds/packages/multimedia/mjpg-streamer/Makefile
++++ b/feeds/packages/multimedia/mjpg-streamer/Makefile
+@@ -27,24 +27,24 @@ include $(INCLUDE_DIR)/cmake.mk
+ PKG_BUILD_DEPENDS:=MJPG_STREAMER_V4L2:libv4l
+ 
+ define Package/mjpg-streamer
+-  SECTION:=multimedia
+-  CATEGORY:=Multimedia
+-  TITLE:=MJPG-streamer
+-  DEPENDS:=+libpthread +libjpeg +MJPG_STREAMER_V4L2:libv4l
+-  URL:=https://github.com/jacksonliam/mjpg-streamer
+-  MENU:=1
++	SECTION:=multimedia
++	CATEGORY:=Multimedia
++	TITLE:=MJPG-streamer
++	DEPENDS:=+libpthread +libjpeg +MJPG_STREAMER_V4L2:libv4l
++	URL:=https://github.com/jacksonliam/mjpg-streamer
++	MENU:=1
+ endef
+ 
+ define Package/mjpg-streamer/description
+- Streaming application for Linux-UVC compatible webcams
++	Streaming application for Linux-UVC compatible webcams
+ endef
+ 
+ define Package/mjpg-streamer/config
+-  source "$(SOURCE)/Config.in"
++	source "$(SOURCE)/Config.in"
+ endef
+ 
+ define Package/mjpg-streamer/conffiles
+-/etc/config/mjpg-streamer
++	/etc/config/mjpg-streamer
+ endef
+ 
+ CAMBOZOLA:=cambozola-0.936.tar.gz
+@@ -53,9 +53,9 @@ CAMBOZOLA:=cambozola-0.936.tar.gz
+ # Using the OpenWrt mirror provides a stable version
+ #      orig-URL:=http://www.andywilcock.com/code/cambozola
+ define Download/cambozola
+-  URL:=https://sources.openwrt.org/
+-  FILE:=$(CAMBOZOLA)
+-  HASH:=4e4e92d95673edd051e6b4d36bed8c5328873f5fc374073760b457d4be33415b
++	URL:=https://sources.openwrt.org/
++	FILE:=$(CAMBOZOLA)
++	HASH:=4e4e92d95673edd051e6b4d36bed8c5328873f5fc374073760b457d4be33415b
+ endef
+ 
+ # redefine prepare to extract to our build dir
+@@ -65,24 +65,25 @@ define Build/Prepare
+ 	mkdir -p $(PKG_BUILD_DIR)/
+ 	$(TAR) -xJf $(DL_DIR)/$(PKG_SOURCE) -C $(PKG_BUILD_DIR) --strip=2
+ 	$(Build/Patch)
+-    # Fetch latest cambozola that works with latest Java(s)
+-    # Yes, I know this is ugly
+-    ifeq ($(CONFIG_MJPG_STREAMER_WWW),y)
++	# Fetch latest cambozola that works with latest Java(s)
++	# Yes, I know this is ugly
++	ifeq ($(CONFIG_MJPG_STREAMER_WWW),y)
+ 	$(eval $(call Download,cambozola))
+ 	$(TAR) -xf $(DL_DIR)/$(CAMBOZOLA) --strip=2 --wildcards \
+ 		-C $(PKG_BUILD_DIR)/www */dist/cambozola.jar
+-    endif
++	endif
+ endef
+ 
+ define Build/Configure
+-    $(RM) $(PKG_BUILD_DIR)/plugins/input_uvc/uvcvideo.h
++	$(RM) $(PKG_BUILD_DIR)/plugins/input_uvc/uvcvideo.h
++	$(call Build/Configure/Default)
+ endef
+ 
+-    TARGET_LDFLAGS+= -ljpeg
++	TARGET_LDFLAGS+= -ljpeg
+ 
+ ifeq ($(CONFIG_MJPG_STREAMER_V4L2),y)
+-    TARGET_CFLAGS+= -DUSE_LIBV4L2
+-    TARGET_LDFLAGS+= -lv4l2
++	TARGET_CFLAGS+= -DUSE_LIBV4L2
++	TARGET_LDFLAGS+= -lv4l2
+ endif
+ 
+ define Package/mjpg-streamer/install
+@@ -96,30 +97,30 @@ define Package/mjpg-streamer/install
+ 	$(INSTALL_DATA) ./files/mjpg-streamer.hotplug $(1)/etc/hotplug.d/usb/20-mjpg-streamer
+ 	$(INSTALL_DIR) $(1)/usr/lib
+ ifeq ($(CONFIG_MJPG_STREAMER_INPUT_FILE),y)
+-	$(CP) $(PKG_BUILD_DIR)/input_file.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/input_file.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_INPUT_UVC),y)
+-	$(CP) $(PKG_BUILD_DIR)/input_uvc.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/input_uvc.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_INPUT_HTTP),y)
+-	$(CP) $(PKG_BUILD_DIR)/input_http.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/input_http.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_OUTPUT_RTSP),y)
+-	$(CP) $(PKG_BUILD_DIR)/output_rtsp.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/output_rtsp.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_OUTPUT_UDP),y)
+-	$(CP) $(PKG_BUILD_DIR)/output_udp.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/output_udp.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_OUTPUT_FILE),y)
+-	$(CP) $(PKG_BUILD_DIR)/output_file.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/output_file.so $(1)/usr/lib
+ endif
+ ifeq ($(CONFIG_MJPG_STREAMER_OUTPUT_HTTP),y)
+-	$(CP) $(PKG_BUILD_DIR)/output_http.so $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/$(PKG_NAME)/output_http.so $(1)/usr/lib
+ 	$(INSTALL_DIR) $(1)/www/webcam
+     ifeq ($(CONFIG_MJPG_STREAMER_WWW),y)
+-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/www/* $(1)/www/webcam
++	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/share/$(PKG_NAME)/www/* $(1)/www/webcam
+     else
+-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/www/stream_simple.html $(1)/www/webcam/index.html
++	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/share/$(PKG_NAME)/www/stream_simple.html $(1)/www/webcam/index.html
+     endif
+ endif
+ endef
