@@ -54,9 +54,9 @@ There are also some ports to openwrt for things I wanted to use for a project, e
 
 There is and will always be some work-in-progress in this feed, so don't expect everything turnkey ready.
 
-Note that *i2c-tools* and *libpng* are also available in the standard feeds, but in slightly different variations - I needed some modifications for my own projects so I duplicated the packages. Fortunately, OpenWrt source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
+Note that *i2c-tools* is also available in the standard feeds, but in slightly different variation - I needed some modifications for my own projects so I duplicated the package. Fortunately, OpenWrt source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
 
     ./scripts/feeds update plan44
-    ./scripts/feeds install -p plan44 libpng
+    ./scripts/feeds install -p plan44 i2c-tools
 
 
