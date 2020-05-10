@@ -12,7 +12,7 @@ if [[ $# -lt 2 ]]; then
   exit 1
 fi
 
-IF=$1
+INTF=$1
 shift
 MODE=$1
 shift
@@ -22,5 +22,5 @@ if [[ "${IMG}" == "IMG" ]]; then
   echo "Using image = ${BUILT_IMAGE}"
   IMG="${BUILT_IMAGE}"
 fi
-echo "### Invoking:" "${FLASHER}" "${IF}" "${MODE}" "${IMG}" "$@"
-"${FLASHER}" "${IF}" "${MODE}" "${IMG}" "$@"
+echo "### Invoking:" "${FLASHER}" "${INTF}" "${MODE}" "${IMG}" "$@"
+"${FLASHER}" "${INTF}" "${MODE}" "${IMG}" "$@"
