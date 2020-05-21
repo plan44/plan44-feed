@@ -1,6 +1,6 @@
 --- a/target/linux/ramips/dts/OMEGA2.dtsi
 +++ b/target/linux/ramips/dts/OMEGA2.dtsi
-@@ -164,3 +164,11 @@
+@@ -173,3 +173,11 @@
  &wmac {
  	status = "okay";
  };

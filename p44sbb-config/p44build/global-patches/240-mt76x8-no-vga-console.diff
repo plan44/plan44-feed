@@ -1,8 +1,0 @@
---- a/target/linux/ramips/mt76x8/config-4.14
-+++ b/target/linux/ramips/mt76x8/config-4.14
-@@ -230,3 +230,4 @@ CONFIG_TINY_SRCU=y
- CONFIG_USB_SUPPORT=y
- CONFIG_USE_OF=y
- CONFIG_WATCHDOG_CORE=y
-+# CONFIG_VGA_CONSOLE is not set
-\ No newline at end of file

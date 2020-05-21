@@ -1,6 +1,6 @@
 --- a/package/boot/uboot-envtools/files/ramips
 +++ b/package/boot/uboot-envtools/files/ramips
-@@ -24,6 +24,8 @@ all5002)
+@@ -26,6 +26,8 @@ all5002)
  	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x10000" "0x10000"
  	;;
  linkits7688|\
