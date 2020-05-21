@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44sbb-config
 # version of what we are downloading
-PKG_VERSION:=0.5
+PKG_VERSION:=0.6
 # version of this makefile
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

@@ -30,17 +30,84 @@
 
     <script language="javascript1.2" type="text/javascript"><!--
 
-      var restartLocation = window.location.href;
-
-      var focusdevice;
-
-      var tickDiff = false;
-
     	var rqvaltok="";
+
+    	var maxHistoryLength = 30;
+    	var jsonhistory = [];
+
+
+      function addToHistory(txt)
+      {
+        var dup = jsonhistory.findIndex(function(e) { return e==txt; });
+        if (dup>=0) {
+          jsonhistory.splice(dup,1);
+          jsonhistory.unshift(txt);
+        }
+        else {
+          // new entry, put in front
+          jsonhistory.unshift(txt);
+          if (jsonhistory.length>maxHistoryLength) jsonhistory.pop();
+        }
+        refreshExamples();
+      }
+
+
+      function refreshExamples()
+      {
+        var selectHtml =
+          '<option value="0">- select template -</option>';
+        if (jsonhistory.length>0) {
+          selectHtml +=
+            '<option disabled>history</option>';
+          for (var i=0; i<jsonhistory.length; i++) {
+            selectHtml +=
+              '<option value="' + (i+1).toString() + '">' + jsonhistory[i] + '</option>';
+          }
+        }
+        selectHtml +=
+          '<option disabled>templates</option>' +
+          '<option value="1000">{ "run":"log(5,\"script run from API\")" }</option>' +
+          '<option value="1000">{ "eventscript":"log(5,message())" }</option>' +
+          '<option value="1000">{ "triggerexpression":"every(0:01)" }</option>' +
+          '<option value="1000">{ "cmd":"status" }</option>' +
+          '<option value="1001">{ "cmd":"now" }</option>' +
+          '<option value="1030">{ "cmd":"init", "splitflaps": { "modules":[ { "name":"hour", "addr":6, "type":"hour" } }</option>' +
+          '<option value="1200">{ "feature":"splitflaps", "cmd":"position", "name":"hour", "value":19 }</option>' +
+          '<option value="1200">{ "feature":"splitflaps", "cmd":"raw", "data":"FFD006" }</option>' +
+          '<option value="1200">{ "level":6 }</option>';
+
+        $('#jsonExamples').html(selectHtml).trigger('create');
+        $('#jsonExamples').val(0).selectmenu('refresh');
+      }
+
+
+      function exampleSelected()
+      {
+        if ($('#jsonExamples').val()!=0) {
+          var text = $('#jsonExamples>option:selected').html();
+          $('#jsonText').val(text);
+          $('#jsonExamples').val(0).selectmenu('refresh');
+          $('#jsonText').focus();
+        }
+      }
+
+
+      function apiSelected()
+      {
+        if ($('#apiExamples').val()!=0) {
+          var text = $('#apiExamples>option:selected').html();
+          $('#apiPath').val(text);
+          $('#apiExamples').val(0).selectmenu('refresh');
+          $('#apiPath').focus();
+        }
+      }
+
+
 
       $(function()
       {
         // document ready
+        refreshExamples();
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
@@ -49,28 +116,40 @@
         // handler for sendAPI button
         $("#sendAPI").click(function() {
           var txt = $("#jsonText").val().toString();
-          var json = JSON.parse(txt);
-          var uri = json.uri;
-          if (uri==undefined) uri='';
-          else uri = '/' + uri;
-          if (json) {
-            $.ajax({
-              url: '/api/json' + uri + '?rqvaltok=' + rqvaltok,
-              type: 'post',
-              dataType: 'json',
-              timeout: 20000, // needs a long timeout, large queries might be sloooow!
-              data: JSON.stringify(json)
-            }).done(function(response) {
-              $("#jsonResult").val(JSON.stringify(response));
-            }).fail(function(response, status) {
-              $("#jsonResult").val('API error ' + response.error.message);
-            });
+          var apipath = $("#apiPath").val().toString();
+          if (txt.length>0) {
+            var json = JSON.parse(txt);
+            if (json) {
+              $.ajax({
+                url: apipath + '?rqvaltok=' + rqvaltok,
+                type: 'post',
+                dataType: 'json',
+                timeout: 20000, // needs a long timeout, large queries might be sloooow!
+                data: JSON.stringify(json)
+              }).done(function(response) {
+                $("#jsonResult").val(JSON.stringify(response));
+                addToHistory(txt);
+              }).fail(function(response, status) {
+                $("#jsonResult").val('API POST error ' + response.error.message);
+              });
+            }
+            else {
+              $("#jsonResult").val("*** input is invalid JSON -> cannot send ***");
+            }
           }
           else {
-            $("#jsonResult").val("*** invalid JSON ***");
+            $.ajax({
+              url: apipath + '?rqvaltok=' + rqvaltok,
+              type: 'get',
+              timeout: 20000 // needs a long timeout, large queries might be sloooow!
+            }).done(function(response) {
+              $("#jsonResult").val(JSON.stringify(response));
+              addToHistory(txt);
+            }).fail(function(response, status) {
+              $("#jsonResult").val('API GET error ' + response.error.message);
+            });
           }
         });
-
       });
 
 
@@ -84,8 +163,18 @@
     <div id="tweak" data-role="page">
       <div data-role="content">
         <div style="margin-bottom: 20px;">
-          <label for="jsonText">Enter JSON Arguments:</label>
-          <input type="text" name="jsonText" id="jsonText" placeholder='{ "uri":"interface", "sendbytes":"FFFC3110" } or { "uri":"module", "addr":57, "pos":22 }' value="" data-theme="d">
+          <label for="apiPath">Enter API Path:</label>
+          <input type="text" name="apiPath" id="apiPath" placeholder='api/json/featureapi' value="api/json/featureapi" data-theme="d">
+          <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+            <option value="0">- select template -</option>
+            <option value="1">api/json/featureapi</option>
+            <option value="3">api/json/log</option>
+            <option value="99">tok/json</option>
+          </select>
+          <label for="jsonText">Enter JSON API Query:</label>
+          <input type="text" name="jsonText" id="jsonText" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="" data-theme="d">
+          <select onchange="javascript:exampleSelected();" name="jsonExamples" id="jsonExamples">
+          </select>
           <button type="button" id="sendAPI" data-inline="true" data-theme="c">Send JSON to API</button>
           <textarea id="jsonResult"></textarea>
         </div>
