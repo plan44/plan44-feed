@@ -180,6 +180,7 @@ public:
     // - model and name
     initMsg->add("modelname", JsonObject::newString("Elsner P03/P04"));
     initMsg->add("name", JsonObject::newString("Elsner P03/P04 via RS485"));
+    initMsg->add("iconname", JsonObject::newString("weather"));
     // - binary inputs
     JsonObjectPtr inputs = JsonObject::newArray();
     JsonObjectPtr i;
