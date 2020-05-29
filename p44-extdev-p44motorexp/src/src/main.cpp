@@ -1,0 +1,344 @@
+//
+//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//
+//  Author: Lukas Zeller <luz@plan44.ch>
+//
+//  This file implements a external device for the vdcd project. It
+//  uses p44utils which are free software licensed under GPLv3,
+//  so this sample code and code derived from it also fall under
+//  the terms of GPLv3.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with vdcd. If not, see <http://www.gnu.org/licenses/>.
+//
+
+#include "application.hpp"
+
+#include "dcmotor.hpp"
+#include "jsoncomm.hpp"
+
+using namespace p44;
+
+// set this to a unique string for your particular app or use --uniqueid command line parameter
+#define DEFAULT_UNIQUE_ID "P44MotorExpansionExternalDeviceApp"
+
+#define DEFAULT_API_HOST "localhost"
+#define DEFAULT_API_SERVICE "8999"
+#define DEFAULT_LOGLEVEL LOG_NOTICE
+
+
+class DCMotor : public P44Obj
+{
+public:
+  DCMotor() : movingUp(false) {};
+  ~DCMotor() { if (motor) motor->stop(); };
+  DcMotorDriverPtr motor;
+  bool movingUp; // current movement direction is up
+  MLTicket moveTimer;
+  int index;
+};
+typedef boost::intrusive_ptr<DCMotor> DCMotorPtr;
+
+
+/// Main program for plan44.ch P44-DSB-DEH in form of the "vdcd" daemon)
+class P44MotorDeviceApp : public CmdLineApp
+{
+  typedef CmdLineApp inherited;
+
+  typedef std::list<string> StringList;
+  typedef std::vector<DCMotorPtr> MotorVector;
+
+  StringList motorDefs;
+  MotorVector motors;
+
+  string uniqueId;
+  JsonCommPtr deviceConnection;
+
+  // log to API
+  static void logToApi(void *aContextPtr, int aLevel, const char *aLinePrefix, const char *aLogMessage)
+  {
+    P44MotorDeviceApp *app = static_cast<P44MotorDeviceApp *>(aContextPtr);
+    JsonObjectPtr msg = JsonObject::newObj();
+    msg->add("message", JsonObject::newString("log"));
+    // - index
+    msg->add("level", JsonObject::newInt32(aLevel));
+    // - value
+    msg->add("text", JsonObject::newString(aLogMessage));
+    // Send message
+    if (app->deviceConnection) {
+      app->deviceConnection->sendMessage(msg);
+    }
+  }
+
+public:
+
+  P44MotorDeviceApp()
+  {
+  }
+
+
+  virtual bool processOption(const CmdLineOptionDescriptor &aOptionDescriptor, const char *aOptionValue)
+  {
+    if (strcmp(aOptionDescriptor.longOptionName,"motor")==0) {
+      motorDefs.push_back(aOptionValue);
+    }
+    else {
+      return inherited::processOption(aOptionDescriptor, aOptionValue);
+    }
+    return true;
+  }
+
+
+
+
+  virtual int main(int argc, char **argv)
+  {
+    const char *usageText =
+    "Usage: %1$s [options]\n";
+    const CmdLineOptionDescriptor options[] = {
+      // specific to P44 motor expansion
+      { 'm', "motor",           true,  "pwm,sensor,cw,cww; define a DC motor device" },
+      { 0  , "adctest",         true,  "analogpinspec;pin to read analog value from" },
+      // generic
+      { 'h', "apihost",         true,  "hostname/IP;specifies vdcd external device API host to connect to, defaults to " DEFAULT_API_HOST },
+      { 'p', "apiport",         true,  "port;external device API port or local socket name, defaults to " DEFAULT_API_SERVICE },
+      { 'i', "unqiueid",        true,  "UUID/unique string;device's dSUID is derived from this, if UUID is used, it must be globally unique, "
+                                       "if other string is used it must be unique for the vdcd it connects to. Defaults to " DEFAULT_UNIQUE_ID },
+      { 'l', "loglevel",        true,  "level;set max level of log message detail to show on stdout" },
+      { 0  , "logtoapi",        false, "log via API log command, so log messages will appear in vdcd log" },
+      { 'h', "help",            false, "show this text" },
+      { 0, NULL } // list terminator
+    };
+
+    // parse the command line, exits when syntax errors occur
+    setCommandDescriptors(usageText, options);
+    parseCommandLine(argc, argv);
+    if (!isTerminated()) {
+      // pin test mode?
+      string testPinSpec;
+      if (getStringOption("adctest", testPinSpec)) {
+        // test only
+        AnalogIoPtr analogTestPin = AnalogIoPtr(new AnalogIo(testPinSpec.c_str(), false, 0));
+        double v = analogTestPin->value();
+        printf("Pin '%s' analog value is = %.3f\n", testPinSpec.c_str(), v);
+        terminateApp(EXIT_SUCCESS);
+      }
+      if (numArguments()>0) {
+        // show usage
+        showUsage();
+        terminateApp(EXIT_FAILURE);
+      }
+      // set log level
+      int loglevel = DEFAULT_LOGLEVEL;
+      getIntOption("loglevel", loglevel);
+      SETLOGLEVEL(loglevel);
+      if (getOption("logtoapi")) {
+        SETLOGHANDLER(logToApi, this);
+      }
+      // create device connection
+      deviceConnection = JsonCommPtr(new JsonComm(MainLoop::currentMainLoop()));
+      // - get parameters for device connection
+      string hostname = DEFAULT_API_HOST;
+      string service = DEFAULT_API_SERVICE;
+      getStringOption("apihost", hostname);
+      getStringOption("apiport", service);
+      deviceConnection->setConnectionParams(hostname.c_str(), service.c_str());
+      // - get uniqueID to use
+      uniqueId = DEFAULT_UNIQUE_ID;
+      getStringOption("unqiueid", uniqueId);
+    }
+    // run
+    return run();
+  };
+
+
+  virtual void initialize()
+  {
+    int mcount = 0;
+    for (StringList::iterator pos = motorDefs.begin(); pos!=motorDefs.end(); ++pos) {
+      // create new motor definition
+      const char *c = pos->c_str();
+      string sensor, limit, pwm, cw, cww;
+      if (nextPart(c, sensor, ',')) {
+        if (nextPart(c, limit, ',')) {
+          double maxCurrent = 0;
+          if (sscanf(limit.c_str(), "%lf", &maxCurrent)!=1) {
+            terminateAppWith(TextError::err("invalid max current specification, needs to be float number"));
+            return;
+          }
+          if (nextPart(c, pwm, ',')) {
+            if (nextPart(c, cw, ',')) {
+              nextPart(c, cww, ','); // optional
+              // create motor
+              DCMotorPtr m = DCMotorPtr(new DCMotor);
+              m->index = mcount++;
+              m->motor = DcMotorDriverPtr(new DcMotorDriver(pwm.c_str(), cw.c_str(), cww.empty() ? NULL : cww.c_str()));
+              m->motor->setCurrentLimiter(
+                 sensor.c_str(), maxCurrent, 100*MilliSecond,
+                 boost::bind(&P44MotorDeviceApp::stopReached, this, m)
+              );
+              motors.push_back(m);
+              continue;
+            }
+          }
+        }
+      }
+      // error
+      terminateAppWith(TextError::err("invalid motor specification %s, needs pinspecs as follows: sensor,currentlimit,pwm,cw[,cww]", pos->c_str()));
+      return;
+    }
+    // open plan44 vdcd external device API connection
+    // - set handlers first
+    deviceConnection->setConnectionStatusHandler(boost::bind(&P44MotorDeviceApp::connectionStatusHandler, this, _2));
+    deviceConnection->setMessageHandler(boost::bind(&P44MotorDeviceApp::jsonMessageHandler, this, _1, _2));
+    // - initiate connection. Status handler will be called if it fails
+    deviceConnection->initiateConnection();
+  };
+
+
+  virtual void cleanup(int aExitCode)
+  {
+  }
+
+
+  void connectionStatusHandler(ErrorPtr aError)
+  {
+    if (Error::isOK(aError)) {
+      // connection successfully established, init device now
+      initDevices();
+    }
+    else {
+      // connecion failed, exit
+      terminateAppWith(aError);
+    }
+  }
+
+
+  void initDevices()
+  {
+    JsonObjectPtr initMsg = JsonObject::newArray();
+    // the vdc
+    JsonObjectPtr vdcInit = JsonObject::newObj();
+    vdcInit->add("message", JsonObject::newString("initvdc"));
+    vdcInit->add("modelname", JsonObject::newString("P44 DC Motor Extension"));
+    vdcInit->add("iconname", JsonObject::newString("dcmotor"));
+    initMsg->arrayAppend(vdcInit);
+    // the motors
+    for (int i=0; i<motors.size(); i++) {
+      // create vdcd external device API init message
+      JsonObjectPtr devInit = JsonObject::newObj();
+      devInit->add("message", JsonObject::newString("init"));
+      // - tag
+      devInit->add("tag", JsonObject::newString(string_format("M%d", i)));
+      // - unique ID
+      devInit->add("uniqueid", JsonObject::newString(string_format("%s-%d", uniqueId.c_str(), i)));
+      devInit->add("modelname", JsonObject::newString("DC Motor Output"));
+      devInit->add("iconname", JsonObject::newString("dcmotor"));
+      // - always JSON
+      devInit->add("protocol", JsonObject::newString("json"));
+      // - projection screen roller blind
+      devInit->add("output", JsonObject::newString("shadow"));
+      devInit->add("kind", JsonObject::newString("roller")); // simple rollerblind, no angle
+      devInit->add("endcontacts", JsonObject::newBool(true)); // has "end contacts", i.e. reports reaching end of movement
+      devInit->add("move", JsonObject::newBool(true));
+      devInit->add("name", JsonObject::newString(string_format("Motor %d", i)));
+      initMsg->arrayAppend(devInit);
+    }
+    // Send init message
+    deviceConnection->sendMessage(initMsg);
+  }
+
+
+  void jsonMessageHandler(ErrorPtr aError, JsonObjectPtr aJsonObject)
+  {
+    if (!Error::isOK(aError)) {
+      // error, exit
+      terminateAppWith(aError);
+      return;
+    }
+    // process messages
+    LOG(LOG_NOTICE, "Received message: %s", aJsonObject->c_strValue());
+    JsonObjectPtr o;
+    int mindex = -1;
+    if (!aJsonObject->get("tag", o)) {
+      LOG(LOG_ERR, "Missing 'tag' in message")
+    }
+    else {
+      if (sscanf(o->c_strValue(), "M%d", &mindex)!=1 || mindex>=motors.size() || mindex<0) {
+        LOG(LOG_ERR, "tag must be M0..M%lu", motors.size()-1);
+      }
+      else {
+        // addressing an existing motor, decode message
+        if (aJsonObject->get("message", o)) {
+          string msg = o->stringValue();
+          if (msg=="move") {
+            // move command
+            if (aJsonObject->get("direction", o)) {
+              int d = o->int32Value();
+              move(motors[mindex], d);
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+  void reportPosition(DCMotorPtr aMotor, double aPos)
+  {
+    LOG(LOG_NOTICE, "Reporting position: %.1f", aPos);
+    // create vdcd external device API channel update message
+    JsonObjectPtr msg = JsonObject::newObj();
+    msg->add("tag", JsonObject::newString(string_format("M%d", aMotor->index)));
+    msg->add("message", JsonObject::newString("channel"));
+    // - index
+    msg->add("index", JsonObject::newInt32(0));
+    // - value
+    msg->add("value", JsonObject::newDouble(aPos));
+    // Send message
+    deviceConnection->sendMessage(msg);
+  }
+
+
+  #define SCREEN_MAX_MOVE_TIME (42*Second) // %%% tbd
+
+  void move(DCMotorPtr aMotor, int aDirection)
+  {
+    LOG(LOG_NOTICE, "Received move command, direction = %d", aDirection);
+    // First, always stop everything, no matter what state
+    aMotor->motor->stop();
+    aMotor->moveTimer.cancel();
+    if (aDirection!=0) {
+      aMotor->movingUp = aDirection>0;
+      aMotor->motor->rampToPower(100, aDirection, 0.5);
+      aMotor->moveTimer.executeOnce(boost::bind(&P44MotorDeviceApp::motorTimeout, this, aMotor), SCREEN_MAX_MOVE_TIME);
+    }
+  }
+
+
+  void motorTimeout(DCMotorPtr aMotor)
+  {
+    LOG(LOG_ERR, "movement timeout, should have reached an end position by now");
+    aMotor->motor->stop();
+  }
+
+
+  void stopReached(DCMotorPtr aMotor)
+  {
+    aMotor->moveTimer.cancel();
+    reportPosition(aMotor, aMotor->movingUp ? 100 : 0);
+  }
+
+};
+
+
+int main(int argc, char **argv)
+{
+  // prevent debug output before application.main scans command line
+  SETLOGLEVEL(LOG_EMERG);
+  SETERRLEVEL(LOG_EMERG, false); // messages, if any, go to stderr
+  // create app with current mainloop
+  static P44MotorDeviceApp application;
+  // pass control
+  return application.main(argc, argv);
+}
