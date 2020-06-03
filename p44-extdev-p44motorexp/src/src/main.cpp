@@ -26,6 +26,7 @@ using namespace p44;
 #define DEFAULT_API_SERVICE "8999"
 #define DEFAULT_LOGLEVEL LOG_NOTICE
 
+#define DEFAULT_MAX_MOVE_TIME (42*Second) // %%% tbd
 
 class DCMotor : public P44Obj
 {
@@ -35,6 +36,7 @@ public:
   DcMotorDriverPtr motor;
   bool movingUp; // current movement direction is up
   MLTicket moveTimer;
+  MLMicroSeconds maxMoveTime; // max overall move time
   int index;
 };
 typedef boost::intrusive_ptr<DCMotor> DCMotorPtr;
@@ -50,6 +52,7 @@ class P44MotorDeviceApp : public CmdLineApp
 
   StringList motorDefs;
   MotorVector motors;
+  MLMicroSeconds defaultMaxMoveTime;
 
   string uniqueId;
   JsonCommPtr deviceConnection;
@@ -72,7 +75,8 @@ class P44MotorDeviceApp : public CmdLineApp
 
 public:
 
-  P44MotorDeviceApp()
+  P44MotorDeviceApp() :
+   defaultMaxMoveTime(DEFAULT_MAX_MOVE_TIME)
   {
   }
 
@@ -98,6 +102,7 @@ public:
     const CmdLineOptionDescriptor options[] = {
       // specific to P44 motor expansion
       { 'm', "motor",           true,  "pwm,sensor,cw,cww; define a DC motor device" },
+      { 0  , "maxmovetime",     true,  "seconds;default max move time" },
       { 0  , "adctest",         true,  "analogpinspec;pin to read analog value from" },
       // generic
       { 'h', "apihost",         true,  "hostname/IP;specifies vdcd external device API host to connect to, defaults to " DEFAULT_API_HOST },
@@ -158,20 +163,29 @@ public:
     for (StringList::iterator pos = motorDefs.begin(); pos!=motorDefs.end(); ++pos) {
       // create new motor definition
       const char *c = pos->c_str();
-      string sensor, limit, pwm, cw, cww;
+      string sensor, num, pwm, cw, cww;
       if (nextPart(c, sensor, ',')) {
-        if (nextPart(c, limit, ',')) {
+        if (nextPart(c, num, ',')) {
           double maxCurrent = 0;
-          if (sscanf(limit.c_str(), "%lf", &maxCurrent)!=1) {
+          if (sscanf(num.c_str(), "%lf", &maxCurrent)!=1) {
             terminateAppWith(TextError::err("invalid max current specification, needs to be float number"));
             return;
           }
           if (nextPart(c, pwm, ',')) {
             if (nextPart(c, cw, ',')) {
-              nextPart(c, cww, ','); // optional
+              nextPart(c, cww, ','); // optional CCW
               // create motor
               DCMotorPtr m = DCMotorPtr(new DCMotor);
               m->index = mcount++;
+              // optional individual max move time
+              m->maxMoveTime = defaultMaxMoveTime;
+              if (nextPart(c, num, ',')) {
+                double secs;
+                if (sscanf(num.c_str(), "%lf", &secs)==1) {
+                  m->maxMoveTime = secs*Second;
+                }
+              }
+              // create driver
               m->motor = DcMotorDriverPtr(new DcMotorDriver(pwm.c_str(), cw.c_str(), cww.empty() ? NULL : cww.c_str()));
               m->motor->setCurrentLimiter(
                  sensor.c_str(), maxCurrent, 100*MilliSecond,
@@ -300,25 +314,23 @@ public:
   }
 
 
-  #define SCREEN_MAX_MOVE_TIME (42*Second) // %%% tbd
-
   void move(DCMotorPtr aMotor, int aDirection)
   {
-    LOG(LOG_NOTICE, "Received move command, direction = %d", aDirection);
+    LOG(LOG_NOTICE, "M%d Received move command, direction = %d", aMotor->index, aDirection);
     // First, always stop everything, no matter what state
     aMotor->motor->stop();
     aMotor->moveTimer.cancel();
     if (aDirection!=0) {
       aMotor->movingUp = aDirection>0;
       aMotor->motor->rampToPower(100, aDirection, 0.5);
-      aMotor->moveTimer.executeOnce(boost::bind(&P44MotorDeviceApp::motorTimeout, this, aMotor), SCREEN_MAX_MOVE_TIME);
+      aMotor->moveTimer.executeOnce(boost::bind(&P44MotorDeviceApp::motorTimeout, this, aMotor), aMotor->maxMoveTime);
     }
   }
 
 
   void motorTimeout(DCMotorPtr aMotor)
   {
-    LOG(LOG_ERR, "movement timeout, should have reached an end position by now");
+    LOG(LOG_ERR, "movement timeout M%d, should have reached an end position by now", aMotor->index);
     aMotor->motor->stop();
   }
 
