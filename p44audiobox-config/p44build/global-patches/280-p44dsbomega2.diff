@@ -57,7 +57,7 @@
 @@ -106,6 +106,15 @@ define Device/omega2p
  endef
  TARGET_DEVICES += omega2p
- 
+
 +define Device/P44DSBOmega2
 +  DTS := P44-DSB-OMEGA2
 +  IMAGE_SIZE := $(ralink_default_fw_size_16M)
@@ -72,7 +72,7 @@
    IMAGE_SIZE := $(ralink_default_fw_size_16M)
 --- /dev/null
 +++ b/target/linux/ramips/dts/P44-DSB-OMEGA2.dts
-@@ -0,0 +1,198 @@
+@@ -0,0 +1,187 @@
 +/dts-v1/;
 +
 +#include "mt7628an.dtsi"
@@ -174,17 +174,6 @@
 +			ralink,group = "pwm1";
 +			ralink,function = "gpio";
 +		};
-+
-+    uart1 {
-+      ralink,group = "uart1";
-+      ralink,function = "gpio";
-+    };
-+
-+    uart2 {
-+      ralink,group = "uart2";
-+      ralink,function = "gpio";
-+    };
-+
 +	};
 +};
 +
