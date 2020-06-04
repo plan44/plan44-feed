@@ -25,7 +25,6 @@ if [ -e /tmp/${EXECUTABLE}_debug ]; then
 fi
 
 exec ${EXECUTABLE} \
-  --logtoapi \
   --loglevel ${LOGLEVEL} \
   ${MOTOR0} \
   ${MOTOR1} \

@@ -26,17 +26,19 @@ using namespace p44;
 #define DEFAULT_API_SERVICE "8999"
 #define DEFAULT_LOGLEVEL LOG_NOTICE
 
-#define DEFAULT_MAX_MOVE_TIME (42*Second) // %%% tbd
+#define DEFAULT_MAX_OPEN_TIME (42*Second) // %%% tbd
+#define DEFAULT_MAX_CLOSE_TIME (60*Second) // %%% tbd
 
 class DCMotor : public P44Obj
 {
 public:
-  DCMotor() : movingUp(false) {};
+  DCMotor() : isOpening(false) {};
   ~DCMotor() { if (motor) motor->stop(); };
   DcMotorDriverPtr motor;
-  bool movingUp; // current movement direction is up
+  bool isOpening; // current movement direction is up
   MLTicket moveTimer;
-  MLMicroSeconds maxMoveTime; // max overall move time
+  MLMicroSeconds maxOpenTime; // max overall opening time
+  MLMicroSeconds maxCloseTime; // max overall closing time
   int index;
 };
 typedef boost::intrusive_ptr<DCMotor> DCMotorPtr;
@@ -52,7 +54,8 @@ class P44MotorDeviceApp : public CmdLineApp
 
   StringList motorDefs;
   MotorVector motors;
-  MLMicroSeconds defaultMaxMoveTime;
+  MLMicroSeconds defaultMaxOpenTime;
+  MLMicroSeconds defaultMaxCloseTime;
 
   string uniqueId;
   JsonCommPtr deviceConnection;
@@ -76,7 +79,8 @@ class P44MotorDeviceApp : public CmdLineApp
 public:
 
   P44MotorDeviceApp() :
-   defaultMaxMoveTime(DEFAULT_MAX_MOVE_TIME)
+    defaultMaxOpenTime(DEFAULT_MAX_OPEN_TIME),
+    defaultMaxCloseTime(DEFAULT_MAX_CLOSE_TIME)
   {
   }
 
@@ -102,7 +106,8 @@ public:
     const CmdLineOptionDescriptor options[] = {
       // specific to P44 motor expansion
       { 'm', "motor",           true,  "pwm,sensor,cw,cww; define a DC motor device" },
-      { 0  , "maxmovetime",     true,  "seconds;default max move time" },
+      { 0  , "maxopentime",     true,  "seconds;default max opening time" },
+      { 0  , "maxclosetime",    true,  "seconds;default max closing time" },
       { 0  , "adctest",         true,  "analogpinspec;pin to read analog value from" },
       // generic
       { 'h', "apihost",         true,  "hostname/IP;specifies vdcd external device API host to connect to, defaults to " DEFAULT_API_HOST },
@@ -178,11 +183,18 @@ public:
               DCMotorPtr m = DCMotorPtr(new DCMotor);
               m->index = mcount++;
               // optional individual max move time
-              m->maxMoveTime = defaultMaxMoveTime;
+              m->maxOpenTime = defaultMaxOpenTime;
+              m->maxCloseTime = defaultMaxCloseTime;
               if (nextPart(c, num, ',')) {
                 double secs;
                 if (sscanf(num.c_str(), "%lf", &secs)==1) {
-                  m->maxMoveTime = secs*Second;
+                  m->maxOpenTime = secs*Second;
+                  m->maxCloseTime = secs*Second;
+                }
+                if (nextPart(c, num, ',')) {
+                  if (sscanf(num.c_str(), "%lf", &secs)==1) {
+                    m->maxCloseTime = secs*Second;
+                  }
                 }
               }
               // create driver
@@ -274,10 +286,8 @@ public:
     LOG(LOG_NOTICE, "Received message: %s", aJsonObject->c_strValue());
     JsonObjectPtr o;
     int mindex = -1;
-    if (!aJsonObject->get("tag", o)) {
-      LOG(LOG_ERR, "Missing 'tag' in message")
-    }
-    else {
+    if (aJsonObject->get("tag", o)) {
+      // only process messages with tag (but there might be valid other ones, just ignore them)
       if (sscanf(o->c_strValue(), "M%d", &mindex)!=1 || mindex>=motors.size() || mindex<0) {
         LOG(LOG_ERR, "tag must be M0..M%lu", motors.size()-1);
       }
@@ -321,24 +331,28 @@ public:
     aMotor->motor->stop();
     aMotor->moveTimer.cancel();
     if (aDirection!=0) {
-      aMotor->movingUp = aDirection>0;
+      aMotor->isOpening = aDirection>0;
       aMotor->motor->rampToPower(100, aDirection, 0.5);
-      aMotor->moveTimer.executeOnce(boost::bind(&P44MotorDeviceApp::motorTimeout, this, aMotor), aMotor->maxMoveTime);
+      aMotor->moveTimer.executeOnce(
+        boost::bind(&P44MotorDeviceApp::motorTimeout, this, aMotor),
+        aDirection>0 ? aMotor->maxOpenTime : aMotor->maxCloseTime
+      );
     }
   }
 
 
   void motorTimeout(DCMotorPtr aMotor)
   {
-    LOG(LOG_ERR, "movement timeout M%d, should have reached an end position by now", aMotor->index);
+    LOG(LOG_WARNING, "M%d timeout, should have reached fully %s end position by now", aMotor->index, aMotor->isOpening ? "open" : "closed");
     aMotor->motor->stop();
   }
 
 
   void stopReached(DCMotorPtr aMotor)
   {
+    LOG(LOG_NOTICE, "M%d reached fully %s position (current limiter)", aMotor->index, aMotor->isOpening ? "open" : "closed");
     aMotor->moveTimer.cancel();
-    reportPosition(aMotor, aMotor->movingUp ? 100 : 0);
+    reportPosition(aMotor, aMotor->isOpening ? 100 : 0);
   }
 
 };
