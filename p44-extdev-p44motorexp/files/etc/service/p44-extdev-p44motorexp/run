@@ -3,16 +3,12 @@
 EXECUTABLE=p44extdevmotorexp
 LOGLEVEL=5
 EXTRAOPTS=
-
-# Motor specification: sensor,maxcurrent,pwmoutput,cwoutput,cwwoutput
-# - motors 0..3 have separate H bridge control and can brake
-MOTOR0="--motor i2c0.MAX1161x@33.0,400,i2c0.PCA9685@42.0,i2c0.PCA9685@42.8,i2c0.PCA9685@42.9"
-MOTOR1="--motor i2c0.MAX1161x@33.1,400,i2c0.PCA9685@42.1,i2c0.PCA9685@42.10,i2c0.PCA9685@42.11"
-MOTOR2="--motor i2c0.MAX1161x@33.2,400,i2c0.PCA9685@42.2,i2c0.PCA9685@42.12,i2c0.PCA9685@42.13"
-MOTOR3="--motor i2c0.MAX1161x@33.3,400,i2c0.PCA9685@42.3,i2c0.PCA9685@42.14,i2c0.PCA9685@42.15"
-# - motors 4+5 have only single direction line and cannot brake
-MOTOR4="--motor i2c0.MAX1161x@33.4,400,i2c0.PCA9685@42.4,i2c0.PCA9685@42.6"
-MOTOR5="--motor i2c0.MAX1161x@33.5,400,i2c0.PCA9685@42.5,i2c0.PCA9685@42.7"
+MAXCURRENT0=300
+MAXCURRENT1=300
+MAXCURRENT2=300
+MAXCURRENT3=300
+MAXCURRENT4=300
+MAXCURRENT5=300
 
 # Allow overriding options
 # - override from flash
@@ -23,6 +19,16 @@ fi
 if [ -e /tmp/${EXECUTABLE}_debug ]; then
   source /tmp/${EXECUTABLE}_debug
 fi
+
+# Motor specification: sensor,maxcurrent,pwmoutput,cwoutput,cwwoutput
+# - motors 0..3 have separate H bridge control and can brake
+MOTOR0="--motor i2c0.MAX1161x@33.0,${MAXCURRENT0},i2c0.PCA9685@42.0,i2c0.PCA9685@42.8,i2c0.PCA9685@42.9"
+MOTOR1="--motor i2c0.MAX1161x@33.1,${MAXCURRENT1},i2c0.PCA9685@42.1,i2c0.PCA9685@42.10,i2c0.PCA9685@42.11"
+MOTOR2="--motor i2c0.MAX1161x@33.2,${MAXCURRENT2},i2c0.PCA9685@42.2,i2c0.PCA9685@42.12,i2c0.PCA9685@42.13"
+MOTOR3="--motor i2c0.MAX1161x@33.3,${MAXCURRENT3},i2c0.PCA9685@42.3,i2c0.PCA9685@42.14,i2c0.PCA9685@42.15"
+# - motors 4+5 have only single direction line and cannot brake
+MOTOR4="--motor i2c0.MAX1161x@33.4,${MAXCURRENT4},i2c0.PCA9685@42.4,i2c0.PCA9685@42.6"
+MOTOR5="--motor i2c0.MAX1161x@33.5,${MAXCURRENT5},i2c0.PCA9685@42.5,i2c0.PCA9685@42.7"
 
 exec ${EXECUTABLE} \
   --loglevel ${LOGLEVEL} \
