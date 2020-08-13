@@ -9,9 +9,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
-    <script src="js/jquery-1.9.1.min.js"></script>
-    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <title id="html_title_model">P44-SBB</title>
 
@@ -150,56 +153,6 @@
       // =========
 
 
-      function sendKey(player, keyname)
-      {
-        // http://pixelboard62988333.local./api/json/player1?key=left
-        $.getJSON( '/api/json/player' + String(player) + '?rqvaltok=' + rqvaltok + '&key=' + keyname )
-        .done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function showPage(pagename, twosided)
-      {
-        // http://pixelboard62988333.local./api/json/board?page=blocks&twosided=true
-        $.getJSON( '/api/json/board?rqvaltok=' + rqvaltok + '&page=' + pagename + '&twosided=' + String(twosided) )
-        .done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function sendMessage()
-      {
-        var msg = $('#messageText').val();
-        var cmd = { "message":msg };
-        $.ajax({
-          url: '/api/json/page?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
-      }
-
-
-      function setTextColor()
-      {
-        var col = $('#messageColor').val();
-        var cmd = { "textcolor":col };
-        $.ajax({
-          url: '/api/json/page?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(cmd)
-        }).done(function(response) {
-          // NOP for now
-        });
-      }
-
-
       function uploadImage()
       {
         var file = $('#imageFile').get(0).files[0];
@@ -252,8 +205,6 @@
           <ul>
             <li><a href="#title" class="ui-btn-active">About</a></li>
             <li><a href="#control">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
           </ul>
         </div>
       </div>
@@ -261,121 +212,36 @@
         <div>
           <div class="centered" data-role="content">
             <h1 id="about_title_model">P44SBB</h1>
-            <h2 id="about_model_description">OpenWrt/LEDE driven SBB Fallblatt controller</h2>
-            <p>© <span id="about_copyright_years">2016-2017</span> by <a id="about_copyright_link" href="http://hardturm.ch/luz" target="_blank">luz</a></p>
+            <h2 id="about_model_description">OpenWrt driven SBB Fallblatt controller</h2>
+            <p>© <span id="about_copyright_years">2016-2020</span> by <a href="https://plan44.ch/custom" target="_blank">plan44.ch</a>/<a href="https://hardturm.ch/luz" target="_blank">luz</a></p>
           </div>
 
           <h3>Opensource:</h3>
           <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
           data-iconpos="right">
 
-        <div id="opensource_openwrt" style="display:none" data-role="collapsible">
-          <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+        <div data-role="collapsible">
+          <h3>p44utils, p44lrgraphics, p44features - © 2013-2020 by plan44.ch, GPLv3 or commercial license</h3>
 
-          <h4><a href="http://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded devices</h4>
+          <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - utility framework in C++ for creating mainloop event based daemon applications</h4>
+          <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - low resolution graphics library specialized for LED chains and matrices</h4>
+          <h4><a href="https://github.com/plan44/p44features" target="_blank">p44features</a> - library of hardware driving "features" for exhibitions, experiments, art and fun projects</h4>
 
-          <p>OpenWrt is free software: you can redistribute it and/or modify
+          <p>p44utils, p44features and p44lrgraphics (henceforth, <i>the software</i>) is free software: you can redistribute it and/or modify
           it under the terms of the GNU General Public License as published by
-          the Free Software Foundation, version 2 of the License.</p>
+          the Free Software Foundation, either <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or
+          (at your option) any later version.</p>
+
+          <p><i>The software</i> is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          GNU General Public License for more details.</p>
 
           <p>You should have received a copy of the GNU General Public License
-          along with openwrt. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
-        </div>
+          along with <i>the software</i>. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
 
-        <div data-role="collapsible">
-          <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
+          <p>Upon request, <i>the software</i> can also be made available under a commercial license from plan44.ch</p>
 
-          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
-          <p>Copyright 2010-2013 <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining
-          a copy of this software and associated documentation files (the
-          "Software"), to deal in the Software without restriction, including
-          without limitation the rights to use, copy, modify, merge, publish,
-          distribute, sublicense, and/or sell copies of the Software, and to
-          permit persons to whom the Software is furnished to do so, subject to
-          the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be
-          included in all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>mongoose - © 2004-2013 Sergey Lyubka, MIT license</h3>
-
-          <h4><a href="https://code.google.com/p/mongoose/" target="_blank">mongoose</a> - lightweight, embeddable web server</h4>
-          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-          of this software and associated documentation files (the "Software"), to deal
-          in the Software without restriction, including without limitation the rights
-          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-          copies of the Software, and to permit persons to whom the Software is
-          furnished to do so, subject to the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be included in
-          all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-          THE SOFTWARE.</p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
-
-          <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
-          <p>Copyright (c) 2004 avahi.org</p>
-
-          <p>avahi is free software; you can redistribute it and/or modify it
-          under the terms of the GNU Lesser General Public License as
-          published by the Free Software Foundation; either version 2.1 of the
-          License, or (at your option) any later version.</p>
-
-          <p>avahi is distributed in the hope that it will be useful, but WITHOUT
-          ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-          or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
-          Public License for more details.</p>
-
-          <p>You should have received a copy of the GNU Lesser General Public
-          License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
-        </div>
-
-        <div data-role="collapsible">
-          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
-
-          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
-          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
-
-          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-          of this software and associated documentation files (the "Software"), to deal
-          in the Software without restriction, including without limitation the rights
-          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-          copies of the Software, and to permit persons to whom the Software is
-          furnished to do so, subject to the following conditions:</p>
-
-          <p>The above copyright notice and this permission notice shall be included in
-          all copies or substantial portions of the Software.</p>
-
-          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-          THE SOFTWARE.</p>
         </div>
 
         <div data-role="collapsible">
@@ -405,6 +271,118 @@
         </div>
 
         <div data-role="collapsible">
+          <h3>jQuery mobile - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+          <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining
+          a copy of this software and associated documentation files (the
+          "Software"), to deal in the Software without restriction, including
+          without limitation the rights to use, copy, modify, merge, publish,
+          distribute, sublicense, and/or sell copies of the Software, and to
+          permit persons to whom the Software is furnished to do so, subject to
+          the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be
+          included in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
+
+          <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+          <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
+          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+          <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+          <p>Copyright (c) 2013 F-Secure Corporation</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the Software), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>Ace - © 2010, Ajax.org B.V., BSD 3 clause license</h3>
+
+          <h4><a href="https://ace.c9.io/" target="_blank">Ace</a> - embeddable code editor written in JavaScript</h4>
+          <p>Copyright (c) 2010, Ajax.org B.V.<br/>
+          All rights reserved.</p>
+
+          <p>Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are met:</p>
+
+          <ul>
+          <li>Redistributions of source code must retain the above copyright
+          notice, this list of conditions and the following disclaimer.</li>
+          <li>Redistributions in binary form must reproduce the above copyright
+          notice, this list of conditions and the following disclaimer in the
+          documentation and/or other materials provided with the distribution.</li>
+          <li>Neither the name of Ajax.org B.V. nor the
+          names of its contributors may be used to endorse or promote products
+          derived from this software without specific prior written permission.</li>
+          </ul>
+
+          <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+          ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+          WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+          DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+          DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+          (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+          LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+          ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+          (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+        </div>
+
+        <div data-role="collapsible">
           <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
 
           <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
@@ -423,34 +401,17 @@
           <ul>
             <li><a href="#title">About</a></li>
             <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
         <div data-role="content">
-          <h2>Game</h2>
-          <button type="button" id="restart" onclick="showPage('blocks', 0);" data-inline="true" data-theme="c">New single player game</button>
-          <button type="button" id="restart" onclick="showPage('blocks', 1);" data-inline="true" data-theme="c">New two player game</button>
-          <h2>Message</h2>
-          <input type="text" id="messageText" name="messageText"/>
-          <button id="sendMessageButton" onclick="sendMessage();" data-theme="b">Send</button>
-          <input type="text" id="messageColor" name="messageColor" value="" placeholder="AArrggbb web color"/>
-          <button id="textColorButton" onclick="setTextColor();" data-theme="b">Set</button>
-          <h2>Pictures</h2>
-          <label for="imageFile">Select PNG file (10x20pixels):</label>
-          <input type="file" id="imageFile" name="imagefile" accept=".png"/>
-          <button id="imageUploadStart" onclick="uploadImage();" data-inline="false" data-theme="b">Upload...</button>
-<!--
-          <h2>System</h2>
-          <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
--->
+          <h2>tbd</h2>
         </div>
       </div>
 
       <div data-role="popup" id="restartWait" class="ui-content" data-dismissible="false" data-overlay-theme="a" data-theme="d">
-        <h3>Restarting Pixelboard - please wait...</h3>
+        <h3>Restarting - please wait...</h3>
         <p>Page will reload automatically</p>
         <div id="restartWaitProgress" class="p44_progressbar">
           <div class="p44_progressbar_text">-</div>
@@ -464,70 +425,14 @@
           <h1>Restart</h1>
         </div>
         <div data-role="content" data-theme="d" class="ui-corner-bottom ui-content">
-          <h3 class="ui-title">Do you want to restart the PIXELBOARD?</h3>
-          <p>Note: it will take a little while until the pixels are all ready again</p>
+          <h3 class="ui-title">Do you want to restart the device?</h3>
+          <p>Note: it will take a little while until it is ready again</p>
           <a href="#" id="restartNow" onclick="system_restart();" data-role="button" data-inline="false" data-rel="back" data-transition="flow" data-theme="b">Restart</a>
           <a href="#" data-role="button" data-inline="false" data-rel="back" data-theme="c">Cancel</a>
         </div>
       </div>
 
     </div>
-
-    <div id="player1" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#player1" class="ui-btn-active">Player1</a></li>
-            <li><a href="#player2">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Player1</h2>
-
-        <button type="button" id="restart" onclick="sendKey(1, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(1, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
-<!--
-        <div class="ui-grid-a">
-          <div class="ui-block-a" id="systemInfo"></div>
-          <div class="ui-block-b">
-            <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-inline="true" data-theme="c">Restart...</button>
-            <br/>
-            <button type="button" id="configrestore" onclick="openDialog('#configRestoreDialog');" data-inline="true" data-theme="c">Restore config…</button>
-          </div>
-        </div>
--->
-      </div>
-    </div>
-
-
-    <div id="player2" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#title">About</a></li>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#player1">Player1</a></li>
-            <li><a href="#player2" class="ui-btn-active">Player2</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <h2>Player2</h2>
-
-        <button type="button" id="restart" onclick="sendKey(2, 'left');" data-inline="true" data-theme="c">&lt;&lt; Left</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'right');" data-inline="true" data-theme="c">Right &gt;&gt;</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'turn');" data-inline="true" data-theme="c">Turn</button>
-        <button type="button" id="restart" onclick="sendKey(2, 'drop');" data-inline="true" data-theme="c">Drop</button>
-
-      </div>
-    </div>
-
 
   </body>
 

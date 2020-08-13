@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>p44script short reference</title>
+
+
+<style type="text/css">
+body {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: white;
+  padding: 30px; }
+
+body > *:first-child {
+  margin-top: 0 !important; }
+body > *:last-child {
+  margin-bottom: 0 !important; }
+
+a {
+  color: #4183C4; }
+a.absent {
+  color: #cc0000; }
+a.anchor {
+  display: block;
+  padding-left: 30px;
+  margin-left: -30px;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative; }
+
+h1 tt, h1 code {
+  font-size: inherit; }
+
+h2 tt, h2 code {
+  font-size: inherit; }
+
+h3 tt, h3 code {
+  font-size: inherit; }
+
+h4 tt, h4 code {
+  font-size: inherit; }
+
+h5 tt, h5 code {
+  font-size: inherit; }
+
+h6 tt, h6 code {
+  font-size: inherit; }
+
+h1 {
+  font-size: 28px;
+  color: black; }
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #cccccc;
+  color: black; }
+
+h3 {
+  font-size: 18px; }
+
+h4 {
+  font-size: 16px; }
+
+h5 {
+  font-size: 14px; }
+
+h6 {
+  color: #777777;
+  font-size: 14px; }
+
+p, blockquote, ul, ol, dl, li, table, pre {
+  margin: 15px 0; }
+
+body > h2:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+body > h1:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+  body > h1:first-child + h2 {
+    margin-top: 0;
+    padding-top: 0; }
+body > h3:first-child, body > h4:first-child, body > h5:first-child, body > h6:first-child {
+  margin-top: 0;
+  padding-top: 0; }
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0; }
+
+h1 p, h2 p, h3 p, h4 p, h5 p, h6 p {
+  margin-top: 0; }
+
+li p.first {
+  display: inline-block; }
+li {
+  margin: 0; }
+ul, ol {
+  padding-left: 30px; }
+
+ul :first-child, ol :first-child {
+  margin-top: 0; }
+
+dl {
+  padding: 0; }
+  dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 0;
+    margin: 15px 0 5px; }
+    dl dt:first-child {
+      padding: 0; }
+    dl dt > :first-child {
+      margin-top: 0; }
+    dl dt > :last-child {
+      margin-bottom: 0; }
+  dl dd {
+    margin: 0 0 15px;
+    padding: 0 15px; }
+    dl dd > :first-child {
+      margin-top: 0; }
+    dl dd > :last-child {
+      margin-bottom: 0; }
+
+blockquote {
+  border-left: 4px solid #dddddd;
+  padding: 0 15px;
+  color: #777777; }
+  blockquote > :first-child {
+    margin-top: 0; }
+  blockquote > :last-child {
+    margin-bottom: 0; }
+
+table {
+  padding: 0;border-collapse: collapse; }
+  table tr {
+    border-top: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    padding: 0; }
+    table tr:nth-child(2n) {
+      background-color: #f8f8f8; }
+    table tr th {
+      font-weight: bold;
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr td {
+      border: 1px solid #cccccc;
+      margin: 0;
+      padding: 6px 13px; }
+    table tr th :first-child, table tr td :first-child {
+      margin-top: 0; }
+    table tr th :last-child, table tr td :last-child {
+      margin-bottom: 0; }
+
+img {
+  max-width: 100%; }
+
+span.frame {
+  display: block;
+  overflow: hidden; }
+  span.frame > span {
+    border: 1px solid #dddddd;
+    display: block;
+    float: left;
+    overflow: hidden;
+    margin: 13px 0 0;
+    padding: 7px;
+    width: auto; }
+  span.frame span img {
+    display: block;
+    float: left; }
+  span.frame span span {
+    clear: both;
+    color: #333333;
+    display: block;
+    padding: 5px 0 0; }
+span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-center > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: center; }
+  span.align-center span img {
+    margin: 0 auto;
+    text-align: center; }
+span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both; }
+  span.align-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px 0 0;
+    text-align: right; }
+  span.align-right span img {
+    margin: 0;
+    text-align: right; }
+span.float-left {
+  display: block;
+  margin-right: 13px;
+  overflow: hidden;
+  float: left; }
+  span.float-left span {
+    margin: 13px 0 0; }
+span.float-right {
+  display: block;
+  margin-left: 13px;
+  overflow: hidden;
+  float: right; }
+  span.float-right > span {
+    display: block;
+    overflow: hidden;
+    margin: 13px auto 0;
+    text-align: right; }
+
+code, tt {
+  margin: 0 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px; }
+
+pre code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent; }
+
+.highlight pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #cccccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px; }
+  pre code, pre tt {
+    background-color: transparent;
+    border: none; }
+
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+<style type="text/css">
+/**
+ * prism.js default theme for JavaScript, CSS and HTML
+ * Based on dabblet (http://dabblet.com)
+ * @author Lea Verou
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: black;
+	background: none;
+	text-shadow: 0 1px white;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection, pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection, code[class*="language-"] ::-moz-selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+pre[class*="language-"]::selection, pre[class*="language-"] ::selection,
+code[class*="language-"]::selection, code[class*="language-"] ::selection {
+	text-shadow: none;
+	background: #b3d4fc;
+}
+
+@media print {
+	code[class*="language-"],
+	pre[class*="language-"] {
+		text-shadow: none;
+	}
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #f5f2f0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #999;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #905;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #690;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #a67f59;
+	background: hsla(0, 0%, 100%, .5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #07a;
+}
+
+.token.function {
+	color: #DD4A68;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e90;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1 id="toc_0">p44script short reference</h1>
+
+<h2 id="toc_1">Expressions</h2>
+
+<h3 id="toc_2">Literals</h3>
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1234</td>
+<td>integer number</td>
+</tr>
+<tr>
+<td>1234.567</td>
+<td>float number</td>
+</tr>
+<tr>
+<td>true <em>or</em> yes</td>
+<td>boolean true, numeric value is 1</td>
+</tr>
+<tr>
+<td>false <em>or</em> no</td>
+<td>boolan false, numeric value is 0</td>
+</tr>
+<tr>
+<td>null <em>or</em> undefined</td>
+<td>no value. Note that p44script has <i>annotated null values</i>, which means that in many cases, null/undefined
+also carries a short text describing its origin. This useful to debug as it helps understanding <i>why</i> a value is null/undefined</td>
+</tr>
+<tr>
+<td>12:30</td>
+<td>time specification in hours and minutes. Numeric value is number of seconds since midnight</td>
+</tr>
+<tr>
+<td>13:30:22</td>
+<td>time specification in hours, minutes and seconds. Numeric value is number of seconds since midnight.</td>
+</tr>
+<tr>
+<td>2.9.</td>
+<td>date specification in <u>day.month.</u> (period at end is important) format. Sample means 2nd of September. Numeric value is number of days from beginning of current year.</td>
+</tr>
+<tr>
+<td>2.Sep</td>
+<td>date specification in <u>day.monthname</u> (no period at end!). Monthnames are <u>jan</u>, <u>feb</u>, <u>mar</u>, <u>apr</u>, <u>may</u>, <u>jun</u>, <u>jul</u>, <u>aug</u>, <u>sep</u>, <u>oct</u>, <u>nov</u>, <u>dec</u>. Numeric value is number of days from beginning of current year.</td>
+</tr>
+<tr>
+<td>wed</td>
+<td>weekday specification. Weekday names are <u>sun</u>, <u>mon</u>, <u>tue</u>, <u>wed</u>, <u>thu</u>, <u>fri</u>, <u>sat</u>. Numeric value is 0 for sunday, 1..6 for monday..saturday.</td>
+</tr>
+<tr>
+<td>'text'</td>
+<td>String literal, use two single quotes in succession to include single quote</td>
+</tr>
+<tr>
+<td>"text"</td>
+<td>String literal with C-like escapes (\n, \r, \t, \xHH and \ can be used)</td>
+</tr>
+<tr>
+<td>{ 'field1':42, 'field2':'hello' }</td>
+<td>JSON object.</td>
+</tr>
+<tr>
+<td>[ 42, 43, 'hello' ]</td>
+<td>JSON array.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="toc_3">Named values</h3>
+
+<p>In expressions, named values (for example sensor values in evaluator conditions, or variables in scripts) can be used. Simple values just consist of a name, but there are also structured values that can be accessed using dot and subscript notation.</p>
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>sensor1</td>
+<td>the value of a sensor named <u>sensor1</u></td>
+</tr>
+<tr>
+<td>sensor1.age</td>
+<td>the time in seconds since the sensor named <u>sensor1</u> has been updated from hardware.</td>
+</tr>
+<td>sensor1.valid</td>
+<td>true if the sensor named <u>sensor1</u> has an actual valid value (a sensor that went into timeout or has never received data from hardware since the last restart does not have a value)</td>
+</tr>
+<td>sensor1.oplevel</td>
+<td>a value between 0 and 100 indicating the "operation level" of the sensor. 0 means out of order, 100 means optimal conditions, values between indicate non-optimal conditions such as poor radio reception or low battery level.</td>
+</tr>
+<tr id="dotandsubscript">
+<td>jsonobj.fieldA</td>
+<td>the subfield named <u>fieldA</u> in a JSON object <i>jsonobj</i>. So with <u>jsonobj={ 'fieldA':42, 'fieldB':'hello' }</u>, the result would be 42</td>
+</tr>
+<tr>
+<td>jsonarr[1]</td>
+<td>the array element at the numeric index <u>1</u> in a JSON array <u>jsonarr</u>. So if jsonvalue=[ 42, 'world' ], the result would be 'world'</td>
+</tr>
+<tr>
+<td>jsonobj['fieldB']</td>
+<td>the subfield named <u>fieldA</u> in a JSON object <i>jsonobj</i>. So with <u>jsonobj={ 'fieldA':42, 'fieldB':'hello' }</u>, the result would be 'hello'</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="toc_3">Operators</h3>
+
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Precedence</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>!</td>
+<td>6 (highest)</td>
+<td>logical NOT</td>
+</tr>
+<tr>
+<td>*</td>
+<td>5</td>
+<td>multiplication</td>
+</tr>
+<tr>
+<td>/</td>
+<td>5</td>
+<td>division</td>
+</tr>
+<tr>
+<td>%</td>
+<td>5</td>
+<td>modulo (remainder)</td>
+</tr>
+<tr>
+<td>+</td>
+<td>4</td>
+<td>numeric addition, string concatenation if left hand expression is of type string</td>
+</tr>
+<tr>
+<td>-</td>
+<td>4</td>
+<td>subtraction</td>
+</tr>
+<tr>
+<td>==</td>
+<td>3</td>
+<td>test for equal</td>
+</tr>
+<tr>
+<td>=</td>
+<td>3</td>
+<td>test for equal (depending on context, = can also be an assignment, use == to avoid ambiguousness)</td>
+</tr>
+<tr>
+<td>!= <em>or</em> &lt;&gt;</td>
+<td>3</td>
+<td>test for not equal</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>3</td>
+<td>test for less than</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>3</td>
+<td>test for greater than</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td>3</td>
+<td>test for less than or equal</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td>3</td>
+<td>test for greater than or equal</td>
+</tr>
+<tr>
+<td>&amp; <em>or</em> &amp;&amp;</td>
+<td>2</td>
+<td>logical AND</td>
+</tr>
+<tr>
+<td>| <em>or</em> ||</td>
+<td>1</td>
+<td>logical OR</td>
+</tr>
+<tr>
+<td>:=</td>
+<td>0 (lowest)</td>
+<td>assignment</td>
+</tr>
+<tr>
+<td>=</td>
+<td>0 (lowest)</td>
+<td>assignment (depending on context, = can also be an test for equal, use := to avoid ambiguousness)</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="toc_4">General Functions</h3>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>abs(a)</td>
+<td>absolute value of <u>a</u></td>
+</tr>
+<tr>
+<td>cyclic(x, a, b)</td>
+<td>return <u>x</u> with wraparound into range <u>a</u>..<u>b</u> (not including <u>b</u>, because it means the same thing as <u>a</u>).</td>
+</tr>
+<tr>
+<td>dawn()</td>
+<td>returns approximate time of dawn on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>day()</td>
+<td>returns current day of month, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>dusk()</td>
+<td>returns approximate time of dusk on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>error(anything)</td>
+<td>creates a error value with <u>anything</u> as error message</td>
+</tr>
+<tr>
+<td>errorcode(errvalue)</td>
+<td>returns the numeric error code from <u>errvalue</u></td>
+</tr>
+<tr>
+<td>errordomain(errvalue)</td>
+<td>returns the error domain string from <u>errvalue</u></td>
+</tr>
+<tr>
+<td>errormessage(value)</td>
+<td>returns the error message string from <u>errvalue</u></td>
+</tr>
+<tr>
+<td>eval(string)</td>
+<td>evaluate string as expression</td>
+</tr>
+<tr>
+<td>find(haystack, needle [, from])</td>
+<td>returns position of <u>needle</u> in <u>haystack</u> optionally starting at <u>from</u>, or <u>null</u> if not found.</td>
+</tr>
+<tr>
+<td>format(formatspec, number)</td>
+<td>formats <u>number</u> as string according to printf-like <u>formatspec</u> (but note that <u>formatspec</u> is *not* a complete printf-style format string, but only a single numeric format specification starting with %, and only + - 0..9 . d, x, and f specifiers supported).</td>
+</tr>
+<tr>
+<td>frac(a)</td>
+<td>fractional value of <u>a</u> (with same sign as a)</td>
+</tr>
+<tr>
+<td>hour()</td>
+<td>returns current hour, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>if(c, a, b)</td>
+<td>returns <u>a</u> if <u>c</u> evaluates to true, <u>b</u> otherwise</td>
+</tr>
+<tr>
+<td>ifvalid(a, b)</td>
+<td>returns <u>a</u> if <u>a</u> is a valid value (not null or error), otherwise return <u>b</u></td>
+</tr>
+<tr>
+<td>int(a)</td>
+<td>integer value of <u>a</u></td>
+</tr>
+<tr>
+<td>isvalid(a)</td>
+<td>returns true if <u>a</u> is a valid value (not null or error), false otherwise</td>
+</tr>
+<tr>
+<td>lastarg(a1, a2, ... , aN)</td>
+<td>returns <u>aN</u>. This can be useful to execute side effects of other arguments first, before returning <u>aN</u></td>
+</tr>
+<tr>
+<td>limited(x, a, b)</td>
+<td>returns min(max(<u>x</u>, <u>a</u>), <u>b</u>), i.e. <u>x</u> limited to values between and including <u>a</u> and <u>b</u></td>
+</tr>
+<tr>
+<td>max(a, b)</td>
+<td>return the bigger value of <u>a</u> and <u>b</u></td>
+</tr>
+<tr>
+<td>min(a, b)</td>
+<td>return the smaller value of <u>a</u> and <u>b</u></td>
+</tr>
+<tr>
+<td>minute()</td>
+<td>returns current minute, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>month()</td>
+<td>returns current month (1..12), but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>number(anything)</td>
+<td>try to convert <u>anything</u> into a number, returns 0 if conversion fails</td>
+</tr>
+<tr>
+<td>random (a, b)</td>
+<td>returns a (floating point) pseudo-random value from <u>a</u> up to and including <u>b</u></td>
+</tr>
+<tr>
+<td>round(a [, p])</td>
+<td>round <u>a</u> to optionally specified precision <u>p</u> (1=integer=default, 0.5=halves, 100=hundreds, etc...)</td>
+</tr>
+<tr>
+<td>second()</td>
+<td>returns current second, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>string(anything)</td>
+<td>returns a string representation of <u>anything</u>. Always returns a descriptive string, even for null/undefined and error values.</td>
+</tr>
+<tr>
+<td>strlen(string)</td>
+<td>returns length of <u>string</u></td>
+</tr>
+<tr>
+<td>substr(string, from [, count])</td>
+<td>returns string starting at <u>from</u> in <u>string</u>, limited to <u>count</u> characters if specified.</td>
+</tr>
+<tr>
+<td>sunrise()</td>
+<td>returns approximate time of sunrise on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>sunset()</td>
+<td>returns approximate time of sunset on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>timeofday()</td>
+<td>returns current time-of-day in seconds since midnight, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>weekday()</td>
+<td>returns current weekday (0..6), but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>year()</td>
+<td>returns current year, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>yearday()</td>
+<td>returns current date as day number in current year, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>epochtime()</td>
+<td>returns unix epoch time (days since 1.1.1970), with time-of-day as fractional part, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>json(anything)</td>
+<td>tries to interpret <u>anything</u> as JSON. Useful to make a JSON string returned from an API accessible as a structure.</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Functions for timed triggering</h3>
+
+<p id="timedtriggers">Please note that you need to use the following functions to test for time/date in event handler trigger expressions. Just writing something like <code>timeofday()==12:30</code> will <strong>not work</strong>!
+General functions returning time values such as <u>sunrise</u> or <u>dusk</u> are meant to be used as <em>arguments</em> to <u>is_time</u> or <u>after_time</u>, or to implement <em>additional</em> checks at the time when the expression is triggered by one of the following functions.</p>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>is_time(time)</td>
+<td>returns true when time of day is <u>time</u> (with 5 seconds tolerance).</td>
+</tr>
+<tr>
+<td>is_weekday(weekday1 [, weekday2, ...])</td>
+<td>returns true if today is any of the specifieds <u>weekdayN</u> arguments</td>
+</tr>
+<tr>
+<td>after_time(time)</td>
+<td>true when time of day is <u>time</u> or later.</td>
+</tr>
+<tr>
+<td>between_dates(date1, date2)</td>
+<td>true when current date is between <u>date1</u> and <u>date2</u> (inclusive) [[1]]</td>
+</tr>
+<tr>
+<td>initial()</td>
+<td>returns true if this is a <q>initial</q> run of a trigger expression, meaning after startup or expression changes.</td>
+</tr>
+<tr>
+<td>every(interval [, syncoffset])</td>
+<td>returns true once every <u>interval</u> (specified in seconds)<br/>
+Note: first true is returned at first evaluation or, if <u>syncoffset</u> is set,
+at next integer number of intervals calculated from beginning of the day +  <u>syncoffset</u>.<br/>
+So <u>every(0:30,0:22)</u> will trigger once every half hour, starting at 0:22, then 0:52, 1:22, ...<br/>
+Be careful with <u>every()</u> and short intervals, as running scripts very often might impact performance of the device!
+</td>
+</tr>
+<tr>
+<td>testlater(seconds, timedtest [, retrigger])</td>
+<td>returns <u>undefined/null</u> when called first, but schedules a re-evaluation after given <u>seconds</u> and return value of test then. If <u>retrigger</u> is true then, the re-evaluation will repeat in <u>seconds</u> interval (use with care!)</td>
+</tr>
+</tbody>
+</table>
+
+
+<h1 id="toc_5">Scripts</h1>
+
+<p>full p44scripts (beyond single expressions as described above) can do various things using the features described below.
+The script language has syntax <i>similar</i> to JavaScript or C, but far from identical.</p>
+
+<h2 id="toc_6">Comments</h2>
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>/* comment */</td>
+<td>C-style comment</td>
+</tr>
+<tr>
+<td>// comment</td>
+<td>C++-style comment continues until end of line</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="toc_6">Declarations</h2>
+
+<p>The first (optional) part of a script can be <i>declarations</i> of <i>global variables</i>, <i>functions</i> or <i>handlers</i>.
+The first non-declaration statement in a script ends the declaration part. You cannot mix declaration with actual script statements.
+Global variable declarations are an exception, these can occur in the declaration part as well as mixed with normal script statements.
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>glob g<br/>global g</td>
+<td>declaration of global variable<u>g</u></td>
+</tr>
+<tr>
+<td>glob g = 78/9</td>
+<td>declaration and initialisation of global variable<u>g</u>.
+Note that the initialisation expression can only consist of constants or other global variables that are already defined.
+Local variables and context-dependent functions and objects are not available at declaration time.</td>
+</tr>
+<tr>
+<td>function hello()<br/>{ log('Hello World'); }</td>
+<td>Declares a globally available function named <u>hello</u> which logs the text 'hello world'.</td>
+</tr>
+<tr>
+<td>function sum(a,b)<br/>{ return a+b }</td>
+<td>Declares a globally available function named <u>sum</u> with two arguments, returning the sum of both</td>
+</tr>
+<tr>
+<td>on (after_time(12:00))<br/>{ log('noon has passed ' + string(timeofday()-12:00) + ' seconds ago'); }</td>
+<td>Defines a <i>event handler</i> (piece of code that is executed when a specified condition is met).
+This handler is triggered by local time passing noon (12:00) and logs the number of seconds actually passed since noon
+- because when this handler is installed any time after 12:00, it will be run once immediately.
+<br/>By default, handlers are run when the trigger condition changes from false to true (but not when it changes from true to false).
+</td>
+</tr>
+<tr>
+<td>on (every(0:15, 0))<br/>{ log('another quarter of an hour has passed'); }</td>
+<td>Defines a event handler that is run every whole quarter of an hour.
+</td>
+</tr>
+<tr>
+<td>on (sensor1>20) toggling<br/>{ log('sensor1 is ' + sensor1); }</td>
+<td>Defines a event handler that triggers whenever the condition <i>toggles from false to true or vice versa</i>.
+<br/>Note that <u>sensor1</u> must be a <i>event source</i> for this to work. Contexts that have hardware inputs such as sensors
+usually make these available as event sources (e.g. in P44-DSB Evaluators).
+</td>
+</tr>
+<tr>
+<td>on (sensor2) changing<br/>{ log('sensor2 is ' + sensor2); }</td>
+<td>Defines a event handler that triggers whenever condition expressions <i>re-evaluates to a different result as in the last evaluation</i>.
+</td>
+</tr>
+<tr>
+<td>on (sensor2) evaluating<br/>{ log('sensor2 is ' + sensor2); }</td>
+<td>Defines a event handler that triggers whenever the condition expression <i>is evaluated, even if the result does not change</i>.
+Note: use this with care, depending on the <i>event sources</i> involved this can cause the handler to be run very often, which
+might cause performance problems.
+</td>
+</tr>
+<tr>
+<td>on (sensor1+sensor2) changing as sensorsum<br/>{ log('sensor1+sensor2 is ' + sensorsum); }</td>
+<td>Defines a event handler that triggers whenever the sum of <u>sensor1+sensor2</u> changes.
+The <u>as sensorsum</u> part stores the result of the trigger expression into the variable <u>sensorsum</u>.
+</td>
+<tr>
+<td>on (featureevent()) as event<br/>{ log('received event ' + event); }</td>
+<td>Defines a event handler that triggers whenever <u>featureevent()</u> triggers and stores the event in the variable <u>event</u>.
+Note that for event sources that deliver unique events like <u>featureevent()</u> does, storing the actual trigger value
+in a variable using <u>as</u> is important.
+</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<h2 id="toc_6">Statements</h2>
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>var a</td>
+<td>creates a script-local variable <u>a</u> (initially set to <u>undefined</u>. If <u>a</u> already exists, nothing happens.</td>
+</tr>
+<tr>
+<td>var a = 7</td>
+<td>declaration of a script-local variable <u>a</u> and assigning an initial value. If the variable already exists, this is like a normal assignment.</td>
+</tr>
+<tr>
+<td>glob b</td>
+<td>declaration of a global variable <u>b</u> (all scripts and condition expressions can access them).</td>
+</tr>
+<tr>
+<td>glob b = 42</td>
+<td>declaration of a global variable <u>b</u> and assignment of an initial value.</td>
+</tr>
+<tr>
+<td>unset b</td>
+<td>removal of a (local or global) variable named <u>b</u>.</td>
+</tr>
+<tr>
+<td>a := 3*4</td>
+<td>Assignment of an expression's result to <u>a</u></td>
+</tr>
+<tr>
+<td>a = 3*4</td>
+<td>single equal sign is also treated as assignment</td>
+</tr>
+<tr>
+<td>let a = 3*4</td>
+<td><u>let</u> can be used to more clearly show this is an assignment (but is completely optional)</td>
+</tr>
+<tr>
+<td>a = 7; b = 3; c = a*b;</td>
+<td>multiple statements can be written on a single line separated by semicolons</td>
+</tr>
+<tr>
+<td>{ a = 42; b = 23; scene(&#39;bright&#39;); }</td>
+<td>block of multiple statements</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="toc_7">Control flow</h2>
+
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>if (a&gt;0) b := 7</td>
+<td>conditional execution of the assignment <u>b:=7</u> when <u>a</u> is greater than zero.</td>
+</tr>
+<tr>
+<td>if (a&gt;0) b := 7 else b := 19</td>
+<td>conditional execution of the assignment <u>b:=7</u> with else</td>
+</tr>
+<tr>
+<td>if (a&gt;0) { b := 7; c := 44 } else { b := 0; c := &#39;a string&#39; }</td>
+<td>conditional with statement blocks</td>
+</tr>
+<tr>
+<td>while (i&gt;0) { i := i-1; log(5, &#39;i is now: &#39; + i); }</td>
+<td>repeat (loop) statement block as long as <u>i</u> is greater than zero.</td>
+</tr>
+<tr>
+<td>break</td>
+<td>exits a <u>while</u> loop</td>
+</tr>
+<tr>
+<td>continue</td>
+<td>starts the next iteration in a <u>while</u> loop</td>
+</tr>
+<tr>
+<td>return</td>
+<td>ends the current script with <u>null/undefined</u> return value</td>
+</tr>
+<tr>
+<td>return value</td>
+<td>ends the current script returning <u>value</u></td>
+</tr>
+<tr>
+<td>try { statements; } catch { handling_statements }</td>
+<td>if any of <u>statements</u> generate a run time error, the <u>handling_statements</u> will be executed</td>
+</tr>
+<tr>
+<td>try { statements; } catch as error_var { handling_statements }</td>
+<td>if any of <u>statements</u> generate a run time error, the <u>handling_statements</u> will be executed and can use <u>error_var</u> to examine the error)</td>
+</tr>
+<tr>
+<td>throw(anything)</td>
+<td>generate a run time error with <u>anything</u> as error message. If <u>anything</u> is already an error value, the error value is re-thrown as-is.</td>
+</tr>
+<tr>
+<td>undeclare()</td>
+<td>deletes all function and handler definitions that are not part of a stored script, but were made in an ad-hoc way,
+for example from a interactive script command line (a REPL = Read-Execute-Print-Loop).
+</br>Note that functions and handlers defined in a script text stored in the application remain tied to these script texts,
+i.e. are updated (or removed) according to edits in the script text.</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2 id="toc_7">Concurrency (threads)</h2>
+
+<p>p44script has a very convenient construct for creating concurrently running sequences of operations,
+something that is often needed in automation. A concurrently running sequence of script statements is also called a <i>thread</i>
+Note that event handlers as show above also evaluate and run concurrently with other script activity.</p>
+
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>concurrent { while(true) { log('blink1'); delay(3) } };
+<br/>concurrent { while(true) { log('blink2'); delay(2.7) } };
+<br/>delay(0:02); abort();</td>
+<td>run two asynchronously blinking sequences in parallel. After 2 minutes,
+both concurrent threads are stopped using the <u>abort()</u> function</td>
+</tr>
+<tr>
+<td>concurrent as blinker { while(true) { log('blink'); delay(2) } };
+<br/>delay(0:02); abort(blinker);</td>
+<td>start a concurrent blinking sequence and save a reference to it as a variable named <u>blinker</u>.
+After two minutes, the variable can be used as argument to <u>abort()</u> to specifically stop a thread.</td>
+</tr>
+<tr>
+<td>concurrent as task1 { delay(random(2,5)); log('task1 done') };
+<br/>concurrent as task2 { delay(random(2,5)); log('task2 done') };
+<br/>await(task1,task2)
+<br/>log('one of both tasks done')
+<br/>await(task1)
+<br/>await(task2)
+<br/>log('both tasks are done now')</td>
+<td>start two concurrent task with a random duration between 2 and 5 seconds.
+<br>The <u>await()</u> function can be used to wait for completion of one of its arguments.
+<br>Using a separate <u>await()</u> call for each thread will complete when all tasks are done.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<h2 id="toc_8">General functions within scripts</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>abort()</td>
+<td>aborts all concurrently running <i>threads</i> except the thread from where <u>abort()</u> is called.</td>
+</tr>
+<tr>
+<td>abort(a)</td>
+<td>aborts the <i>thread</i> named <u>a</u>, that is the thread started with <u>concurrent as a {...}</u>.</td>
+</tr>
+<tr>
+<td>await(a [,b,...] [, timeout])</td>
+<td>waits for one or multiple events to happen, for example threads terminating, and returns the event's value.
+if <u>timeout</u> is used, await will quit waiting after the specified time and return undefined</td>
+</tr>
+<tr>
+<td>delay(seconds)</td>
+<td>delays the script execution by <u>seconds</u></td>
+</tr>
+<tr>
+<td>log([loglevel, ] logmessage)</td>
+<td>writes a message into the application's logfile. If <u>loglevel</u> is omitted, 5 (LOG_NOTICE) is used.</td>
+</tr>
+<tr>
+<td>loglevel(level)</td>
+<td>change the application's log level to <u>level</u>.</td>
+</tr>
+<tr>
+<td>logleveloffset(offset)</td>
+<td>change the log level offset of the context the script runs in to <u>offset</u>. This allows making part of an application
+more or less verbose in the log selectively.</td>
+</tr>
+<tr>
+<td>geturl(url [,timeout])</td>
+<td>returns response from GET request to (http or https) <u>url</u>, times out after <u>timeout</u> seconds if specified</td>
+</tr>
+<tr>
+<td>posturl(url [,timeout][,data])</td>
+<td>sends <u>data</u> (must be string) with POST to <u>url</u>, returns response, times out after <u>timeout</u> seconds if specified</td>
+</tr>
+<tr>
+<td>puturl(url [,timeout][,data])</td>
+<td>sends <u>data</u> (must be string) with PUT to <u>url</u>, returns response, times out after <u>timeout</u> seconds if specified</td>
+</tr>
+</tbody>
+</table>
+
+</body>
+</html>
