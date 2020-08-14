@@ -1,0 +1,65 @@
+// "UngenaUhr" - displays time with random delay to real time, delay itself is
+// displayed using the train departure delay module
+// In addition, two train type and two destination modules are changed randomly
+
+// helper to set a single module's position
+function setFlap(module, value)
+{
+  var cmd = {};
+  cmd.name = module;
+  cmd.value = value;
+  log(6, string(cmd));
+  feature('splitflaps').cmd('position', cmd);
+}
+
+// update the clock from real time and global delay
+function updateclock()
+{
+  var hour = hour();
+  var minute = minute() - delay;
+  if (minute<0) { minute = minute+60; hour = hour-1; }
+  if (hour<0) hour = 23;
+  setFlap('hour', hour);
+  setFlap('minute', minute);
+  setFlap('delay', delay);
+}
+
+// event handlers (or "lambdas")
+
+// - update the clock every minute
+on(every(60, 0)) {
+  updateclock()
+}
+
+
+// - change the random delay between 0..20min every 13 to 42 minutes
+on(every(random(0:13,0:42))) {
+  delay = int(random(0,20));
+  log('new random delay = ' + delay);
+  updateclock()
+}
+
+// - change the 2 train type and 2 destination modules every 42min..1h23min
+on(every(random(0:42,1:23))) {
+  log('new random train type and place');
+  var typen1 = [ 0, 1, 2, 3, 4, 5, 8, 9, 10, 13, 14, 15, 16, 17, 18, 20, 22, 29, 30, 32 ]; // positions with non-empty train types
+  setFlap('zugtyp1', typen1[random(0,19)]);
+  var typen2 = [ 0, 1, 2, 3, 4, 5, 17, 18, 20, 22 ]; // positions with non-empty train types
+  setFlap('zugtyp2', typen2[random(0,9)]);
+  setFlap('ort1', random(0,42));
+  setFlap('ort2', random(0,42));
+}
+
+// main script starts here
+glob delay = 0;
+
+// initialize the splitflaps.
+feature('splitflaps').init({ "modules":[
+  { "name":"hour", "addr":6, "type":"hour" },
+  { "name":"minute", "addr":1, "type":"minute" },
+  { "name":"delay", "addr":8, "type":"40" },
+  { "name":"zugtyp1", "addr":9, "type":"62" },
+  { "name":"zugtyp2", "addr":10, "type":"62" },
+  { "name":"ort1", "addr":5, "type":"62" },
+  { "name":"ort2", "addr":4, "type":"62" }
+] });
