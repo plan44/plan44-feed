@@ -1,0 +1,31 @@
+// Simple clock with a hour and a minute module
+
+// helper to set a single module's position
+function setFlap(module, value)
+{
+  var cmd = {};
+  cmd.name = module;
+  cmd.value = value;
+  log(6, string(cmd));
+  feature('splitflaps').cmd('position', cmd);
+}
+
+// update the clock from real time and global delay
+function updateclock()
+{
+  setFlap('hour', hour());
+  setFlap('minute', minute());
+}
+
+// event handlers (or "lambdas")
+
+// - update the clock every minute
+on(every(60, 0)) {
+  updateclock()
+}
+
+// initialize the splitflaps.
+feature('splitflaps').init({ "modules":[
+  { "name":"hour", "addr":6, "type":"hour" },
+  { "name":"minute", "addr":1, "type":"minute" },
+] });

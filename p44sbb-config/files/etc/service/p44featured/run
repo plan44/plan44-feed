@@ -1,7 +1,9 @@
 #!/bin/sh
 
+DAEMON=p44featured
+
 # app config
-APPCONFIG="--timedisplay 79,8"
+APPCONFIG="--mainscript simpleclock.txt"
 
 # basic config Omega1 on controlboard v1/v2
 # RS485TXOFFDELAY=2
@@ -12,13 +14,24 @@ APPCONFIG="--timedisplay 79,8"
 # basic config Omega2 on splitflapcontroller v1
 RS485TXOFFDELAY=3
 RS485PORT=/dev/ttyS1
-RS485TXENPIN=gpio.0
+RS485TXENPIN=gpio.2
 RS485RXENPIN=missing
 
 # general settings
 JSONAPIPORT=8090
 STATEDIR=/tmp/p44sbbd
 LOGLEVEL=5
+
+
+# Allow overriding options (such as LOGLEVEL or EXTRAOPTS)
+# - override from flash
+if [ -f "/flash/${DAEMON}_cfg" ]; then
+  source "/flash/${DAEMON}_cfg"
+fi
+# - override from tmp
+if [ -f "/tmp/${DAEMON}_cfg" ]; then
+  source "/tmp/${DAEMON}_cfg"
+fi
 
 # make the state dir
 mkdir -p ${STATEDIR}
@@ -29,14 +42,13 @@ omega2-ctrl gpiomux set uart1 uart
 omega2-ctrl gpiomux set i2s gpio
 omega2-ctrl gpiomux set spi_s pwm01_uart2
 
-# run
-exec p44sbbd \
-  --rs485connection ${RS485PORT} \
-  --rs485txoffdelay ${RS485TXOFFDELAY} \
-  --rs485txenable ${RS485TXENPIN} \
-  --rs485rxenable ${RS485RXENPIN} \
+#run
+exec ${DAEMON} \
+  --splitflapconn ${RS485PORT} \
+  --splitflaptxoff ${RS485TXOFFDELAY} \
+  --splitflaptxen ${RS485TXENPIN} \
+  --splitflaprxen ${RS485RXENPIN} \
   --jsonapiport ${JSONAPIPORT} \
-  --statedir ${STATEDIR} \
-  -l ${LOGLEVEL} \
+  --featureapiport 11200 \
   ${APPCONFIG} \
-  </dev/null
+  -l ${LOGLEVEL}

@@ -450,7 +450,7 @@ pre[class*="language-"] {
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -487,7 +487,7 @@ also carries a short text describing its origin. This useful to debug as it help
 </tr>
 <tr>
 <td>2.9.</td>
-<td>date specification in <u>day.month.</u> (period at end is important) format. Sample means 2nd of September. Numeric value is number of days from beginning of current year.</td>
+<td>date specification in <u>day.month.</u> (period at end is important) format. Example means 2nd of September. Numeric value is number of days from beginning of current year.</td>
 </tr>
 <tr>
 <td>2.Sep</td>
@@ -507,23 +507,23 @@ also carries a short text describing its origin. This useful to debug as it help
 </tr>
 <tr>
 <td>{ 'field1':42, 'field2':'hello' }</td>
-<td>JSON object.</td>
+<td>JSON object. Note that JSON literals are really literal, you cannot use variables in place of field names as it is possible in JavaScript.</td>
 </tr>
 <tr>
 <td>[ 42, 43, 'hello' ]</td>
-<td>JSON array.</td>
+<td>JSON array. . Note that JSON literals are really literal, you cannot use variables in place of array values as it is possible in JavaScript.</td>
 </tr>
 </tbody>
 </table>
 
 <h3 id="toc_3">Named values</h3>
 
-<p>In expressions, named values (for example sensor values in evaluator conditions, or variables in scripts) can be used. Simple values just consist of a name, but there are also structured values that can be accessed using dot and subscript notation.</p>
+<p>In expressions, named values (for example sensor values in evaluator conditions, or variables in scripts) can be used. Simple values just consist of a name, but there are also structured values that can be accessed using dot and subscript notation, for example JSON objects.</p>
 
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -714,8 +714,16 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns position of <u>needle</u> in <u>haystack</u> optionally starting at <u>from</u>, or <u>null</u> if not found.</td>
 </tr>
 <tr>
-<td>format(formatspec, number)</td>
-<td>formats <u>number</u> as string according to printf-like <u>formatspec</u> (but note that <u>formatspec</u> is *not* a complete printf-style format string, but only a single numeric format specification starting with %, and only + - 0..9 . d, x, and f specifiers supported).</td>
+<td>format(formatstring, value [, value...])</td>
+<td>formats <u>value</u>s as string according to printf-like <u>formatstring</u> (but note that <u>formatspec</u> only supports a subset of printf. In particular, no 'h', 'l' or 'll' length specifiers are allowed (nor needed). Recognized formatting chars are <u>d,u,x,X</u> for integer formatting, <u>e,E,g,G,f</u> for floating point, and <u>s</u> for strings.</td>
+</tr>
+<tr>
+<td>formattime()
+<br/>formattime(time)
+<br/>formattime(formatstring)
+<br/>formattime(time, formatstring)
+</td>
+<td>returns formatted time. Without arguments, <u>formattime</u> returns the current date and time like <i>2020-08-19 11:04:42</i>. With only a numeric <u>time</u> argument, the specified time is formatted. When <u>time</u> is a time-of-day (between 0 and 24*60*60 seconds), only time is shown like <i>11:04:42</i> , otherwise <u>time</u> is treated as absolute unix epoch timestamp and formatted as date+time by default. <u>formatstring</u> can be used to set a specific date and time format, using the formatting capabilities of the <a target="_blank" href="https://man7.org/linux/man-pages/man3/strftime.3.html">strftime() C standard function</a>.</td>
 </tr>
 <tr>
 <td>frac(a)</td>
@@ -819,6 +827,10 @@ also carries a short text describing its origin. This useful to debug as it help
 </tr>
 <tr>
 <td>epochtime()</td>
+<td>returns unix epoch time (seconds since 1.1.1970 midnight UTC), but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>epochdays()</td>
 <td>returns unix epoch time (days since 1.1.1970), with time-of-day as fractional part, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
 </tr>
 <tr>
@@ -889,7 +901,7 @@ The script language has syntax <i>similar</i> to JavaScript or C, but far from i
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -915,7 +927,7 @@ Global variable declarations are an exception, these can occur in the declaratio
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -993,7 +1005,7 @@ in a variable using <u>as</u> is important.
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -1047,7 +1059,7 @@ in a variable using <u>as</u> is important.
 <table>
 <thead>
 <tr>
-<th>Sample</th>
+<th>Example</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -1102,7 +1114,7 @@ in a variable using <u>as</u> is important.
 <td>deletes all function and handler definitions that are not part of a stored script, but were made in an ad-hoc way,
 for example from a interactive script command line (a REPL = Read-Execute-Print-Loop).
 </br>Note that functions and handlers defined in a script text stored in the application remain tied to these script texts,
-i.e. are updated (or removed) according to edits in the script text.</td>
+i.e. are updated (or removed) according to edits in the script text, and <i>will not be removed</i> by <u>undeclare()</u>.</td>
 </tr>
 </tbody>
 </table>
@@ -1150,7 +1162,6 @@ After two minutes, the variable can be used as argument to <u>abort()</u> to spe
 </tr>
 </tbody>
 </table>
-
 
 
 <h2 id="toc_8">General functions within scripts</h2>
@@ -1208,6 +1219,169 @@ more or less verbose in the log selectively.</td>
 </tr>
 </tbody>
 </table>
+
+<h2 id="toc_10">Objects/functions for working with the P44 low level graphics (p44lrg) subsystem (Ledchain matrices)</h2>
+
+<table>
+<thead>
+<tr>
+<th>Function/Object</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>lrg</td>
+<td>returns the root view of the entire <i>led chain arrangement</i> currently configured, i.e. the view that contains the entire area covered by all mapped ledchain segments</td>
+</tr>
+<tr>
+<td>findview(viewlabel)</td>
+<td>searches for a subview with the specified <u>viewlabel</u>, returns the view or undefined</td>
+</tr>
+<tr>
+<td>configure(json)
+<br/>configure(resource_file)
+</td>
+<td>(re)configures the view with the <u>json</u> specified directly or read from a JSON <u>resource_file</u></td>
+</tr>
+<tr>
+<td>set('propertyname', new_value)</td>
+<td>set a single property in the view. This is just a more convenient way than using <u>configure</u> with a json object containing a single field, but technically does the same thing.</td>
+</tr>
+<tr>
+<td>animator('propertyname')</td>
+<td>Get an animator for the specified property of the view. Animatable p44lrg properties are: <u>alpha, rotation, x, y, dx, dy, content_x, content_y, rel_content_x, rel_content_y, rel_center_x, rel_center_y, content_dx, content_dy, color, bgcolor</u>. Colors have the animatable subcomponents <u>r,g,b,w,hue,saturation,brightness</u>
+<br/>If a valid animatable property name is passed, an animator object is returned. See animator description for details</td>
+</tr>
+<tr>
+<td>stopanimations()</td>
+<td>stop all animations running in the view</td>
+</tr>
+<tr>
+<td>hsv(hue [, saturation [, brightness]])</td>
+<td>converts the specified <u>hue</u> (0..359), <u>saturation</u> (0..1) and <u>brightness</u> (0..1) values to the hexadecimal 6 digit web color format, which can be used for setting <i>bgcolor</i> or <i>color</i> in p44lrg views. <u>saturation</u> (0..1) and <u>brightness</u> default to 1 when not specified</td>
+</tr>
+</tbody>
+</table>
+<?php endif ?>
+
+
+<h2 id="toc_10">Animator</h2>
+
+<p>Animators generate a series of changes of a numeric value over time, with a number of parameters such as total duration, curve (function) to follow, repetition, delay etc. Animators are returned from <u>animator(...)</u> functions of objects that support animation, such as p44lrg views.
+<br/>The animator methods which just set a paramater, return the animator itself, such that calls can be chained like <u>animator('dx').delay(2).function('easein',4).runto(50,0:01:02)</u></p>
+<p>Animations run concurrently with the script that starts them, but <u>await()</u> can be used to wait for the end of an animation.</p>
+
+<table>
+<thead>
+<tr>
+<th>Method/Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>delay(seconds)</td>
+<td>delays the start of the animation by the specified time</td>
+</tr>
+<tr>
+<td>runafter(animation)</td>
+<td>schedules the animation to start only after the specified <u>animation</i> has completed</td>
+</tr>
+<tr>
+<td>repeat(cycles [, autoreverse])</td>
+<td>Causes the animation to repeat <u>cycles</u> times total. If <u>cycles</u> is set to 0, the animation will repeat forever (until explicitly stopped with <u>stop()</u>). if <u>autoreverse</u> is true, the animation is run backwards every second cycle</td>
+</tr>
+<tr>
+<td>function('animationfunction')</td>
+<td>Sets the animation function, which can be on of: <u>linear,easein,easeout,easeinout</u></td>
+</tr>
+<tr>
+<td>from(startvalue)</td>
+<td>Sets the start value for the animation. By default, the start value is the current value of the property being animated, but in some cases this is not available for reading (e.g. hue or saturation of a switched off RGB light is undefined), so <u>from</u> allows to set a start value explicitly.</td>
+</tr>
+<tr>
+<td>runto(endvalue, duration)</td>
+<td>Only this method actually starts the animation to reach <u>endvalue</u> within the specified <u>duration</u>
+<br/>Usually, an animation setup statement looks like: <u>animator('color.hue').delay(2).from(0).runto(360,20)</u>, with <u>runto</u> being the last method in the chain.
+</td>
+</tr>
+<tr>
+<td>stop()</td>
+<td>Stops an animation</td>
+</tr>
+<tr>
+<td>current</td>
+<td>returns the current value of the animator</td>
+</tr>
+</tbody>
+</table>
+
+
+<h2 id="toc_10">Functions related to "p44features"</h2>
+
+<p>The following functions are global functions allowing access to features and their API from scripts</p>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>feature('featurename')
+<td>access a feature by name. Use the methods below for working with the feature</td>
+</tr>
+<tr>
+<td>featurecall(json_request)</td>
+<td>issues a feature API request and returns its response (or null if call has no response)</td>
+</tr>
+<tr>
+<td>featureevent(json_event)</td>
+<td>sends a even message to the current feature API client (if any)</td>
+</tr>
+<tr>
+<td>featureevent()</td>
+<td>returns events issued from active features, such as detected RFID, input changes etc. <u>featureevent()</u> can be passed to <u>await()</u> or used in <u>on (featureevent()) as event { do something with event }</u> handlers.</td>
+</tr>
+</tbody>
+</table>
+
+
+<p>The following are methods of the feature object (see feature(...) above), and can be called for example like: <u>feature('inputs').status()</u></p>
+
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>status()</td>
+<td>returns the status of the feature. Is false when the feature is not initialized, or when initialized, a feature-specific JSON value or object</td>
+</tr>
+<tr>
+<td>init(init_json)</td>
+<td>initializes the feature, with feature-specific <u>init_json</u> parameters</td>
+</tr>
+<tr>
+<td>cmd('command' [, json_param_object])</td>
+<td>send <u>command</u> to the feature, with optional <u>json_param_object</u> containing command parameters</td>
+</tr>
+<tr>
+<td>set('property', value)</td>
+<td>set a single <u>property</u> in the feature to a new <u>value</u></td>
+</tr>
+</tbody>
+</table>
+
+
 
 </body>
 </html>
