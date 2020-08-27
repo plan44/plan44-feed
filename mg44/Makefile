@@ -1,4 +1,4 @@
-# Copyright (c) 2016 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=mg44
 # version of what we are downloading
-PKG_VERSION:=3.4
+PKG_VERSION:=3.6
 # version of this makefile
-PKG_RELEASE:=9
+PKG_RELEASE:=12
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -40,6 +40,9 @@ define Package/$(PKG_NAME)/description
   It has a built-in JSON proxy for accessing TCP socket based JSON APIs and JSON-processing
   command line tools.
 endef
+
+CONFIGURE_ARGS += \
+	$(if $(CONFIG_DEBUG),--enable-debug)
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin

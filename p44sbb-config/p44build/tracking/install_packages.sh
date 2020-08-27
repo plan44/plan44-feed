@@ -438,6 +438,7 @@
 ./scripts/feeds install -p packages libzstd
 #./scripts/feeds install -p packages zstd
 ./scripts/feeds update plan44
+./scripts/feeds install -p plan44 ace-p44script
 ./scripts/feeds install -p plan44 hermel-config
 ./scripts/feeds install -p plan44 hermeld
 ./scripts/feeds install -p plan44 hmt20-config
@@ -449,6 +450,7 @@
 ./scripts/feeds install -p plan44 lora_gateway
 ./scripts/feeds install -p plan44 messagetorch
 ./scripts/feeds install -p plan44 p44-extdev-elsner
+./scripts/feeds install -p plan44 p44-extdev-p44motorexp
 ./scripts/feeds install -p plan44 kmod-p44-ledchain
 ./scripts/feeds install -p plan44 p44audiobox-config
 ./scripts/feeds install -p plan44 p44ayabd

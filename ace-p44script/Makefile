@@ -13,7 +13,8 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
-PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/ace-p44script.git
+PKG_SOURCE_URL:=https://github.com/plan44/ace-p44script.git
+#PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/ace-p44script.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)

@@ -1,27 +1,226 @@
 // "UngenaUhr" - displays time with random delay to real time, delay itself is
 // displayed using the train departure delay module
-// In addition, two train type and two destination modules are changed randomly
+// In addition, any number of other modules are changed randomly from time to time
 
-// helper to set a single module's position
-function setFlap(module, value)
+// - the definition of all modules
+glob modules = [
+  { "title":"Stunde", "min":0, "max":23, "fconfig":{ "name":"hour", "addr":6, "type":"hour" } },
+  { "title":"Minute", "min":0, "max":59, "fconfig":{ "name":"minute", "addr":1, "type":"minute" } },
+  { "title":"Verspätung", "min":0, "max":39, "fconfig":{ "name":"delay", "addr":8, "type":"40" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"ca 1 Minuten später", "flap":1 },
+    { "text":"ca 2 Minuten später", "flap":2 },
+    { "text":"ca 3 Minuten später", "flap":3 },
+    { "text":"ca 4 Minuten später", "flap":4 },
+    { "text":"ca 5 Minuten später", "flap":5 },
+    { "text":"ca 6 Minuten später", "flap":6 },
+    { "text":"ca 7 Minuten später", "flap":7 },
+    { "text":"ca 8 Minuten später", "flap":8 },
+    { "text":"ca 9 Minuten später", "flap":9 },
+    { "text":"ca 10 Minuten später", "flap":10 },
+    { "text":"ca 11 Minuten später", "flap":11 },
+    { "text":"ca 12 Minuten später", "flap":12 },
+    { "text":"ca 13 Minuten später", "flap":13 },
+    { "text":"ca 14 Minuten später", "flap":14 },
+    { "text":"ca 15 Minuten später", "flap":15 },
+    { "text":"ca 16 Minuten später", "flap":16 },
+    { "text":"ca 17 Minuten später", "flap":17 },
+    { "text":"ca 18 Minuten später", "flap":18 },
+    { "text":"ca 19 Minuten später", "flap":19 },
+    { "text":"ca 20 Minuten später", "flap":20 },
+    { "text":"ca 25 Minuten später", "flap":21 },
+    { "text":"ca 30 Minuten später", "flap":22 },
+    { "text":"ca 35 Minuten später", "flap":23 },
+    { "text":"ca 40 Minuten später", "flap":24 },
+    { "text":"ca 45 Minuten später", "flap":25 },
+    { "text":"ca 50 Minuten später", "flap":26 },
+    { "text":"ca 55 Minuten später", "flap":27 },
+    { "text":"ca 60 Minuten später", "flap":28 },
+    { "text":"ca 90 Minuten später", "flap":29 },
+    { "text":"Ausfall", "flap":30 },
+    { "text":"Ersatzzug", "flap":31 },
+    { "text":"Umleitung", "flap":32 },
+    { "text":"Bitte Ansage beachten", "flap":33 },
+    { "text":"Unbestimmte Verspätung", "flap":34 },
+    { "text":"Mit Zuschlag", "flap":35 },
+    { "text":"Zusatzzug", "flap":37 },
+  ]},
+  { "title":"Zugtyp1", "min":0, "max":61, "fconfig":{ "name":"zugtyp1", "addr":9, "type":"62" }, "choices":[
+    { "text":"-leer-", "flap":0 },
+    { "text":"ICE", "flap":1 },
+    { "text":"ICN", "flap":2 },
+    { "text":"EC", "flap":3 },
+    { "text":"IC", "flap":4 },
+    { "text":"Urlaubs Express", "flap":5 },
+    { "text":"Schnellzug", "flap":8 },
+    { "text":"Special Train", "flap":9 },
+    { "text":"Train Spécial", "flap":10 },
+    { "text":"Extrazug", "flap":13 },
+    { "text":"Glacier Express", "flap":14 },
+    { "text":"Bernina Express", "flap":15 },
+    { "text":"Arosa Express", "flap":16 },
+    { "text":"[RE] Regio Express", "flap":17 },
+    { "text":"[R] Regio", "flap":18 },
+    { "text":"Dampfzug", "flap":20 },
+    { "text":"IR", "flap":22 },
+    { "text":"[S12]", "flap":29 },
+    { "text":"CNL", "flap":30 },
+    { "text":"TGV", "flap":32 },
+  ]},
+  { "title":"Zugtyp2", "min":0, "max":61, "fconfig":{ "name":"zugtyp2", "addr":10, "type":"62" }, "choices":[
+    { "text":"-leer-", "flap":0 },
+    { "text":"ICE", "flap":1 },
+    { "text":"ICN", "flap":2 },
+    { "text":"EC", "flap":3 },
+    { "text":"IC", "flap":4 },
+    { "text":"Urlaubs Express", "flap":5 },
+    { "text":"[RE] Regio Express", "flap":17 },
+    { "text":"[R] Regio", "flap":18 },
+    { "text":"Dampfzug", "flap":20 },
+    { "text":"IR", "flap":22 },
+  ]},
+  { "title":"Ort1", "min":0, "max":61, "fconfig":{ "name":"ort1", "addr":5, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Aarau Basel SBB", "flap":1 },
+    { "text":"Arosa", "flap":2 },
+    { "text":"Baden Brugg", "flap":27 },
+    { "text":"Basel SBB Bruxelles", "flap":6 },
+    { "text":"Basel SBB Paris", "flap":7 },
+    { "text":"Belgien / Begique", "flap":3 },
+    { "text":"Bonaduz Rhäzüns", "flap":4 },
+    { "text":"Bonaduz Rothenbrunnen", "flap":35 },
+    { "text":"Bonaduz Thusis", "flap":5 },
+    { "text":"Brig Visp", "flap":37 },
+    { "text":"Brig Zermatt", "flap":28 },
+    { "text":"Davos", "flap":29 },
+    { "text":"Disentis Mustér", "flap":8 },
+    { "text":"Dortmund Hamburg", "flap":9 },
+    { "text":"Filisur Samedan St.Moritz", "flap":39 },
+    { "text":"Filisur Samedan", "flap":38 },
+    { "text":"Ilanz Disentis", "flap":10 },
+    { "text":"Ilanz", "flap":11 },
+    { "text":"Klosters Scual-Tarasp", "flap":12 },
+    { "text":"Köln Dortmund", "flap":33 },
+    { "text":"Köln Hamburg", "flap":13 },
+    { "text":"Köln Kiel", "flap":14 },
+    { "text":"Landquart Schiers", "flap":16 },
+    { "text":"Landquart", "flap":15 },
+    { "text":"Luxembourg", "flap":17 },
+    { "text":"Posciavo Tirano", "flap":18 },
+    { "text":"Preda", "flap":42 },
+    { "text":"Samedan St.Moritz", "flap":20 },
+    { "text":"Sargans", "flap":19 },
+    { "text":"St. Margrethen St.Gallen", "flap":22 },
+    { "text":"St. Moritz", "flap":21 },
+    { "text":"Stuttgart Frankfurt (M) HBF", "flap":23 },
+    { "text":"Ziegelbrücke", "flap":24 },
+    { "text":"Zürich Flughafen Schaffhausen", "flap":40 },
+    { "text":"Zürich HB Basel SBB", "flap":26 },
+    { "text":"Zürich HB", "flap":25 },
+  ]},
+  { "title":"Ort2", "min":0, "max":61, "fconfig":{ "name":"ort2", "addr":4, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Andermatt", "flap":21 },
+    { "text":"Disentis Andermatt", "flap":3 },
+    { "text":"Domat Ems Bonaduz", "flap":2 },
+    { "text":"Domat/Ems Thusis", "flap":24 },
+    { "text":"Domat/Ems", "flap":1 },
+    { "text":"Felsberg Domat/Ems", "flap":5 },
+    { "text":"Felsberg", "flap":4 },
+    { "text":"Filisur Davos", "flap":27 },
+    { "text":"Filisur", "flap":25 },
+    { "text":"Haldenstein Landquart", "flap":6 },
+    { "text":"Haldenstein Untervaz Thusis", "flap":7 },
+    { "text":"Intersoc", "flap":8 },
+    { "text":"Landquart Buchs SG", "flap":11 },
+    { "text":"Landquart Klosters", "flap":22 },
+    { "text":"Landquart Pfäffikon", "flap":12 },
+    { "text":"Landquart Sargans", "flap":13 },
+    { "text":"Landquart Ziegelbrücke", "flap":14 },
+    { "text":"Landquart Zürich HB", "flap":15 },
+    { "text":"Landquart", "flap":10 },
+    { "text":"Langwies", "flap":9 },
+    { "text":"Pontresina", "flap":17 },
+    { "text":"Reichenau T. Thusus", "flap":19 },
+    { "text":"Reichenau Tamins", "flap":18 },
+    { "text":"Rorschach", "flap":28 },
+    { "text":"Schlaf + Liegewagen", "flap":16 },
+    { "text":"St. Moritz Tirano", "flap":31 },
+    { "text":"Untervaz Trimmis", "flap":20 },
+  ]},
+];
+
+glob hourMod = 0; // the module index of the hour module to use for clock, undefined if no clock
+glob minMod = 1; // the module index of the minute module to use for clock
+glob delayMod = 2; // the module index of the delay module to use for UngenaUhr clock offset, undefined if none
+glob randomMods = [ 3, 4, 5, 6 ]; // the modules that should change at random
+
+// set by module index/flap as found in info
+function modset(modnum, flap)
 {
+  modnum = number(modnum);
+  flap = number(flap);
+  var m = modules[modnum];
+  if (flap>m.max) flap = m.max;
+  if (flap<m.min) flap = m.min;
+  log(6, format('modnum=%d, flap=%d, min=%d, max=%d, fconfig=%s', modnum, flap, m.min, m.max, m.fconfig));
   var cmd = {};
-  cmd.name = module;
-  cmd.value = value;
+  cmd.name = string(m.fconfig.name);
+  cmd.value = flap;
+  modules[modnum].current = flap;
   log(6, string(cmd));
   feature('splitflaps').cmd('position', cmd);
 }
 
+
+// choose one of the listed choices by random, or if no choices, a number between min and max
+function randomset(modnum)
+{
+  var m = modules[number(modnum)];
+  var n = elements(m.choices);
+  var flap;
+  if (n>0) {
+    flap = m.choices[int(random(0,n-1))].flap;
+  }
+  else {
+    flap = int(random(m.min, m.max));
+  }
+  modset(modnum, flap);
+}
+
+
 // update the clock from real time and global delay
 function updateclock()
 {
-  var hour = hour();
-  var minute = minute() - delay;
-  if (minute<0) { minute = minute+60; hour = hour-1; }
-  if (hour<0) hour = 23;
-  setFlap('hour', hour);
-  setFlap('minute', minute);
-  setFlap('delay', delay);
+  if (isvalid(hourMod)) {
+    var hour = hour();
+    var minute = minute() - delay;
+    if (minute<0) { minute = minute+60; hour = hour-1; }
+    if (hour<0) hour = 23;
+    modset(hourMod, hour);
+    modset(minMod, minute);
+    if (isvalid(delayMod)) {
+      modset(delayMod, delay);
+    }
+  }
+}
+
+
+function updateRandom()
+{
+  var i = 0;
+  while (i<elements(randomMods)) {
+    randomset(randomMods[i]);
+    i = i+1;
+  }
+}
+
+
+function updateRandomDelay()
+{
+  delay = int(random(0,20));
+  log('new random delay = ' + delay)
+  updateclock()
 }
 
 // event handlers (or "lambdas")
@@ -34,32 +233,66 @@ on(every(60, 0)) {
 
 // - change the random delay between 0..20min every 13 to 42 minutes
 on(every(random(0:13,0:42))) {
-  delay = int(random(0,20));
-  log('new random delay = ' + delay);
-  updateclock()
+  if (isvalid(delayMod)) {
+    updateRandomDelay()
+  }
 }
 
-// - change the 2 train type and 2 destination modules every 42min..1h23min
+// - change randomMods every 42min..1h23min
 on(every(random(0:42,1:23))) {
-  log('new random train type and place');
-  var typen1 = [ 0, 1, 2, 3, 4, 5, 8, 9, 10, 13, 14, 15, 16, 17, 18, 20, 22, 29, 30, 32 ]; // positions with non-empty train types
-  setFlap('zugtyp1', typen1[random(0,19)]);
-  var typen2 = [ 0, 1, 2, 3, 4, 5, 17, 18, 20, 22 ]; // positions with non-empty train types
-  setFlap('zugtyp2', typen2[random(0,9)]);
-  setFlap('ort1', random(0,42));
-  setFlap('ort2', random(0,42));
+  log('new random module positions');
+  updateRandom()
+}
+
+
+// - web interface
+on (webrequest()) as request {
+  log(format('Webrequest: %s', request))
+  try {
+    if (request.cmd=="info") {
+      request.answer(modules);
+    }
+    else if (request.cmd=="set") {
+      modset(request.modnum, request.flap)
+      request.answer('flap set')
+    }
+    else if (request.cmd=="updateclock") {
+      delay = 0;
+      updateclock();
+      request.answer('clock updated')
+    }
+    else if (request.cmd=="updaterandom") {
+      updateRandom();
+      request.answer('random modules updated')
+    }
+    else if (request.cmd=="updaterandomdelay") {
+      updateRandomDelay();
+      request.answer('random delay updated')
+    }
+    else {
+      request.answer('Unknown cmd')
+    }
+  }
+  catch as e {
+    request.answer(string(e));
+  }
 }
 
 // main script starts here
 glob delay = 0;
 
 // initialize the splitflaps.
-feature('splitflaps').init({ "modules":[
-  { "name":"hour", "addr":6, "type":"hour" },
-  { "name":"minute", "addr":1, "type":"minute" },
-  { "name":"delay", "addr":8, "type":"40" },
-  { "name":"zugtyp1", "addr":9, "type":"62" },
-  { "name":"zugtyp2", "addr":10, "type":"62" },
-  { "name":"ort1", "addr":5, "type":"62" },
-  { "name":"ort2", "addr":4, "type":"62" }
-] });
+log('Initializing splitflaps')
+var m = [];
+var i = 0;
+while(i<elements(modules)) {
+  m[i] = modules[i].fconfig;
+  i=i+1
+}
+var mi = { "modules":null };
+mi.modules = m;
+feature('splitflaps').init(mi);
+
+// set initial values
+updateclock();
+updateRandom();

@@ -1,1 +1,1 @@
-<!--#exec "cat /var/log/p44sbbd/@*"-->
+<!--#exec "cat /var/log/p44featured/@*"-->

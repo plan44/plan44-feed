@@ -19,7 +19,6 @@ RS485RXENPIN=missing
 
 # general settings
 JSONAPIPORT=8090
-STATEDIR=/tmp/p44sbbd
 LOGLEVEL=5
 
 
@@ -33,10 +32,6 @@ if [ -f "/tmp/${DAEMON}_cfg" ]; then
   source "/tmp/${DAEMON}_cfg"
 fi
 
-# make the state dir
-mkdir -p ${STATEDIR}
-chmod 777 ${STATEDIR}
-
 # prepare output
 omega2-ctrl gpiomux set uart1 uart
 omega2-ctrl gpiomux set i2s gpio
@@ -44,6 +39,8 @@ omega2-ctrl gpiomux set spi_s pwm01_uart2
 
 #run
 exec ${DAEMON} \
+  --resourcepath /usr/share/p44sbb \
+  --datapath /flash \
   --splitflapconn ${RS485PORT} \
   --splitflaptxoff ${RS485TXOFFDELAY} \
   --splitflaptxen ${RS485TXENPIN} \

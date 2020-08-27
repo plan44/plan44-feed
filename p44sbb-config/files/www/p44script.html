@@ -54,7 +54,6 @@
 
     #controls #message {
       display: inline;
-      font-weight: bold;
     }
     .error {
       color: red;
@@ -159,7 +158,7 @@
 
     function loadScript()
     {
-      mg44Call('api/json/mainscript', {}, 2000, false).done(function(response) {
+      mg44Call('api/json/mainscript', {}, 10000, false).done(function(response) {
         if (response['code']!==undefined) {
           editor.setValue(response['code']);
           editor.navigateTo(0,0);
@@ -177,7 +176,7 @@
     function saveAndCheckScript()
     {
       var call = { "code": editor.getValue(), "save":true };
-      mg44Call('api/json/mainscript', call, 2000, false).done(function(response) {
+      mg44Call('api/json/mainscript', call, 10000, false).done(function(response) {
         if (response.error!==undefined) {
           $("#message").html('Syntax Error: <span class="error">' + escapehtml(response.error) + '</span>');
           if (response.at!==undefined) {

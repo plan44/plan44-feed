@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44featured
 # version of what we are downloading
-PKG_VERSION:=1.1
+PKG_VERSION:=1.2
 # version of this makefile
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master

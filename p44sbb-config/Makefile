@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44sbb-config
 # version of what we are downloading
-PKG_VERSION:=0.6
+PKG_VERSION:=0.7
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=5
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -20,7 +20,7 @@ PKG_CONFIG_DEPENDS := \
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+mg44 +p44sbbd
+	DEPENDS:=+mg44 +p44featured +ace-p44script
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=maker
@@ -54,13 +54,15 @@ endif
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
-	# Replace contents of /files with stuff we want to have there
+	# remove softlink to ace that might be copied along from source
+	rm $(PKG_BUILD_DIR)/www/ace
 endef
 
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/flash
 	$(INSTALL_DIR) $(1)/www
+	$(INSTALL_DIR) $(1)/usr/share/p44sbb
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/config_p44defaults
@@ -70,6 +72,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
+	$(CP) $(PKG_BUILD_DIR)/resources/* $(1)/usr/share/p44sbb
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-p44sbb $(1)/lib/upgrade/keep.d/p44sbb
 endef

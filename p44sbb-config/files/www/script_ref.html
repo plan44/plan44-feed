@@ -837,6 +837,10 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>json(anything)</td>
 <td>tries to interpret <u>anything</u> as JSON. Useful to make a JSON string returned from an API accessible as a structure.</td>
 </tr>
+<tr>
+<td>jsonresource(path)</td>
+<td>load JSON from <u>path</u>. If <u>path</u> is not absolute, is is interpreted relative to the application's resource path (which is usually /usr/share/<i>applicationname</i>)</td>
+</tr>
 </tbody>
 </table>
 
@@ -988,6 +992,11 @@ might cause performance problems.
 <td>Defines a event handler that triggers whenever the sum of <u>sensor1+sensor2</u> changes.
 The <u>as sensorsum</u> part stores the result of the trigger expression into the variable <u>sensorsum</u>.
 </td>
+<tr>
+<td>on (sensor1>22) stable 0:05 as sens<br/>{ log('sensor1: stable for 5 minutes at > 22, currently: ' + sens); }</td>
+<td>Defines a event handler that triggers when <u>sensor1</u> remains over 22 for at least 5 minutes.
+</td>
+</tr>
 <tr>
 <td>on (featureevent()) as event<br/>{ log('received event ' + event); }</td>
 <td>Defines a event handler that triggers whenever <u>featureevent()</u> triggers and stores the event in the variable <u>event</u>.
