@@ -9,7 +9,7 @@ PKG_NAME:=p44sbb-config
 # version of what we are downloading
 PKG_VERSION:=0.7
 # version of this makefile
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

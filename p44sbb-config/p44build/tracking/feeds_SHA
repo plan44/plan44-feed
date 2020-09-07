@@ -3,7 +3,7 @@ luci https://git.openwrt.org/project/luci.git:fb2f36306756d0d0782dcab8413a8bb7ec
 onion https://github.com/OnionIoT/OpenWRT-Packages.git:696949eb5e2f509a1334379aa4910925dae391c7
 p44i ssh://plan44@plan44.ch/home/plan44/sharedgit/p44i-feed.git:43ea0721e903b34612c59535d28f0ee24135b76f
 packages https://git.openwrt.org/feed/packages.git:2e6bd4cb86682b224803325127d3f777d40b3231
-plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:fef57ce6cf35dcc23a5104a6e2d9e17c04ab1767
+plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:1d35ff2588260d4c09d761637c950cb03292f3e8
 routing https://git.openwrt.org/feed/routing.git:3f8571194c2765ed31aa73459e86c2ebf943d27d
 stintel https://github.com/stintel/lede-wip.git:b6a2903d94d84fd959180956ff9d83e6275e4b15
 telephony https://git.openwrt.org/feed/telephony.git:036cd451c35b82b3d8cac519864986894d9f6958

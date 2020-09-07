@@ -1,0 +1,427 @@
+// "UngenaUhr" - displays time with random delay to real time, delay itself is
+// displayed using the train departure delay module
+// In addition, any number of other modules are changed randomly from time to time
+
+// - the definition of all modules
+glob modules = [
+  { "title":"Stunde", "min":0, "max":24, "fconfig":{ "name":"hour", "addr":0, "type":"hour" } },
+  { "title":"Minute", "min":0, "max":60, "fconfig":{ "name":"minute", "addr":1, "type":"minute" } },
+  { "title":"Verspätung", "min":0, "max":39, "fconfig":{ "name":"delay", "addr":2, "type":"40" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"ca 1 Minuten später", "flap":1 },
+    { "text":"ca 2 Minuten später", "flap":2 },
+    { "text":"ca 3 Minuten später", "flap":3 },
+    { "text":"ca 4 Minuten später", "flap":4 },
+    { "text":"ca 5 Minuten später", "flap":5 },
+    { "text":"ca 6 Minuten später", "flap":6 },
+    { "text":"ca 7 Minuten später", "flap":7 },
+    { "text":"ca 8 Minuten später", "flap":8 },
+    { "text":"ca 9 Minuten später", "flap":9 },
+    { "text":"ca 10 Minuten später", "flap":10 },
+    { "text":"ca 11 Minuten später", "flap":11 },
+    { "text":"ca 12 Minuten später", "flap":12 },
+    { "text":"ca 13 Minuten später", "flap":13 },
+    { "text":"ca 14 Minuten später", "flap":14 },
+    { "text":"ca 15 Minuten später", "flap":15 },
+    { "text":"ca 16 Minuten später", "flap":16 },
+    { "text":"ca 17 Minuten später", "flap":17 },
+    { "text":"ca 18 Minuten später", "flap":18 },
+    { "text":"ca 19 Minuten später", "flap":19 },
+    { "text":"ca 20 Minuten später", "flap":20 },
+    { "text":"ca 25 Minuten später", "flap":21 },
+    { "text":"ca 30 Minuten später", "flap":22 },
+    { "text":"ca 35 Minuten später", "flap":23 },
+    { "text":"ca 40 Minuten später", "flap":24 },
+    { "text":"ca 45 Minuten später", "flap":25 },
+    { "text":"ca 50 Minuten später", "flap":26 },
+    { "text":"ca 55 Minuten später", "flap":27 },
+    { "text":"ca 60 Minuten später", "flap":28 },
+    { "text":"ca 90 Minuten später", "flap":29 },
+    { "text":"Ausfall", "flap":30 },
+    { "text":"Ersatzzug", "flap":31 },
+    { "text":"Umleitung", "flap":32 },
+    { "text":"Bitte Ansage beachten", "flap":33 },
+    { "text":"Unbestimmte Verspätung", "flap":34 },
+    { "text":"Mit Zuschlag", "flap":35 },
+    { "text":"Zusatzzug", "flap":37 },
+  ]},
+  { "title":"Zuggattung", "min":0, "max":61, "fconfig":{ "name":"zuggattung", "addr":3, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Regio", "flap":1 },
+    { "text":"Schnellzug", "flap":2 },
+    { "text":"IC", "flap":3 },
+    { "text":"Extrazug", "flap":15 },
+    { "text":"Direct", "flap":17 },
+    { "text":"Spécial", "flap":22 },
+    { "text":"IR", "flap":32 },
+    { "text":"S3", "flap":34 },
+    { "text":"S31", "flap":36 },
+    { "text":"ICN", "flap":38 },
+    { "text":"RE Regioexpress", "flap":40 },
+    { "text":"Extrazug", "flap":42 },
+  ]},
+  { "title":"Via 1", "min":0, "max":61, "fconfig":{ "name":"via1", "addr":4, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Lyss", "flap":1 },
+    { "text":"Lyss Bern", "flap":2 },
+    { "text":"Thun Spiez", "flap":3 },
+    { "text":"Grenchen Süd", "flap":4 },
+    { "text":"Neuchâtel", "flap":5 },
+    { "text":"Sonceboz-S.", "flap":6 },
+    { "text":"Grenchen Nord", "flap":7 },
+    { "text":"Delémont", "flap":8 },
+    { "text":"Täuffelen", "flap":9 },
+    { "text":"Neuchâtel Yverdon", "flap":10 },
+    { "text":"Grenchen Süd Olten", "flap":11 },
+    { "text":"Grenchen Nord Moutier", "flap":12 },
+    { "text":"Solothurn", "flap":13 },
+    { "text":"Moutier", "flap":14 },
+    { "text":"Sonceboz St-Imier", "flap":15 },
+    { "text":"La Neuveville", "flap":17 },
+    { "text":"Solothurn Olten", "flap":19 },
+    { "text":"Grenchen Süd Solothurn", "flap":20 },
+    { "text":"Frinvillier-Taubenloch", "flap":22 },
+    { "text":"Mett Grenchen Süd", "flap":24 },
+    { "text":"Brügg Lyss", "flap":25 },
+    { "text":"Tüscherz Twann", "flap":26 },
+    { "text":"Nidau", "flap":27 },
+    { "text":"Pfungen", "flap":28 },
+  ]},
+  { "title":"Formation", "min":0, "max":61, "fconfig":{ "name":"formation", "addr":5, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Gruppenreservation Sektor A", "flap":1 },
+    { "text":"Gruppenreservation Sektor B", "flap":2 },
+    { "text":"Gruppenreservation Sektor C", "flap":3 },
+    { "text":"Gruppenreservation Sektor D", "flap":4 },
+    { "text":"1: B, 2: BC", "flap":5 },
+    { "text":"1: B, 2: BC", "flap":6 },
+    { "text":"1: C, 2: BC", "flap":7 },
+    { "text":"1: B, 2: ABC, R:B", "flap":8 },
+    { "text":"1: BCD, 2: ABCD, R: A", "flap":9 },
+    { "text":"1: ABD, 2: ABCD, R: C", "flap":10 },
+    { "text":"1: C, 2: BCD", "flap":11 },
+    { "text":"1: AD, 2: BCD", "flap":12 },
+    { "text":"1: CD, 2: BCD", "flap":13 },
+    { "text":"1:BD, 2: BCD", "flap":14 },
+    { "text":"1: BC, 2: BC", "flap":15 },
+    { "text":"1: BCD, 2: ABCD", "flap":16 },
+    { "text":"1: BCD, 2: ABCD", "flap":17 },
+    { "text":"1: CD, 2: ABCD", "flap":18 },
+    { "text":"1: C, 2: ABCD, R: BD", "flap":19 },
+    { "text":"1: AB, 2: ABCD", "flap":20 },
+    { "text":"1: A, 2: ABCD, R: BD", "flap":21 },
+    { "text":"1: A, 2: AB, R: B", "flap":22 },
+    { "text":"1: AB, 2: AB", "flap":23 },
+    { "text":"1: C, 2: CD, R: D", "flap":24 },
+    { "text":"1: CD, 2: CD", "flap":25 },
+    { "text":"1: AC, 2: ABCD, R: BD", "flap":27 },
+    { "text":"1: B, 2: ABC, R:B", "flap":28 },
+    { "text":"1: C, 2: BC", "flap":29 },
+    { "text":"1: AB, 2: B", "flap":30 },
+    { "text":"1: B, 2: AB", "flap":31 },
+    { "text":"1: CD, 2: C", "flap":32 },
+    { "text":"1: C, 2: CD", "flap":33 },
+    { "text":"1: B, 2: BC, Gr: A", "flap":34 },
+    { "text":"1: C, 2: BC, Gr: A", "flap":35 },
+    { "text":"1: C, 2: BC, Gr: D", "flap":36 },
+    { "text":"1: B, 2: BC, Gr: D", "flap":37 },
+    { "text":"Betriebsstörung Ansage beachten", "flap":38 },
+    { "text":"Busersatz", "flap":39 },
+    { "text":"Zugsausfall", "flap":40 },
+    { "text":"Zug verspätet", "flap":41 },
+    { "text":"Nicht einsteigen", "flap":42 },
+    { "text":"1: C, 2: BC", "flap":44 },
+    { "text":"1: B, 2: BC", "flap":45 },
+    { "text":"1: ACD, 2: ABCD, R: B", "flap":47 },
+    { "text":"1: ABC, 2: ABCD, R: D", "flap":48 },
+    { "text":"1: ABCD, 2: ABCD", "flap":49 },
+    { "text":"1: B, 2: ABC", "flap":50 },
+    { "text":"1: C, 2: CD, R: D, Ge: B", "flap":51 },
+    { "text":"1: CD, 2: CD, Ge: B", "flap":52 },
+    { "text":"1: A, 2: AB, R: B, Ge: C", "flap":53 },
+    { "text":"1: AB, 2: AB, Ge: C", "flap":54 },
+    { "text":"1: B, 2: BCD", "flap":55 },
+    { "text":"1: CD, 2: BC", "flap":56 },
+    { "text":"1: AC, 2: ABCD", "flap":57 },
+    { "text":"1: BD, 2: ABCD", "flap":58 },
+    { "text":"1: AB, 2: BC, Ge: D", "flap":59 },
+    { "text":"1: CD, 2: BC, Ge: A", "flap":60 },
+  ]},
+  { "title":"Via 2", "min":0, "max":61, "fconfig":{ "name":"via2", "addr":6, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Luzern", "flap":1 },
+    { "text":"Thun Spiez", "flap":2 },
+    { "text":"Domodossola", "flap":3 },
+    { "text":"Olten Zürich", "flap":4 },
+    { "text":"Zürich Flughafen", "flap":5 },
+    { "text":"Olten", "flap":6 },
+    { "text":"Lausanne", "flap":7 },
+    { "text":"Sion", "flap":8 },
+    { "text":"Genève", "flap":9 },
+    { "text":"La Chaux-de-Fonds", "flap":10 },
+    { "text":"Delémont", "flap":11 },
+    { "text":"La Neuveville", "flap":13 },
+    { "text":"Täuffelen", "flap":14 },
+    { "text":"Verkehrt nicht", "flap":15 },
+    { "text":"Nicht einsteigen", "flap":16 },
+    { "text":"Vorne einsteigen", "flap":17 },
+    { "text":"Bus nach Erlach (defekt)", "flap":18 },
+    { "text":"Olten Zürich HB Zürich Flughafen", "flap":19 },
+    { "text":"Ohne Halt bis Sonceboz", "flap":22 },
+    { "text":"Ohne Halt bis Bern", "flap":24 },
+    { "text":"Belp", "flap":26 },
+    { "text":"Sonceboz-S.", "flap":28 },
+    { "text":"Busersatz", "flap":30 },
+    { "text":"Zugsausfall", "flap":31 },
+    { "text":"verspätet", "flap":32 },
+    { "text":"Solothurn Olten", "flap":34 },
+    { "text":"Münchenbuchsee", "flap":35 },
+    { "text":"La Neuveville", "flap":36 },
+    { "text":"Tavannes", "flap":37 },
+    { "text":"Solothurn", "flap":38 },
+    { "text":"Bern", "flap":39 },
+    { "text":"Winterthur", "flap":40 },
+    { "text":"Arth-Goldau", "flap":41 },
+    { "text":"Olten Aarau", "flap":42 },
+    { "text":"Delémont Porrentruy", "flap":44 },
+    { "text":"Ligerz (defekt)", "flap":45 },
+    { "text":"Aarau Zürich HB Zürich Flughafen", "flap":46 },
+    { "text":"Hinten einsteigen (defekt)", "flap":47 },
+    { "text":"Sektor AB Romanshorn, Sektor CD Konstanz", "flap":48 },
+    { "text":"Sektor AB Konstanz, Sektor CD Zürich", "flap":49 },
+    { "text":"Ohne Halt in Ligerz und Cressier", "flap":51 },
+    { "text":"Sektor AB St. Gallen, Sektor CD Zürich", "flap":52 },
+    { "text":"Sektor AB Zürich, Sektor CD St. Gallen", "flap":53 },
+    { "text":"Aarau Zürich HB", "flap":55 },
+    { "text":"Sonceboz-S St-Imier", "flap":57 },
+    { "text":"Sonceboz-S Tavannes", "flap":58 },
+    { "text":"Sektor AB Zürich, Sektor CD Konstanz", "flap":59 },
+    { "text":"Bitte nicht", "flap":60 },
+  ]},
+  { "title":"Ziel", "min":0, "max":61, "fconfig":{ "name":"ziel", "addr":7, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Lyss", "flap":1 },
+    { "text":"Bern", "flap":2 },
+    { "text":"Brig", "flap":3 },
+    { "text":"La Chaux-de-Fonds / Moutier", "flap":4 },
+    { "text":"Moutier / La Chaux-de-Fonds", "flap":5 },
+    { "text":"Yverdon", "flap":6 },
+    { "text":"Belp", "flap":7 },
+    { "text":"Solothurn", "flap":8 },
+    { "text":"Olten", "flap":9 },
+    { "text":"Aarau", "flap":10 },
+    { "text":"Lenzburg", "flap":11 },
+    { "text":"Zürich", "flap":12 },
+    { "text":"Romanshorn", "flap":13 },
+    { "text":"Konstanz", "flap":14 },
+    { "text":"St. Gallen", "flap":15 },
+    { "text":"Schaffhausen", "flap":16 },
+    { "text":"Neuchâtel", "flap":17 },
+    { "text":"Lausanne", "flap":18 },
+    { "text":"Genève", "flap":19 },
+    { "text":"Genève-Aéroport", "flap":20 },
+    { "text":"Winterthur", "flap":21 },
+    { "text":"Konstanz / Zürich", "flap":22 },
+    { "text":"Grenchen Nord", "flap":23 },
+    { "text":"Moutier", "flap":24 },
+    { "text":"Délemont", "flap":25 },
+    { "text":"Porrentruy", "flap":26 },
+    { "text":"Boncourt", "flap":27 },
+    { "text":"Delle", "flap":28 },
+    { "text":"Basel SBB", "flap":29 },
+    { "text":"La Chaux-de-Fonds / Solothurn", "flap":30 },
+    { "text":"Bure", "flap":31 },
+    { "text":"Murten", "flap":32 },
+    { "text":"Sonceboz", "flap":33 },
+    { "text":"Malleray B", "flap":34 },
+    { "text":"La Chaux-de-Fonds", "flap":35 },
+    { "text":"Le Locle", "flap":36 },
+    { "text":"Bellinzona", "flap":37 },
+    { "text":"Spiez (defekt)", "flap":38 },
+    { "text":"Tavannes Moutier / La Chaux-de-Fonds", "flap":39 },
+    { "text":"Tavannes Malleray-B. / La Chaux-de-Fonds", "flap":40 },
+    { "text":"Solothurn / La Chaux-de-Fonds", "flap":41 },
+    { "text":"Tavannes", "flap":42 },
+    { "text":"Chiasso", "flap":43 },
+    { "text":"Chur", "flap":44 },
+    { "text":"Basel Bad Bf", "flap":45 },
+    { "text":"Zürich Flughafen", "flap":46 },
+    { "text":"Täuffelen (defekt)", "flap":47 },
+    { "text":"Morges", "flap":48 },
+    { "text":"Ins (defekt)", "flap":49 },
+    { "text":"Ipsach", "flap":50 },
+    { "text":"Lattrigen", "flap":51 },
+    { "text":"Grenchen Süd", "flap":52 },
+    { "text":"Laufen", "flap":53 },
+    { "text":"einsteigen", "flap":54 },
+    { "text":"Bern Wankdorf", "flap":55 },
+    { "text":"Konstanz", "flap":56 },
+    { "text":"Thun", "flap":57 },
+    { "text":"Le Landeron", "flap":58 },
+    { "text":"St-Imier", "flap":59 },
+    { "text":"Lausanne Brig", "flap":60 },
+  ]},
+
+  { "title":"Zuggattung 2", "min":0, "max":61, "fconfig":{ "name":"zuggattung2", "addr":11, "type":"62" }, "choices":[
+    { "text":"-", "flap":0 },
+    { "text":"Regio", "flap":1 },
+    { "text":"Direct (defekt)", "flap":2 },
+    { "text":"IC", "flap":3 },
+    { "text":"Special", "flap":15 },
+    { "text":"Schnellzug", "flap":17 },
+    { "text":"Extrazug", "flap":22 },
+    { "text":"IR", "flap":32 },
+    { "text":"S3", "flap":34 },
+    { "text":"S31", "flap":36 },
+    { "text":"ICN", "flap":38 },
+    { "text":"RE Regioexpress", "flap":40 },
+    { "text":"Train spécial", "flap":42 },
+  ]},
+];
+
+glob hourMod = 0; // the module index of the hour module to use for clock, undefined if no clock
+glob minMod = 1; // the module index of the minute module to use for clock
+glob delayMod = 2; // the module index of the delay module to use for UngenaUhr clock offset, undefined if none
+glob randomMods = [ 3, 4, 5, 6, 7, 8 ]; // the modules that should change at random
+
+// set by module index/flap as found in info
+function modset(modnum, flap)
+{
+  modnum = number(modnum);
+  flap = number(flap);
+  var m = modules[modnum];
+  if (flap>m.max) flap = m.max;
+  if (flap<m.min) flap = m.min;
+  log(6, format('modnum=%d, flap=%d, min=%d, max=%d, fconfig=%s', modnum, flap, m.min, m.max, m.fconfig));
+  var cmd = {};
+  cmd.name = string(m.fconfig.name);
+  cmd.value = flap;
+  modules[modnum].current = flap;
+  log(6, string(cmd));
+  feature('splitflaps').cmd('position', cmd);
+}
+
+
+// choose one of the listed choices by random, or if no choices, a number between min and max
+function randomset(modnum)
+{
+  var m = modules[number(modnum)];
+  var n = elements(m.choices);
+  var flap;
+  if (n>0) {
+    flap = m.choices[int(random(0,n-1))].flap;
+  }
+  else {
+    flap = int(random(m.min, m.max));
+  }
+  modset(modnum, flap);
+}
+
+
+// update the clock from real time and global delay
+function updateclock()
+{
+  if (isvalid(hourMod)) {
+    var hour = hour();
+    var minute = minute() - delay;
+    if (minute<0) { minute = minute+60; hour = hour-1; }
+    if (hour<0) hour = 23;
+    modset(hourMod, hour);
+    modset(minMod, minute);
+    if (isvalid(delayMod)) {
+      modset(delayMod, delay);
+    }
+  }
+}
+
+
+function updateRandom()
+{
+  var i = 0;
+  while (i<elements(randomMods)) {
+    randomset(randomMods[i]);
+    i = i+1;
+  }
+}
+
+
+function updateRandomDelay()
+{
+  delay = int(random(0,20));
+  log('new random delay = ' + delay)
+  updateclock()
+}
+
+// event handlers (or "lambdas")
+
+// - update the clock every minute
+on(every(60, 0)) {
+  updateclock()
+}
+
+
+// - change the random delay between 0..20min every 13 to 42 minutes
+on(every(random(0:13,0:42))) {
+  if (isvalid(delayMod)) {
+    updateRandomDelay()
+  }
+}
+
+// - change randomMods every 42min..1h23min
+on(every(random(0:42,1:23))) {
+  log('new random module positions');
+  updateRandom()
+}
+
+
+// - web interface
+on (webrequest()) as request {
+  log(format('Webrequest: %s', request))
+  try {
+    if (request.cmd=="info") {
+      request.answer(modules);
+    }
+    else if (request.cmd=="set") {
+      modset(request.modnum, request.flap)
+      request.answer('flap set')
+    }
+    else if (request.cmd=="updateclock") {
+      delay = 0;
+      updateclock();
+      request.answer('clock updated')
+    }
+    else if (request.cmd=="updaterandom") {
+      updateRandom();
+      request.answer('random modules updated')
+    }
+    else if (request.cmd=="updaterandomdelay") {
+      updateRandomDelay();
+      request.answer('random delay updated')
+    }
+    else {
+      request.answer('Unknown cmd')
+    }
+  }
+  catch as e {
+    request.answer(string(e));
+  }
+}
+
+// main script starts here
+glob delay = 0;
+
+// initialize the splitflaps.
+log('Initializing splitflaps')
+var m = [];
+var i = 0;
+while(i<elements(modules)) {
+  m[i] = modules[i].fconfig;
+  i=i+1
+}
+var mi = { "modules":null };
+mi.modules = m;
+feature('splitflaps').init(mi);
+
+// set initial values
+updateclock();
+updateRandom();

@@ -4,8 +4,8 @@
 
 // - the definition of all modules
 glob modules = [
-  { "title":"Stunde", "min":0, "max":23, "fconfig":{ "name":"hour", "addr":6, "type":"hour" } },
-  { "title":"Minute", "min":0, "max":59, "fconfig":{ "name":"minute", "addr":1, "type":"minute" } },
+  { "title":"Stunde", "min":0, "max":24, "fconfig":{ "name":"hour", "addr":6, "type":"hour" } },
+  { "title":"Minute", "min":0, "max":60, "fconfig":{ "name":"minute", "addr":1, "type":"minute" } },
   { "title":"Verspätung", "min":0, "max":39, "fconfig":{ "name":"delay", "addr":8, "type":"40" }, "choices":[
     { "text":"-", "flap":0 },
     { "text":"ca 1 Minuten später", "flap":1 },
@@ -46,7 +46,7 @@ glob modules = [
     { "text":"Zusatzzug", "flap":37 },
   ]},
   { "title":"Zugtyp1", "min":0, "max":61, "fconfig":{ "name":"zugtyp1", "addr":9, "type":"62" }, "choices":[
-    { "text":"-leer-", "flap":0 },
+    { "text":"-", "flap":0 },
     { "text":"ICE", "flap":1 },
     { "text":"ICN", "flap":2 },
     { "text":"EC", "flap":3 },
@@ -68,7 +68,7 @@ glob modules = [
     { "text":"TGV", "flap":32 },
   ]},
   { "title":"Zugtyp2", "min":0, "max":61, "fconfig":{ "name":"zugtyp2", "addr":10, "type":"62" }, "choices":[
-    { "text":"-leer-", "flap":0 },
+    { "text":"-", "flap":0 },
     { "text":"ICE", "flap":1 },
     { "text":"ICN", "flap":2 },
     { "text":"EC", "flap":3 },

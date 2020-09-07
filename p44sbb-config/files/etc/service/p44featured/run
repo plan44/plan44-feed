@@ -14,7 +14,8 @@ APPCONFIG="--mainscript simpleclock.txt"
 # basic config Omega2 on splitflapcontroller v1
 RS485TXOFFDELAY=3
 RS485PORT=/dev/ttyS1
-RS485TXENPIN=gpio.2
+#RS485TXENPIN=gpio.2 # patched version (J.L's board)
+RS485TXENPIN=gpio.0 # original 3-UART Generalanzeiger ready board
 RS485RXENPIN=missing
 
 # general settings
@@ -47,5 +48,6 @@ exec ${DAEMON} \
   --splitflaprxen ${RS485RXENPIN} \
   --jsonapiport ${JSONAPIPORT} \
   --featureapiport 11200 \
+  --ubusapi \
   ${APPCONFIG} \
   -l ${LOGLEVEL}
