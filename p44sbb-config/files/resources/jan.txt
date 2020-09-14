@@ -299,6 +299,11 @@ function modset(modnum, flap)
   modules[modnum].current = flap;
   log(6, string(cmd));
   feature('splitflaps').cmd('position', cmd);
+  if (m.fconfig.addr2!=undefined) {
+    cmd.name = string(m.fconfig.name) + '_B';
+    log(6, string(cmd));
+    feature('splitflaps').cmd('position', cmd);
+  }
 }
 
 
@@ -414,12 +419,22 @@ glob delay = 0;
 log('Initializing splitflaps')
 var m = [];
 var i = 0;
+var j = 0;
 while(i<elements(modules)) {
-  m[i] = modules[i].fconfig;
+  var fc = modules[i].fconfig;
+  m[j] = fc;
+  j=j+1
+  if (fc.addr2!=undefined) {
+    fc.addr = fc.addr2;
+    fc.name = string(fc.name) + '_B';
+    m[j] = fc;
+    j=j+1
+  }
   i=i+1
 }
 var mi = { "modules":null };
 mi.modules = m;
+log(6, 'init: ' + string(mi));
 feature('splitflaps').init(mi);
 
 // set initial values
