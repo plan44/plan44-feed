@@ -32,7 +32,7 @@ Where
 - **ledtype** selects the correct timing and byte order for different LED types:
   - 0 : **WS2811** RGB LED driver (separate chip, rather ancient). Note: some WS2811 chips reportedly (thanks @Marti-MG!) do not work in this mode - but work fine in WS2813 mode.
   - 1 : **WS2812** and **WS2812B** RGB LEDs. Note that WS2812 have the most demanding timeout, as the maximum time between two bits may not exceed 10µS, and some chips might need less than 6µS. By default, WS2812 mode assumes 10µS, but if you see flickering in wrong colors then you need to tweak `maxTpassive` down and/or `maxrepeats` up, see below.
-  - 2 : **WS2813** RGB LED with relaxed timing and single failed LED bridging. Generally, prefer WS2813 over WS2812 when possible ;-)
+  - 2 : **WS2813(B)** (5V) and **WS2815** (12V) RGB LED with relaxed timing and single failed LED bridging. Generally, prefer WS2813/15 over WS2812 when possible ;-)
   - 3 : **P9823** RGB LED in standard 3mm and 5mm LED case, similar timing as WS2812 but different byte order (RGB rather than GRB)
   - 4 : **SK6812** RGBW four channel LED, similar timing to WS2812
 - optional **maxretries** sets how many time an update is retried (when it could not complete due to IRQ response time not met). By default, this is 3.
@@ -71,6 +71,7 @@ It will have a reduced frame rate, because it will probably need a lot of retrie
         - **retries**: number of retries that were needed to complete the last update (write to /dev/ledchainX)
         - **last timeout**: the last IRQ response time that triggered a retry, because it was larger than the minimum chain reset time (defaults: 10'000nS for WS2812, 100'000nS for WS2813)
         - **min..max irq**: the lowest and highest IRQ response times measured during this update which did *not* trigger a retry. Helps to estimate the minimum possible setting of `maxTpassive`.
+        - **duration**: time spent for the update. 
 
     - **Totals:** on the third line shows:
         - **updates**: how many updates total (writes to /dev/ledchainX) have been requested.
@@ -78,4 +79,5 @@ It will have a reduced frame rate, because it will probably need a lot of retrie
         - **retries**: how often the update had to be restarted, because the interrupt response was too slow and the update process had to be restarted before the whole chain was updated. That by itself should also NOT cause any flickering, but will only reduce the max possible frame rate because of the retries.
         - **errors**: how many times an update could not be applied after `maxretries` (default: 3) retries. In these cases, the driver gives up retrying, so the update of the LEDs will be incomplete (until a new update is started). If this happens a lot, you might want to increase `maxretries`.
         - **irqs**: just a counter of how many interrupt requests have been handled. One IRQ happens after every 64bits of PWM output, and one LED bit takes 2 or 3 PWM bits, so it's roughly one IRQ per updated LED.
+        - **min..max update duration**: min/max time spent for an update since the start of the driver. This gives an indication about the maximum frame rate (chain update rate) that might be possible - updating more often than `min update duration` will certainly not work, but an interval 1-2mS longer than `min update duration` usually will.
 

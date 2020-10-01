@@ -38,7 +38,7 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type serial led chains");
 
 
 #define DEVICE_NAME "ledchain"
-#define P44LEDCHAIN_VERSION 3
+#define P44LEDCHAIN_VERSION 4
 
 #define LEDCHAIN_MAX_LEDS   2048
 #define DEFAULT_MAX_RETRIES 3
@@ -53,8 +53,8 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type serial led chains");
 #define LEDCHAIN_PARAM_NUMLEDS 1 // number of LEDs
 #define LEDCHAIN_PARAM_REQUIRED_COUNT 2 // min number of params
 #define LEDCHAIN_PARAM_LEDTYPE 2 // type of LEDs
-#define LEDCHAIN_PARAM_MAXRETRIES 3 // maximum number of retries in case of timing failures before givin up
-#define LEDCHAIN_PARAM_MAXTPASSIVE 4 // maximum number of retries in case of timing failures before givin up
+#define LEDCHAIN_PARAM_MAXRETRIES 3 // maximum number of retries in case of timing failures before giving up
+#define LEDCHAIN_PARAM_MAXTPASSIVE 4 // maximum number of retries in case of timing failures before giving up
 #define LEDCHAIN_PARAM_MAX_COUNT 5 // max number of params
 
 
@@ -96,9 +96,13 @@ void __iomem *pwm_base; // set from ioremap()
 //   mediatek-android-linux-kerneltree/drivers/misc/mediatek/pwm/mt8173/include/mach/mt_pwm_prv.h
 //   Note that the MZ8173/MT6595 PWM is more capable (DMA!) than the MT7688's, but IRQ seems to be
 //   the same
-#define PWM_INT_ENABLE    PWM_ADDR(0x200) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
-#define PWM_INT_STATUS    PWM_ADDR(0x204) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=wave done, bit 1=???
+#define PWM_INT_ENABLE    PWM_ADDR(0x200) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=PWM_IRQ_FINISH, bit 1=PWM_IRQ_UNDERFLOW
+#define PWM_INT_STATUS    PWM_ADDR(0x204) // 8 bits, two bits per channel (ch0=0/1, ch1=2/3), bit 0=PWM_IRQ_FINISH, bit 1=PWM_IRQ_UNDERFLOW
 #define PWM_INT_ACK       PWM_ADDR(0x208) // write 1 to acknowledge IRQ
+// - information derived from MT7623N datasheet
+#define PWM_IRQ_FINISH    0x01 // IRQ that happens when wave is done
+#define PWM_IRQ_UNDERFLOW 0x02 // IRQ that happens when new data can be written?
+
 
 #define PWM_CHAN_OFFS(channel,reg) (0x10+((channel)*0x40)+(reg))
 #define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
@@ -186,16 +190,17 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     .TPassive_max_nS = 10000, .TReset_nS = 50000
   },
   {
-    // WS2813 - GRB data order
-    .name = "WS2813", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    // WS2813, WS2815 - GRB data order
+    .name = "WS2813/15", .channels = 3, .fetchIdx = { 1, 0, 2 },
     // timing from datasheet:
     // - T0H = 300ns..450nS
     // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
     // - T1H = 750ns..1000nS
     // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
     // - TReset = >300µS
+    // - Note: T0L/T1L of more than 40µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 100000, .TReset_nS = 300000
+    .TPassive_max_nS = 40000, .TReset_nS = 300000
   },
   {
     // P9823 - RGB data order, 5mm/8mm single LEDs
@@ -389,7 +394,7 @@ void startSendingPatterns(devPtr_t dev)
     // - enable PWM IRQ
     intEnable = ioread32(PWM_INT_ENABLE); // currently enabled PWM IRQs
     SEQ_HEXBYTE(intEnable);
-    iowrite32(intEnable | (0x03<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // enable both PWM interrupts for this channel, but we only understand bit 0 for now = end of wave
+    iowrite32(intEnable | (PWM_IRQ_FINISH<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // enable underflow interrupt for this channel
     // - set up PWM for one output sequence
     iowrite32(0x7E08 | (dev->inverted ? 0x0180 : 0x0000), PWM_CHAN(dev->pwm_channel, PWMCON)); // PWMxCON: New PWM mode, all 64 bits, idle&guard=inverted, 40Mhz clock, no clock dividing
     iowrite32(dev->ledTypeDesc->T0Active_nS/25, PWM_CHAN(dev->pwm_channel, dev->inverted ? PWMLDUR : PWMHDUR)); // bit active time
@@ -450,7 +455,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
   irqStatus = ioread32(PWM_INT_STATUS); // two bits per channel
   SEQ_HEXBYTE(irqStatus);
   now = ktime_to_ns(ktime_get());
-  irqMask = 0x03;
+  irqMask = PWM_IRQ_FINISH;
   for (i=0; i<NUM_DEVICES; i++) {
     // IRQ from this PWM?
     if (irqStatus & irqMask) {
@@ -460,7 +465,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
         SEQ_TRACE('d');
         SEQ_TRACE('0'+i);
         // PWM channel i has interrupt and we have a ledchain device for that channel
-        // - acknowledge both PWM IRQs of this channel (altough we don't know what the upper bit is for)
+        // - acknowledge the IRQ
         iowrite32(irqMask, PWM_INT_ACK);
         // check for timing failure
         irq_delay_ns = now-dev->expectedSentAt;
@@ -511,7 +516,7 @@ static irqreturn_t p44ledchain_pwm_interrupt(int irq, void *dev_id)
         ret = IRQ_HANDLED;
       }
     }
-    // next PWM
+    // next PWM channel
     irqMask <<= 2;
   }
   SEQ_TRACE(' ');
@@ -1030,7 +1035,7 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
 	hrtimer_cancel(&dev->starttimer);
 	// disable PWM interrupts
   intEnable = ioread32(PWM_INT_ENABLE); // currently enabled PWM IRQs
-  iowrite32(intEnable & ~(0x03<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // disable interrupts
+  iowrite32(intEnable & ~((PWM_IRQ_FINISH|PWM_IRQ_UNDERFLOW)<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // disable interrupts of this channel
 	// destroy device
 	device_destroy(class, MKDEV(p44ledchain_major, minor));
 	// delete cdev
