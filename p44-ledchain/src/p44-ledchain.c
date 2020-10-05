@@ -38,7 +38,7 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type serial led chains");
 
 
 #define DEVICE_NAME "ledchain"
-#define P44LEDCHAIN_VERSION 4
+#define P44LEDCHAIN_VERSION 5
 
 #define LEDCHAIN_MAX_LEDS   2048
 #define DEFAULT_MAX_RETRIES 3
@@ -148,6 +148,7 @@ typedef enum {
   ledtype_ws2813,
   ledtype_p9823,
   ledtype_sk6812,
+  ledtype_ws2815_rgb,
   num_ledtypes
 } LedType_t;
 
@@ -167,7 +168,7 @@ typedef struct {
 static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   {
     // WS2811 - RGB data order
-    .name = "WS2811", .channels = 3, .fetchIdx = { 0, 1, 2 },
+    .name = "WS2811 RGB", .channels = 3, .fetchIdx = { 0, 1, 2 },
     // timing from datasheet:
     // - T0H = 350ns..650nS
     // - T0L = 1850ns..2150nS
@@ -179,7 +180,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   },
   {
     // WS2812, WS2812B - GRB data order
-    .name = "WS2812", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    .name = "WS2812 GRB", .channels = 3, .fetchIdx = { 1, 0, 2 },
     // timing from datasheet:
     // - T0H = 200ns..500nS
     // - T0L = 750ns..1050nS (actual max is fortunately higher, ~10uS)
@@ -191,7 +192,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   },
   {
     // WS2813, WS2815 - GRB data order
-    .name = "WS2813/15", .channels = 3, .fetchIdx = { 1, 0, 2 },
+    .name = "WS2813/15 GRB", .channels = 3, .fetchIdx = { 1, 0, 2 },
     // timing from datasheet:
     // - T0H = 300ns..450nS
     // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
@@ -204,7 +205,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   },
   {
     // P9823 - RGB data order, 5mm/8mm single LEDs
-    .name = "P9823", .channels = 3, .fetchIdx = { 0, 1, 2 },
+    .name = "P9823 RGB", .channels = 3, .fetchIdx = { 0, 1, 2 },
     // timing from datasheet:
     // - T0H = 200ns..500nS
     // - T0L = 1210ns..1510nS
@@ -217,7 +218,7 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
   },
   {
     // SK2812 - RGBW data order
-    .name = "SK6812", .channels = 4, .fetchIdx = { 0, 1, 2, 3 },
+    .name = "SK6812 RGBW", .channels = 4, .fetchIdx = { 0, 1, 2, 3 },
     // timing from datasheet:
     // - T0H = 150ns..450nS
     // - T0L = 750ns..1050nS (actual max is fortunately higher, ~15uS)
@@ -226,6 +227,19 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     // - TReset = >50µS
     .T0Active_nS = 300, .TPassive_min_nS = 900, .T0Passive_double = 0,
     .TPassive_max_nS = 15000, .TReset_nS = 80000
+  },
+  {
+    // WS2813, WS2815 - RGB data order
+    .name = "WS2813/15 RGB", .channels = 3, .fetchIdx = { 0, 1, 2 },
+    // timing from datasheet:
+    // - T0H = 300ns..450nS
+    // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
+    // - T1H = 750ns..1000nS
+    // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
+    // - TReset = >300µS
+    // - Note: T0L/T1L of more than 40µS can apparently cause single LEDs to reset and loose bits
+    .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
+    .TPassive_max_nS = 40000, .TReset_nS = 300000
   },
 };
 

@@ -32,9 +32,10 @@ Where
 - **ledtype** selects the correct timing and byte order for different LED types:
   - 0 : **WS2811** RGB LED driver (separate chip, rather ancient). Note: some WS2811 chips reportedly (thanks @Marti-MG!) do not work in this mode - but work fine in WS2813 mode.
   - 1 : **WS2812** and **WS2812B** RGB LEDs. Note that WS2812 have the most demanding timeout, as the maximum time between two bits may not exceed 10µS, and some chips might need less than 6µS. By default, WS2812 mode assumes 10µS, but if you see flickering in wrong colors then you need to tweak `maxTpassive` down and/or `maxrepeats` up, see below.
-  - 2 : **WS2813(B)** (5V) and **WS2815** (12V) RGB LED with relaxed timing and single failed LED bridging. Generally, prefer WS2813/15 over WS2812 when possible ;-)
+  - 2 : **WS2813(B)** (5V) and **WS2815** (12V) RGB LED with GRB data order and relaxed timing and single failed LED bridging. Generally, prefer WS2813/15 over WS2812 when possible ;-)
   - 3 : **P9823** RGB LED in standard 3mm and 5mm LED case, similar timing as WS2812 but different byte order (RGB rather than GRB)
   - 4 : **SK6812** RGBW four channel LED, similar timing to WS2812
+  - 5 : **WS2813/WS2815** with RGB data order (rather than GRB). Especially found in newer WS2815 strips.
 - optional **maxretries** sets how many time an update is retried (when it could not complete due to IRQ response time not met). By default, this is 3.
 - optional **maxTpassive** sets the maximum passive time allowed between bits in nanoseconds. By default, this is set to a known-good value for the LED type.
 But especially in case of WS2812, some chips might need more tight timing. Note that the driver is unlikely to work for values below 5000nS and longer chains, because the average interrupt response time in an MT7688 is around 5000nS, so demanding less is likely to make no update get completed at all. For "difficult" WS2812 chips, I found that `maxretries=10` and `maxTPassive=5100` gives usable results. But try to set **maxTpassive** higher if possible. The default used in WS2812 mode is 10µS.
@@ -71,7 +72,7 @@ It will have a reduced frame rate, because it will probably need a lot of retrie
         - **retries**: number of retries that were needed to complete the last update (write to /dev/ledchainX)
         - **last timeout**: the last IRQ response time that triggered a retry, because it was larger than the minimum chain reset time (defaults: 10'000nS for WS2812, 100'000nS for WS2813)
         - **min..max irq**: the lowest and highest IRQ response times measured during this update which did *not* trigger a retry. Helps to estimate the minimum possible setting of `maxTpassive`.
-        - **duration**: time spent for the update. 
+        - **duration**: time spent for the update.
 
     - **Totals:** on the third line shows:
         - **updates**: how many updates total (writes to /dev/ledchainX) have been requested.
