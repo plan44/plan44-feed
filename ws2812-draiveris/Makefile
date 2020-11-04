@@ -30,9 +30,9 @@ include $(INCLUDE_DIR)/kernel.mk
 # name
 PKG_NAME:=ws2812-draiveris
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.2
 # version of this makefile
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0

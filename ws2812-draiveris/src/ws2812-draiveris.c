@@ -31,7 +31,7 @@
 #include <linux/spinlock.h>
 #include <linux/watchdog.h>
 #include <linux/ioctl.h>
-#include <asm/uaccess.h>  /* for put_user */
+#include <linux/uaccess.h>  /* for put_user */
 #include <linux/fs.h>
 
 #define LED_STRIPS_SEQUENTIAL   1       /* 0: PARALLEL: one set of values for all outputs */
@@ -39,6 +39,8 @@
 
 #define sysRegRead(phys)         (*(volatile u32 *)KSEG1ADDR(phys))
 #define sysRegWrite(phys, val)  ((*(volatile u32 *)KSEG1ADDR(phys)) = (val))
+
+#if defined(CONFIG_ATH79)
 
 // FROM http://www.eeboard.com/wp-content/uploads/downloads/2013/08/AR9331.pdf p65, p77
 #define SYS_REG_GPIO_OE         0x18040000L
@@ -56,6 +58,16 @@
 #define SYS_REG_GPIO_INT_FUNCTION_2     0x18040030L
 
 #define SYS_REG_RST_WATCHDOG_TIMER 0x1806000CL
+
+#elif defined(CONFIG_RALINK)
+
+#define SYS_REG_GPIO_OE         0xb0000600L
+#define SYS_REG_GPIO_SET        0xb0000630L
+#define SYS_REG_GPIO_CLEAR      0xb0000640L
+
+#else
+#error "NO SOC DEFINED"
+#endif
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Saulius Lukse saulius.lukse@gmail.com; Juergen Weigert juewei@fabfolk.com");
@@ -190,7 +202,10 @@ void update_leds(const char *buff, size_t len)
   if (stride > len) stride = len;
   if (len < gpio_used * stride) gpio_used = (int)(len/stride)+1;
 
+#if defined(CONFIG_ATH79)
   sysRegWrite(SYS_REG_RST_WATCHDOG_TIMER, 1<<31); // Just in case set watchdog to timeout some time later
+#endif
+
   // http://www.eeboard.com/wp-content/uploads/downloads/2013/08/AR9331.pdf
   // p65: SYS_REG_GPIO_OE 0: Enables the driver to be used as input mechanism; 1: Enables the output driver
   i = sysRegRead(SYS_REG_GPIO_OE);
