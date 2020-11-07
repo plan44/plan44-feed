@@ -9,8 +9,12 @@ fi
 
 if [[ $# -lt 2 ]]; then
   echo "Usage: flash <ethernet-if> <auto|wait|omega2_ipv6|list|ping> [IMG [<uboot_env_file>]]"
+  echo " Note: on Mac, use 'networksetup -listallhardwareports' to find ethernet interface name"
   exit 1
 fi
+
+SCRIPTDIR="$(dirname $0)"
+cd "${SCRIPTDIR}"
 
 INTF=$1
 shift
