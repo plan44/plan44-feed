@@ -296,7 +296,7 @@ while(i<elements(modules)) {
   var fc = modules[i].fconfig;
   m[j] = fc;
   j=j+1
-  if (fc.addr2!=undefined) {
+  if (isvalid(fc.addr2)) {
     fc.addr = fc.addr2;
     fc.name = string(fc.name) + '_B';
     m[j] = fc;
