@@ -217,8 +217,8 @@ static const LedTypeDescriptor_t ledTypeDescriptors[num_ledtypes] = {
     .TPassive_max_nS = 10000, .TReset_nS = 50000
   },
   {
-    // SK2812 - RGBW data order
-    .name = "SK6812 RGBW", .channels = 4, .fetchIdx = { 0, 1, 2, 3 },
+    // SK2812 - GRBW data order
+    .name = "SK6812 GRBW", .channels = 4, .fetchIdx = { 1, 0, 2, 3 },
     // timing from datasheet:
     // - T0H = 150ns..450nS
     // - T0L = 750ns..1050nS (actual max is fortunately higher, ~15uS)
