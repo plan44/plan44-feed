@@ -9,7 +9,7 @@
  /overlay
  /package/feeds
  /package/openwrt-packages
-@@ -27,3 +27,8 @@ TAGS*~
+@@ -28,3 +28,8 @@ TAGS*~
  git-src
  .project
  .cproject

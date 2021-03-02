@@ -26,7 +26,7 @@
  
  --- a/drivers/i2c/busses/Kconfig
  +++ b/drivers/i2c/busses/Kconfig
- @@ -868,6 +868,11 @@ config I2C_RALINK
+ @@ -869,6 +869,11 @@ config I2C_RALINK
   	depends on RALINK && !SOC_MT7621
   	select OF_I2C
 - 

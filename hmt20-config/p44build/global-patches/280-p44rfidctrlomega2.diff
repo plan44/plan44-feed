@@ -1,14 +1,14 @@
 --- a/target/linux/ramips/base-files/etc/board.d/02_network
 +++ b/target/linux/ramips/base-files/etc/board.d/02_network
-@@ -57,6 +57,7 @@ ramips_setup_interfaces()
+@@ -60,6 +60,7 @@ ramips_setup_interfaces()
  	ncs601w|\
  	omega2 | \
  	omega2p | \
 +	p44rfidctrlomega2 | \
  	timecloud|\
+ 	tplink,tl-wa801nd-v5|\
  	w150m|\
- 	widora,neo-16m|\
-@@ -507,7 +508,8 @@ ramips_setup_macs()
+@@ -628,7 +629,8 @@ ramips_setup_macs()
  		lan_mac=$(macaddr_add "$lan_mac" 2)
  		;;
  	omega2|\
@@ -18,21 +18,9 @@
  		wan_mac=$(mtd_get_mac_binary factory 4)
  		lan_mac=$(mtd_get_mac_binary factory 46)
  		;;
---- a/target/linux/ramips/base-files/etc/diag.sh
-+++ b/target/linux/ramips/base-files/etc/diag.sh
-@@ -228,7 +228,8 @@ get_status_led() {
- 		status_led="$boardname:blue:status"
- 		;;
- 	omega2| \
--	omega2p)
-+	omega2p| \
-+	p44rfidctrlomega2)
- 		status_led="$boardname:amber:system"
- 		;;
- 	oy-0001|\
 --- a/target/linux/ramips/base-files/lib/ramips.sh
 +++ b/target/linux/ramips/base-files/lib/ramips.sh
-@@ -385,6 +385,9 @@ ramips_board_detect() {
+@@ -379,6 +379,9 @@ ramips_board_detect() {
  	*"OY-0001")
  		name="oy-0001"
  		;;
@@ -42,19 +30,9 @@
  	*"PBR-D1")
  		name="pbr-d1"
  		;;
---- a/target/linux/ramips/base-files/lib/upgrade/platform.sh
-+++ b/target/linux/ramips/base-files/lib/upgrade/platform.sh
-@@ -120,6 +120,7 @@ platform_check_image() {
- 	omega2|\
- 	omega2p|\
- 	oy-0001|\
-+	p44rfidctrlomega2|\
- 	pbr-d1|\
- 	pbr-m1|\
- 	phicomm,k2g|\
 --- a/target/linux/ramips/image/mt76x8.mk
 +++ b/target/linux/ramips/image/mt76x8.mk
-@@ -106,6 +106,15 @@ define Device/omega2p
+@@ -160,6 +160,15 @@ define Device/omega2p
  endef
  TARGET_DEVICES += omega2p
  
@@ -72,10 +50,10 @@
    IMAGE_SIZE := $(ralink_default_fw_size_16M)
 --- /dev/null
 +++ b/target/linux/ramips/dts/P44-RFIDCTRL-OMEGA2.dts
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,192 @@
 +/dts-v1/;
 +
-+#include "mt7628an.dtsi"
++#include "mt7688newgpio.dtsi"
 +
 +#include <dt-bindings/gpio/gpio.h>
 +#include <dt-bindings/interrupt-controller/irq.h>
@@ -84,6 +62,13 @@
 +/ {
 +	compatible = "plan44,p44rfidctrl", "mediatek,mt7628an-soc";
 +	model = "P44 RFIDCTRL Omega2";
++
++	aliases {
++		led-boot = &system_led;
++		led-failsafe = &system_led;
++		led-running = &system_led;
++		led-upgrade = &system_led;
++	};
 +
 +	chosen {
 +		bootargs = "console=ttyS0,115200";
@@ -94,16 +79,10 @@
 +		reg = <0x0 0x4000000>;
 +	};
 +
-+	bootstrap {
-+		compatible = "mediatek,linkit";
-+
-+		status = "okay";
-+	};
-+
-+	gpio-leds {
++	leds {
 +		compatible = "gpio-leds";
 +
-+		system {
++		system_led: system {
 +			label = "onion:amber:system";
 +			/* standard Onion, GPIO 44 (which is also WLAN_LED), connected to ETH connector LED */
 +			gpios = <&gpioc 44 GPIO_ACTIVE_LOW>;
@@ -180,14 +159,6 @@
 +	};
 +};
 +
-+&gpioc {
-+	status = "okay";
-+};
-+
-+&wmac {
-+	status = "okay";
-+};
-+
 +&spi0 {
 +	status = "okay";
 +
@@ -195,41 +166,46 @@
 +	pinctrl-0 = <&spi_pins>, <&spi_cs1_pins>;
 +
 +	m25p80@0 {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
 +		compatible = "jedec,spi-nor";
 +		reg = <0>;
 +		linux,modalias = "m25p80", "mx25l25635e";
 +		spi-max-frequency = <40000000>;
-+		m25p,chunked-io = <31>;
 +
-+		partition@0 {
-+			label = "u-boot";
-+			reg = <0x0 0x30000>;
-+			read-only;
-+		};
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
 +
-+		partition@30000 {
-+			label = "u-boot-env";
-+			reg = <0x30000 0x10000>;
-+		};
++			partition@0 {
++				label = "u-boot";
++				reg = <0x0 0x30000>;
++				read-only;
++			};
 +
-+		factory: partition@40000 {
-+			label = "factory";
-+			reg = <0x40000 0x10000>;
-+			read-only;
-+		};
++			partition@30000 {
++				label = "u-boot-env";
++				reg = <0x30000 0x10000>;
++				/* we need a linux writable uboot environment, so WE DONT WANT A read-only HERE! */
++			};
 +
-+		partition@50000 {
-+			label = "firmware";
-+			reg = <0x50000 0x1fb0000>;
++			factory: partition@40000 {
++				label = "factory";
++				reg = <0x40000 0x10000>;
++				read-only;
++			};
++
++			firmware: partition@50000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x50000 0xfb0000>;
++			};
 +		};
 +	};
 +
 +	spidev@1 {
 +		#address-cells = <1>;
 +		#size-cells = <1>;
-+		compatible = "linux,spidev";
++		compatible = "siriuscybernetics,spigpp";
 +		reg = <1>;
 +		spi-max-frequency = <40000000>;
 +	};
@@ -247,10 +223,6 @@
 +	status = "okay";
 +};
 +
-+&pwm {
-+	status = "okay";
-+};
-+
 +&ethernet {
 +	mtd-mac-address = <&factory 0x28>;
 +};
@@ -263,9 +235,17 @@
 +&wmac {
 +	status = "okay";
 +};
++
++&gpioc {
++	status = "okay";
++};
++
++&pwm {
++	status = "okay";
++};
 --- a/package/boot/uboot-envtools/files/ramips
 +++ b/package/boot/uboot-envtools/files/ramips
-@@ -26,6 +26,7 @@ all5002)
+@@ -28,6 +28,7 @@ all5002)
  linkits7688|\
  omega2|\
  omega2p|\

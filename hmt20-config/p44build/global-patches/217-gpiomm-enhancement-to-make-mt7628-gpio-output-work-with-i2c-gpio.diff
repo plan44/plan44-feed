@@ -1,12 +1,12 @@
 --- /dev/null
-+++ b/target/linux/generic/hack-4.14/990-luz-fix-i2c-gpio.patch
++++ b/target/linux/ramips/patches-4.14/0447c-luz-fix-i2c-gpio.patch
 @@ -0,0 +1,66 @@
 +--- a/drivers/gpio/gpio-mmio.c
 ++++ b/drivers/gpio/gpio-mmio.c
 +@@ -324,6 +324,22 @@ static int bgpio_dir_out(struct gpio_chi
 + 	return 0;
 + }
-+ 
++
 ++static int bgpio_dir_out_value_late(struct gpio_chip *gc, unsigned int gpio, int val)
 ++{
 ++	unsigned long flags;
@@ -26,7 +26,7 @@
 + static int bgpio_dir_in_inv(struct gpio_chip *gc, unsigned int gpio)
 + {
 + 	unsigned long flags;
-+@@ -479,7 +495,12 @@ static int bgpio_setup_direction(struct 
++@@ -479,7 +495,12 @@ static int bgpio_setup_direction(struct
 + 		return -EINVAL;
 + 	} else if (dirout) {
 + 		gc->reg_dir = dirout;
@@ -45,7 +45,7 @@
 +@@ -255,8 +255,13 @@ mediatek_gpio_bank_probe(struct device *
 + 	ctrl = mtk->base + GPIO_REG_DCLR + (rg->bank * GPIO_BANK_STRIDE);
 + 	diro = mtk->base + GPIO_REG_CTRL + (rg->bank * GPIO_BANK_STRIDE);
-+ 
++
 ++  /* Note: luz 2020-02-10: BGPIOF_OUTPUT_VALUE_LATE is a flag I had to add to gpio-mmio
 ++   *       to make sure the output value is set AFTER the direction is changed to
 ++   *       output. MT7688 GPIO logic does not store writes to the output register
@@ -64,6 +64,6 @@
 + #define BGPIOF_READ_OUTPUT_REG_SET	BIT(4) /* reg_set stores output value */
 + #define BGPIOF_NO_OUTPUT		BIT(5) /* only input */
 ++#define BGPIOF_OUTPUT_VALUE_LATE	BIT(6) /* value can be set only AFTER changing direction to output */
-+ 
++
 + #endif
-+ 
++
