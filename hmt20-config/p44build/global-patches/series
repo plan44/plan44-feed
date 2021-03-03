@@ -12,3 +12,4 @@
 280-p44rfidctrlomega2.diff
 301-files-etc-shadow--no-root-login.diff
 302-uci-defaults-disable-dhcp-and-ra.diff
+800-backport-feed-packages-5b76339f09-libhttp-parse-macos-build.diff
