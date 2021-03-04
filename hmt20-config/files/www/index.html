@@ -9,13 +9,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
-    <script src="js/jquery-1.9.1.min.js"></script>
-    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <title id="html_title_model">HMT20-RFID+LED-Controller</title>
 
-    <style type="text/css"><!--
+    <style type="text/css">
       h1 { font-family:Helvetica; font-size:24pt; }
       h2 { font-family:Helvetica; font-size:18pt; }
 
@@ -72,10 +75,10 @@
         height: 21px;
       }
 
-    --></style>
+    </style>
 
 
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
 
       var restartLocation = window.location.href;
 
@@ -130,6 +133,56 @@
       }
 
 
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+
+      function mg44Call(uri, jsonquery, timeout)
+      {
+        // mg44 based API
+        var dfd = $.Deferred();
+        if (rqvaltok===false) {
+          // need to fetch token first
+          $.getJSON('/tok/json' , {
+          }).done(function(response) {
+            rqvaltok = response;
+            mg44Call(uri, jsonquery, timeout).done(function(response) {
+              dfd.resolve(response);
+            }).fail(function(domain, code, message) {
+              dfd.reject(domain, code, message);
+            });
+          }).fail(function() {
+            console.log('TOK error ' + response.error.message);
+            dfd.reject("mg44", -1, "cannot get token");
+          });
+        }
+        else {
+          var url = uri + '?rqvaltok=' + rqvaltok;
+          var jdata = JSON.stringify(jsonquery);
+          var xhr = $.ajax({
+            url: url,
+            type: 'post',
+            dataType: 'json',
+            timeout: timeout,
+            data: jdata
+          }).done(function(response) {
+            dfd.resolve(response);
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            // unsuccessful at the AJAX API level
+            dfd.reject("ajax", -1, textStatus + "(" + errorThrown.message + " accessing '" + url + "' data='" + jdata + "')");
+          });
+        }
+        var promise = dfd.promise();
+        promise.abort = function() { xhr.abort(); }
+        return promise;
+      }
+
+
+      // Main Page
+      // =========
+
       $(function()
       {
         // Initialize
@@ -137,583 +190,250 @@
         $.getJSON( '/tok/json' , {
         }).done( function(response) {
           rqvaltok = response;
-          refresh_controls();
-          refresh_log();
+          // init app
+          initApp();
         }).fail(function(response, status) {
           console.log('TOK error ' + response.error.message);
         });
 
-        // Handlers
-
-        // load latest log tails when log pane is opened
-        $("#logs").on('pageshow', function(event) {
-          refresh_log();
-        });
-
-        // load current settings list when page is opened
-        $("#control").on('pageshow', function(event) {
-          refresh_controls();
-        });
-
-        // brightness sliders
-        $('#text_brightness').on("change", function(event, ui) {
-          if (!noUpdate) {
-            var bri = floatVal($('#text_brightness').val());
-            sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"fade", "to":bri, "t":0 });
-          }
-        });
-        $('#light_brightness').on("change", function(event, ui) {
-          if (!noUpdate) {
-            var bri = floatVal($('#light_brightness').val());
-            sendApiCmd('/featureapi', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
-          }
-        });
-
-        // scroll sliders
-        $('#text_scrollsteptime').on("change", function(event, ui) {
-          if (!noUpdate) {
-            newScroll();
-          }
-        });
-        $('#text_scrollstepx').on("change", function(event, ui) {
-          if (!noUpdate) {
-            newScroll();
-          }
-        });
-        $('#text_scrolloffsety').on("change", function(event, ui) {
-          if (!noUpdate) {
-            var scrolloffsety = floatVal($('#text_scrolloffsety').val());
-            sendApiCmd('/featureapi', { "feature":"dispmatrix", "offsety":scrolloffsety });
-          }
-        });
-        $('#text_scrolloffsetx').on("change", function(event, ui) {
-          if (!noUpdate) {
-            var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
-            sendApiCmd('/featureapi', { "feature":"dispmatrix", "offsetx":scrolloffsetx });
-          }
-        });
       });
 
 
-      // Common utils
-
-      function floatVal(a)
+      function initApp()
       {
-        var f = parseFloat(a);
-        if (Number.isNaN(f)) f = 0;
-        return f;
       }
 
-
-      function sendApiCmd(context, command, doneCB)
+      /*
+      function cmd(command)
       {
-        $.ajax({
-          url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(command)
-        })
-        .done(function(response) {
-          if (doneCB) doneCB(response);
+        var req = {
+          "cmd":command
+        };
+        mg44Call('api/json/scriptapi', req, 10000, false).done(function(response) {
+          loadModules();
+        }).fail(function(domain, code, message) {
+          $("#message").html('error: [' + domain + '] Error ' + code.toString() + ': ' + message);
         });
       }
+      */
 
-
-
-      // Control Page
-      // =============
-
-
-      function newScroll()
-      {
-        var scrollsteptime = floatVal($('#text_scrollsteptime').val());
-        var scrollstepx = floatVal($('#text_scrollstepx').val());
-        sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
-      }
-
-
-      function stopScroll()
-      {
-        sendApiCmd('/featureapi', { "feature":"dispmatrix", "cmd":"stopscroll" });
-      }
-
-
-      function sendMessage()
-      {
-        var msg = $('#messageText').val();
-        sendApiCmd('/featureapi', { "feature":"text", "text":msg });
-      }
-
-
-      function WTmessage()
-      {
-        var msg = $('#WTmessageText').val();
-        var col = $('#WTmessageColor').val();
-        sendApiCmd('/featureapi', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
-      }
-
-
-      function WThide()
-      {
-        var mac = $('#WTMAC').val();
-        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
-      }
-
-
-      function WTrename()
-      {
-        var mac = $('#WTMAC').val();
-        var name = $('#WTpersonName').val();
-        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
-      }
-
-
-
-      function callScene()
-      {
-        var sname = $('#sceneName').val();
-        sendApiCmd('/featureapi', { "feature":"dispmatrix", "scene":"scenes/"+sname+".json" });
-      }
-
-
-      function setTextColor()
-      {
-        var col = $('#messageColor').val();
-        sendApiCmd('/featureapi', { "feature":"dispmatrix", "color":col });
-      }
-
-
-      function setBackgroundColor()
-      {
-        var col = $('#backgroundColor').val();
-        sendApiCmd('/featureapi', { "feature":"dispmatrix", "bgcolor":col });
-      }
-
-
-      function fireNeuron()
-      {
-        sendApiCmd('/featureapi', { "feature":"neuron", "cmd":"fire" });
-      }
-
-
-      function initLight()
-      {
-        sendApiCmd('/featureapi', { "cmd":"init", "light":true });
-        refresh_controls();
-      }
-
-
-      function initNeuron()
-      {
-        sendApiCmd('/featureapi', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
-        refresh_controls();
-      }
-
-
-      function initText()
-      {
-        sendApiCmd('/featureapi', { "cmd":"init", "dispmatrix":{} });
-        refresh_controls();
-      }
-
-
-      function initHermel()
-      {
-        sendApiCmd('/featureapi', { "cmd":"init", "hermel":true });
-        refresh_controls();
-      }
-
-
-      function shoot()
-      {
-        var angle = floatVal($('#shoot_angle').val());
-        sendApiCmd('/featureapi', { "feature":"hermel", "cmd":"shoot", "angle":angle });
-      }
-
-      function whoop()
-      {
-        sendApiCmd('/featureapi', { "feature":"mixloop", "cmd":"hit" });
-      }
-
-
-
-
-      function refresh_controls()
-      {
-        // get status
-        sendApiCmd('/featureapi', { "cmd":"status" }, function(response) {
-          noUpdate = true;
-          // global
-          $('#macaddress').html(response.macaddress);
-          $('#ipv4').html(response.ipv4);
-          $('#appVersion').html(response.version);
-          $('#devicelabel').html(response.devicelabel);
-          // features
-          var features = response.features;
-          if (features.wifitrack===false) {
-            $("#wifitrack").hide();
-          }
-          else {
-            $("#wifitrack").show();
-          }
-          if (features.mixloop===false) {
-            $("#mixloop").hide();
-          }
-          else {
-            $("#mixloop").show();
-          }
-          if (features.hermel===false) {
-            $("#hermel").hide();
-          }
-          else {
-            $("#hermel").show();
-          }
-          if (features.light===false) {
-            $("#light").hide();
-          }
-          else {
-            $("#light").show();
-            $('#light_brightness').val(features.light.brightness).slider("refresh");
-          }
-          if (features.text===false) {
-            $("#text").hide();
-          }
-          else {
-            $("#text").show();
-            $('#text_brightness').val(features.dispmatrix.brightness).slider("refresh");
-            $('#messageText').val(features.dispmatrix.text);
-            $('#backgroundColor').val(features.dispmatrix.bgcolor);
-            $('#messageColor').val(features.dispmatrix.color);
-            $('#text_scrollsteptime').val(features.dispmatrix.scrollsteptime).slider("refresh");
-            $('#text_scrollstepx').val(features.dispmatrix.scrollstepx).slider("refresh");
-            $('#text_scrolloffsety').val(features.dispmatrix.scrolloffsety).slider("refresh");
-          }
-          if (features.neuron==false) {
-            $("#neuron").hide();
-          }
-          else {
-            $("#neuron").show();
-          }
-          noUpdate = false;
-        });
-      }
-
-
-      // Settings Page
-      // =============
-
-
-      // Log page
-      // ========
-
-      function refresh_log()
-      {
-        $.get("tail_log.txt", function(data) {
-          $("#tail_log").html(data);
-        });
-      }
-
-
-      function set_loglevel(i)
-      {
-        sendApiCmd('/log', { "level":i }, function(response) {
-          // refresh log
-          refresh_log();
-        });
-      }
-
-
-
-    --></script>
+    </script>
 
   </head>
 
   <body>
 
-    <div id="control" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#control" class="ui-btn-active">Control</a></li>
-            <li><a href="#logs">Logs</a></li>
-            <li><a href="#title">About</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <div data-role="content">
-          <div id="identification" style="display:none">
-            <h1 id="macaddress">MAC</h1>
-            <p><b>Device Label: </b><span id="devicelabel"></span></p>
-            <p><b>IPv4: </b><span id="ipv4"></span></p>
-            <p><b>Version: </b><span id="appVersion"></span></p>
-          </div>
-
-          <div id="wifitrack">
-            <h2>WiFi Probe request visualisation</h2>
-            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="255" step="1" />
-            <input type="text" autocomplete="off" id="WTmessageText" name="WTmessageText"/>
-            <input type="text" autocomplete="off" id="WTmessageColor" name="WTmessageColor" value="FFF" placeholder="rgb or rrggbb web color"/>
-            <button id="WTmsg_button" onclick="WTmessage();" data-theme="a">Send message to scroller</button>
-            <input type="text" autocomplete="off" id="WTMAC" name="WTMAC" placeholder="aa:bb:cc:dd:ee:ff MAC address"/>
-            <button id="WThide_button" onclick="WThide();" data-theme="a">Hide person using specified MAC</button>
-            <input type="text" autocomplete="off" id="WTpersonName" name="WTpersonName" placeholder="new person name"/>
-            <button id="WTrename_button" onclick="WTrename();" data-theme="a">Rename person using specified MAC</button>
-          </div>
-
-          <div id="hermel">
-            <h2>Hermeldon remote player</h2>
-            <label for="shoot_angle">Angle:</label><input type="range" data-highlight="true" name="shoot_angle" id="shoot_angle" min="-1" max="1" step="0.02" />
-            <button id="shoot_button" onclick="shoot();" data-theme="a">Shoot</button>
-          </div>
-
-          <div id="mixloop">
-            <h2>Hermeldon mixloop</h2>
-            <button id="shoot_button" onclick="whoop();" data-theme="a">Whoop!</button>
-          </div>
-
-          <div id="light">
-            <h2>Light</h2>
-            <label for="music_volume">Brightness:</label><input type="range" data-highlight="true" name="light_brightness" id="light_brightness" min="0" max="1" step="0.01" />
-          </div>
-
-          <div id="text_disabled" style="display:none">
-            <h2>Text</h2>
-            <label for="text_brightness">Brightness:</label><input type="range" data-highlight="true" name="text_brightness" id="text_brightness" min="0" max="1" step="0.01" />
-            <input type="text" autocomplete="off" id="sceneName" name="sceneName" value="" placeholder="scene name"/>
-            <button id="callSceneButton" onclick="callScene();" data-theme="a">Call Scene</button>
-            <input type="text" autocomplete="off" id="messageText" name="messageText"/>
-            <button id="sendMessageButton" onclick="sendMessage();" data-theme="a">Set Text</button>
-            <input type="text" autocomplete="off" id="messageColor" name="messageColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="textColorButton" onclick="setTextColor();" data-theme="a">Set Text Color</button>
-            <input type="text" autocomplete="off" id="backgroundColor" name="backgroundColor" value="" placeholder="rgb or rrggbb web color"/>
-            <button id="backgroundColorButton" onclick="setBackgroundColor();" data-theme="a">Set BG Color</button>
-            <button id="backgroundColorButton" onclick="stopScroll();" data-theme="a">Stop Scroll</button>
-            <label for="text_scrollsteptime">Speed of scroll (time for one step in seconds):</label><input type="range" data-highlight="true" name="text_scrollsteptime" id="text_scrollsteptime" min="0.018" max="0.2" step="0.01" />
-            <label for="text_scrollstepx">Pixels per Step:</label><input type="range" data-highlight="true" name="text_scrollstepx" id="text_scrollstepx" min="0.05" max="2" step="0.05" />
-            <label for="text_scrolloffsety">Vertical scroll position:</label> <input type="range" data-highlight="true" name="text_scrolloffsety" id="text_scrolloffsety" min="-10" max="10" step="0.1" />
-            <label for="text_scrolloffsetx">Horizontal scroll position:</label><input type="range" data-highlight="true" name="text_scrolloffsetx" id="text_scrolloffsetx" min="-10" max="10" step="0.1" />
-          </div>
-
-          <div id="neuron">
-            <h2>Neuron</h2>
-            <button id="fireButton" onclick="fireNeuron();" data-theme="a">Fire</button>
-          </div>
-
-          <div id="features" style="display:none">
-            <h2>(Re)Init Features</h2>
-            <button id="initHermelButton" onclick="initHermel();" data-theme="a">Init Hermeldon remote player</button>
-            <button id="initLightButton" onclick="initLight();" data-theme="a">Init Light</button>
-            <button id="initTextButton" onclick="initText();" data-theme="a">Init Text</button>
-            <button id="initNeuronButton" onclick="initNeuron();" data-theme="a">Init Neuron</button>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div id="logs" data-role="page">
-      <div data-role="header" data-position="fixed">
-        <div data-role="navbar">
-          <ul>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#logs" class="ui-btn-active">Logs</a></li>
-            <li><a href="#title">About</a></li>
-          </ul>
-        </div>
-      </div>
-      <div data-role="content">
-        <div id="logcontent" data-role="content">
-          <h2>Logs</h2>
-          <div id="logs">
-            <h3>p44featured - complete <a target="_blank" href="current_log.txt">current</a> /
-            <a target="_blank" href="previous_log.txt">previous</a> log -
-            last lines (<a href="javascript:refresh_log();">refresh</a>) -
-            set loglevel
-            <a title="debug" href="javascript:set_loglevel(7);">7</a>
-            <a title="detailed" href="javascript:set_loglevel(6);">6</a>
-            <a title="standard" href="javascript:set_loglevel(5);">5</a>
-            <a title="quiet" href="javascript:set_loglevel(4);">4</a>
-            </h3>
-            <pre id="tail_log"></pre>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div id="title" data-role="page">
       <div data-role="header" data-position="fixed">
         <div data-role="navbar">
           <ul>
-            <li><a href="#control">Control</a></li>
-            <li><a href="#logs">Logs</a></li>
             <li><a href="#title" class="ui-btn-active">About</a></li>
+            <li><a href="#control">Control</a></li>
           </ul>
         </div>
       </div>
       <div data-role="content">
         <div>
           <div class="centered" data-role="content">
-            <h1 id="about_title_model">P44-RFIDCTRL</h1>
-            <h2 id="about_model_description">OpenWrt driven RFID and LED controller</h2>
-            <p>© <span id="about_copyright_years">2018-2020</span> by <a href="https://plan44.ch/custom" target="_blank">plan44/luz</a> / <a href="https://github.com/ulai" target="_blank">ulai</a></p>
+            <h1 id="about_title_model">HMT20-RFID+LED-Controller</h1>
+            <h2 id="about_model_description">OpenWrt driven RFID and LED Controller</h2>
+            <p>© <span id="about_copyright_years">2016-2021</span> by <a href="https://plan44.ch/custom" target="_blank">plan44.ch</a>/<a href="https://hardturm.ch/luz" target="_blank">luz</a></p>
           </div>
 
           <h3>Opensource:</h3>
           <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
           data-iconpos="right">
 
-            <div data-role="collapsible">
-              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+        <div data-role="collapsible">
+          <h3>p44utils, p44lrgraphics, p44features - © 2013-2021 by plan44.ch, GPLv3 or commercial license</h3>
 
-              <h4><a href="https://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded network devices</h4>
+          <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - utility framework in C++ for creating mainloop event based daemon applications</h4>
+          <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - low resolution graphics library specialized for LED chains and matrices</h4>
+          <h4><a href="https://github.com/plan44/p44features" target="_blank">p44features</a> - library of hardware driving "features" for exhibitions, experiments, art and fun projects</h4>
 
-              <p>OpenWrt is free software: you can redistribute it and/or modify
-              it under the terms of the GNU General Public License as published by
-              the Free Software Foundation, version 2 of the License.</p>
+          <p>p44utils, p44features and p44lrgraphics (henceforth, <i>the software</i>) is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, either <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or
+          (at your option) any later version.</p>
 
-              <p>You should have received a copy of the GNU General Public License
-              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
-            </div>
+          <p><i>The software</i> is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          GNU General Public License for more details.</p>
 
-            <div data-role="collapsible">
-              <h3>p44utils - © 2013-2020 by plan44.ch, GPLv3</h3>
+          <p>You should have received a copy of the GNU General Public License
+          along with <i>the software</i>. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
 
-              <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - C++ utility framework for automation daemons</h4>
+          <p>Upon request, <i>the software</i> can also be made available under a commercial license from plan44.ch</p>
 
-              <p>p44utils is free software: you can redistribute it and/or modify
-              it under the terms of the GNU General Public License as published by
-              the Free Software Foundation, either version 3 of the License, or
-              (at your option) any later version.</p>
-
-              <p>p44utils is distributed in the hope that it will be useful,
-              but WITHOUT ANY WARRANTY; without even the implied warranty of
-              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-              GNU General Public License for more details.</p>
-
-              <p>You should have received a copy of the GNU General Public License
-              along with p44utils. If not, see <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
-            </div>
-
-            <div data-role="collapsible">
-              <h3>p44lrgraphics - © 2019-2020 by plan44.ch, GPLv3</h3>
-
-              <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - C++ framework for Lo-Res LED graphics</h4>
-
-              <p>p44lrgraphics is free software: you can redistribute it and/or modify
-              it under the terms of the GNU General Public License as published by
-              the Free Software Foundation, either version 3 of the License, or
-              (at your option) any later version.</p>
-
-              <p>p44lrgraphics is distributed in the hope that it will be useful,
-              but WITHOUT ANY WARRANTY; without even the implied warranty of
-              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-              GNU General Public License for more details.</p>
-
-              <p>You should have received a copy of the GNU General Public License
-              along with p44lrgraphics. If not, see <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
-            </div>
-
-
-            <div data-role="collapsible">
-              <h3>p44-ledchain - © plan44.ch, GPL v2</h3>
-
-              <h4><a href="https://github.com/plan44/plan44-feed/tree/master/p44-ledchain" target="_blank">p44-ledchain</a> -  Linux kernel driver for MT76x8 SoC to control WS281x type LED chains</h4>
-
-              <p>p44-ledchain is free software: you can redistribute it and/or modify
-              it under the terms of the GNU General Public License as published by
-              the Free Software Foundation, version 2 of the License.</p>
-
-              <p>You should have received a copy of the GNU General Public License
-              along with p44-ledchain. If not, see <a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
-            </div>
-
-            <div data-role="collapsible">
-              <h3>jQuery mobile 1.3.2 - © 2010-2013 jQuery Foundation, Inc. and other contributors, MIT license</h3>
-
-              <h4><a href="https://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
-              <p>Copyright 2010-2013 <a href="https://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
-
-              <p>Permission is hereby granted, free of charge, to any person obtaining
-              a copy of this software and associated documentation files (the
-              "Software"), to deal in the Software without restriction, including
-              without limitation the rights to use, copy, modify, merge, publish,
-              distribute, sublicense, and/or sell copies of the Software, and to
-              permit persons to whom the Software is furnished to do so, subject to
-              the following conditions:</p>
-
-              <p>The above copyright notice and this permission notice shall be
-              included in all copies or substantial portions of the Software.</p>
-
-              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-              LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-              OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-              WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-            </div>
-
-            <div data-role="collapsible">
-              <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
-
-              <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
-              <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
-              <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
-              <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
-              <p>Copyright (c) 2013 F-Secure Corporation</p>
-
-              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
-              of this software and associated documentation files (the Software), to deal
-              in the Software without restriction, including without limitation the rights
-              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-              copies of the Software, and to permit persons to whom the Software is
-              furnished to do so, subject to the following conditions:</p>
-
-              <p>The above copyright notice and this permission notice shall be included in
-              all copies or substantial portions of the Software.</p>
-
-              <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-              THE SOFTWARE.</p>
-            </div>
-
-
-            <div data-role="collapsible">
-              <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
-
-              <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
-              <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
-              Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
-
-              <p>Permission is hereby granted, free of charge, to any person obtaining a
-              copy of this software and associated documentation files (the "Software"),
-              to deal in the Software without restriction, including without limitation
-              the rights to use, copy, modify, merge, publish, distribute, sublicense,
-              and/or sell copies of the Software, and to permit persons to whom the
-              Software is furnished to do so, subject to the following conditions:</p>
-
-              <p>The above copyright notice and this permission notice shall be included
-              in all copies or substantial portions of the Software.</p>
-
-              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-              SOFTWARE.</p>
-            </div>
-
-          </div>
         </div>
+
+        <div data-role="collapsible">
+          <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+          <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+          <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+          Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a
+          copy of this software and associated documentation files (the "Software"),
+          to deal in the Software without restriction, including without limitation
+          the rights to use, copy, modify, merge, publish, distribute, sublicense,
+          and/or sell copies of the Software, and to permit persons to whom the
+          Software is furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included
+          in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery mobile - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+          <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining
+          a copy of this software and associated documentation files (the
+          "Software"), to deal in the Software without restriction, including
+          without limitation the rights to use, copy, modify, merge, publish,
+          distribute, sublicense, and/or sell copies of the Software, and to
+          permit persons to whom the Software is furnished to do so, subject to
+          the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be
+          included in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
+
+          <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+          <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
+          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+          <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+          <p>Copyright (c) 2013 F-Secure Corporation</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the Software), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>Ace - © 2010, Ajax.org B.V., BSD 3 clause license</h3>
+
+          <h4><a href="https://ace.c9.io/" target="_blank">Ace</a> - embeddable code editor written in JavaScript</h4>
+          <p>Copyright (c) 2010, Ajax.org B.V.<br/>
+          All rights reserved.</p>
+
+          <p>Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are met:</p>
+
+          <ul>
+          <li>Redistributions of source code must retain the above copyright
+          notice, this list of conditions and the following disclaimer.</li>
+          <li>Redistributions in binary form must reproduce the above copyright
+          notice, this list of conditions and the following disclaimer in the
+          documentation and/or other materials provided with the distribution.</li>
+          <li>Neither the name of Ajax.org B.V. nor the
+          names of its contributors may be used to endorse or promote products
+          derived from this software without specific prior written permission.</li>
+          </ul>
+
+          <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+          ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+          WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+          DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+          DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+          (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+          LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+          ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+          (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+          <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+          <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
+        </div>
+
+      </div>
+    </div>
       </div>
     </div>
 
+    <div id="control" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Control</h2>
+        <p>n/a at this time</p>
+      </div>
+
+    </div>
 
   </body>
 
