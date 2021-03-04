@@ -541,7 +541,7 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>true if the sensor named <u>sensor1</u> has an actual valid value (a sensor that went into timeout or has never received data from hardware since the last restart does not have a value)</td>
 </tr>
 <td>sensor1.oplevel</td>
-<td>a value between 0 and 100 indicating the "operation level" of the sensor. 0 means out of order, 100 means optimal conditions, values between indicate non-optimal conditions such as poor radio reception or low battery level.</td>
+<td>a value between 0 and 100 indicating the "operation level" of the sensor. 0 means out of order, 100 means optimal conditions, values between indicate non-optimal conditions such as poor radio reception or low battery level. If no information is available, a null value is returned</td>
 </tr>
 <tr id="dotandsubscript">
 <td>jsonobj.fieldA</td>
@@ -593,7 +593,7 @@ also carries a short text describing its origin. This useful to debug as it help
 <tr>
 <td>+</td>
 <td>4</td>
-<td>numeric addition, string concatenation if left hand expression is of type string</td>
+<td>numeric addition, string concatenation if left hand expression is of type string, JSON array concatenation of both expressions are arrays, JSON object merging if both expressions are JSON objects.</td>
 </tr>
 <tr>
 <td>-</td>
@@ -690,6 +690,17 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns approximate time of dusk on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
 </tr>
 <tr>
+<td>elements(array)</td>
+<td>returns the number of elements in <u>array</u>, or undefined if <u>array</u> is not a json value</td>
+</tr>
+<tr>
+<td>epochtime()</td>
+<td>returns unix epoch time (seconds since 1.1.1970 midnight UTC), but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>epochdays()</td>
+<td>returns unix epoch time (days since 1.1.1970), with time-of-day as fractional part, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
 <td>error(anything)</td>
 <td>creates a error value with <u>anything</u> as error message</td>
 </tr>
@@ -758,6 +769,9 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns min(max(<u>x</u>, <u>a</u>), <u>b</u>), i.e. <u>x</u> limited to values between and including <u>a</u> and <u>b</u></td>
 </tr>
 <tr>
+<td>macaddress()</td>
+<td>returns the MAC address of the wired network interface as a string of 12 hex digits (no separators between bytes)</td>
+</tr>
 <td>max(a, b)</td>
 <td>return the bigger value of <u>a</u> and <u>b</u></td>
 </tr>
@@ -790,6 +804,10 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns current second, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
 </tr>
 <tr>
+<td>shellquote(argument)</td>
+<td>returns <u>argument</u> interpreted as string and quote enclosed such that it safely works as a single shell argument</td>
+</tr>
+<tr>
 <td>string(anything)</td>
 <td>returns a string representation of <u>anything</u>. Always returns a descriptive string, even for null/undefined and error values.</td>
 </tr>
@@ -799,7 +817,7 @@ also carries a short text describing its origin. This useful to debug as it help
 </tr>
 <tr>
 <td>substr(string, from [, count])</td>
-<td>returns string starting at <u>from</u> in <u>string</u>, limited to <u>count</u> characters if specified.</td>
+<td>returns string starting at <u>from</u> in <u>string</u>, limited to <u>count</u> characters if specified. If <u>from</u> is negative, start position is relative to the end of <u>string</u></td>
 </tr>
 <tr>
 <td>sunrise()</td>
@@ -810,8 +828,29 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns approximate time of sunset on the current day, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
 </tr>
 <tr>
+<td>system(commandline)</td>
+<td>executes <u>commandline</u> using the platform's shell and returns the output as string.
+<br/>Note that this function is only available when userlevel is >=2 (default userlevel for production devices is 0)</td>
+</tr>
+<tr>
 <td>timeofday()</td>
 <td>returns current time-of-day in seconds since midnight, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
+</tr>
+<tr>
+<td>udpsocket(host, port, receive, nonlocal, broadcast)</td>
+<td>returns a UDP socket configured to send packets to <u>host</u>:<u>port</u>. Use .send(string) method to send data<br/>
+If <u>receive</u> is true, the socket can also receive UDP packets (via its .message() method, which can be used in <i>on()</i> statements as trigger.<br/>
+If <u>nonlocal</u> is true, the socket can also receive UDP packets originating from other hosts than just localhost (which is the default)<br/>
+If <u>broadcast</u> is true, the socket can send and receive broadcast packets
+</td>
+</tr>
+<tr>
+<td>udpsocket(...).message()</td>
+<td>returns the last UDP message received on the socket. The result is an event source and can be used in <i>on()</i> statements as trigger condition and can also be <i>await()</i>-ed</td>
+</tr>
+<tr>
+<td>udpsocket(...).send(string)</td>
+<td>sends <u>string</u> as UDP packet</td>
 </tr>
 <tr>
 <td>weekday()</td>
@@ -826,13 +865,6 @@ also carries a short text describing its origin. This useful to debug as it help
 <td>returns current date as day number in current year, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
 </tr>
 <tr>
-<td>epochtime()</td>
-<td>returns unix epoch time (seconds since 1.1.1970 midnight UTC), but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
-</tr>
-<tr>
-<td>epochdays()</td>
-<td>returns unix epoch time (days since 1.1.1970), with time-of-day as fractional part, but <a href="#timedtriggers">(cannot directly trigger timed actions)</a></td>
-</tr>
 <tr>
 <td>json(anything)</td>
 <td>tries to interpret <u>anything</u> as JSON. Useful to make a JSON string returned from an API accessible as a structure.</td>
@@ -860,19 +892,19 @@ General functions returning time values such as <u>sunrise</u> or <u>dusk</u> ar
 <tbody>
 <tr>
 <td>is_time(time)</td>
-<td>returns true when time of day is <u>time</u> (with 5 seconds tolerance).</td>
+<td>returns true when time of day is <u>time</u> (with 5 seconds tolerance) and triggers evaluation once per day when <u>time</u> is reached.</td>
 </tr>
 <tr>
 <td>is_weekday(weekday1 [, weekday2, ...])</td>
-<td>returns true if today is any of the specifieds <u>weekdayN</u> arguments</td>
+<td>returns true if today is any of the specifieds <u>weekdayN</u> arguments</td> and triggers evaluation at the beginning of the specified days.
 </tr>
 <tr>
 <td>after_time(time)</td>
-<td>true when time of day is <u>time</u> or later.</td>
+<td>return true when time of day is <u>time</u> or later and triggers evaluation once per day when <u>time</u> is reached.</td>
 </tr>
 <tr>
 <td>between_dates(date1, date2)</td>
-<td>true when current date is between <u>date1</u> and <u>date2</u> (inclusive) [[1]]</td>
+<td>true when current date is between <u>date1</u> and <u>date2</u> (inclusive) and triggers evaluation at beginning of <u>date1</u> and at the end of <u>date2</u></td>
 </tr>
 <tr>
 <td>initial()</td>
@@ -880,7 +912,7 @@ General functions returning time values such as <u>sunrise</u> or <u>dusk</u> ar
 </tr>
 <tr>
 <td>every(interval [, syncoffset])</td>
-<td>returns true once every <u>interval</u> (specified in seconds)<br/>
+<td>returns true once every <u>interval</u> (specified in seconds) and triggers evaluation.<br/>
 Note: first true is returned at first evaluation or, if <u>syncoffset</u> is set,
 at next integer number of intervals calculated from beginning of the day +  <u>syncoffset</u>.<br/>
 So <u>every(0:30,0:22)</u> will trigger once every half hour, starting at 0:22, then 0:52, 1:22, ...<br/>
@@ -1133,7 +1165,7 @@ i.e. are updated (or removed) according to edits in the script text, and <i>will
 
 <p>p44script has a very convenient construct for creating concurrently running sequences of operations,
 something that is often needed in automation. A concurrently running sequence of script statements is also called a <i>thread</i>
-Note that event handlers as show above also evaluate and run concurrently with other script activity.</p>
+Note that event handlers as shown above also evaluate and run concurrently with other script activity.</p>
 
 <table>
 <thead>
@@ -1245,8 +1277,46 @@ more or less verbose in the log selectively.</td>
 <td>returns the root view of the entire <i>led chain arrangement</i> currently configured, i.e. the view that contains the entire area covered by all mapped ledchain segments</td>
 </tr>
 <tr>
+<td>addledchain(ledchainconfigstring)</td>
+<td>adds a LED chain to the LED chain arrangement. <u>ledchainconfig</u> has the same format as the --ledchain command line parameter:<br/>
+<i>[chaintype:[leddevicename:]]numberOfLeds:[x:dx:y:dy:firstoffs:betweenoffs][XYSA][W#whitecolor]</i></td>
+</tr>
+<tr>
+<td>removeledchains()</td>
+<td>removes all ledchains from the LED chain arrangement</td>
+</tr>
+<tr>
+<td>ledchaincover()</td>
+<td>returns the rectangular area (x,y,dx,dy) currently (possibly partially) covered by the installed ledchains</td>
+</tr>
+<tr>
+<td>neededledpower()</td>
+<td>returns the (approximate) electrical power im milliwatts needed for the currently displayed pixels on the LED chain arrangement. Note that this
+returns the power that would be needed to display all pixels without limiting (even if currently limited, see <u>setmaxledpower()</u>)</td>
+</tr>
+<tr>
+<td>setmaxledpower(maxpower)</td>
+<td>sets the (approximate) maximal electrical power in milliwatts the entire LED chain arrangement may consume. If the currently requested pixel colors would exceed the limit, all pixels are dimmed as needed to stay withing the power limit</td>
+</tr>
+<tr>
+<td>makeview(json)</td>
+<td>creates a view according to config in <u>json</u></td>
+</tr>
+<tr>
 <td>findview(viewlabel)</td>
 <td>searches for a subview with the specified <u>viewlabel</u>, returns the view or undefined</td>
+</tr>
+<tr>
+<td>addview(view)</td>
+<td>adds <u>view</u> as a subview (if this view suppots subviews)</td>
+</tr>
+<tr>
+<td>parent()</td>
+<td>returns the parent view (or null if none)</td>
+</tr>
+<tr>
+<td>remove()</td>
+<td>removes the view from its parent (if there is a parent), returns true if view could be removed</td>
 </tr>
 <tr>
 <td>configure(json)
@@ -1260,7 +1330,7 @@ more or less verbose in the log selectively.</td>
 </tr>
 <tr>
 <td>animator('propertyname')</td>
-<td>Get an animator for the specified property of the view. Animatable p44lrg properties are: <u>alpha, rotation, x, y, dx, dy, content_x, content_y, rel_content_x, rel_content_y, rel_center_x, rel_center_y, content_dx, content_dy, color, bgcolor</u>. Colors have the animatable subcomponents <u>r,g,b,w,hue,saturation,brightness</u>
+<td>Get an animator for the specified property of the view. Animatable p44lrg properties are: <u>alpha, rotation, x, y, dx, dy, content_x, content_y, rel_content_x, rel_content_y, rel_center_x, rel_center_y, content_dx, content_dy, color, bgcolor</u>. Colors have the animatable subcomponents <u>r,g,b,a,hue,saturation,brightness</u>
 <br/>If a valid animatable property name is passed, an animator object is returned. See animator description for details</td>
 </tr>
 <tr>
@@ -1273,7 +1343,6 @@ more or less verbose in the log selectively.</td>
 </tr>
 </tbody>
 </table>
-<?php endif ?>
 
 
 <h2 id="toc_10">Animator</h2>
@@ -1389,8 +1458,6 @@ more or less verbose in the log selectively.</td>
 </tr>
 </tbody>
 </table>
-
-
 
 </body>
 </html>
