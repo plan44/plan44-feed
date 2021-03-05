@@ -2,7 +2,7 @@
 pushd /tmp; rm -rf /tmp/p44b_temp; mkdir p44b_temp; cd p44b_temp
 git clone --depth 1 --no-checkout --single-branch --branch master https://github.com/plan44/p44featured.git p44featured
 pushd p44featured
-git tag -f P44-RFIDCTRL/1.1/p44rfidctrl-omega2 402b3ab35ed2348938fef272dca3b518ce545edf
+git tag -f P44-RFIDCTRL/1.1/p44rfidctrl-omega2 676a7ae7762c203b572b0657557e9325f8a54b25
 git push -f origin P44-RFIDCTRL/1.1/p44rfidctrl-omega2
 popd
 git clone --depth 1 --no-checkout --single-branch --branch HEAD https://github.com/OnionIoT/omega2-ctrl.git omega2-ctrl

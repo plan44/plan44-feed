@@ -139,6 +139,7 @@
 ./scripts/feeds install -p packages libpam
 ./scripts/feeds install -p packages libpciaccess
 ./scripts/feeds install -p packages libpng
+./scripts/feeds install -p packages libsodium
 ./scripts/feeds install -p packages libssh2
 ./scripts/feeds install -p packages libtasn1
 ./scripts/feeds install -p packages libtirpc
@@ -423,6 +424,8 @@
 #./scripts/feeds install -p packages xzgrep
 #./scripts/feeds install -p packages xzless
 #./scripts/feeds install -p packages xzmore
+./scripts/feeds install -p packages libzmq-nc
+#./scripts/feeds install -p packages libzmq-curve
 ./scripts/feeds install -p packages zoneinfo-simple
 #./scripts/feeds install -p packages zoneinfo-core
 #./scripts/feeds install -p packages zoneinfo-africa
