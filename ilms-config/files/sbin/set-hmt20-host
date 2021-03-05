@@ -1,0 +1,33 @@
+#!/bin/sh
+
+HOST_NAME="hmt20-host"
+HOSTSFILE="/etc/hosts"
+SCOPEID="eth0"
+
+# - must have single host name or IP
+if [[ $# -ne 1 ]]; then
+  echo "Must specify IPv6 (no scope id!)"
+  exit 1
+fi
+IPV6=$1
+
+
+# - set up hosts entry
+if ! grep -q leths-host "${HOSTSFILE}"; then
+  # no entry yet
+  echo -e "\n${IPV6}%${SCOPEID}\t${HOST_NAME}" >>"${HOSTSFILE}"
+else
+  # entry exists, update
+  sed -i -r -e "/${HOST_NAME}/s/^[^\t]*/${IPV6}%${SCOPEID}/" "${HOSTSFILE}"
+fi
+
+
+# - set up ntp to use the local server as ONLY time server
+if ! grep -q "${HOST_NAME}" /etc/config/system; then
+  uci set system.ntp.server=
+  uci add_list system.ntp.server="${HOST_NAME}"
+  uci commit
+fi
+
+# anyway, reload
+/etc/init.d/sysntpd reload

@@ -1,0 +1,30 @@
+/* custom theme specific CSS */
+
+#deviceTable th { background-color: #DDD; }
+#deviceTable tr.vdcrow { background-color: #CCC; }
+#deviceTable tr.focusdevice { background-color: #a9deff; }
+
+.inputsInfoTable * th { background-color: #CCC; }
+.inputsInfoTable * td { background-color: #DDD; }
+
+.daliMatrix td { background-color: #DDD; }
+
+.varDefs th { background-color: #CCC; }
+.varDefs td { background-color: #DDD; }
+/* 
+.varDefs input { background-color: #222; color: white; }
+ */
+/* links within evaluator defs -> lighter color if theme is dark */
+/*
+.varDefs a { color:#7ecaff; }
+.varDefs a:hover { color:#ff6161; }
+*/
+
+
+/* non-button links within dialog boxes -> lighter color if theme is dark */
+/*
+.dialogbox * a:link:not(.ui-btn) { color:#66CCFE; }
+.dialogbox * a:visited:not(.ui-btn) { color:#A48BFE; }
+ */
+
+#vdcDangerousScanButtons { background-color: #FFE785; }

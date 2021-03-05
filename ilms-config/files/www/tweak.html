@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+
+    <title>Tweaking</title>
+
+    <style type="text/css"><!--
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      .devinfo p { }
+      .infovalue { font-weight: bold; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+    --></style>
+
+    <script language="javascript1.2" type="text/javascript"><!--
+
+    	var rqvaltok="";
+
+    	var maxHistoryLength = 30;
+    	var jsonhistory = [];
+
+
+      function addToHistory(txt)
+      {
+        var dup = jsonhistory.findIndex(function(e) { return e==txt; });
+        if (dup>=0) {
+          jsonhistory.splice(dup,1);
+          jsonhistory.unshift(txt);
+        }
+        else {
+          // new entry, put in front
+          jsonhistory.unshift(txt);
+          if (jsonhistory.length>maxHistoryLength) jsonhistory.pop();
+        }
+        refreshExamples();
+      }
+
+
+      function refreshExamples()
+      {
+        var selectHtml =
+          '<option value="0">- select template -</option>';
+        if (jsonhistory.length>0) {
+          selectHtml +=
+            '<option disabled>history</option>';
+          for (var i=0; i<jsonhistory.length; i++) {
+            selectHtml +=
+              '<option value="' + (i+1).toString() + '">' + jsonhistory[i] + '</option>';
+          }
+        }
+        selectHtml +=
+          '<option disabled>featureapi templates</option>' +
+          '<option value="1000">{ "run":"log(5,\"script run from API\")" }</option>' +
+          '<option value="1000">{ "eventscript":"log(5,message())" }</option>' +
+          '<option value="1000">{ "cmd":"status" }</option>' +
+          '<option value="1001">{ "cmd":"now" }</option>' +
+          '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
+          '<option value="1030">{ "cmd":"init", "rfids":{ "readers":[0,1,2,3,4,5] } }</option>' +
+          '<option value="1030">{ "cmd":"init", "indicators":1 }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "effect":"pulse", "dx":15 }</option>' +
+          '<option value="1010">{ "feature":"indicators", "cmd":"indicate", "t":5, "effect":"colorswipe.json", "t":5 }</option>' +
+          '<option value="1030">{ "cmd":"init", "inputs":{ "keyX":{ "pin":"sim.xbutton" } } }</option>' +
+          '<option value="1030">{ "cmd":"init", "light":1 }</option>' +
+          '<option value="1031">{ "feature":"light", "cmd":"fade", "to":1, "t":5000 }</option>' +
+          '<option value="1040">{ "cmd":"init", "dispmatrix": [ { "installationX": 72, "installationY": 0 } ] }</option>' +
+          '<option value="1045">{ "feature":"dispmatrix", "backgroundcolor":"000" }</option>' +
+          '<option value="1046">{ "feature":"dispmatrix", "cmd":"fade", "to":0, "t":5000 }</option>' +
+          '<option value="1047">{ "feature":"dispmatrix", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
+          '<option value="1048">{ "feature":"dispmatrix", "scene":"scenes/stepup.json" }</option>' +
+          '<option value="1049">{ "feature":"dispmatrix", "cmd":"configure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>' +
+          '<option value="1002">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
+          '<option value="1200">{ "level":6 }</option>';
+
+        $('#jsonExamples').html(selectHtml).trigger('create');
+        $('#jsonExamples').val(0).selectmenu('refresh');
+      }
+
+
+      function exampleSelected()
+      {
+        if ($('#jsonExamples').val()!=0) {
+          var text = $('#jsonExamples>option:selected').html();
+          $('#jsonText').val(text);
+          $('#jsonExamples').val(0).selectmenu('refresh');
+          $('#jsonText').focus();
+        }
+      }
+
+
+      function apiSelected()
+      {
+        if ($('#apiExamples').val()!=0) {
+          var text = $('#apiExamples>option:selected').html();
+          $('#apiPath').val(text);
+          $('#apiExamples').val(0).selectmenu('refresh');
+          $('#apiPath').focus();
+        }
+      }
+
+
+
+      $(function()
+      {
+        // document ready
+        refreshExamples();
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+        });
+
+        // handler for sendAPI button
+        $("#sendAPI").click(function() {
+          var txt = $("#jsonText").val().toString();
+          var apipath = $("#apiPath").val().toString();
+          if (txt.length>0) {
+            var json = JSON.parse(txt);
+            if (json) {
+              $.ajax({
+                url: apipath + '?rqvaltok=' + rqvaltok,
+                type: 'post',
+                dataType: 'json',
+                timeout: 20000, // needs a long timeout, large queries might be sloooow!
+                data: JSON.stringify(json)
+              }).done(function(response) {
+                $("#jsonResult").val(JSON.stringify(response));
+                addToHistory(txt);
+              }).fail(function(response, status) {
+                $("#jsonResult").val('API POST error ' + response.error.message);
+              });
+            }
+            else {
+              $("#jsonResult").val("*** input is invalid JSON -> cannot send ***");
+            }
+          }
+          else {
+            $.ajax({
+              url: apipath + '?rqvaltok=' + rqvaltok,
+              type: 'get',
+              timeout: 20000 // needs a long timeout, large queries might be sloooow!
+            }).done(function(response) {
+              $("#jsonResult").val(JSON.stringify(response));
+              addToHistory(txt);
+            }).fail(function(response, status) {
+              $("#jsonResult").val('API GET error ' + response.error.message);
+            });
+          }
+        });
+      });
+
+
+    --></script>
+
+
+  </head>
+
+  <body>
+
+    <div id="tweak" data-role="page">
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <label for="apiPath">Enter API Path:</label>
+          <input type="text" name="apiPath" id="apiPath" placeholder='api/json/featureapi' value="api/json/featureapi" data-theme="d">
+          <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
+            <option value="0">- select template -</option>
+            <option value="1">api/json/featureapi</option>
+            <option value="1">api/json/mainscript</option>
+            <option value="1">api/json/scriptapi</option>
+            <option value="3">api/json/log</option>
+            <option value="99">tok/json</option>
+          </select>
+          <label for="jsonText">Enter JSON API Query:</label>
+          <input type="text" name="jsonText" id="jsonText" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="" data-theme="d">
+          <select onchange="javascript:exampleSelected();" name="jsonExamples" id="jsonExamples">
+          </select>
+          <button type="button" id="sendAPI" data-inline="true" data-theme="c">Send JSON to API</button>
+          <textarea id="jsonResult"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

@@ -1,0 +1,10 @@
+{ "type":"stack", "label":"STACK", "fullframe":true, "positioningmode":"fillXY|noadjust", "layers": [
+  { "view": {
+    "type":"plain", "label":"1ST", "fullframe":true, "color":"F00",
+    "animate": [{ "time": 0.5, "property": "x", "from": -288, "to": 260, "function": "linear", "cycles": 1 }]
+  }},
+  { "view": {
+    "type":"plain", "label":"2ND", "fullframe":true, "color":"F00", "x":-288,
+    "animate": [{ "delay":0.5, "time": 0.5, "property": "x", "from": -288, "to": 260, "function": "linear", "cycles": 1 }]
+  }}
+]}

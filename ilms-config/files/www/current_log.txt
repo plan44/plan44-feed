@@ -1,0 +1,1 @@
+<!--#include abspath="/var/log/p44featured/current"-->

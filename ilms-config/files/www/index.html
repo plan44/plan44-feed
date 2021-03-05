@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+
+    <title id="html_title_model">HMT20-RFID+LED-Controller</title>
+
+    <style type="text/css">
+      h1 { font-family:Helvetica; font-size:24pt; }
+      h2 { font-family:Helvetica; font-size:18pt; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      .ui-content { padding: 5px; }
+
+      span.error { background-color: #ff0000; }
+
+      span.errortext { color: #e80000; }
+      span.warningtext { color: #ff9e00; }
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+      .p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
+      .p44-mini-input-end { clear: right; }
+
+
+
+      /* simplistic p44 progress bar */
+
+      div.p44_progressbar {
+        position: relative;
+        margin: 0;
+        margin-top: 20px;
+        width: 100%;
+        height: 21px;
+        padding: 0px;
+        background-color:#d0d0d0;
+        border-radius: 15px;
+        border: 1px solid black;
+      }
+
+      div.p44_progressbar_text {
+        position: absolute;
+        width: 100%;
+        padding: 2px;
+        text-align: center;
+        font-family: sans-serif;
+        font-weight: bold;
+        text-shadow: none;
+      }
+
+      div.p44_progressbar_gauge {
+        background-color: #4e98ff;
+        padding: 0px;
+        margin-left: 0px;
+        margin-right: -2px; /* needed to avoid gauge enlarging bar */
+        margin-top: 0px;
+        margin-bottom: 1px;
+        width: 22px;
+        border-radius: 15px;
+        height: 21px;
+      }
+
+    </style>
+
+
+    <script type="text/javascript">
+
+      var restartLocation = window.location.href;
+
+      var tickDiff = false;
+
+      var noUpdate = false;
+
+      // request validation token
+      var rqvaltok = "";
+
+      /* simplistic p44 progress bar */
+
+      function setProgressBar(progBar, percentage)
+      {
+        if (percentage<0) percentage = 0;
+        else if (percentage>100) percentage = 100;
+        percentage = Math.round(percentage);
+        var w = progBar.width()/100*percentage;
+        if (w<progBar.height()) w = progBar.height();
+        progBar.find('.p44_progressbar_gauge').width(w);
+        progBar.find('.p44_progressbar_text').html(percentage.toString()+'%');
+      }
+
+
+      function startTimeProgress(progBar, waitTime)
+      {
+        setProgressBar(progBar, 0);
+        var progressStart = (new Date).getTime(); // MS since 1970
+        var i = setInterval(function() {
+          var nowtime = (new Date).getTime(); // MS since 1970
+          var percentage = (nowtime-progressStart)/waitTime*100;
+          setProgressBar(progBar, percentage);
+          if (percentage>=100) clearInterval(i); // stop
+        }, waitTime/100);
+      }
+
+
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+      function openDialog(dialog)
+      {
+        $(dialog).popup("open", { positionTo:"window" });
+      }
+
+
+      function closeDialog(dialog)
+      {
+        $(dialog).popup("close");
+      }
+
+
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+
+      function mg44Call(uri, jsonquery, timeout)
+      {
+        // mg44 based API
+        var dfd = $.Deferred();
+        if (rqvaltok===false) {
+          // need to fetch token first
+          $.getJSON('/tok/json' , {
+          }).done(function(response) {
+            rqvaltok = response;
+            mg44Call(uri, jsonquery, timeout).done(function(response) {
+              dfd.resolve(response);
+            }).fail(function(domain, code, message) {
+              dfd.reject(domain, code, message);
+            });
+          }).fail(function() {
+            console.log('TOK error ' + response.error.message);
+            dfd.reject("mg44", -1, "cannot get token");
+          });
+        }
+        else {
+          var url = uri + '?rqvaltok=' + rqvaltok;
+          var jdata = JSON.stringify(jsonquery);
+          var xhr = $.ajax({
+            url: url,
+            type: 'post',
+            dataType: 'json',
+            timeout: timeout,
+            data: jdata
+          }).done(function(response) {
+            dfd.resolve(response);
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            // unsuccessful at the AJAX API level
+            dfd.reject("ajax", -1, textStatus + "(" + errorThrown.message + " accessing '" + url + "' data='" + jdata + "')");
+          });
+        }
+        var promise = dfd.promise();
+        promise.abort = function() { xhr.abort(); }
+        return promise;
+      }
+
+
+      // Main Page
+      // =========
+
+      $(function()
+      {
+        // Initialize
+
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+          // init app
+          initApp();
+        }).fail(function(response, status) {
+          console.log('TOK error ' + response.error.message);
+        });
+
+      });
+
+
+      function initApp()
+      {
+      }
+
+      /*
+      function cmd(command)
+      {
+        var req = {
+          "cmd":command
+        };
+        mg44Call('api/json/scriptapi', req, 10000, false).done(function(response) {
+          loadModules();
+        }).fail(function(domain, code, message) {
+          $("#message").html('error: [' + domain + '] Error ' + code.toString() + ': ' + message);
+        });
+      }
+      */
+
+    </script>
+
+  </head>
+
+  <body>
+
+    <div id="title" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title" class="ui-btn-active">About</a></li>
+            <li><a href="#control">Control</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <div>
+          <div class="centered" data-role="content">
+            <h1 id="about_title_model">HMT20-RFID+LED-Controller</h1>
+            <h2 id="about_model_description">OpenWrt driven RFID and LED Controller</h2>
+            <p>© <span id="about_copyright_years">2016-2021</span> by <a href="https://plan44.ch/custom" target="_blank">plan44.ch</a>/<a href="https://hardturm.ch/luz" target="_blank">luz</a></p>
+          </div>
+
+          <h3>Opensource:</h3>
+          <div data-role="collapsible-set" data-theme="c" data-mini="true" data-content-theme="d"
+          data-iconpos="right">
+
+        <div data-role="collapsible">
+          <h3>p44utils, p44lrgraphics, p44features - © 2013-2021 by plan44.ch, GPLv3 or commercial license</h3>
+
+          <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - utility framework in C++ for creating mainloop event based daemon applications</h4>
+          <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - low resolution graphics library specialized for LED chains and matrices</h4>
+          <h4><a href="https://github.com/plan44/p44features" target="_blank">p44features</a> - library of hardware driving "features" for exhibitions, experiments, art and fun projects</h4>
+
+          <p>p44utils, p44features and p44lrgraphics (henceforth, <i>the software</i>) is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, either <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or
+          (at your option) any later version.</p>
+
+          <p><i>The software</i> is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+          GNU General Public License for more details.</p>
+
+          <p>You should have received a copy of the GNU General Public License
+          along with <i>the software</i>. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+
+          <p>Upon request, <i>the software</i> can also be made available under a commercial license from plan44.ch</p>
+
+        </div>
+
+        <div data-role="collapsible">
+          <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+          <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+          <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+          Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a
+          copy of this software and associated documentation files (the "Software"),
+          to deal in the Software without restriction, including without limitation
+          the rights to use, copy, modify, merge, publish, distribute, sublicense,
+          and/or sell copies of the Software, and to permit persons to whom the
+          Software is furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included
+          in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery mobile - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+          <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+          <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining
+          a copy of this software and associated documentation files (the
+          "Software"), to deal in the Software without restriction, including
+          without limitation the rights to use, copy, modify, merge, publish,
+          distribute, sublicense, and/or sell copies of the Software, and to
+          permit persons to whom the Software is furnished to do so, subject to
+          the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be
+          included in all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+          EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+          NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+          LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+          WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
+
+          <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+          <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
+          <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+          <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+          <p>Copyright (c) 2013 F-Secure Corporation</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the Software), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+          <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+          <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+          <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:</p>
+
+          <p>The above copyright notice and this permission notice shall be included in
+          all copies or substantial portions of the Software.</p>
+
+          <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+          THE SOFTWARE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>Ace - © 2010, Ajax.org B.V., BSD 3 clause license</h3>
+
+          <h4><a href="https://ace.c9.io/" target="_blank">Ace</a> - embeddable code editor written in JavaScript</h4>
+          <p>Copyright (c) 2010, Ajax.org B.V.<br/>
+          All rights reserved.</p>
+
+          <p>Redistribution and use in source and binary forms, with or without
+          modification, are permitted provided that the following conditions are met:</p>
+
+          <ul>
+          <li>Redistributions of source code must retain the above copyright
+          notice, this list of conditions and the following disclaimer.</li>
+          <li>Redistributions in binary form must reproduce the above copyright
+          notice, this list of conditions and the following disclaimer in the
+          documentation and/or other materials provided with the distribution.</li>
+          <li>Neither the name of Ajax.org B.V. nor the
+          names of its contributors may be used to endorse or promote products
+          derived from this software without specific prior written permission.</li>
+          </ul>
+
+          <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+          ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+          WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+          DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+          DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+          (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+          LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+          ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+          (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+          SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+        </div>
+
+        <div data-role="collapsible">
+          <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+          <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+          <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
+        </div>
+
+      </div>
+    </div>
+      </div>
+    </div>
+
+    <div id="control" data-role="page">
+      <div data-role="header" data-position="fixed">
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#title">About</a></li>
+            <li><a href="#control" class="ui-btn-active">Control</a></li>
+          </ul>
+        </div>
+      </div>
+      <div data-role="content">
+        <h2>Control</h2>
+        <p>n/a at this time</p>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

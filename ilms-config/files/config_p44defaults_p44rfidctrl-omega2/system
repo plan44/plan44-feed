@@ -1,0 +1,8 @@
+config system
+	option hostname	ilms
+	option timezone	'CET-1CEST,M3.5.0,M10.5.0/3'
+
+config timeserver ntp
+	list server	'time.plan44.ch'
+	option enabled 1
+	option enable_server 0
