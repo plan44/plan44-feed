@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.5.0.0
+PKG_VERSION:=2.5.1.1
 # version of this makefile
-PKG_RELEASE:=129
+PKG_RELEASE:=133
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -27,7 +27,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola +VDCD_PNG:libpng +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json +VDCD_RRDB:librrd1 $(CXX_DEPENDS)
+	DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola +VDCD_PNG:libpng +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json +VDCD_RRDB:librrd1 $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
