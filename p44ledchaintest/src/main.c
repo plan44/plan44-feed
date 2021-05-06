@@ -36,6 +36,8 @@ static void usage(const char *name)
   fprintf(stderr, "    -c rrggbb : hex color (default: %s)\n", DEFAULT_FGCOLOR);
   fprintf(stderr, "    -b rrggbb : alternate (background) hex color (default: %s)\n", DEFAULT_BGCOLOR);
   fprintf(stderr, "    -s rrggbb : color increment added at each step (default: %s)\n", DEFAULT_COLORSTEP);
+  fprintf(stderr, "    -H ooccttttrr : send header data (needed for ledchain in variable led type mode)\n");
+  fprintf(stderr, "       (for p44-ledchain >=v6: oo=layout, cc=chip, tttt=tmaxpassive, rr=maxretries)\n");
   fprintf(stderr, "    -F : fill up / empty led chain with foreground color\n");
   fprintf(stderr, "    -S : single wandering LED with foreground color\n");
   fprintf(stderr, "    -v : verbose\n");
@@ -82,6 +84,7 @@ enum {
 int mode = mode_static;
 
 const int maxchains = 4;
+const int maxhdrlen = 20;
 
 int main(int argc, char **argv)
 {
@@ -89,7 +92,10 @@ int main(int argc, char **argv)
   int numchains;
   int loopidx, cidx, lidx, eidx;
   struct timespec ts;
+  uint8_t *rawbuffer;
   uint8_t *ledbuffer;
+  const char* headerStr = NULL;
+  int hdrlen = 0;
 
   long long start;
   long long loopStart;
@@ -108,7 +114,7 @@ int main(int argc, char **argv)
   }
 
   int c;
-  while ((c = getopt(argc, argv, "hn:i:e:r:c:b:s:vFS")) != -1)
+  while ((c = getopt(argc, argv, "hH:n:i:e:r:c:b:s:vFS")) != -1)
   {
     switch (c) {
       case 'h':
@@ -134,6 +140,9 @@ int main(int argc, char **argv)
         break;
       case 's':
         sscanf(optarg, "%2hhx%2hhx%2hhx", &colorstep[0], &colorstep[1], &colorstep[2]);
+        break;
+      case 'H':
+        headerStr = optarg;
         break;
       case 'v':
         verbose = 1;
@@ -164,7 +173,19 @@ int main(int argc, char **argv)
     exit(1);
   }
   // allocate buffer
-  ledbuffer = malloc(numleds*3);
+  rawbuffer = malloc(numleds*3+maxhdrlen+1);
+  ledbuffer = rawbuffer;
+  // maybe we have a header
+  if (headerStr) {
+    ledbuffer++; // room for length
+    hdrlen = 1;
+    while (hdrlen<maxhdrlen && sscanf(headerStr, "%2hhx", ledbuffer)==1) {
+      headerStr +=2;
+      hdrlen++;
+      ledbuffer++;
+    }
+    *rawbuffer = hdrlen-1;
+  }
   // loop
   start = now();
   eidx = 0; // effect index
@@ -214,7 +235,7 @@ int main(int argc, char **argv)
     // update chains
     beforeUpdate = now();
     for (cidx = 0; cidx<numchains; cidx++) {
-      write(chainFds[cidx], ledbuffer, numleds*3);
+      write(chainFds[cidx], rawbuffer, numleds*3+hdrlen);
     }
     afterUpdate = now();
     // calculate remaining wait time
@@ -251,7 +272,7 @@ int main(int argc, char **argv)
     close(chainFds[cidx]);
   }
   // free buffer
-  free(ledbuffer); ledbuffer = NULL;
+  free(rawbuffer); rawbuffer = NULL; ledbuffer = NULL;
   // done
   exit(0);
 }
