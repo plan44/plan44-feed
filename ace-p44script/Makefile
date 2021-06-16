@@ -9,7 +9,7 @@ PKG_NAME:=ace-p44script
 # version of what we are downloading
 PKG_VERSION:=1.0
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
