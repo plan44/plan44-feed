@@ -13,6 +13,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
+PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/ace-p44script.git
 #PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/ace-p44script.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)

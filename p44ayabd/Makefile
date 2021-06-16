@@ -15,6 +15,7 @@ PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=master
 #PKG_SOURCE_URL:=https://github.com/plan44/p44ayabd.git
 PKG_SOURCE_VERSION:=luz
+PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/p44ayabd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
