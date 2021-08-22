@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2021 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.5.1.5
+PKG_VERSION:=2.6.0.6
 # version of this makefile
-PKG_RELEASE:=136
+PKG_RELEASE:=143
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -28,7 +28,14 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt +VDCD_OLA:ola +VDCD_PNG:libpng +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json +VDCD_RRDB:librrd1 $(CXX_DEPENDS)
+	DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt \
+	  +VDCD_OLA:ola \
+	  +VDCD_PNG:libpng \
+	  +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json \
+	  +VDCD_RRDB:librrd1 \
+	  +VDCD_EV:libev \
+	  +VDCD_UWSC:libuwsc \
+	  $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
@@ -50,11 +57,14 @@ endef
 
 CONFIGURE_ARGS += \
 	--enable-p44buildow \
+	$(if $(CONFIG_DEBUG),--enable-debug) \
 	$(call autoconf_bool,CONFIG_VDCD_OLA,ola) \
 	$(call autoconf_bool,CONFIG_VDCD_UBUS,ubus) \
 	$(call autoconf_bool,CONFIG_VDCD_PNG,png) \
 	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x) \
-	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb)
+	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb) \
+	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
+	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc)
 
 
 define Package/$(PKG_NAME)/install
