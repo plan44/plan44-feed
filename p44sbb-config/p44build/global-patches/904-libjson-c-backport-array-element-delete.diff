@@ -1,0 +1,91 @@
+--- /dev/null
++++ b/package/libs/libjson-c/patches/900-backport-array-element-delete.patch
+@@ -0,0 +1,88 @@
++From c2533355ebca33e05ffcbb1fac40949283a094f1 Mon Sep 17 00:00:00 2001
++From: Mark Swoope <markswoope0@gmail.com>
++Date: Thu, 2 Apr 2015 14:05:27 -0700
++Subject: [PATCH] Added array_list_del_idx and json_object_array_del_idx
++
++(cherry picked from commit cdca9d3c8e50ff7de712f7157d6f0ddaa1922700)
++---
++ arraylist.c   | 15 +++++++++++++++
++ arraylist.h   |  2 ++
++ json_object.c |  4 ++++
++ json_object.h | 13 +++++++++++++
++ 4 files changed, 34 insertions(+)
++
++diff --git a/arraylist.c b/arraylist.c
++index 81b6fa2..59b9890 100644
++--- a/arraylist.c
+++++ b/arraylist.c
++@@ -99,3 +99,18 @@ array_list_length(struct array_list *arr)
++ {
++   return arr->length;
++ }
+++
+++int
+++array_list_del_idx( struct array_list *arr, int idx, int count )
+++{
+++	int i, stop;
+++
+++	stop = idx + count;
+++	if ( idx >= arr->length || stop > arr->length ) return -1;
+++	for ( i = idx; i < stop; ++i ) {
+++		if ( arr->array[i] ) arr->free_fn( arr->array[i] );
+++	}
+++	memmove( arr->array + idx, arr->array + stop, (arr->length - stop) * sizeof(void*) );
+++	arr->length -= count;
+++	return 0;
+++}
++diff --git a/arraylist.h b/arraylist.h
++index 4f3113c..3ef7e22 100644
++--- a/arraylist.h
+++++ b/arraylist.h
++@@ -49,6 +49,8 @@ array_list_length(struct array_list *al);
++ extern void
++ array_list_sort(struct array_list *arr, int(*compar)(const void *, const void *));
++ 
+++extern int 
+++array_list_del_idx(struct array_list *arr, int i, int count);
++ #ifdef __cplusplus
++ }
++ #endif
++diff --git a/json_object.c b/json_object.c
++index 6cc73bc..8dcf772 100644
++--- a/json_object.c
+++++ b/json_object.c
++@@ -853,3 +853,7 @@ struct json_object* json_object_array_get_idx(struct json_object *jso,
++   return (struct json_object*)array_list_get_idx(jso->o.c_array, idx);
++ }
++ 
+++int json_object_array_del_idx(struct json_object *jso, int idx, int count)
+++{
+++	return array_list_del_idx(jso->o.c_array, idx, count);
+++}
++diff --git a/json_object.h b/json_object.h
++index e6c6a4f..4e36779 100644
++--- a/json_object.h
+++++ b/json_object.h
++@@ -440,6 +440,19 @@ extern int json_object_array_put_idx(struct json_object *obj, int idx,
++ extern struct json_object* json_object_array_get_idx(struct json_object *obj,
++ 						     int idx);
++ 
+++/** Delete an elements from a specified index in an array (a json_object of type json_type_array)
+++ *
+++ * The reference count will be decremented for each of the deleted objects.  If there
+++ * are no more owners of an element that is being deleted, then the value is 
+++ * freed.  Otherwise, the reference to the value will remain in memory.
+++ *
+++ * @param obj the json_object instance
+++ * @param idx the index to start deleting elements at
+++ * @param count the number of elements to delete
+++ * @returns 0 if the elements were successfully deleted
+++ */
+++extern int json_object_array_del_idx(struct json_object *obj, int idx, int count);
+++
++ /* json_bool type methods */
++ 
++ /** Create a new empty json_object of type json_type_boolean
++-- 
++2.31.1
++

@@ -5,9 +5,21 @@
 205-omega2-dtsi-gdma-i2s-enable.diff
 206-omega2-dtsi-pwm-enable.diff
 207-uboot-envtools-config-init-for-omega2.diff
+#210-omega2-sound-max98357a-NEEDS-GPIO42.diff # only enable this when GPIO42 is not in use!
 211-mt7621-spi-buggy-dt-message-fix.diff
 215-mt7621-better-i2c-driver.diff
 216-mt7621-newer-gpio-driver.diff
-291-omega2S-dtsi-p44-button-and-leds.diff
-301-files-etc-shadow--no-root-login.diff
+217-gpiomm-enhancement-to-make-mt7628-gpio-output-work-with-i2c-gpio.diff
+280-p44-xxx-omega2.diff # extra device targets for P44-DSB and Omega2S-based-P44 boards
+#300-files-etc-inittab--no-serial-console.diff # disables serial console
+301-files-etc-shadow--no-root-login.diff # disables any password based root login
 302-uci-defaults-disable-dhcp-and-ra.diff
+303-u2pnpd-uci-defaults-keep-uuid.diff
+898-unbound-macos-build-patch.diff
+899-use-ola-0.10.8.patch
+900-ola-running-as-root.diff
+901-rrdtool1-add-standard-installdev-locations.diff
+902-libcec-add-ceclient-install.diff
+903-avahi-ignore-invalid-service-types.diff
+904-libjson-c-backport-array-element-delete.diff
+905-libuwsc-correct-casts-in-buffer-h.diff

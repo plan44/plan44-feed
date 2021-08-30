@@ -1,0 +1,397 @@
+--- /dev/null
++++ b/feeds/packages/net/ola/patches/200-configure-acx-pthread.patch
+@@ -0,0 +1,12 @@
++--- a/configure.ac
+++++ b/configure.ac
++@@ -428,8 +428,7 @@ ACX_PTHREAD([
++              LIBS="$PTHREAD_LIBS $LIBS"
++              CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
++              CXXFLAGS="$CXXFLAGS $PTHREAD_CXXFLAGS"
++-             CC="$PTHREAD_CC"
++-             CXX="$PTHREAD_CXX"],
+++             CC="$PTHREAD_CC"],
++             [AC_MSG_ERROR([Missing pthread, please install it])])
++ 
++ # pthread_setname_np can take either 1 or 2 arguments.
+--- /dev/null
++++ b/feeds/packages/net/ola/patches/201-automake-fix.patch
+@@ -0,0 +1,11 @@
++--- a/Makefile.am
+++++ b/Makefile.am
++@@ -12,8 +12,6 @@ AUX_DIST                = $(auxdir)/inst
++ ACLOCAL         = aclocal -I $(auxdir)
++ ACLOCAL_AMFLAGS = -I config
++ 
++-include aminclude.am
++-
++ # When running distcheck we want to enable the Python modules.
++ AM_DISTCHECK_CONFIGURE_FLAGS = --enable-python-libs
++ 
+--- /dev/null
++++ b/feeds/packages/net/ola/patches/202-gnu++11.patch
+@@ -0,0 +1,10 @@
++--- a/configure.ac
+++++ b/configure.ac
++@@ -112,7 +112,6 @@ AS_IF([test "x$ac_cv_gnu_plus_plus_11" =
++       [AS_IF([test "x$ac_cv_gnu_plus_plus_98" = xyes],
++              [AS_IF([test "x$ac_cv_header_random_98" = xyes],
++                     [AS_IF([test "x$enable_unittests" = xno],
++-                           [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
++                            [PKG_CHECK_MODULES([CPPUNIT1], [cppunit < 1.14.0],
++                                               [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
++                                               [PKG_CHECK_MODULES([CPPUNIT2], [cppunit >= 1.14.0],
+--- /dev/null
++++ b/feeds/packages/net/ola/patches/203-fix-protobuf-host-build.patch
+@@ -0,0 +1,96 @@
++--- a/configure.ac
+++++ b/configure.ac
++@@ -103,22 +103,29 @@ AS_IF([test "x$ac_cv_gnu_plus_plus_11" =
++ # force us into gnu++98 mode if necessary
++ # If gnu++11 and gnu++98 then
++ #   If random works with gnu++98
++-#     If no unit tests, force to gnu++98
++-#     If unittests and cppunit < 1.14.0, force to gnu++98
++-#     Else turn off deprecation messages for std::auto_ptr and run gnu++11
++-#   Else run gnu++11
+++#     If protobuf < 3.6
+++#       If no unit tests, force to gnu++98
+++#       Else we have unit tests
+++#         If cppunit < 1.14.0, force to gnu++98
+++#         Else turn off deprecation messages for std::auto_ptr and run gnu++11
+++#     Else assume we have protobuf >= 3.6 (later checks will confirm that for certain), turn off deprecation messages for std::auto_ptr and run gnu++11
+++#   Else turn off deprecation messages for std::auto_ptr and run gnu++11
++ require_gnu_plus_plus_11="no"
++ AS_IF([test "x$ac_cv_gnu_plus_plus_11" = xyes],
++       [AS_IF([test "x$ac_cv_gnu_plus_plus_98" = xyes],
++              [AS_IF([test "x$ac_cv_header_random_98" = xyes],
++-                    [AS_IF([test "x$enable_unittests" = xno],
++-                           [PKG_CHECK_MODULES([CPPUNIT1], [cppunit < 1.14.0],
+++                    [PKG_CHECK_MODULES([PROTOBUF1], [protobuf < 3.6],
+++                                       [AS_IF([test "x$enable_unittests" = xno],
++                                               [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
++-                                              [PKG_CHECK_MODULES([CPPUNIT2], [cppunit >= 1.14.0],
++-                                                                 [require_gnu_plus_plus_11="yes"],
++-                                                                 [AC_MSG_WARN([OLA requires std::auto_ptr support.])])
+++                                              [PKG_CHECK_MODULES([CPPUNIT1], [cppunit < 1.14.0],
+++                                                                 [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
+++                                                                 [PKG_CHECK_MODULES([CPPUNIT2], [cppunit >= 1.14.0],
+++                                                                                    [require_gnu_plus_plus_11="yes"],
+++                                                                                    [AC_MSG_WARN([OLA requires std::auto_ptr support.])])
+++                                                                 ])
++                                               ])
++-                           ])
+++                                       ],
+++                                       [require_gnu_plus_plus_11="yes"])
++                     ],
++                     [require_gnu_plus_plus_11="yes"])
++              ])
++@@ -394,12 +401,16 @@ AC_CHECK_HEADER([dmx/dmxioctl.h], [], [h
++ AS_IF([test "x$have_dmx4linux" = xyes],
++       [AC_DEFINE([HAVE_DMX4LINUX], [1], [define if dmx4linux is installed])])
++ 
+++# librt - may be separate or part of libc
+++AC_SEARCH_LIBS([clock_gettime], [rt])
+++
++ # libexecinfo
++ # FreeBSD required -lexecinfo to call backtrace - checking for presence of
++ # header execinfo.h isn't enough
++ AC_CHECK_LIB([execinfo], [backtrace], [use_lexecinfo="yes"])
+++# TODO(Peter): This should really be AC_COMPILE_IFELSE and AC_LANG_PROGRAM
++ case "${host_os}" in
++-  *freebsd* | *dragonfly*)
+++  *freebsd* | *netbsd* | *dragonfly*)
++   LIBS="$LIBS -lexecinfo"
++   ;;
++ esac
++@@ -427,7 +438,8 @@ ACX_PTHREAD([
++              LIBS="$PTHREAD_LIBS $LIBS"
++              CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
++              CXXFLAGS="$CXXFLAGS $PTHREAD_CXXFLAGS"
++-             CC="$PTHREAD_CC"],
+++             CC="$PTHREAD_CC"
+++             CXX="$PTHREAD_CXX"],
++             [AC_MSG_ERROR([Missing pthread, please install it])])
++ 
++ # pthread_setname_np can take either 1 or 2 arguments.
++@@ -765,7 +777,7 @@ AS_IF([test "x$enable_root_check" = xno]
++ # Use tcmalloc. This is used by the buildbot leak checks.
++ AC_ARG_ENABLE([tcmalloc], AS_HELP_STRING([--enable-tcmalloc], [Use tcmalloc]))
++ AS_IF([test "x$enable_tcmalloc" = xyes],
++-      [AC_CHECK_LIB([tcmalloc], [malloc], [LDFLAGS="$LDFLAGS -ltcmalloc"], [AS_ERROR([tcmalloc not found, but enabled on command line])])])
+++      [AC_CHECK_LIB([tcmalloc], [malloc], [AM_LDFLAGS="$AM_LDFLAGS -ltcmalloc"], [AS_ERROR([tcmalloc not found, but enabled on command line])])])
++ 
++ # Optionally set the Doxygen version to "Latest Git" for website latest
++ # version.
++@@ -989,6 +1003,7 @@ AC_CONFIG_FILES([include/ola/base/Versio
++                  ])
++ # Makefiles
++ AC_CONFIG_FILES([Makefile java/Makefile])
+++AC_SUBST(AM_LDFLAGS)
++ AC_OUTPUT
++ 
++ echo \
++@@ -997,7 +1012,7 @@ ${PACKAGE_NAME} Version ${PACKAGE_VERSIO
++ 
++ Prefix: '${prefix}'
++ Compiler: '${CXX} ${CXXFLAGS} ${CPPFLAGS}'
++-Linker: '${LD} ${LDFLAGS} ${LIBS}'
+++Linker: '${LD} ${AM_LDFLAGS} ${LIBS}'
++ Python: ${PYTHON}
++ 
++ Python API: ${enable_python_libs}
+--- a/feeds/packages/net/ola/Makefile
++++ b/feeds/packages/net/ola/Makefile
+@@ -9,12 +9,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=ola
+-PKG_VERSION:=0.10.7
+-PKG_RELEASE:=4
++PKG_VERSION:=0.10.8
++PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/OpenLightingProject/ola/tar.gz/$(PKG_VERSION)?
+-PKG_HASH:=95b5e99775f700a9cdf6e2219eccfc8c037fa8841f87cb00344359c4b8c7bf26
++PKG_HASH:=45bc101d1ddcc1c6320c063eb25a9345e5820a4233acfa5b29f2dfd99f7452e1
+ 
+ PKG_LICENSE:=LGPL-2.1-or-later
+ 
+@@ -65,8 +65,8 @@ HOST_CONFIGURE_ARGS += \
+ 	--disable-doxygen-html \
+ 	--disable-doxygen-doc
+ 
+-HOST_CPPFLAGS += \
+-	-std=gnu++11
++HOST_LDFLAGS += -Wl,-rpath$(comma)$(STAGING_DIR_HOSTPKG)/lib
++TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lm)
+ 
+ # only build the ola_protoc thingy
+ define Host/Compile
+--- a/feeds/packages/net/ola/patches/001-Eliminate-protobuf-AddDescriptors-call.patch
++++ /dev/null
+@@ -1,91 +0,0 @@
+-From d7f13fdc516ffa36b16b89e7f398a8a36b4188d9 Mon Sep 17 00:00:00 2001
+-From: =?UTF-8?q?Christoph=20M=C3=BCllner?= <christophm30@gmail.com>
+-Date: Sat, 2 Dec 2017 00:08:55 +0100
+-Subject: [PATCH 1/6] Eliminate protobuf AddDescriptors() call.
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
+-
+-Eliminating protobuf's AddDescriptors() calls enabled
+-forward-compatibility with libprotobuf. That allows to
+-run OLA on recent Linux distrubutions.
+-
+-Tested on x86_64 running Fedora 27 with protobuf 3.3.1
+-in combination with QLC+ and a uDMX controller.
+-
+-See #1192.
+-
+-Signed-off-by: Christoph Müllner <christophm30@gmail.com>
+----
+- config/ola.m4               | 3 ---
+- protoc/CppFileGenerator.cpp | 8 --------
+- protoc/GeneratorHelpers.cpp | 5 -----
+- protoc/GeneratorHelpers.h   | 3 ---
+- 4 files changed, 19 deletions(-)
+-
+-diff --git a/config/ola.m4 b/config/ola.m4
+-index 6080932e9..d3b8cc8f8 100644
+---- a/config/ola.m4
+-+++ b/config/ola.m4
+-@@ -24,9 +24,6 @@ AC_DEFUN([PROTOBUF_SUPPORT],
+- AC_REQUIRE_CPP()
+- PKG_CHECK_MODULES(libprotobuf, [protobuf >= $1])
+- 
+--PKG_CHECK_MODULES(libprotobuf2, [protobuf < 3.2], [],
+--                  [AC_MSG_ERROR([OLA currently requires protobuf < 3.2, see issue 1192])])
+--
+- AC_SUBST([libprotobuf_CFLAGS])
+- 
+- AC_ARG_WITH([protoc],
+-diff --git a/protoc/CppFileGenerator.cpp b/protoc/CppFileGenerator.cpp
+-index 518c17879..e7dd95ccb 100644
+---- a/protoc/CppFileGenerator.cpp
+-+++ b/protoc/CppFileGenerator.cpp
+-@@ -196,14 +196,6 @@ void FileGenerator::GenerateBuildDescriptors(Printer* printer) {
+-       "assigndescriptorsname", GlobalAssignDescriptorsName(m_output_name));
+-     printer->Indent();
+- 
+--    // Make sure the file has found its way into the pool.  If a descriptor
+--    // is requested *during* static init then AddDescriptors() may not have
+--    // been called yet, so we call it manually.  Note that it's fine if
+--    // AddDescriptors() is called multiple times.
+--    printer->Print(
+--      "$adddescriptorsname$();\n",
+--      "adddescriptorsname", GlobalAddDescriptorsName(m_file->name()));
+--
+-     // Get the file's descriptor from the pool.
+-     printer->Print(
+-       "const ::google::protobuf::FileDescriptor* file =\n"
+-diff --git a/protoc/GeneratorHelpers.cpp b/protoc/GeneratorHelpers.cpp
+-index 19609181e..6f619b5c0 100644
+---- a/protoc/GeneratorHelpers.cpp
+-+++ b/protoc/GeneratorHelpers.cpp
+-@@ -104,11 +104,6 @@ string FilenameIdentifier(const string& filename) {
+-   return result;
+- }
+- 
+--// Return the name of the AddDescriptors() function for a given file.
+--string GlobalAddDescriptorsName(const string& filename) {
+--  return "protobuf_AddDesc_" + FilenameIdentifier(filename);
+--}
+--
+- // Return the name of the AssignDescriptors() function for a given file.
+- string GlobalAssignDescriptorsName(const string& filename) {
+-   return "protobuf_AssignDesc_" + FilenameIdentifier(filename);
+-diff --git a/protoc/GeneratorHelpers.h b/protoc/GeneratorHelpers.h
+-index 35efdbb04..fa91a915d 100644
+---- a/protoc/GeneratorHelpers.h
+-+++ b/protoc/GeneratorHelpers.h
+-@@ -67,9 +67,6 @@ string StripProto(const string& filename);
+- // Convert a file name into a valid identifier.
+- string FilenameIdentifier(const string& filename);
+- 
+--// Return the name of the AddDescriptors() function for a given file.
+--string GlobalAddDescriptorsName(const string& filename);
+--
+- // Return the name of the AssignDescriptors() function for a given file.
+- string GlobalAssignDescriptorsName(const string& filename);
+- 
+--- 
+-2.11.0
+-
+--- a/feeds/packages/net/ola/patches/002-remove-visibility-inlines-hidden-flag.patch
++++ /dev/null
+@@ -1,13 +0,0 @@
+-diff --git a/Makefile.am b/Makefile.am
+-index 22647be..7dcf0de 100644
+---- a/Makefile.am
+-+++ b/Makefile.am
+-@@ -45,7 +45,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = --enable-python-libs
+- COMMON_CXXFLAGS_ONLY_WARNINGS = \
+-     -I$(top_srcdir)/include \
+-     -I$(top_builddir)/include \
+--    -Wall -Wformat -W -fvisibility-inlines-hidden \
+-+    -Wall -Wformat -W \
+-     $(libprotobuf_CFLAGS)
+- 
+- COMMON_CXXFLAGS = $(COMMON_CXXFLAGS_ONLY_WARNINGS)
+--- a/feeds/packages/net/ola/patches/050-always-force-gnu++11.patch
++++ /dev/null
+@@ -1,21 +0,0 @@
+-Index: ola-0.10.6/configure.ac
+-===================================================================
+---- ola-0.10.6.orig/configure.ac
+-+++ ola-0.10.6/configure.ac
+-@@ -72,8 +72,6 @@ AM_CONDITIONAL([SUPPORTS_GNU_PLUS_PLUS_1
+- require_gnu_plus_plus_11="no"
+- AS_IF([test "x$ac_cv_gnu_plus_plus_11" = xyes],
+-       [AS_IF([test "x$ac_cv_gnu_plus_plus_98" = xyes],
+--             [AS_IF([test "x$enable_unittests" = xno],
+--                    [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
+-                     [PKG_CHECK_MODULES([CPPUNIT1], [cppunit < 1.14.0],
+-                                        [CXXFLAGS="$CXXFLAGS -std=gnu++98"],
+-                                        [PKG_CHECK_MODULES([CPPUNIT2], [cppunit >= 1.14.0],
+-@@ -81,7 +79,6 @@ AS_IF([test "x$ac_cv_gnu_plus_plus_11" =
+-                                                           [AC_MSG_WARN([OLA requires std::auto_ptr support.])])
+-                                        ])
+-                     ])
+--             ])
+-       ])
+- AS_IF([test "x$require_gnu_plus_plus_11" = xyes],
+-       [CXXFLAGS="$CXXFLAGS -std=gnu++11"])
+--- a/feeds/packages/net/ola/patches/100-protobuf-3.7.patch
++++ /dev/null
+@@ -1,45 +0,0 @@
+-From d311970864a2338d63ce3c22a46bb9ec4bb26bfe Mon Sep 17 00:00:00 2001
+-From: Peter Newman <peterjnewman@gmail.com>
+-Date: Fri, 8 Mar 2019 15:43:50 +0000
+-Subject: [PATCH] Attempt to fix Protobuf 3.7 builds
+-
+----
+- configure.ac       |  3 +++
+- protoc/StrUtil.cpp | 10 ++++++++++
+- 2 files changed, 13 insertions(+)
+-
+-diff --git a/configure.ac b/configure.ac
+-index 9824609b4..4f782847c 100644
+---- a/configure.ac
+-+++ b/configure.ac
+-@@ -803,6 +803,9 @@ AS_IF([test "${enable_rdm_tests}" = "yes"],
+- AS_IF([test "x$build_java_libs" = xyes],
+-       [PROTOBUF_SUPPORT([2.4.0])],
+-       [PROTOBUF_SUPPORT([2.3.0])])
+-+# Version 3.7 and above of protoc require some additional includes
+-+AC_CHECK_HEADERS([google/protobuf/io/strtod.h google/protobuf/stubs/logging.h \
+-+                  google/protobuf/stubs/stl_util.h])
+- 
+- 
+- # Doxygen
+-diff --git a/protoc/StrUtil.cpp b/protoc/StrUtil.cpp
+-index 85891a6a4..2914e82f1 100644
+---- a/protoc/StrUtil.cpp
+-+++ b/protoc/StrUtil.cpp
+-@@ -41,6 +41,16 @@
+- 
+- #include "protoc/StrUtil.h"
+- 
+-+#ifdef HAVE_GOOGLE_PROTOBUF_IO_STRTOD_H
+-+#include <google/protobuf/io/strtod.h>
+-+#endif  // HAVE_GOOGLE_PROTOBUF_IO_STRTOD_H
+-+#ifdef HAVE_GOOGLE_PROTOBUF_STUBS_LOGGING_H
+-+#include <google/protobuf/stubs/logging.h>
+-+#endif  // HAVE_GOOGLE_PROTOBUF_STUBS_LOGGING_H
+-+#ifdef HAVE_GOOGLE_PROTOBUF_STUBS_STL_UTIL_H
+-+#include <google/protobuf/stubs/stl_util.h>
+-+#endif  // HAVE_GOOGLE_PROTOBUF_STUBS_STL_UTIL_H
+-+
+- #ifdef _WIN32
+- // MSVC has only _snprintf, not snprintf.
+- //
+--- a/feeds/packages/net/ola/patches/110-add-missing-config.h-incluude.patch
++++ /dev/null
+@@ -1,25 +0,0 @@
+-From 409a82f0e35fc33627f16180af7ba8a617347c8e Mon Sep 17 00:00:00 2001
+-From: Peter Newman <peterjnewman@gmail.com>
+-Date: Sat, 9 Mar 2019 14:08:01 +0000
+-Subject: [PATCH] Add the missing config.h include
+-
+----
+- protoc/StrUtil.cpp | 5 +++++
+- 1 file changed, 5 insertions(+)
+-
+-diff --git a/protoc/StrUtil.cpp b/protoc/StrUtil.cpp
+-index 2914e82f1..d300b71e8 100644
+---- a/protoc/StrUtil.cpp
+-+++ b/protoc/StrUtil.cpp
+-@@ -41,6 +41,11 @@
+- 
+- #include "protoc/StrUtil.h"
+- 
+-+#if HAVE_CONFIG_H
+-+#include <config.h>
+-+#endif  // HAVE_CONFIG_H
+-+
+-+// Required for Protobuf 3.7 onwards
+- #ifdef HAVE_GOOGLE_PROTOBUF_IO_STRTOD_H
+- #include <google/protobuf/io/strtod.h>
+- #endif  // HAVE_GOOGLE_PROTOBUF_IO_STRTOD_H
+--- a/feeds/packages/net/ola/patches/120-compile-fix.patch
++++ /dev/null
+@@ -1,14 +0,0 @@
+---- a/protoc/CppFileGenerator.cpp
+-+++ b/protoc/CppFileGenerator.cpp
+-@@ -223,9 +223,9 @@
+-     printer->Print(
+-       "namespace {\n"
+-       "\n"
+--      "GOOGLE_PROTOBUF_DECLARE_ONCE(protobuf_AssignDescriptors_once_);\n"
+-+      "::google::protobuf::internal::once_flag protobuf_AssignDescriptors_once_;\n"
+-       "inline void protobuf_AssignDescriptorsOnce() {\n"
+--      "  ::google::protobuf::GoogleOnceInit(&protobuf_AssignDescriptors_once_,"
+-+      "  ::google::protobuf::internal::call_once(protobuf_AssignDescriptors_once_,"
+-       "\n"
+-       "                 &$assigndescriptorsname$);\n"
+-       "}\n"
