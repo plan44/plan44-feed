@@ -34,12 +34,13 @@ boot() {
   cd ${PREV}
 
   # set product vars (in lack of p44maintd on this platform)
-  UNIT_HOSTNAME="p44sbb"
+  MAC=$(ip link | sed -n -E -e '/eth0/{n;s/.*ether *([0-9a-fA-F:]*).*$/\1/;s/://g;p;}')
+  UNIT_HOSTNAME="p44sbb-$MAC"
   PRODUCT_COPYRIGHT_HOLDER="plan44.ch"
   PRODUCT_INFORMATION_PAGE_LINK="https://plan44.ch/custom"
   PRODUCT_MODEL_DESCRIPTION="SBB Splitflap controller"
   PRODUCT_MODEL="P44SBB"
-  UNIT_SERIALNO="n/a"
+  UNIT_SERIALNO="$MAC"
 
   # test for custom overrides
   if [ -f "/flash/p44_startup_defs" ]; then
