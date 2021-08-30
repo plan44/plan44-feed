@@ -1,5 +1,5 @@
 #!/bin/sh /etc/rc.common
-# Copyright (c) 2017-2019 plan44.ch/luz
+# Copyright (c) 2017-2021 plan44.ch/luz
 START=99
 
 boot() {
@@ -33,24 +33,76 @@ boot() {
   done
   cd ${PREV}
 
+  # set product vars (in lack of p44maintd on this platform)
+  UNIT_HOSTNAME="p44sbb"
+  PRODUCT_COPYRIGHT_HOLDER="plan44.ch"
+  PRODUCT_INFORMATION_PAGE_LINK="https://plan44.ch/custom"
+  PRODUCT_MODEL_DESCRIPTION="SBB Splitflap controller"
+  PRODUCT_MODEL="P44SBB"
+  UNIT_SERIALNO="n/a"
+
+  # test for custom overrides
+  if [ -f "/flash/p44_startup_defs" ]; then
+    source /flash/p44_startup_defs
+  fi
+
+  # update u2pnpd UPnP announcement details
+  # - uuid gets defined automatically by u2pnpd's uci defaults script
+  uci -q set u2pnpd.@u2pnpd[0].manufacturer="${PRODUCT_COPYRIGHT_HOLDER}"
+  uci -q set u2pnpd.@u2pnpd[0].manufacturerURL="${PRODUCT_INFORMATION_PAGE_LINK}"
+  uci -q set u2pnpd.@u2pnpd[0].modelDescription="${PRODUCT_MODEL_DESCRIPTION}"
+  uci -q set u2pnpd.@u2pnpd[0].modelName="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelNumber="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelName="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelURL="${PRODUCT_INFORMATION_PAGE_LINK}"
+  uci -q set u2pnpd.@u2pnpd[0].serialNumber="${UNIT_SERIALNO}"
+  uci commit u2pnpd
+
   # make sure no dhcp services (v4, v6) or RA are running at all
   # - in case a dhcp section exists for lan
-  uci set dhcp.lan.dhcpv4=disabled
-  uci set dhcp.lan.dhcpv6=disabled
-  uci set dhcp.lan.ra=disabled
-  uci set dhcp.lan.ignore=1
+  uci -q set dhcp.lan.dhcpv4=disabled
+  uci -q set dhcp.lan.dhcpv6=disabled
+  uci -q set dhcp.lan.ra=disabled
+  uci -q set dhcp.lan.ignore=1
   # - in case a dhcp section exists for wlan
-  uci set dhcp.wlan.dhcpv4=disabled
-  uci set dhcp.wlan.dhcpv6=disabled
-  uci set dhcp.wlan.ra=disabled
-  uci set dhcp.wlan.ignore=1
+  uci -q set dhcp.wlan.dhcpv4=disabled
+  uci -q set dhcp.wlan.dhcpv6=disabled
+  uci -q set dhcp.wlan.ra=disabled
+  uci -q set dhcp.wlan.ignore=1
+  # - only when being AP, we need to provide DHCPv4
+  if ! uci -q get dhcp.ap; then
+    n=$(uci add dhcp dhcp)
+    uci -q rename dhcp.$n='ap'
+    uci -q set dhcp.ap.interface='wlanap'
+    uci -q set dhcp.ap.dhcpv4=server
+    uci -q set dhcp.ap.start=100
+    uci -q set dhcp.ap.limit=100
+    uci -q set dhcp.ap.leasetime='12h'
+    # also make odhcpd the main dhcp (no dsnmasq installed)
+    uci -q set dhcp.odhcpd.maindhcp="1"
+  fi
+  # commit
   uci commit dhcp
 
   # update host name
-  UNIT_HOSTNAME="p44sbb"
-  uci set system.@system[0].hostname="${UNIT_HOSTNAME}"
+  uci -q set system.@system[0].hostname="${UNIT_HOSTNAME}"
   uci commit system
+
+  # initialize time zone
+  if ! uci -q get system.@system[0].zonename; then
+    uci -q set system.@system[0].timezone='CET-1CEST,M3.5.0,M10.5.0/3'
+    uci -q set system.@system[0].zonename='Europe/Zurich'
+    uci commit system
+  fi
+
+  # test for custom startup script
+  if [ -f "/flash/p44_startup" ]; then
+    source /flash/p44_startup
+  fi
 
   # start runit
   /sbin/runsvdir-start &
+
+  # start u2pnpd which for some reason does not autostart (or terminates)
+  /etc/init.d/u2pnpd start
 }
