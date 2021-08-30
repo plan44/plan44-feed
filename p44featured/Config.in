@@ -7,4 +7,42 @@ config P44FEATURED_UBUS
   help
     Enabling this includes support for ubus API
 
+config P44FEATURED_EV
+	bool "Base Mainloop on libev"
+	default n
+  help
+    Enabling this makes the mainloop use libev for I/O polling which allows
+    using features that are libev-based such as UWSC websockets.
+    If enabled, p44featured depends on libev
+
+config P44FEATURED_UWSC
+  depends on P44FEATURED_EV
+	bool "Include uwsc (websocket) support"
+	default n
+  help
+    Enabling this includes support for websocket clients in p44script
+    If enabled, p44featured depends on package libuwsc
+
+config P44FEATURED_RRDB
+	bool "Include rrd(tool) support for logging sensor data"
+	default n
+  help
+    Enabling this includes support for librrd (round robin database, rrdtool).
+    If enabled, p44featured depends on package librrd1
+
+config P44FEATURED_PNG
+	bool "Include PNG support for advanced LED chain light effects"
+	default n
+  help
+    Enabling this includes support for displaying PNG images in LED matrix lights.
+    If enabled, p44featured depends on package libpng
+
+config P44FEATURED_RPIWS281X
+  depends on TARGET_brcm2708_bcm2708_DEVICE_rpi || TARGET_brcm2708_bcm2709_DEVICE_rpi-2 || TARGET_brcm2708_bcm2710_DEVICE_rpi-3
+	bool "Include support for WS281x LED-chains"
+	default n
+	help
+    Enabling this makes ledchain support use RaspberryPi-specific
+    hardware (instead relying on a kernel driver like p44-ledchain)
+
 endif

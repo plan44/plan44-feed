@@ -1,4 +1,4 @@
-# Copyright (c) 2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2020-2021 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44featured
 # version of what we are downloading
-PKG_VERSION:=1.2.2
+PKG_VERSION:=1.3.0
 # version of this makefile
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -28,7 +28,13 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools +P44FEATURED_UBUS:libubus +P44FEATURED_UBUS:libblobmsg-json $(CXX_DEPENDS)
+  DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools \
+	  +P44FEATURED_UBUS:libubus \
+	  +P44FEATURED_UBUS:libblobmsg-json \
+	  +P44FEATURED_PNG:libpng \
+	  +P44FEATURED_EV:libev \
+	  +P44FEATURED_UWSC:libuwsc \
+	  $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=custom
@@ -51,7 +57,12 @@ endef
 
 CONFIGURE_ARGS += \
 	--enable-p44buildow \
-	$(call autoconf_bool,CONFIG_P44FEATURED_UBUS,ubus)
+	$(if $(CONFIG_DEBUG),--enable-debug) \
+	$(call autoconf_bool,CONFIG_P44FEATURED_UBUS,ubus) \
+	$(call autoconf_bool,CONFIG_P44FEATURED_PNG,png) \
+	$(call autoconf_bool,CONFIG_P44FEATURED_RPIWS281X,rpiws281x) \
+	$(call autoconf_bool,CONFIG_P44FEATURED_EV,ev) \
+	$(call autoconf_bool,CONFIG_P44FEATURED_UWSC,uwsc)
 
 
 define Package/$(PKG_NAME)/install
