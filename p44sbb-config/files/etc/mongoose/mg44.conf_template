@@ -1,9 +1,14 @@
 # configuration for plan44 variant of mongoose (mg44)
 
-ssl_certificate /etc/mongoose/mg.crt
 listening_ports 80,443s
+static_file_cache_control must-revalidate
+ssl_certificate /etc/mongoose/mg.crt
+ssl_cache_timeout 2000
+enable_keep_alive yes
+keep_alive_timeout_ms 2000
 # need 2 threads at least to be able to abort running requests
-num_threads 2
+num_threads 10
+files_changed_at_restart yes
 document_root /www
 enable_directory_listing no
 authentication_domain ##PRODUCTNAME##
