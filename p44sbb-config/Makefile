@@ -49,6 +49,9 @@ endif
 ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_P44DSBOmega2),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=p44-dsb-omega2
 endif
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_P44Omega2S),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=p44-omega2s
+endif
 
 
 define Build/Prepare
