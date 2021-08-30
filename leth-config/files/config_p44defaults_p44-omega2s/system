@@ -1,0 +1,8 @@
+config system
+	option hostname	leth
+	option timezone	'CET-1CEST,M3.5.0,M10.5.0/3'
+
+config timeserver ntp
+	list server	'leths-server'
+	option enabled 1
+	option enable_server 0

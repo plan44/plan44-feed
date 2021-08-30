@@ -9,13 +9,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
-    <script src="js/jquery-1.9.1.min.js"></script>
-    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <title id="html_title_model">LETH</title>
 
-    <style type="text/css"><!--
+    <style type="text/css">
       h1 { font-family:Helvetica; font-size:24pt; }
       h2 { font-family:Helvetica; font-size:18pt; }
 
@@ -72,10 +75,10 @@
         height: 21px;
       }
 
-    --></style>
+    </style>
 
 
-    <script type="text/javascript"><!--
+    <script type="text/javascript">
 
       var restartLocation = window.location.href;
 
@@ -130,18 +133,107 @@
       }
 
 
+      function escapehtml(htmltext)
+      {
+        return $("<div>").text(htmltext).html();
+      }
+
+
+      function constructUri(baseuri, uriparams)
+      {
+        sep = "?"
+        if (rqvaltok!==true) {
+          baseuri += '?rqvaltok=' + rqvaltok;
+          sep = "&"
+        }
+        if (uriparams!==undefined && uriparams.length>0) baseuri += sep + uriparams;
+        return baseuri;
+      }
+
+
+      function mg44Call(uri, jsonquery, timeout, retrycount)
+      {
+        if (retrycount==undefined) retrycount=0;
+        // mg44 based API
+        var dfd = $.Deferred();
+        if (rqvaltok===false) {
+          // need to fetch token first
+          $.getJSON( '/tok/json' , {
+          }).done(function(response) {
+            rqvaltok = response;
+            // run request
+            mg44Call(uri, jsonquery, timeout).done(function(response) {
+              dfd.resolve(response);
+            }).fail(function(domain, code, message) {
+              dfd.reject(domain, code, message);
+            });
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status=404) {
+              // mg44 has no CSRF token enabled
+              rqvaltok=true
+              // just run request
+              mg44Call(uri, jsonquery, timeout).done(function(response) {
+                dfd.resolve(response);
+              }).fail(function(domain, code, message) {
+                dfd.reject(domain, code, message);
+              });
+            }
+            else {
+              console.log('TOK error ' + textStatus);
+              dfd.reject("mg44", -1, "cannot get token");
+            }
+          });
+        }
+        else {
+          var url = constructUri('' + uri);
+          var jdata = JSON.stringify(jsonquery);
+          var xhr = $.ajax({
+            url: url,
+            type: 'post',
+            dataType: 'json',
+            timeout: timeout,
+            data: jdata,
+            xhrFields: {
+              withCredentials: true
+            }
+          }).done(function(response) {
+            dfd.resolve(response);
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            // unsuccessful at the AJAX API level
+            if ((jqXHR.status==401 || jqXHR.status==403) && retrycount<3) {
+              retrycount++
+              // Note: status 403 is usually due to expired token.
+              //   But we also force reloading the token at 401, because of a bug in Safari??
+              //   where https PUT sometimes lacks Authorization: header repeatedly.
+              //   Forcing token reload causes a GET request in between, which seems to
+              //   mitigate the issue
+              rqvaltok = false // force getting a new token
+              console.log("auth problem (status=" + jqXHR.status + "), retrying, count=" + retrycount.toString())
+              mg44Call(uri, jsonquery, timeout, retrycount).done(function(response) {
+                dfd.resolve(response);
+              }).fail(function(domain, code, message) {
+                dfd.reject(domain, code, message);
+              });
+            }
+            else {
+              dfd.reject("ajax", jqXHR.status, textStatus + " (" + errorThrown.message + " accessing '" + url + "' data='" + jdata + "')")
+            }
+          });
+        }
+        var promise = dfd.promise();
+        promise.abort = function() { xhr.abort(); }
+        return promise;
+      }
+
+
+      // Main Page
+      // =========
+
       $(function()
       {
         // Initialize
-
-        $.getJSON( '/tok/json' , {
-        }).done( function(response) {
-          rqvaltok = response;
-          refresh_controls();
-          refresh_log();
-        }).fail(function(response, status) {
-          console.log('TOK error ' + response.error.message);
-        });
+        refresh_controls();
+        refresh_log();
 
         // Handlers
 
@@ -159,13 +251,13 @@
         $('#text_brightness').on("change", function(event, ui) {
           if (!noUpdate) {
             var bri = floatVal($('#text_brightness').val());
-            sendApiCmd('/lethd', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
+            sendApiCmd('/featureapi', { "feature":"text", "cmd":"fade", "to":bri, "t":0 });
           }
         });
         $('#light_brightness').on("change", function(event, ui) {
           if (!noUpdate) {
             var bri = floatVal($('#light_brightness').val());
-            sendApiCmd('/lethd', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
+            sendApiCmd('/featureapi', { "feature":"light", "cmd":"fade", "to":bri, "t":10 });
           }
         });
 
@@ -183,13 +275,13 @@
         $('#text_scrolloffsety').on("change", function(event, ui) {
           if (!noUpdate) {
             var scrolloffsety = floatVal($('#text_scrolloffsety').val());
-            sendApiCmd('/lethd', { "feature":"text", "offsety":scrolloffsety });
+            sendApiCmd('/featureapi', { "feature":"text", "offsety":scrolloffsety });
           }
         });
         $('#text_scrolloffsetx').on("change", function(event, ui) {
           if (!noUpdate) {
             var scrolloffsetx = floatVal($('#text_scrolloffsetx').val());
-            sendApiCmd('/lethd', { "feature":"text", "offsetx":scrolloffsetx });
+            sendApiCmd('/featureapi', { "feature":"text", "offsetx":scrolloffsetx });
           }
         });
       });
@@ -207,12 +299,7 @@
 
       function sendApiCmd(context, command, doneCB)
       {
-        $.ajax({
-          url: '/api/json' + context + '?rqvaltok=' + rqvaltok,
-          type: 'post',
-          dataType: 'json',
-          data: JSON.stringify(command)
-        })
+        mg44Call('/api/json' + context, command, 10000)
         .done(function(response) {
           if (doneCB) doneCB(response);
         });
@@ -228,20 +315,20 @@
       {
         var scrollsteptime = floatVal($('#text_scrollsteptime').val());
         var scrollstepx = floatVal($('#text_scrollstepx').val());
-        sendApiCmd('/lethd', { "feature":"text", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
+        sendApiCmd('/featureapi', { "feature":"text", "cmd":"startscroll", "stepx":scrollstepx, "stepy":0, "steps":-1, "interval":scrollsteptime });
       }
 
 
       function stopScroll()
       {
-        sendApiCmd('/lethd', { "feature":"text", "cmd":"stopscroll" });
+        sendApiCmd('/featureapi', { "feature":"text", "cmd":"stopscroll" });
       }
 
 
       function sendMessage()
       {
         var msg = $('#messageText').val();
-        sendApiCmd('/lethd', { "feature":"text", "text":msg });
+        sendApiCmd('/featureapi', { "feature":"text", "text":msg });
       }
 
 
@@ -249,14 +336,14 @@
       {
         var msg = $('#WTmessageText').val();
         var col = $('#WTmessageColor').val();
-        sendApiCmd('/lethd', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
+        sendApiCmd('/featureapi', { "cmd":"call", "script":"scripts/showmsg.json", "substitutions":{ "MSG":msg, "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":col } });
       }
 
 
       function WThide()
       {
         var mac = $('#WTMAC').val();
-        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
+        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"hide", "mac":mac, "withperson":true, "hide":true });
       }
 
 
@@ -264,7 +351,7 @@
       {
         var mac = $('#WTMAC').val();
         var name = $('#WTpersonName').val();
-        sendApiCmd('/lethd', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
+        sendApiCmd('/featureapi', { "feature":"wifitrack", "cmd":"rename", "mac":mac, "name":name });
       }
 
 
@@ -272,47 +359,47 @@
       function callScene()
       {
         var sname = $('#sceneName').val();
-        sendApiCmd('/lethd', { "feature":"text", "scene":"scenes/"+sname+".json" });
+        sendApiCmd('/featureapi', { "feature":"text", "scene":"scenes/"+sname+".json" });
       }
 
 
       function setTextColor()
       {
         var col = $('#messageColor').val();
-        sendApiCmd('/lethd', { "feature":"text", "color":col });
+        sendApiCmd('/featureapi', { "feature":"text", "color":col });
       }
 
 
       function setBackgroundColor()
       {
         var col = $('#backgroundColor').val();
-        sendApiCmd('/lethd', { "feature":"text", "backgroundcolor":col });
+        sendApiCmd('/featureapi', { "feature":"text", "backgroundcolor":col });
       }
 
 
       function fireNeuron()
       {
-        sendApiCmd('/lethd', { "feature":"neuron", "cmd":"fire" });
+        sendApiCmd('/featureapi', { "feature":"neuron", "cmd":"fire" });
       }
 
 
       function initLight()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "light":true });
+        sendApiCmd('/featureapi', { "cmd":"init", "light":true });
         refresh_controls();
       }
 
 
       function initNeuron()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
+        sendApiCmd('/featureapi', { "cmd":"init", "neuron":{ "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70 } });
         refresh_controls();
       }
 
 
       function initText()
       {
-        sendApiCmd('/lethd', { "cmd":"init", "text":[ { "cols": 72, "offset": 0, "orientation": 0 } ] });
+        sendApiCmd('/featureapi', { "cmd":"init", "text":[ { "cols": 72, "offset": 0, "orientation": 0 } ] });
         refresh_controls();
       }
 
@@ -320,7 +407,7 @@
       function refresh_controls()
       {
         // get status
-        sendApiCmd('/lethd', { "cmd":"status" }, function(response) {
+        sendApiCmd('/featureapi', { "cmd":"status" }, function(response) {
           noUpdate = true;
           // global
           $('#macaddress').html(response.macaddress);

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# default features
-EXECUTABLE=lethd
-LOGLEVEL=6
-EXTRAOPTS=
+DAEMON=p44featured
+
+# app config
+APPCONFIG="--mainscript lethd_main.txt"
 
 # basic config Omega2 on ledcontroller v1
 
@@ -11,12 +11,17 @@ EXTRAOPTS=
 PWM_LED_FET_PIN="pwmchip0.0.320000"
 
 # - LED chain
+MAX_LEDS=800
+LED_TYPE="WS2813.GRB"
 LEDCHAIN_NAME_1="ledchain1"
 LEDCHAIN_NAME_2="ledchain2"
 LEDCHAIN_NAME_3="ledchain3"
-LEDCHAIN_NUMLEDS_1=518
-LEDCHAIN_NUMLEDS_2=182
-LEDCHAIN_NUMLEDS_3=100
+# - default ledchain init-params
+#   [ledtype:[leddevicename:]]numberOfLeds:[x:dx:y:dy:firstoffset:betweenoffset][XYSA][W#whitecolor]
+LEDCHAIN_DEVICE_1="${LED_TYPE}:/dev/${LEDCHAIN_NAME_1}:518:0:72:0:7:1:2:A"
+LEDCHAIN_DEVICE_2="${LED_TYPE}:/dev/${LEDCHAIN_NAME_2}:182:0:24:0:7:1:2:A"
+LEDCHAIN_DEVICE_3="${LED_TYPE}:/dev/${LEDCHAIN_NAME_3}:100"
+LEDCHAINS="--ledchain ${LEDCHAIN_DEVICE_1} --ledchain ${LEDCHAIN_DEVICE_2} --ledchain ${LEDCHAIN_DEVICE_3}"
 
 # - WiFi interface
 WIFI_MONITOR_IF="moni0"
@@ -42,28 +47,30 @@ BUTTON_PIN="missing"
 GREENLED_PIN="led.p44:green:status1"
 REDLED_PIN="led.p44:red:status2"
 
+# general settings
+JSONAPIPORT=8090
+FEATUREAPIPORT=11200
+LOGLEVEL=6
+
 
 # Allow overriding options (such as LOGLEVEL or EXTRAOPTS)
 # - override from flash
-if [ -f /flash/lethd_cfg ]; then
-  source /flash/lethd_cfg
+if [ -f "/flash/${DAEMON}_cfg" ]; then
+  source "/flash/${DAEMON}_cfg"
 fi
 # - override from tmp
-if [ -f /tmp/lethd_cfg ]; then
-  source /tmp/lethd_cfg
+if [ -f "/tmp/${DAEMON}_cfg" ]; then
+  source "/tmp/${DAEMON}_cfg"
 fi
 
 
 # LED chains
-LEDCHAIN_DEVICE_1="/dev/${LEDCHAIN_NAME_1}"
-LEDCHAIN_DEVICE_2="/dev/${LEDCHAIN_NAME_2}"
-LEDCHAIN_DEVICE_3="/dev/${LEDCHAIN_NAME_3}"
 # - we need PWM1 on GPIO45/46
 omega2-ctrl gpiomux set uart1 pwm01
 # - we need pwm2 and 3 as well
 omega2-ctrl gpiomux set uart2 pwm23
-# load driver
-insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${LEDCHAIN_NUMLEDS_1},2 ${LEDCHAIN_NAME_2}=0,${LEDCHAIN_NUMLEDS_2},2 ${LEDCHAIN_NAME_3}=0,${LEDCHAIN_NUMLEDS_3},2
+# load driver (in variable mode, LED type/layout determined by app)
+insmod p44-ledchain ${LEDCHAIN_NAME_1}=0,${MAX_LEDS},255 ${LEDCHAIN_NAME_2}=0,${MAX_LEDS},255 ${LEDCHAIN_NAME_3}=0,${MAX_LEDS},255
 
 
 # PWM for LED dimmer: pwm0 on GPIO45
@@ -78,12 +85,12 @@ omega2-ctrl gpiomux set i2s gpio
 #   Note: devid 0 (bus 0) is already in use by HW SPI, so we take 1
 insmod spi-gpio-custom bus0=1,1,2,3,0,100000,0
 
-# run the daemon
-exec ${EXECUTABLE} \
+#run
+exec ${DAEMON} \
+  --resourcepath /usr/share/leth \
+  --datapath /flash \
   --pwmdimmer ${PWM_LED_FET_PIN} \
-  --ledchain1 ${LEDCHAIN_DEVICE_1} \
-  --ledchain2 ${LEDCHAIN_DEVICE_2} \
-  --ledchain3 ${LEDCHAIN_DEVICE_3} \
+  ${LEDCHAINS} \
   --sensor0 ${ADC_INPUT_CH0} \
   --sensor1 ${ADC_INPUT_CH1} \
   ${WIFITRACK} \
@@ -91,11 +98,9 @@ exec ${EXECUTABLE} \
   --button ${BUTTON_PIN} \
   --greenled ${GREENLED_PIN} \
   --redled ${REDLED_PIN} \
-  --datapath /flash \
-  --resourcepath /usr/share/leth \
-  --jsonapiport 8090 \
+  --jsonapiport ${JSONAPIPORT} \
   --jsonapinonlocal \
-  --lethdapiport 11200 \
-  -l ${LOGLEVEL} \
-  ${EXTRAOPTS} \
-  </dev/null
+  --featureapiport ${FEATUREAPIPORT} \
+  --ubusapi \
+  ${APPCONFIG} \
+  -l ${LOGLEVEL}

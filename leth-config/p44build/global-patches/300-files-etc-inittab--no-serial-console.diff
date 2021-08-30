@@ -1,0 +1,7 @@
+--- /dev/null
++++ b/files/etc/inittab
+@@ -0,0 +1,3 @@
++::sysinit:/etc/init.d/rcS S boot
++::shutdown:/etc/init.d/rcS K shutdown
++#::askconsole:/bin/ash --login
+\ No newline at end of file

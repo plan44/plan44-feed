@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DAEMON="lethd"
+DAEMON="p44featured"
 LOGDIR="/var/log/${DAEMON}"
 
 # check options
@@ -33,7 +33,7 @@ for OPT in $@ ; do
 done
 
 if [ "${LOGCHANGE}" -eq "1" ]; then
-  echo "{ 'method': 'POST', 'uri': 'vdc', 'data': { 'method': 'loglevel', 'dSUID':'root', 'value': ${LOGLEVEL} } }" | nc localhost 8090 >/dev/null
+  ubus call ${DAEMON} log "{ 'level': ${LOGLEVEL} }"
 fi
 
 if [ "${DUMPALL}" -ne "0" ]; then

@@ -9,10 +9,10 @@
  /overlay
  /package/feeds
  /package/openwrt-packages
-@@ -27,3 +27,8 @@ TAGS*~
- git-src
+@@ -29,3 +29,8 @@ git-src
  .project
  .cproject
+ .ccache
 +# p44build additions
 +/patches
 +/.pc

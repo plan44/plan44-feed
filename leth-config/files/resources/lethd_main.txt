@@ -1,0 +1,9 @@
+// Common main script for all LETH Controllers
+
+/*
+// initialize default features
+feature('splitflaps').init({ "modules":[
+  { "name":"hour", "addr":6, "type":"hour" },
+  { "name":"minute", "addr":1, "type":"minute" },
+] });
+*/

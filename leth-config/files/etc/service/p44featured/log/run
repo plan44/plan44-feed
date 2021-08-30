@@ -1,5 +1,5 @@
 #!/bin/sh
-DAEMON=lethd
+DAEMON=p44featured
 LOGDIR=/var/log/${DAEMON}
 
 # create logdir (svlogd runs as nobody)

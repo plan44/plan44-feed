@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>p44script editor</title>
+  <style type="text/css" media="screen">
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        overflow: hidden;
+    }
+
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin-bottom: 40px;
+    }
+
+    #controls {
+        border
+        margin: 0;
+        position: fixed;
+        height: 40px;
+        background-color: #BBB;
+        bottom: -40px;
+        left: 0;
+        right: 0;
+        margin-bottom: 40px;
+        padding: 8px;
+        font-family: sans-serif;
+    }
+
+    #controls button {
+      height: 24px;
+      padding: 0 50px;
+      font-weight: bold;
+    }
+    #controls #save {
+      color: black
+    }
+    #controls #restart {
+      color: green
+    }
+    #controls #stop {
+      color: red
+    }
+
+    #controls #message {
+      display: inline;
+    }
+    .error {
+      color: red;
+    }
+    .ok {
+      color: green;
+    }
+
+    .referencelink { float: right; font-size: smaller;}
+
+  </style>
+</head>
+<body>
+
+<pre id="editor"></pre>
+
+<div id="controls">
+  <button id="save" onclick="javascript:saveAndCheckScript()" title="Saves and compiles the script. Note that function definitions and 'on(...) {...}' handlers get active immediately">Save & Compile</button>
+  <button id="restart" onclick="javascript:restartScript()" title="Starts or restarts the main script">Restart</button>
+  <button id="stop" onclick="javascript:stopScript()" title="Stops the main script (if it is still running)">Stop</button>
+  &nbsp<div id="message"></div>
+  <a class="referencelink" href="/script_ref.html" target="_blank">p44script reference</a>
+</div>
+
+<script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.min.js"></script>
+<script>
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/xcode");
+    editor.session.setMode("ace/mode/p44script");
+    editor.setOptions({
+      tabSize: 2,
+      useSoftTabs: true,
+      newLineMode: "unix",
+      scrollPastEnd: 0.5,
+      enableBasicAutocompletion: false,
+      enableLiveAutocompletion: true,
+      enableSnippets: true,
+    });
+
+    var rqvaltok="";
+
+    $(document).ready(function() {
+
+      $.getJSON( '/tok/json' , {
+      }).done( function(response) {
+        rqvaltok = response;
+        loadScript();
+      });
+
+    });
+
+
+    function escapehtml(htmltext)
+    {
+      return $("<div>").text(htmltext).html();
+    }
+
+
+    function constructUri(baseuri, uriparams)
+    {
+      sep = "?"
+      if (rqvaltok!==true) {
+        baseuri += '?rqvaltok=' + rqvaltok;
+        sep = "&"
+      }
+      if (uriparams!==undefined && uriparams.length>0) baseuri += sep + uriparams;
+      return baseuri;
+    }
+
+
+    function mg44Call(uri, jsonquery, timeout, retrycount)
+    {
+      if (retrycount==undefined) retrycount=0;
+      // mg44 based API
+      var dfd = $.Deferred();
+      if (rqvaltok===false) {
+        // need to fetch token first
+        $.getJSON( '/tok/json' , {
+        }).done(function(response) {
+          rqvaltok = response;
+          // run request
+          mg44Call(uri, jsonquery, timeout).done(function(response) {
+            dfd.resolve(response);
+          }).fail(function(domain, code, message) {
+            dfd.reject(domain, code, message);
+          });
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          if (jqXHR.status=404) {
+            // mg44 has no CSRF token enabled
+            rqvaltok=true
+            // just run request
+            mg44Call(uri, jsonquery, timeout).done(function(response) {
+              dfd.resolve(response);
+            }).fail(function(domain, code, message) {
+              dfd.reject(domain, code, message);
+            });
+          }
+          else {
+            console.log('TOK error ' + textStatus);
+            dfd.reject("mg44", -1, "cannot get token");
+          }
+        });
+      }
+      else {
+        var url = constructUri('' + uri);
+        var jdata = JSON.stringify(jsonquery);
+        var xhr = $.ajax({
+          url: url,
+          type: 'post',
+          dataType: 'json',
+          timeout: timeout,
+          data: jdata,
+          xhrFields: {
+            withCredentials: true
+          }
+        }).done(function(response) {
+          dfd.resolve(response);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          // unsuccessful at the AJAX API level
+          if ((jqXHR.status==401 || jqXHR.status==403) && retrycount<3) {
+            retrycount++
+            // Note: status 403 is usually due to expired token.
+            //   But we also force reloading the token at 401, because of a bug in Safari??
+            //   where https PUT sometimes lacks Authorization: header repeatedly.
+            //   Forcing token reload causes a GET request in between, which seems to
+            //   mitigate the issue
+            rqvaltok = false // force getting a new token
+            console.log("auth problem (status=" + jqXHR.status + "), retrying, count=" + retrycount.toString())
+            mg44Call(uri, jsonquery, timeout, retrycount).done(function(response) {
+              dfd.resolve(response);
+            }).fail(function(domain, code, message) {
+              dfd.reject(domain, code, message);
+            });
+          }
+          else {
+            dfd.reject("ajax", jqXHR.status, textStatus + " (" + errorThrown.message + " accessing '" + url + "' data='" + jdata + "')")
+          }
+        });
+      }
+      var promise = dfd.promise();
+      promise.abort = function() { xhr.abort(); }
+      return promise;
+    }
+
+
+    function loadScript()
+    {
+      mg44Call('api/json/mainscript', {}, 10000, false).done(function(response) {
+        if (response['code']!==undefined) {
+          editor.setValue(response['code']);
+          editor.navigateTo(0,0);
+          $("#message").html('');
+        }
+        else {
+          $("#message").html('cannot load main script');
+        }
+      }).fail(function(domain, code, message) {
+        $("#message").html('error: [' + domain + '] Error ' + code.toString() + ': ' + message);
+      });
+    }
+
+
+    function saveAndCheckScript()
+    {
+      var call = { "code": editor.getValue(), "save":true };
+      mg44Call('api/json/mainscript', call, 10000, false).done(function(response) {
+        if (response.error!==undefined) {
+          $("#message").html('Syntax Error: <span class="error">' + escapehtml(response.error) + '</span>');
+          if (response.at!==undefined) {
+            editor.gotoLine(response.line+1, response.char, true);
+            editor.selection.selectRight();
+          }
+        }
+        else {
+          $("#message").html('<span class="ok">Syntax OK</span>');
+        }
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+    function restartScript()
+    {
+      var call = { "run":true };
+      mg44Call('api/json/mainscript', call, 2000, false).done(function(response) {
+        $("#message").html('restarted');
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+    function stopScript()
+    {
+      var call = { "stop":true };
+      mg44Call('api/json/mainscript', call, 2000, false).done(function(response) {
+        $("#message").html('stopped');
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+</script>
+
+</body>
+</html>

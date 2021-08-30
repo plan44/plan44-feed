@@ -9,9 +9,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <link rel="stylesheet" href="css/jquery.mobile-1.3.2.min.css" />
-    <script src="js/jquery-1.9.1.min.js"></script>
-    <script src="js/jquery.mobile-1.3.2.min.js"></script>
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
 
     <title>Tweaking</title>
 
@@ -29,12 +32,6 @@
     --></style>
 
     <script language="javascript1.2" type="text/javascript"><!--
-
-      var restartLocation = window.location.href;
-
-      var focusdevice;
-
-      var tickDiff = false;
 
     	var rqvaltok="";
 
@@ -71,7 +68,8 @@
           }
         }
         selectHtml +=
-          '<option disabled>templates</option>' +
+          '<option disabled>featureapi templates</option>' +
+          '<option value="1000">{ "run":"log(5,\"script run from API\")" }</option>' +
           '<option value="1000">{ "cmd":"status" }</option>' +
           '<option value="1001">{ "cmd":"now" }</option>' +
           '<option value="1002">{ "cmd":"call", "script":"scripts/xxx.json", "substitutions":{ "MSG":"msg", "HASMSG":1, "IMGNAME":"", "HASIMG":0, "COLOR":"FFF" } }</option>' +
@@ -96,8 +94,15 @@
           '<option value="1047">{ "feature":"text", "cmd":"startscroll", "stepx":1, "interval":80, "start":null }</option>' +
           '<option value="1048">{ "feature":"text", "scene":"scenes/stepup.json" }</option>' +
           '<option value="1049">{ "feature":"text", "cmd":"reconfigure", "view":"PACMAN", "config":{ "color":"#FFD700" } }</option>' +
-          '<option value="1002">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
-          '<option value="1200">{ "level":6 }</option>';
+          '<option value="1050">{ "cmd":"init", "neuron": { "movingAverageCount": 20, "threshold": 250, "numBodyLeds": 70, "numAxonLeds":70, "x":1, "y":1 } }</option>' +
+          '<option value="1060">{ "cmd":"init", "splitflaps": { "modules":[ { "name":"hour", "addr":6, "type":"hour" } }</option>' +
+          '<option value="1061">{ "feature":"splitflaps", "cmd":"position", "name":"hour", "value":19 }</option>' +
+          '<option value="1062">{ "feature":"splitflaps", "cmd":"raw", "data":"FFD006" }</option>' +
+          '<option disabled>mainscript templates</option>' +
+          '<option value="2000">{ }</option>' +
+          '<option value="2001">{ "stop":true, "code":"log(' + "'hello mainscript'" +')", "save":true, "run":true" }</option>' +
+          '<option disabled>log templates</option>' +
+          '<option value="3000">{ "level":6 }</option>';
 
         $('#jsonExamples').html(selectHtml).trigger('create');
         $('#jsonExamples').val(0).selectmenu('refresh');
@@ -187,10 +192,12 @@
       <div data-role="content">
         <div style="margin-bottom: 20px;">
           <label for="apiPath">Enter API Path:</label>
-          <input type="text" name="apiPath" id="apiPath" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="api/json/lethd" data-theme="d">
+          <input type="text" name="apiPath" id="apiPath" placeholder='api/json/featureapi' value="api/json/featureapi" data-theme="d">
           <select onchange="javascript:apiSelected();" name="apiExamples" id="apiExamples">
             <option value="0">- select template -</option>
-            <option value="1">api/json/lethd</option>
+            <option value="1">api/json/featureapi</option>
+            <option value="1">api/json/mainscript</option>
+            <option value="1">api/json/scriptapi</option>
             <option value="3">api/json/log</option>
             <option value="99">tok/json</option>
           </select>
