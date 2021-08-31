@@ -62,8 +62,10 @@ CONFIG_TARGET_ramips_mt76x8=y
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_mt7628 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_mac1200r-v2 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_netgear_r6120 is not set
-CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2=y
+# CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2p is not set
+CONFIG_TARGET_ramips_mt76x8_DEVICE_P44Omega2S=y
+# CONFIG_TARGET_ramips_mt76x8_DEVICE_P44DSBOmega2 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_pbr-d1 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_rakwireless_rak633 is not set
 # CONFIG_TARGET_ramips_mt76x8_DEVICE_skylab_skw92a is not set
@@ -99,7 +101,7 @@ CONFIG_HAS_SUBTARGETS=y
 CONFIG_HAS_DEVICES=y
 CONFIG_TARGET_BOARD="ramips"
 CONFIG_TARGET_SUBTARGET="mt76x8"
-CONFIG_TARGET_PROFILE="DEVICE_omega2"
+CONFIG_TARGET_PROFILE="DEVICE_P44Omega2S"
 CONFIG_TARGET_ARCH_PACKAGES="mipsel_24kc"
 CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc"
 CONFIG_CPU_TYPE="24kc"
@@ -174,6 +176,7 @@ CONFIG_TARGET_UBIFS_JOURNAL_SIZE=""
 #
 # Global build settings
 #
+# CONFIG_JSON_OVERVIEW_IMAGE_INFO is not set
 # CONFIG_ALL_NONSHARED is not set
 # CONFIG_ALL_KMODS is not set
 # CONFIG_ALL is not set
@@ -316,7 +319,7 @@ CONFIG_TARGET_ROOTFS_DIR=""
 # CONFIG_CCACHE is not set
 CONFIG_EXTERNAL_KERNEL_TREE=""
 CONFIG_KERNEL_GIT_CLONE_URI=""
-CONFIG_BUILD_LOG=y
+# CONFIG_BUILD_LOG is not set
 # CONFIG_SRC_TREE_OVERRIDE is not set
 CONFIG_EXTRA_OPTIMIZATION="-fno-caller-saves -fno-plt"
 # CONFIG_TARGET_OPTIONS is not set
@@ -363,7 +366,7 @@ CONFIG_TARGET_INIT_CMD="/sbin/init"
 CONFIG_TARGET_INIT_SUPPRESS_STDERR=y
 CONFIG_VERSIONOPT=y
 CONFIG_VERSION_DIST="P44SBB"
-CONFIG_VERSION_NUMBER="0.7"
+CONFIG_VERSION_NUMBER="0.8"
 CONFIG_VERSION_CODE=""
 CONFIG_VERSION_REPO="http://swupd.plan44.ch/owfeeds"
 CONFIG_VERSION_HOME_URL=""
@@ -380,6 +383,7 @@ CONFIG_FEED_packages=y
 # CONFIG_FEED_luci is not set
 CONFIG_FEED_routing=y
 # CONFIG_FEED_telephony is not set
+CONFIG_FEED_freifunk=y
 CONFIG_FEED_p44i=y
 CONFIG_FEED_plan44=y
 CONFIG_FEED_onion=y
@@ -2334,9 +2338,9 @@ CONFIG_PACKAGE_procd=y
 # CONFIG_PACKAGE_qos-scripts is not set
 # CONFIG_PACKAGE_resolveip is not set
 CONFIG_PACKAGE_rpcd=y
-# CONFIG_PACKAGE_rpcd-mod-file is not set
+CONFIG_PACKAGE_rpcd-mod-file=y
 CONFIG_PACKAGE_rpcd-mod-iwinfo=y
-# CONFIG_PACKAGE_rpcd-mod-rpcsys is not set
+CONFIG_PACKAGE_rpcd-mod-rpcsys=y
 # CONFIG_PACKAGE_snapshot-tool is not set
 CONFIG_PACKAGE_swconfig=y
 CONFIG_PACKAGE_ubox=y
@@ -2374,15 +2378,13 @@ CONFIG_PACKAGE_sudo=m
 # CONFIG_PACKAGE_binutils is not set
 # CONFIG_PACKAGE_gdb is not set
 CONFIG_PACKAGE_gdbserver=y
+# CONFIG_PACKAGE_meson is not set
+# CONFIG_PACKAGE_meson-src is not set
+# CONFIG_PACKAGE_ninja is not set
 # CONFIG_PACKAGE_objdump is not set
 # CONFIG_PACKAGE_trace-cmd is not set
 # CONFIG_PACKAGE_trace-cmd-extra is not set
 # CONFIG_PACKAGE_valgrind is not set
-
-#
-# Extra packages
-#
-# CONFIG_PACKAGE_wireguard-tools is not set
 
 #
 # Firmware
@@ -3322,7 +3324,6 @@ CONFIG_PACKAGE_kmod-rt2x00-pci=y
 #
 # CONFIG_PACKAGE_libbz2 is not set
 # CONFIG_PACKAGE_liblzma is not set
-# CONFIG_PACKAGE_libzstd is not set
 
 #
 # Filesystem
@@ -3339,6 +3340,21 @@ CONFIG_PACKAGE_libip6tc=y
 # CONFIG_PACKAGE_libiptc is not set
 CONFIG_PACKAGE_libxtables=y
 # CONFIG_PACKAGE_libxtables-nft is not set
+
+#
+# Networking
+#
+# CONFIG_PACKAGE_libunbound-heavy is not set
+CONFIG_PACKAGE_libunbound-light=y
+# CONFIG_PACKAGE_libuwsc-mbedtls is not set
+# CONFIG_PACKAGE_libuwsc-nossl is not set
+CONFIG_PACKAGE_libuwsc-openssl=y
+
+#
+# Configuration
+#
+# CONFIG_LIBUWSC_openssl_LUA_BINDING is not set
+# CONFIG_PACKAGE_libuwsc-wolfssl is not set
 
 #
 # SSL
@@ -3557,12 +3573,12 @@ CONFIG_PACKAGE_libjpeg=y
 CONFIG_PACKAGE_libjson-c=y
 # CONFIG_PACKAGE_libkmod is not set
 # CONFIG_PACKAGE_libltdl is not set
-# CONFIG_PACKAGE_liblua is not set
+CONFIG_PACKAGE_liblua=y
 # CONFIG_PACKAGE_liblzo is not set
 # CONFIG_PACKAGE_libmad is not set
 # CONFIG_PACKAGE_libmariadb is not set
 # CONFIG_PACKAGE_libmcrypt is not set
-# CONFIG_PACKAGE_libmicrohttpd-no-ssl is not set
+CONFIG_PACKAGE_libmicrohttpd-no-ssl=m
 # CONFIG_PACKAGE_libmicrohttpd-ssl is not set
 CONFIG_PACKAGE_libmnl=m
 # CONFIG_PACKAGE_libmodbus is not set
@@ -3607,13 +3623,14 @@ CONFIG_PACKAGE_libpcre=y
 # CONFIG_PACKAGE_libpcrecpp is not set
 CONFIG_PACKAGE_libpng=y
 # CONFIG_PACKAGE_libpopt is not set
-# CONFIG_PACKAGE_libprotobuf-c is not set
+CONFIG_PACKAGE_libprotobuf-c=y
 CONFIG_PACKAGE_libreadline=y
 # CONFIG_PACKAGE_libroxml is not set
 CONFIG_PACKAGE_librrd1=y
 # CONFIG_PACKAGE_libsasl2 is not set
 # CONFIG_PACKAGE_libsmartcols is not set
 # CONFIG_PACKAGE_libsocks is not set
+# CONFIG_PACKAGE_libsodium is not set
 # CONFIG_PACKAGE_libss is not set
 # CONFIG_PACKAGE_libssh2 is not set
 # CONFIG_PACKAGE_libtasn1 is not set
@@ -3638,6 +3655,8 @@ CONFIG_PACKAGE_libuuid=y
 CONFIG_PACKAGE_libuv=m
 # CONFIG_PACKAGE_libv4l is not set
 # CONFIG_PACKAGE_libxml2 is not set
+# CONFIG_PACKAGE_libzmq-curve is not set
+# CONFIG_PACKAGE_libzmq-nc is not set
 # CONFIG_PACKAGE_linux-atm is not set
 # CONFIG_PACKAGE_p11-kit is not set
 # CONFIG_PACKAGE_protobuf is not set
@@ -3660,6 +3679,11 @@ CONFIG_PACKAGE_zlib=y
 #
 # Network
 #
+
+#
+# Captive Portals
+#
+# CONFIG_PACKAGE_nodogsplash is not set
 
 #
 # File Transfer
@@ -3713,6 +3737,13 @@ CONFIG_PACKAGE_avahi-dbus-daemon=y
 # CONFIG_PACKAGE_avahi-nodbus-daemon is not set
 CONFIG_PACKAGE_avahi-utils=y
 # CONFIG_PACKAGE_idn2 is not set
+# CONFIG_PACKAGE_unbound-anchor is not set
+# CONFIG_PACKAGE_unbound-checkconf is not set
+# CONFIG_PACKAGE_unbound-control is not set
+# CONFIG_PACKAGE_unbound-control-setup is not set
+CONFIG_PACKAGE_unbound-daemon=y
+# CONFIG_PACKAGE_unbound-daemon-heavy is not set
+# CONFIG_PACKAGE_unbound-host is not set
 
 #
 # Linux ATM tools
@@ -3860,6 +3891,7 @@ CONFIG_PACKAGE_openssh-sftp-server=y
 # CONFIG_PACKAGE_openvpn-openssl is not set
 # CONFIG_PACKAGE_tinc is not set
 # CONFIG_PACKAGE_wireguard is not set
+# CONFIG_PACKAGE_wireguard-tools is not set
 
 #
 # WWAN
@@ -3874,7 +3906,10 @@ CONFIG_PACKAGE_openssh-sftp-server=y
 #
 # CONFIG_PACKAGE_sockd is not set
 # CONFIG_PACKAGE_socksify is not set
-# CONFIG_PACKAGE_uhttpd is not set
+CONFIG_PACKAGE_uhttpd=m
+CONFIG_uhttpd_lua=y
+CONFIG_PACKAGE_uhttpd-mod-lua=m
+CONFIG_PACKAGE_uhttpd-mod-ubus=m
 
 #
 # wireless
@@ -3926,13 +3961,13 @@ CONFIG_PACKAGE_iw=y
 # CONFIG_PACKAGE_map is not set
 CONFIG_PACKAGE_odhcp6c=y
 CONFIG_PACKAGE_odhcp6c_ext_cer_id=0
-# CONFIG_PACKAGE_odhcpd is not set
-CONFIG_PACKAGE_odhcpd-ipv6only=y
+CONFIG_PACKAGE_odhcpd=y
 
 #
 # Configuration
 #
-CONFIG_PACKAGE_odhcpd_ipv6only_ext_cer_id=0
+CONFIG_PACKAGE_odhcpd_full_ext_cer_id=0
+# CONFIG_PACKAGE_odhcpd-ipv6only is not set
 # CONFIG_PACKAGE_ola is not set
 # CONFIG_PACKAGE_omcproxy is not set
 # CONFIG_PACKAGE_pagekitec is not set
@@ -3953,7 +3988,7 @@ CONFIG_SOCAT_SSL=y
 # CONFIG_PACKAGE_soloscli is not set
 CONFIG_PACKAGE_tcpdump=m
 CONFIG_PACKAGE_tcpdump-mini=m
-CONFIG_PACKAGE_u2pnpd=m
+CONFIG_PACKAGE_u2pnpd=y
 CONFIG_PACKAGE_uclient-fetch=y
 # CONFIG_PACKAGE_umbim is not set
 # CONFIG_PACKAGE_umdns is not set
@@ -3977,6 +4012,7 @@ CONFIG_DRIVER_11W_SUPPORT=y
 # CONFIG_PACKAGE_wpa-supplicant-wolfssl is not set
 # CONFIG_PACKAGE_wpad is not set
 CONFIG_PACKAGE_wpad-basic=y
+# CONFIG_PACKAGE_wpad-basic-wolfssl is not set
 # CONFIG_PACKAGE_wpad-mesh-openssl is not set
 # CONFIG_PACKAGE_wpad-mesh-wolfssl is not set
 # CONFIG_PACKAGE_wpad-mini is not set
@@ -3988,12 +4024,6 @@ CONFIG_PACKAGE_wpad-basic=y
 #
 # Onion
 #
-
-#
-# Network
-#
-# CONFIG_PACKAGE_wifimanager is not set
-# CONFIG_PACKAGE_wifisetup is not set
 
 #
 # Utilities
@@ -4009,6 +4039,7 @@ CONFIG_PACKAGE_omega2-ctrl=y
 # Utilities
 #
 CONFIG_PACKAGE_i2c-tools=y
+# CONFIG_PACKAGE_p44ledchaintest is not set
 CONFIG_PACKAGE_serialfwd=y
 # CONFIG_PACKAGE_sqfloatswapper is not set
 
@@ -4023,6 +4054,10 @@ CONFIG_PACKAGE_serialfwd=y
 # CONFIG_PACKAGE_p44banditd is not set
 CONFIG_PACKAGE_p44featured=y
 CONFIG_P44FEATURED_UBUS=y
+CONFIG_P44FEATURED_EV=y
+CONFIG_P44FEATURED_UWSC=y
+# CONFIG_P44FEATURED_RRDB is not set
+CONFIG_P44FEATURED_PNG=y
 # CONFIG_PACKAGE_p44mbc-config is not set
 # CONFIG_PACKAGE_p44mbcd is not set
 # CONFIG_PACKAGE_p44mbutil is not set
@@ -4080,7 +4115,6 @@ CONFIG_PACKAGE_mg44=y
 # CONFIG_PACKAGE_hermel-config is not set
 # CONFIG_PACKAGE_hermeld is not set
 # CONFIG_PACKAGE_messagetorch is not set
-# CONFIG_PACKAGE_p44sbbd is not set
 # CONFIG_PACKAGE_pixelboard-config is not set
 # CONFIG_PACKAGE_pixelboardd is not set
 
@@ -4109,7 +4143,6 @@ CONFIG_PACKAGE_uboot-envtools=y
 #
 # CONFIG_PACKAGE_bzip2 is not set
 # CONFIG_PACKAGE_xz-utils is not set
-# CONFIG_PACKAGE_zstd is not set
 
 #
 # Disc
@@ -4220,6 +4253,7 @@ CONFIG_SQLITE3_LIBEDIT=y
 # CONFIG_PACKAGE_bsdiff is not set
 # CONFIG_PACKAGE_bspatch is not set
 # CONFIG_PACKAGE_cal is not set
+# CONFIG_PACKAGE_cec-client is not set
 # CONFIG_PACKAGE_ct-bugcheck is not set
 CONFIG_PACKAGE_dbus=y
 # CONFIG_PACKAGE_dbus-utils is not set
@@ -4271,7 +4305,7 @@ CONFIG_PACKAGE_tree=y
 # CONFIG_PACKAGE_unshare is not set
 # CONFIG_PACKAGE_usb-modeswitch is not set
 # CONFIG_PACKAGE_usbreset is not set
-CONFIG_PACKAGE_usbutils=y
+# CONFIG_PACKAGE_usbutils is not set
 # CONFIG_PACKAGE_uuidd is not set
 # CONFIG_PACKAGE_uuidgen is not set
 # CONFIG_PACKAGE_v4l-utils is not set
