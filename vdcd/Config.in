@@ -52,4 +52,11 @@ config VDCD_RPIWS281X
     Enabling this makes ledchain support use RaspberryPi-specific
     hardware (instead relying on a kernel driver like p44-ledchain)
 
+config VDCD_P44FEATURES
+	bool "Include support for p44features (specific usecase drivers)"
+	default n
+  help
+    Enabling this includes support for p44features, a set of drivers for
+    very specific peripheral hardware and use cases for exhibitions & art project.
+
 endif

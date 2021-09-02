@@ -24,7 +24,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libubus +libblobmsg-json $(C_DEPENDS)
+	DEPENDS:=+libubus +libblobmsg-json $(C_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products

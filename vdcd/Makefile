@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.6.0.6
+PKG_VERSION:=2.6.0.8
 # version of this makefile
-PKG_RELEASE:=143
+PKG_RELEASE:=145
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=master
@@ -63,6 +63,7 @@ CONFIGURE_ARGS += \
 	$(call autoconf_bool,CONFIG_VDCD_PNG,png) \
 	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x) \
 	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb) \
+	$(call autoconf_bool,CONFIG_VDCD_P44FEATURES,p44features) \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
 	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc)
 
