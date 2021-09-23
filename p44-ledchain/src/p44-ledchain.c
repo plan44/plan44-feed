@@ -46,7 +46,8 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 // v4 - reduce TPassive_max_nS for WS2813/15 to 40uS, more causes occasional flicker for WS2815 at least
 // v5 - add ledtype_ws2815_rgb
 // v6 - completely reworked led type handling, separate chip/layout parameters, variable mode with led type header in data
-#define P44LEDCHAIN_VERSION 6
+// v7 - reduce TPassive_max_nS for WS2813 (done for WS2813 in v6 already) to 35uS, more STILL caused occasional flicker
+#define P44LEDCHAIN_VERSION 7
 
 
 #define LEDCHAIN_MAX_LEDS 2048
@@ -232,8 +233,9 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1H = 750ns..1000nS
     // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
     // - TReset = >300µS
+    // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 40000, .TReset_nS = 300000
+    .TPassive_max_nS = 35000, .TReset_nS = 300000
   },
   {
     .name = "WS2815",
