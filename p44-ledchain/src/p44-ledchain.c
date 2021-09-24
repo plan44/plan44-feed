@@ -186,6 +186,7 @@ typedef struct {
   int T0Passive_double; ///< if set, for a 0 bit the passive time is doubled
   int TPassive_max_nS; ///< max time signal can be passive without reset occurring
   int TReset_nS; ///< time signal must be passive to reset chain
+  int TBitFlags; ///< 0 for no special bit control, 1 to make sure each led starts with a new PWM
 } LedChipDescriptor_t;
 
 
@@ -212,7 +213,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 1150ns..1450nS
     // - TReset = >50µS
     .T0Active_nS = 500, .TPassive_min_nS = 1200, .T0Passive_double = 1,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .TBitFlags = 0
   },
   {
     .name = "WS2812",
@@ -223,7 +225,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 200ns..500nS (actual max is fortunately higher, ~10uS)
     // - TReset = >50µS
     .T0Active_nS = 350, .TPassive_min_nS = 900, .T0Passive_double = 0,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .TBitFlags = 0
   },
   {
     .name = "WS2813",
@@ -235,7 +238,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >300µS
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 35000, .TReset_nS = 300000
+    .TPassive_max_nS = 35000, .TReset_nS = 300000,
+    .TBitFlags = 1 // %%% start each LED with new PWM pattern
   },
   {
     .name = "WS2815",
@@ -247,7 +251,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >300µS
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 35000, .TReset_nS = 300000
+    .TPassive_max_nS = 35000, .TReset_nS = 300000,
+    .TBitFlags = 0
   },
   {
     .name = "P9823",
@@ -259,7 +264,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >50µS
     // Note: the T0L and T1H seem to be wrong, using experimentally determined values
     .T0Active_nS = 425, .TPassive_min_nS = 1000, .T0Passive_double = 0,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .TBitFlags = 0
   },
   {
     .name = "SK6812",
@@ -270,7 +276,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 450ns..750nS (actual max is fortunately higher, ~15uS)
     // - TReset = >50µS
     .T0Active_nS = 300, .TPassive_min_nS = 900, .T0Passive_double = 0,
-    .TPassive_max_nS = 15000, .TReset_nS = 80000
+    .TPassive_max_nS = 15000, .TReset_nS = 80000,
+    .TBitFlags = 0
   },
 };
 
@@ -318,7 +325,7 @@ static const PredefLedTypeDescriptor_t predefLedTypeDescriptors[num_predef_ledty
 // PWM pattern
 typedef struct {
   u32 data[2];
-  u32 nanosecs;
+  u32 bitsAndNanosecs;
 } PWMPattern_t;
 
 
@@ -414,6 +421,7 @@ static void startSendingPatterns(devPtr_t dev);
 u32 sendNextPattern(devPtr_t dev)
 {
   u32 expectedNs = 0;
+  u32 bns = dev->outPtr->bitsAndNanosecs;
 
   SEQ_TRACE('p');
   // disable PWM before setting new pattern (especially in case no more patterns follow!)
@@ -422,8 +430,13 @@ u32 sendNextPattern(devPtr_t dev)
     // set new pattern to send
     iowrite32(dev->outPtr->data[0], PWM_CHAN(dev->pwm_channel, PWMSENDDATA0)); // Upper 32 bits
     iowrite32(dev->outPtr->data[1], PWM_CHAN(dev->pwm_channel, PWMSENDDATA1)); // Lower 32 bits
-    // get nanoseconds
-    expectedNs = dev->outPtr->nanosecs;
+    // get nanoseconds and number of bits
+    expectedNs = bns & 0xFFFFFF;
+    if (bns & 0xFF000000) {
+      // changing number of bits per output, must set it for every PWM run
+      // nanosecs (bits 24..30)-1 -> PWMCON0 bits 9..14
+      iowrite32(0x0008 | (((bns>>15)-0x200) & 0x7E00) | (dev->inverted ? 0x0180 : 0x0000), PWM_CHAN(dev->pwm_channel, PWMCON)); // PWMxCON: New PWM mode, specified number of bits, idle&guard=inverted, 40Mhz clock, no clock dividing
+    }
     // next
     (dev->outPtr)++;
     (dev->remainingPWMPatterns)--;
@@ -683,13 +696,16 @@ static void initBitGenerator(devPtr_t dev)
 
 
 // generate single bit into pattern buffer
-static void generateBit(int aBit, devPtr_t dev)
+static void generateBit(int aBit, devPtr_t dev, int aEndPWMPattern)
 {
   u32 om = dev->outMask;
   u32 *owPtr = &(dev->outPtr->data[(dev->bitCount & 0x20) ? 1 : 0]); // second word for bits 32..63
 
   #if VAR_DUMP
-  printk(KERN_INFO LOGPREFIX "bit=%d, outPtr=0x%08X, om=0x%08X, bitCount=%d, *owPtr=0x%08X, nanosecs=%d\n", aBit, (u32)(dev->outPtr), om, dev->bitCount, *owPtr, dev->nanosecs);
+  printk(
+    KERN_INFO LOGPREFIX "bit=%d, outPtr=0x%08X, om=0x%08X, bitCount=%d, *owPtr=0x%08X, nanosecs=%d, endpattern=%d\n",
+    aBit, (u32)(dev->outPtr), om, dev->bitCount, *owPtr, dev->nanosecs, aEndPWMPattern
+  );
   #endif
 
   if (om==0) {
@@ -712,11 +728,17 @@ static void generateBit(int aBit, devPtr_t dev)
   // next bit
   om = om << 1;
   (dev->bitCount)++;
-  if (om==0) {
-    // longword complete, begin next
-    if (dev->bitCount>=64) {
-      // 64 bit pattern complete, save nanoseconds
-      dev->outPtr->nanosecs = dev->nanosecs;
+  if (om==0 || (dev->ledChipDesc->TBitFlags && aEndPWMPattern)) {
+    // longword complete or forced end, begin next
+    if (dev->bitCount>=64 || (dev->ledChipDesc->TBitFlags && aEndPWMPattern)) {
+      // pattern complete, save nanoseconds (and number of bits in case we use end control)
+      if (dev->ledChipDesc->TBitFlags) {
+        dev->outPtr->bitsAndNanosecs = dev->nanosecs | (dev->bitCount<<24);
+        om = 0; // can be non-0 here
+      }
+      else {
+        dev->outPtr->bitsAndNanosecs = dev->nanosecs;
+      }
       dev->nanosecs = 0;
       dev->bitCount = 0;
       // safeguard
@@ -743,16 +765,16 @@ static void generateBits(u32 aWord, u8 aNumBits, devPtr_t dev)
     // make sure 1-bit does not start at end of a 64-bit word
     if (bit && (dev->bitCount==63)) {
       // High bit starting at end of 64bit output word -> would fail because cut in two parts by idle period
-      generateBit(0, dev); // insert an extra inactive period, so High bit is in fresh 64-bit word
+      generateBit(0, dev, 0); // insert an extra inactive period, so High bit is in fresh 64-bit word
     }
-    generateBit(1, dev); // first bit always high
-    if (bit) generateBit(1, dev); // generate a second high period for a high input bit
+    generateBit(1, dev, 0); // first bit always high
+    if (bit) generateBit(1, dev, aNumBits==1); // generate a second high period for a high input bit
     // idle period is only needed if not in a new pattern (pattern load time is assumed to be ALWAYS longer than minimal idle period!)
     if (dev->bitCount!=0) {
-      generateBit(0, dev); // at least one low period is needed
+      generateBit(0, dev, aNumBits==1); // at least one low period is needed, if we have end control end when this is the last bit
       if (!bit && dev->ledChipDesc->T0Passive_double && dev->bitCount!=0) {
-        // 0-bit needs double passive time (but is not needed if we're at end of the pattern)
-        generateBit(0, dev); // add another low bit
+        // 0-bit needs double passive time (but is not needed if we're reacxhed the end of the pattern with the previous bit)
+        generateBit(0, dev, aNumBits==1); // add another low bit
       }
     }
     // shift input bit mask to next bit
@@ -790,7 +812,7 @@ static u32 finishBitGenerator(devPtr_t dev)
       dev->nanosecs += 32*dev->ledChipDesc->TPassive_min_nS;
     }
     // word full now, save nanosecs and advance
-    dev->outPtr->nanosecs = dev->nanosecs;
+    dev->outPtr->bitsAndNanosecs = dev->nanosecs;  // always full 64bit, MSB==0 (no bit count)
     (dev->outPtr)++;
   }
   // return number of new patterns
