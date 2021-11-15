@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -x /usr/bin/p44maintd ]; then
+  # obtain system information vars
+  p44maintd --defs >/tmp/p44defs
+  source /tmp/p44defs
+fi
+if [ -z "${PRODUCT_KITE_FRONTEND}" ]; then
+  # no product specific config, use generic device config
+  PRODUCT_KITE_FRONTEND="devices.plan44.ch"
+  PRODUCT_KITE_PORT="22281"
+  AUTOKITE_SEED="0x5A27127D2671"
+fi
+
+if [ -z "${AUTOKITE_SEED}" ]; then
+  AUTOKITE_SEED="0"
+fi
+
+# start p44pagekite
+exec p44pagekite \
+-S -F ${PRODUCT_KITE_FRONTEND} -P ${PRODUCT_KITE_PORT} -C \
+-x ${AUTOKITE_SEED} \
+-f \
+/etc/pagekite/kite.cfg \
+/flash/kite.cfg \
+/flash/tempkite.cfg \
+>/dev/null 2>&1
