@@ -1,0 +1,14 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2021 plan44.ch/luz
+START=19
+
+boot() {
+
+  echo "[kksdcm] configuring hardware"
+
+  # Enable all Ethernet ports (bits 17..20 must be 0 for P1..P4, bit 16 for P0)
+  devmem 0x1000003C 32 0x000001FF
+  # Enable P0,P1,P4,P4 activity LEDs (but not P2, this is an internal connection)
+  devmem 0x10000064 32 0x00010040
+
+}

@@ -1,0 +1,15 @@
+{
+  "webadmin": {
+    "description": "KKS-DCM administrator via Web UI",
+    "read": {
+      "ubus": {
+        "kksdcmd": [ "*" ],
+      },
+    },
+    "write": {
+      "ubus": {
+        "kksdcmd": [ "*" ],
+      },
+    }
+  }
+}

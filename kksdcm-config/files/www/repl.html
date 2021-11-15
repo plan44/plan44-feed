@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/dialog.js"></script>
+    <script src="/js/p44api.js"></script>
+
+    <title>p44Script playground (REPL)</title>
+
+    <style type="text/css">
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      .devinfo p { }
+      .infovalue { font-weight: bold; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      .referencelink { float: right; font-size: smaller;}
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+    </style>
+
+    <script language="javascript1.2" type="text/javascript"><!--
+
+    	var maxHistoryLength = 30;
+    	var jsonhistory = [];
+
+
+      function selectText(jqfield, start, end)
+      {
+        var field = jqfield.get(0);
+        if( field.createTextRange ) {
+          var selRange = field.createTextRange();
+          selRange.collapse(true);
+          selRange.moveStart('character', start);
+          selRange.moveEnd('character', end);
+          selRange.select();
+        } else if( field.setSelectionRange ) {
+          field.setSelectionRange(start, end);
+        } else if( field.selectionStart ) {
+          field.selectionStart = start;
+          field.selectionEnd = end;
+        }
+        field.focus();
+      }
+
+
+      function addToHistory(txt)
+      {
+        var dup = jsonhistory.findIndex(function(e) { return e==txt; });
+        if (dup>=0) {
+          jsonhistory.splice(dup,1);
+          jsonhistory.unshift(txt);
+        }
+        else {
+          // new entry, put in front
+          jsonhistory.unshift(txt);
+          if (jsonhistory.length>maxHistoryLength) jsonhistory.pop();
+        }
+        refreshExamples();
+      }
+
+
+      function refreshExamples()
+      {
+        var selectHtml =
+          '<option value="0">- select example / from history -</option>';
+        if (jsonhistory.length>0) {
+          selectHtml +=
+            '<option disabled>history</option>';
+          for (var i=0; i<jsonhistory.length; i++) {
+            selectHtml +=
+              '<option value="' + (i+1).toString() + '">' + jsonhistory[i] + '</option>';
+          }
+        }
+        selectHtml +=
+          '<option disabled>templates</option>' +
+          '<option value="1000">log("hello world")</option>' +
+          '<option value="1001">glob x=42</option>' +
+          '<option value="1002">function hello(what) { log("hello "+what) }</option>' +
+          '<option value="1003">on (every(0:10)) { log("another ten minutes have passed") }</option>' +
+          '<option value="1004">undeclare()</option>';
+        $('#scriptExamples').html(selectHtml).trigger('create');
+        $('#scriptExamples').val(0).selectmenu('refresh');
+      }
+
+
+      function exampleSelected()
+      {
+        if ($('#scriptExamples').val()!=0) {
+          var text = $('#scriptExamples>option:selected').html();
+          $('#scriptSource').val(text);
+          $('#scriptExamples').val(0).selectmenu('refresh');
+          $('#scriptSource').focus();
+        }
+      }
+
+
+      function refresh_log()
+      {
+        $.get("tail_log.txt", function(data) {
+          $("#tail_log").html(data);
+        });
+      }
+
+
+      var rqvaltok="";
+
+      $(function()
+      {
+        refreshExamples();
+        // force ubus login
+        apiCall();
+
+        // handler for execScript button
+        $("#execScript").click(function() {
+          $("#scriptResult").val("...running...");
+          var script = $("#scriptSource").val().toString();
+          var call = { "execcode":script };
+          // needs a long timeout, large queries might be sloooow!
+          apiCall(call, 20000, true, "mainscript").done(function(response) {
+            if (response.result!==undefined) {
+              var v;
+              if (typeof response.result === "object" || typeof response.result === "array") {
+                // json
+                v = JSON.stringify(response.result);
+              }
+              else if (response.result===null) {
+                v = "null";
+              }
+              else {
+                v = response.result.toString();
+              }
+              $("#scriptResult").val(v + " // "+response.annotation);
+            }
+            else if (response.error!==undefined) {
+              $("#scriptResult").val("// *** Error: "+response.error.toString());
+              if (response.at!==undefined) selectText($('#scriptSource'), response.at, response.at+1);
+            }
+            else {
+              $("#scriptResult").val(JSON.stringify(response));
+            }
+            addToHistory(script);
+            refresh_log();
+          }).fail(function(domain, code, message) {
+            $("#scriptResult").val('// apiCall: [' + domain + '] Error ' + code.toString() + ': ' + message);
+          });
+        });
+
+      });
+
+
+    --></script>
+
+
+  </head>
+
+  <body>
+
+    <div id="repl" data-role="page">
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <label for="scriptSource">Enter p44Script code:</label>
+          <select onchange="exampleSelected()" name="scriptExamples" data-mini="true" id="scriptExamples">
+          </select>
+          <textarea rows="10" data-autogrow="false" type="text" name="scriptSource" id="scriptSource" data-theme="d"></textarea>
+          <button type="button" id="execScript" data-inline="true" data-theme="c">Execute</button>
+          <a class="referencelink" href="/script_ref.html" target="_blank">p44script reference</a>
+          <textarea rows="10" id="scriptResult" data-theme="d"></textarea>
+        </div>
+        <div>
+          <h3>complete <a target="_blank" href="current_log.txt">current</a> /
+          <a target="_blank" href="previous_log.txt">previous</a> log -
+          last lines (<a href="javascript:refresh_log()">refresh</a>)
+          </h3>
+          <div id="logtext">
+            <pre id="tail_log">...</pre>
+          </div>
+        </div>
+      </div>
+
+      <div data-theme="a" data-role="popup" id="loginDialog" data-overlay-theme="b" data-dismissible="false" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>KKSDCM - Login</h3>
+          <p id="loginMessage"></p>
+          <label for="loginUser">User:</label>
+          <input type="text" autocomplete="off" name="loginUser" id="loginUser" value="" >
+          <label for="loginPassword">Password:</label>
+          <input type="password" name="loginPassword" id="loginPassword" value="" >
+          <button type="button" id="loginCheckButton" data-icon="check">Login</button>
+        </div>
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

@@ -1,0 +1,22 @@
+--- /dev/null
++++ b/feeds/packages/libs/libmodbus/patches/001-tolerate-TIOCSRS485-fail-when-custom-rts-handler-installed.patch
+@@ -0,0 +1,19 @@
++--- a/src/modbus-rtu.c
+++++ b/src/modbus-rtu.c
++@@ -914,9 +914,14 @@ int modbus_rtu_set_serial_mode(modbus_t
++         if (mode == MODBUS_RTU_RS485) {
++             rs485conf.flags = SER_RS485_ENABLED;
++             if (ioctl(ctx->s, TIOCSRS485, &rs485conf) < 0) {
++-                return -1;
+++                /* allow failing here in case we have set a custom RTS handler */
+++                if (ctx_rtu->set_rts==_modbus_rtu_ioctl_rts) {
+++                    return -1;
+++                }
+++                if (ctx->debug) {
+++                    fprintf(stderr, "TIOCSRS485 failed (%d), but tolerated because custom RTS handler is set\n", errno);
+++                }
++             }
++-
++             ctx_rtu->serial_mode = MODBUS_RTU_RS485;
++             return 0;
++         } else if (mode == MODBUS_RTU_RS232) {

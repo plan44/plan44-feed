@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/p44api.js"></script>
+
+  <title>Demo</title>
+
+  <style type="text/css" media="screen">
+    dd { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+
+<!-- plain html/css/js login box -->
+
+<style>
+.overlay {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  transition: opacity 500ms;
+}
+
+.overlay * {
+  box-sizing: border-box;
+}
+
+.popup {
+  margin: 70px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 5px;
+  width: 30%;
+  position: relative;
+  transition: all 5s ease-in-out;
+}
+.popup h2 {
+  margin-top: 0;
+  color: #333;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.popup .content {
+  max-height: 30%;
+  overflow: auto;
+}
+.popup input, .popup button {
+  width: 98%;
+  height: 2.5em;
+  margin: 10px 2px;
+  border: black 1px solid;
+  padding: 5px;
+}
+.popup button {
+  width: 98%;
+  margin: 10px 2px;
+  background-color: #DDD;
+}
+.popup button:hover {
+  background-color: #BBB;
+}
+</style>
+
+
+<script>
+  function openDialog(dialog, openedCB)
+  {
+    $(dialog).show();
+    if (openedCB!=undefined) {
+      openedCB();
+    }
+  }
+
+  function closeDialog() {
+    $('#loginDialog').hide();
+  }
+</script>
+
+
+<div id="loginDialog" class="overlay" style="display:none">
+	<div class="popup">
+		<h2>KKSDCM - Login</h2>
+		<div class="content">
+      <p id="loginMessage"></p>
+      <label for="loginUser">User:</label><br/>
+      <input type="text" autocomplete="off" name="loginUser" id="loginUser" value="" ><br/>
+      <label for="loginPassword">Password:</label><br/>
+      <input type="password" name="loginPassword" id="loginPassword" value="" ><br/>
+      <button type="button" id="loginCheckButton">Login</button>
+		</div>
+	</div>
+</div>
+
+
+<!-- Demo site just showing 10 modbus registers -->
+
+<script>
+
+    function pollmodbus()
+    {
+      // get modbus register contents
+      var call = { "scriptapi": { "cmd": "regs" }};
+      apiCall(call, 10000, true).done(function(response) {
+        // create definition list
+        var listhtml = '';
+        for (var key in response) {
+          if (response.hasOwnProperty(key)) {
+            listhtml += '<dt>' + key + ':</dt><dd>' + response[key] + '</dd>';
+          }
+        }
+        $('#registerlist').html(listhtml);
+      }).fail(function(domain, code, message) {
+        // API problem
+        alert('API error: ' + domain + '] Error ' + code.toString() + ': ' + message);
+      }).always(function() {
+        // repeat
+        setTimeout(pollmodbus, 2000);
+      });
+    }
+
+    $(document).ready(function() {
+      pollmodbus()
+    });
+
+</script>
+
+<div id="main">
+  <h1>Demo website: display modbus registers</h1>
+
+  <dl id="registerlist">
+  </dl>
+</div>
+
+
+</body>
+</html>

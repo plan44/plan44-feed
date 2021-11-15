@@ -1,0 +1,22 @@
+001-gitignore.diff
+002-download-save-gitrev.diff
+204-mt7628an-pwm-irq.diff
+204b-mt7628an-pwm-no-pin-claims.diff
+205-omega2-dtsi-gdma-i2s-enable.diff
+206-omega2-dtsi-pwm-enable.diff
+207-uboot-envtools-config-init-for-omega2.diff
+211-mt7621-spi-buggy-dt-message-fix.diff
+215-mt7621-better-i2c-driver.diff
+216-mt7621-newer-gpio-driver.diff
+217-gpiomm-enhancement-to-make-mt7628-gpio-output-work-with-i2c-gpio.diff
+280-kksdcmomega2.diff
+300-libmodbus-working-without-TIOCSRS485.diff
+301-files-etc-shadow--no-root-login.diff # disables any password based root login
+302-uci-defaults-disable-dhcp-and-ra.diff
+303-u2pnpd-uci-defaults-keep-uuid.diff
+800-backport-to-19.07-libhttp-parser-macos-fix.diff
+901-rrdtool1-add-standard-installdev-locations.diff
+903-avahi-ignore-invalid-service-types.diff
+904-libjson-c-backport-array-element-delete.diff
+905-libuwsc-correct-casts-in-buffer-h.diff
+999-TEMP-fix-libubus-hash.diff

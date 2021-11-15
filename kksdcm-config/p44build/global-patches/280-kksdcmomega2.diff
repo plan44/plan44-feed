@@ -1,0 +1,242 @@
+--- a/target/linux/ramips/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/base-files/etc/board.d/02_network
+@@ -60,6 +60,7 @@ ramips_setup_interfaces()
+ 	ncs601w|\
+ 	omega2 | \
+ 	omega2p | \
++	kksdcmomega2 | \
+ 	timecloud|\
+ 	tplink,tl-wa801nd-v5|\
+ 	w150m|\
+@@ -628,7 +629,8 @@ ramips_setup_macs()
+ 		lan_mac=$(macaddr_add "$lan_mac" 2)
+ 		;;
+ 	omega2|\
+-	omega2p)
++	omega2p|\
++	kksdcmomega2)
+ 		wan_mac=$(mtd_get_mac_binary factory 4)
+ 		lan_mac=$(mtd_get_mac_binary factory 46)
+ 		;;
+--- a/target/linux/ramips/base-files/lib/ramips.sh
++++ b/target/linux/ramips/base-files/lib/ramips.sh
+@@ -379,6 +379,9 @@ ramips_board_detect() {
+ 	*"OY-0001")
+ 		name="oy-0001"
+ 		;;
++	*"KKS DCM Omega2")
++		name="kksdcmomega2"
++		;;
+ 	*"PBR-D1")
+ 		name="pbr-d1"
+ 		;;
+--- a/target/linux/ramips/image/mt76x8.mk
++++ b/target/linux/ramips/image/mt76x8.mk
+@@ -160,6 +160,15 @@ define Device/omega2p
+ endef
+ TARGET_DEVICES += omega2p
+ 
++define Device/KKSDCMOmega2
++  DTS := KKS-DCM-OMEGA2
++  IMAGE_SIZE := $(ralink_default_fw_size_16M)
++  SUPPORTED_DEVICES := kksdcmomega2 omega2 omega2p
++  DEVICE_TITLE := KKS-DCM Omega2
++  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
++endef
++TARGET_DEVICES += KKSDCMOmega2
++
+ define Device/pbr-d1
+   DTS := PBR-D1
+   IMAGE_SIZE := $(ralink_default_fw_size_16M)
+--- /dev/null
++++ b/target/linux/ramips/dts/KKS-DCM-OMEGA2.dts
+@@ -0,0 +1,179 @@
++/dts-v1/;
++
++#include "mt7688newgpio.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	compatible = "plan44,kksdcmomega2", "onion,omega2p", "onion,omega2", "mediatek,mt7628an-soc";
++	model = "KKS DCM Omega2";
++
++	aliases {
++		led-boot = &system_led;
++		led-failsafe = &system_led;
++		led-running = &system_led;
++		led-upgrade = &system_led;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x4000000>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		system_led: system {
++			label = "onion:amber:system";
++			gpios = <&gpioc 44 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++		};
++
++	};
++
++};
++
++&pinctrl {
++	state_default: pinctrl0 {
++		gpio {
++			ralink,group = "gpio";
++			ralink,function = "gpio";
++		};
++
++		perst {
++			ralink,group = "perst";
++			ralink,function = "gpio";
++		};
++
++		refclk {
++			ralink,group = "refclk";
++			ralink,function = "gpio";
++		};
++
++		i2s {
++			ralink,group = "i2s";
++			ralink,function = "gpio";
++		};
++
++		spis {
++			ralink,group = "spis";
++			ralink,function = "gpio";
++		};
++
++		wled_kn {
++			ralink,group = "wled_kn";
++			ralink,function = "gpio";
++		};
++
++		wled_an {
++			ralink,group = "wled_an";
++			ralink,function = "gpio";
++		};
++
++		wdt {
++			ralink,group = "wdt";
++			ralink,function = "gpio";
++		};
++
++		pwm0 {
++			ralink,group = "pwm0";
++			ralink,function = "gpio";
++		};
++
++		pwm1 {
++			ralink,group = "pwm1";
++			ralink,function = "gpio";
++		};
++	};
++};
++
++&spi0 {
++	status = "okay";
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi_pins>, <&spi_cs1_pins>;
++
++	m25p80@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		linux,modalias = "m25p80", "mx25l25635e";
++		spi-max-frequency = <40000000>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "u-boot";
++				reg = <0x0 0x30000>;
++				read-only;
++			};
++
++			partition@30000 {
++				label = "u-boot-env";
++				reg = <0x30000 0x10000>;
++				/* we need a linux writable uboot environment, so WE DONT WANT A read-only HERE! */
++			};
++
++			factory: partition@40000 {
++				label = "factory";
++				reg = <0x40000 0x10000>;
++				read-only;
++			};
++
++			firmware: partition@50000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x50000 0xfb0000>;
++			};
++		};
++	};
++
++	spidev@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "siriuscybernetics,spigpp";
++		reg = <1>;
++		spi-max-frequency = <40000000>;
++	};
++};
++
++&i2c {
++	status = "okay";
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&ethernet {
++	mtd-mac-address = <&factory 0x28>;
++};
++
++&sdhci {
++	status = "okay";
++	mediatek,cd-low;
++};
++
++&wmac {
++	status = "okay";
++};
++
++&gpioc {
++	status = "okay";
++};
++
++&pwm {
++	status = "okay";
++};
+--- a/package/boot/uboot-envtools/files/ramips
++++ b/package/boot/uboot-envtools/files/ramips
+@@ -28,6 +28,7 @@ all5002)
+ linkits7688|\
+ omega2|\
+ omega2p|\
++kksdcmomega2|\
+ miwifi-nano|\
+ sk-wb8|\
+ wsr-1166|\

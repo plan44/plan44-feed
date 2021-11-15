@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/dialog.js"></script>
+  <script src="/js/p44api.js"></script>
+
+  <title>p44script editor</title>
+
+  <style type="text/css" media="screen">
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        overflow: hidden;
+    }
+
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin-bottom: 40px;
+    }
+
+    #controls {
+        border
+        margin: 0;
+        position: fixed;
+        height: 40px;
+        background-color: #BBB;
+        bottom: -40px;
+        left: 0;
+        right: 0;
+        margin-bottom: 40px;
+        padding: 8px;
+        font-family: sans-serif;
+    }
+
+    #controls button {
+      height: 24px;
+      padding: 0 50px;
+      font-weight: bold;
+    }
+    #controls #save {
+      color: black
+    }
+    #controls #restart {
+      color: green
+    }
+    #controls #stop {
+      color: red
+    }
+
+    #controls #message {
+      display: inline;
+    }
+    .error {
+      color: red;
+    }
+    .ok {
+      color: green;
+    }
+
+    .referencelink { float: right; font-size: smaller;}
+
+  </style>
+</head>
+<body>
+
+
+<!-- plain html/css/js login box -->
+
+<style>
+.overlay {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  transition: opacity 500ms;
+}
+
+.overlay * {
+  box-sizing: border-box;
+}
+
+.popup {
+  margin: 70px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 5px;
+  width: 30%;
+  position: relative;
+  transition: all 5s ease-in-out;
+}
+.popup h2 {
+  margin-top: 0;
+  color: #333;
+  font-family: Tahoma, Arial, sans-serif;
+}
+.popup .content {
+  max-height: 30%;
+  overflow: auto;
+}
+.popup input, .popup button {
+  width: 98%;
+  height: 2.5em;
+  margin: 10px 2px;
+  border: black 1px solid;
+  padding: 5px;
+}
+.popup button {
+  width: 98%;
+  margin: 10px 2px;
+  background-color: #DDD;
+}
+.popup button:hover {
+  background-color: #BBB;
+}
+</style>
+
+
+<script>
+  function openDialog(dialog, openedCB)
+  {
+    $(dialog).show();
+    if (openedCB!=undefined) {
+      openedCB();
+    }
+  }
+
+  function closeDialog() {
+    $('#loginDialog').hide();
+  }
+</script>
+
+
+<div id="loginDialog" class="overlay" style="display:none">
+	<div class="popup">
+		<h2>KKSDCM - Login</h2>
+		<div class="content">
+      <p id="loginMessage"></p>
+      <label for="loginUser">User:</label><br/>
+      <input type="text" autocomplete="off" name="loginUser" id="loginUser" value="" ><br/>
+      <label for="loginPassword">Password:</label><br/>
+      <input type="password" name="loginPassword" id="loginPassword" value="" ><br/>
+      <button type="button" id="loginCheckButton">Login</button>
+		</div>
+	</div>
+</div>
+
+
+<!-- ace editor -->
+
+<pre id="editor"></pre>
+<div id="controls">
+  <button id="save" onclick="javascript:saveAndCheckScript()" title="Saves and compiles the script. Note that function definitions and 'on(...) {...}' handlers get active immediately">Save & Compile</button>
+  <button id="restart" onclick="javascript:restartScript()" title="Starts or restarts the main script">Restart</button>
+  <button id="stop" onclick="javascript:stopScript()" title="Stops the main script (if it is still running)">Stop</button>
+  &nbsp<div id="message"></div>
+  <a class="referencelink" href="/script_ref.html" target="_blank">p44script reference</a>
+</div>
+
+
+<script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+
+
+<!-- p44script access -->
+
+<script>
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/xcode");
+    editor.session.setMode("ace/mode/p44script");
+    editor.setOptions({
+      tabSize: 2,
+      useSoftTabs: true,
+      newLineMode: "unix",
+      scrollPastEnd: 0.5,
+      enableBasicAutocompletion: false,
+      enableLiveAutocompletion: true,
+      enableSnippets: true,
+    });
+    // custom commands
+    editor.commands.addCommand({
+      name: "Save",
+      bindKey: {win: "Ctrl-S", mac: "Command-S"},
+      exec: function(editor) {
+        saveAndCheckScript()
+      }
+    });
+
+
+    $(document).ready(function() {
+      loadScript();
+    });
+
+    function loadScript()
+    {
+      apiCall({}, 10000, true, "mainscript").done(function(response) {
+        if (response['code']!==undefined) {
+          editor.setValue(response['code']);
+          editor.navigateTo(0,0);
+          $("#message").html('');
+        }
+        else {
+          $("#message").html('cannot load main script');
+        }
+      }).fail(function(domain, code, message) {
+        $("#message").html('error: [' + domain + '] Error ' + code.toString() + ': ' + message);
+      });
+    }
+
+
+    function saveAndCheckScript()
+    {
+      var call = { "code": editor.getValue(), "save":true };
+      apiCall(call, 10000, true, "mainscript").done(function(response) {
+        if (response.error!==undefined) {
+          $("#message").html('Syntax Error: <span class="error">' + escapehtml(response.error) + '</span>');
+          if (response.at!==undefined) {
+            editor.gotoLine(response.line+1, response.char, true);
+            editor.selection.selectRight();
+          }
+        }
+        else {
+          $("#message").html('<span class="ok">Syntax OK</span>');
+        }
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+    function restartScript()
+    {
+      var call = { "run":true };
+      apiCall(call, 2000, true, "mainscript").done(function(response) {
+        $("#message").html('restarted');
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+    function stopScript()
+    {
+      var call = { "stop":true };
+      apiCall(call, 2000, true, "mainscript").done(function(response) {
+        $("#message").html('stopped');
+      }).fail(function(domain, code, message) {
+        $("#message").html('<span class="error">API error: [' + escapehtml(domain + '] Error ' + code.toString() + ': ' + message) + '</span>');
+      });
+    }
+
+</script>
+
+
+</body>
+</html>

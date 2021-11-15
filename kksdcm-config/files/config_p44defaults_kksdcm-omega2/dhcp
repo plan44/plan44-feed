@@ -1,0 +1,13 @@
+config odhcpd 'odhcpd'
+	option leasefile '/tmp/hosts/odhcpd'
+	option leasetrigger '/usr/sbin/odhcpd-update'
+	option maindhcp '1'
+	option loglevel '5'
+
+config dhcp
+	option interface 'wlanap'
+	option dhcpv4 'server'
+	option dhcpv6 'disabled'
+	option ra 'disabled'
+	option start '100'
+	option limit '100'

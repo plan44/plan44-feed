@@ -1,0 +1,10 @@
+--- a/target/linux/ramips/dts/OMEGA2.dtsi
++++ b/target/linux/ramips/dts/OMEGA2.dtsi
+@@ -181,3 +181,7 @@
+ &i2s {
+ 	status = "okay";
+ };
++
++&pwm {
++	status = "okay";
++};

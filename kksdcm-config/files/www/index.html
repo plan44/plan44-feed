@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+    <link rel="stylesheet" href="/css/themes/p44dark.min.css">
+    <link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+    <link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+    <link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/dialog.js"></script>
+    <script src="/js/p44api.js"></script>
+
+    <title id="html_title_model">KSS-DCM</title>
+
+    <style type="text/css"><!--
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+
+    --></style>
+
+
+    <script type="text/javascript"><!--
+
+
+      $(function()
+      {
+
+      });
+
+
+
+    --></script>
+
+  </head>
+
+  <body>
+
+    <div data-theme="a" data-role="popup" id="loginDialog" data-overlay-theme="b" data-dismissible="false" class="ui-corner-all dialogbox">
+      <div style="padding:10px 20px;">
+        <h3>KKS-DCM - Login</h3>
+        <p id="loginMessage"></p>
+        <label for="loginUser">User:</label>
+        <input type="text" autocomplete="off" name="loginUser" id="loginUser" value="" >
+        <label for="loginPassword">Password:</label>
+        <input type="password" name="loginPassword" id="loginPassword" value="" >
+        <button type="button" id="loginCheckButton" data-icon="check">Login</button>
+      </div>
+    </div>
+
+    <div data-role="page" id="title" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+        <div data-role="navbar" class="ui-state-persist"><ul>
+          <li><a href="#title" class="ui-btn-active ui-state-persist">About</a></li>
+          <li><a href="#system">System</a></li>
+        </div></ul>
+      </div>
+      <div data-role="content">
+        <div>
+          <div class="centered" data-role="content">
+            <h1 id="about_title_model">KKS-DCM</h1>
+            <h2 id="about_model_description">modbus controller</h2>
+            <p>© <span id="about_copyright_years">2021</span> by <a id="about_copyright_link" href="http://plan44.ch/automation" target="_blank">astrol.ch/plan44.ch</a></p>
+          </div>
+
+          <h3>Opensource:</h3>
+          <div data-role="collapsible-set" data-mini="true"
+          data-iconpos="right">
+
+            <div data-role="collapsible">
+              <h3>kksdcmd - © 2021 by astrol.ch/plan44.ch, GPLv3</h3>
+
+              <h4><a href="http://plan44.ch/opensource/vdcd" target="_blank">kksdcmd</a> - modbus touch lcd controller daemon</h4>
+
+              <p>kksdcmd is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, either <a href="http://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or
+              (at your option) any later version.</p>
+
+              <p>kksdcmd is distributed in the hope that it will be useful,
+              but WITHOUT ANY WARRANTY; without even the implied warranty of
+              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+              GNU General Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with kksdcmd. If not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>.</p>
+
+            </div>
+
+            <div data-role="collapsible">
+              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+
+              <h4><a href="https://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded network devices</h4>
+
+              <p>OpenWrt is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, version 2 of the License.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with openwrt. If not, see <a href="http://www.gnu.org/licenses/gpl-2.0.html" target="_blank">www.gnu.org/licenses</a>.</p>
+            </div>
+
+
+            <div id="opensource_pagekite" style="display:none" data-role="collapsible">
+              <h3>libpagekite - © The Beanstalks Project ehf. and Bjarni Rúnar Einarsson, AGPL</h3>
+
+              <h4><a href="http://pagekite.net" target="_blank">pagekite</a> - the fast, reliable localhost tunneling solution</h4>
+
+              <p>The pagekite.py and libpagekite source code is licensed under version 3.0 of the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">GNU Affero General Public License</a> as published by the Free Software Foundation.
+              Copyright is currently held exclusively by The Beanstalks Project ehf. and Bjarni Rúnar Einarsson.</p>
+
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery mobile - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+              <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+              <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining
+              a copy of this software and associated documentation files (the
+              "Software"), to deal in the Software without restriction, including
+              without limitation the rights to use, copy, modify, merge, publish,
+              distribute, sublicense, and/or sell copies of the Software, and to
+              permit persons to whom the Software is furnished to do so, subject to
+              the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be
+              included in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+              LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+              OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+              WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
+              <p>Copyright (c) 2004 avahi.org</p>
+
+              <p>avahi is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>avahi is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with avahi; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+              <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+              <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+              <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+              Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"),
+              to deal in the Software without restriction, including without limitation
+              the rights to use, copy, modify, merge, publish, distribute, sublicense,
+              and/or sell copies of the Software, and to permit persons to whom the
+              Software is furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included
+              in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+              SOFTWARE.</p>
+            </div>
+
+
+            <div data-role="collapsible">
+              <h3>libmodbus - © 2019 libmodbus.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="https://www.libmodbus.org" target="_blank">libmodbus</a> - A Modbus library for Linux, Mac OS X, FreeBSD, QNX and Win32</h4>
+              <p>Copyright (c) 2019 libmodbus.org / Stéphane Raimbault</p>
+
+              <p>libmodbus is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>libmodbus is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with libmodbus; if not, see <a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a></p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-role="page" id="system" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+        <div data-role="navbar" class="ui-state-persist"><ul>
+          <li><a href="#title">About</a></li>
+          <li><a href="#system" class="ui-btn-active ui-state-persist">System</a></li>
+        </ul></div>
+      </div>
+      <div data-role="content">
+        <div id="system_contents" data-role="content">
+          <h2>System</h2>
+
+          <a href="/sd/index.html" target="_blank">go to SD-Card hosted website</a>
+        </div>
+      </div>
+    </div>
+
+
+  </body>
+
+</html>

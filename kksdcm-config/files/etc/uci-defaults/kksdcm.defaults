@@ -1,0 +1,14 @@
+# configure as access point by default
+uci set network.wlanap.enabled="1"
+uci set wireless.radio0.disabled="0"
+uci set wireless.ap_radio0.disabled="0"
+uci set wireless.ap_radio0.ssid="KKSDCM"
+uci set wireless.ap_radio0.encryption='psk2'
+# Note that key must have at least 8 chars, or AP will silently fail to start
+uci set wireless.ap_radio0.key="KKSDCM44"
+uci commit network
+uci commit wireless
+
+# set anonymous auto-mount (meaning: /dev/sdXy will get mounted to /mnt/sdXy)
+uci set fstab.@global[0].anon_mount='1'
+uci commit fstab

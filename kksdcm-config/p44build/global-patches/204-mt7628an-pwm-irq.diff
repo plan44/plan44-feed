@@ -1,0 +1,12 @@
+--- a/target/linux/ramips/dts/mt7628an.dtsi
++++ b/target/linux/ramips/dts/mt7628an.dtsi
+@@ -240,6 +240,9 @@
+ 			pinctrl-names = "default";
+ 			pinctrl-0 = <&pwm0_pins>, <&pwm1_pins>;
+ 
++			interrupt-parent = <&intc>;
++			interrupts = <26>;
++
+ 			status = "disabled";
+ 		};
+ 

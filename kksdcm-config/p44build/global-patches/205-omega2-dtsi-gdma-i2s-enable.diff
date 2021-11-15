@@ -1,0 +1,14 @@
+--- a/target/linux/ramips/dts/OMEGA2.dtsi
++++ b/target/linux/ramips/dts/OMEGA2.dtsi
+@@ -173,3 +173,11 @@
+ &wmac {
+ 	status = "okay";
+ };
++
++&gdma {
++	status = "okay";
++};
++
++&i2s {
++	status = "okay";
++};
