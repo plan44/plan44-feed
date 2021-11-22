@@ -26,15 +26,16 @@ if [ -e /tmp/${EXECUTABLE}_debug ]; then
 fi
 
 
-# if there is no website on the SD card yet, install one
-if [ ! -d "${CARDMOUNTPOINT}/${CARDWEBSITE}" ]; then
-  mkdir "${CARDMOUNTPOINT}/${CARDWEBSITE}"
+if [ -d "${CARDMOUNTPOINT}" ]; then
+  # SD card mounted - if there is no website on the SD card yet, install one
+  if [ ! -d "${CARDMOUNTPOINT}/${CARDWEBSITE}" ]; then
+    mkdir "${CARDMOUNTPOINT}/${CARDWEBSITE}"
+  fi
+  if [ ! -f "${CARDMOUNTPOINT}/${CARDWEBSITE}/${CARDWEBINDEX}" ]; then
+    # copy default card-based index.html
+    cp "${CARDWEBDEFAULTINDEX}" "${CARDMOUNTPOINT}/${CARDWEBSITE}/${CARDWEBINDEX}"
+  fi
 fi
-if [ ! -f "${CARDMOUNTPOINT}/${CARDWEBSITE}/${CARDWEBINDEX}" ]; then
-  # copy default card-based index.html
-  cp "${CARDWEBDEFAULTINDEX}" "${CARDMOUNTPOINT}/${CARDWEBSITE}/${CARDWEBINDEX}"
-fi
-
 
 
 # check for system upgrade delivered on SD card

@@ -155,10 +155,12 @@ p44b has built-in convenience commands to send files via scp and login via ssh:
 After flashing, Omega reboots and runs the kksdcmd daemon and the uhttpd web server, which allows controlling the kksdcmd daemon via the ubus interface.
 The website is advertised via avahi/zeroconf and upnp/sd.
 The website has
+
 - a **index.html** page with OSS credits, no functionality otherwise
 - **repl.html** to access the [p44script REPL](https://plan44.ch/p44-techdocs/en/repl/)
 - **p44script.html** to access the source code editor for the mainscript running the daemons functionality
 - **tweak.html** to manually send commands via the ubus API to the daemon.
+- **sd/index.html** a sample page (located on the SDCard) which displays the state of some modbus registers.
 
 
 ### start, stop, logs, tools
