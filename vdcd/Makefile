@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2021 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2022 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.6.3.1
+PKG_VERSION:=2.6.3.3
 # version of this makefile
-PKG_RELEASE:=155
+PKG_RELEASE:=157
 
 PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=master
-PKG_SOURCE_VERSION:=f7123d3618345d6f76645cf1f8d21242873ce3ca
+PKG_SOURCE_VERSION:=beed61cf823d9071e82db3a6607e43fc2f51302b
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
