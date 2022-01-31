@@ -7,12 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=mg44
 # version of what we are downloading
-PKG_VERSION:=3.10
+PKG_VERSION:=3.12
 # version of this makefile
-PKG_RELEASE:=16
+PKG_RELEASE:=18
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=master
+#PKG_SOURCE_VERSION:=master
+PKG_SOURCE_VERSION:=feec94696a6e70d7e5f290bd4f61898b774644b7
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/mg44.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
