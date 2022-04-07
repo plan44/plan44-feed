@@ -8,6 +8,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=p44-extdev-elsner
 # version of what we are downloading
 PKG_VERSION:=2.0
+PKG_MIRROR_HASH:=skip
 # version of this makefile
 PKG_RELEASE:=5
 

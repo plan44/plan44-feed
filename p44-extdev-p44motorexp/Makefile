@@ -8,6 +8,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=p44-extdev-p44motorexp
 # version of what we are downloading
 PKG_VERSION:=1.0
+PKG_MIRROR_HASH:=skip
 # version of this makefile
 PKG_RELEASE:=5
 
