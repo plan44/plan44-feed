@@ -1,5 +1,5 @@
 #!/bin/sh /etc/rc.common
-# Copyright (c) 2021 plan44.ch/luz
+# Copyright (c) 2021-2022 plan44.ch/luz
 START=99
 
 boot() {
@@ -9,8 +9,8 @@ boot() {
   PRODUCT_COPYRIGHT_HOLDER="astrol.ch"
   PRODUCT_MODEL_DESCRIPTION="modbus SPI controller"
   PRODUCT_WEBADMIN_USER="kksdcm"
-  UNIT_HOSTNAME="kksdcm"
-
+  MAC=$(ip link | sed -n -E -e '/eth0/{n;s/.*ether *([0-9a-fA-F:]*).*$/\1/;s/://g;p;}')
+  UNIT_HOSTNAME="kksdcm-$MAC"
 
   echo "[kksdcm] preparing for runit"
 
@@ -104,7 +104,8 @@ boot() {
   omega2-ctrl gpiomux set i2c gpio # NCS1 and IRQ
   # - kernel modile
   #   Syntax: insmod spi-gpio-custom busBusNum=deviceId,sckGPIO,mosiGPIO,misoGPIO,mode0,speedInHz0[,cs0_GPIO[,mode1,speedInHz1,cs1_GPIO[,mode2....]]]
-  insmod spi-gpio-custom bus0=1,13,45,46,0,100000,12,0,100000,4
+  #   Note: current implementation of spi-gpio.c does not care about the speed, but just runs at max which is ~1.2MHz on MT7688.
+  insmod spi-gpio-custom bus0=1,13,45,46,0,1000000,12,0,1000000,4
   # - enable SPI gate
   echo 1 >/sys/class/gpio/gpio0/value
   # - enable drivers
@@ -124,8 +125,13 @@ boot() {
   uci commit dhcp
 
   # update host name
-  uci -q set system.@system[0].hostname="${UNIT_HOSTNAME}"
-  uci commit system
+  if [ "$(uci get system.@system[0].hostname)" != "${UNIT_HOSTNAME}" ]; then
+    uci -q set system.@system[0].hostname="${UNIT_HOSTNAME}"
+    uci commit system
+    # make sure it applies immediately
+    /etc/init.d/system reload
+    /etc/init.d/avahi-daemon restart
+  fi
 
   # start runit
   /sbin/runsvdir-start &
