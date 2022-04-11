@@ -5,6 +5,26 @@
 ./scripts/feeds install -p onion omega2-ctrl
 ./scripts/feeds install -p onion wifimanager
 ./scripts/feeds install -p onion wifisetup
+./scripts/feeds update p44i
+./scripts/feeds install -p p44i alix-flashbox-config
+./scripts/feeds install -p p44i ds-vdc
+./scripts/feeds install -p p44i mg44
+./scripts/feeds install -p p44i p44-extdev-cecbutton
+./scripts/feeds install -p p44i p44-extdev-htscreen
+./scripts/feeds install -p p44i p44-maint-keys
+./scripts/feeds install -p p44i kmod-p44dbr
+./scripts/feeds install -p p44i p44dsb-config
+./scripts/feeds install -p p44i p44dsb-webui
+./scripts/feeds install -p p44i p44lc-config
+./scripts/feeds install -p p44i p44lc-webui
+./scripts/feeds install -p p44i p44maintd
+./scripts/feeds install -p p44i p44mbc-config
+./scripts/feeds install -p p44i p44mbcd
+#./scripts/feeds install -p p44i p44mbutil
+./scripts/feeds install -p p44i serialfwd
+./scripts/feeds install -p p44i sqfloatswapper
+./scripts/feeds install -p p44i vdcd
+./scripts/feeds install -p p44i vdsm
 ./scripts/feeds update packages
 ./scripts/feeds install -p packages aircrack-ng
 #./scripts/feeds install -p packages airmon-ng
@@ -59,6 +79,7 @@
 #./scripts/feeds install -p packages boost-test
 #./scripts/feeds install -p packages boost-libs
 #./scripts/feeds install -p packages boost
+./scripts/feeds install -p packages libcares
 ./scripts/feeds install -p packages confuse
 ./scripts/feeds install -p packages libsasl2
 ./scripts/feeds install -p packages libdb47
@@ -136,6 +157,9 @@
 #./scripts/feeds install -p packages libuwsc-nossl
 ./scripts/feeds install -p packages libv4l
 #./scripts/feeds install -p packages v4l-utils
+./scripts/feeds install -p packages libwebsockets-openssl
+#./scripts/feeds install -p packages libwebsockets-mbedtls
+#./scripts/feeds install -p packages libwebsockets-full
 ./scripts/feeds install -p packages libxml2
 ./scripts/feeds install -p packages madplay-alsa
 #./scripts/feeds install -p packages madplay
@@ -176,6 +200,13 @@
 ./scripts/feeds install -p packages meson
 #./scripts/feeds install -p packages meson-src
 ./scripts/feeds install -p packages mjpg-streamer
+./scripts/feeds install -p packages mosquitto-ssl
+#./scripts/feeds install -p packages mosquitto-nossl
+#./scripts/feeds install -p packages libmosquitto-ssl
+#./scripts/feeds install -p packages libmosquitto-nossl
+#./scripts/feeds install -p packages libmosquittopp
+#./scripts/feeds install -p packages mosquitto-client-ssl
+#./scripts/feeds install -p packages mosquitto-client-nossl
 ./scripts/feeds install -p packages libnetsnmp
 #./scripts/feeds install -p packages snmp-mibs
 #./scripts/feeds install -p packages snmp-utils
@@ -444,6 +475,9 @@
 ./scripts/feeds install -p plan44 hmt20-config
 ./scripts/feeds install -p plan44 hxcmodplayer
 ./scripts/feeds install -p plan44 i2c-tools
+./scripts/feeds install -p plan44 kksdcm-config
+./scripts/feeds install -p plan44 kksdcmd
+#./scripts/feeds install -p plan44 p44mbutil
 ./scripts/feeds install -p plan44 leth-config
 ./scripts/feeds install -p plan44 lethd
 ./scripts/feeds install -p plan44 libev
@@ -459,6 +493,7 @@
 ./scripts/feeds install -p plan44 p44devd
 ./scripts/feeds install -p plan44 p44featured
 ./scripts/feeds install -p plan44 p44ledchaintest
+./scripts/feeds install -p plan44 p44pagekite
 ./scripts/feeds install -p plan44 p44sbb-config
 ./scripts/feeds install -p plan44 p44ttngw-config
 ./scripts/feeds install -p plan44 p44utils-lvgl-sample
