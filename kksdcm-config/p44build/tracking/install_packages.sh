@@ -21,7 +21,6 @@
 ./scripts/feeds install -p p44i p44mbc-config
 ./scripts/feeds install -p p44i p44mbcd
 #./scripts/feeds install -p p44i p44mbutil
-./scripts/feeds install -p p44i serialfwd
 ./scripts/feeds install -p p44i sqfloatswapper
 ./scripts/feeds install -p p44i vdcd
 ./scripts/feeds install -p p44i vdsm
@@ -503,6 +502,7 @@
 ./scripts/feeds install -p plan44 pixelboard-config
 ./scripts/feeds install -p plan44 pixelboardd
 ./scripts/feeds install -p plan44 kmod-rcswitch
+./scripts/feeds install -p plan44 serialfwd
 ./scripts/feeds install -p plan44 sshpass
 ./scripts/feeds install -p plan44 timidity
 ./scripts/feeds install -p plan44 kmod-ws2812-draiveris

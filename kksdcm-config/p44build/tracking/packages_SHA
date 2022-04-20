@@ -1,3 +1,4 @@
 # feed/package giturl:gitref
-p44i/serialfwd ssh://plan44@plan44.ch/home/plan44/gitrepositories/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
+plan44/serialfwd https://github.com/plan44/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
+plan44/kksdcmd https://github.com/plan44/kksdcmd.git:76f80a13d7b2122ae0e21cea09cb3fc73b202aad
 onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:e7152ba869b1af10e3c4d22938100962eb1d9b0e
