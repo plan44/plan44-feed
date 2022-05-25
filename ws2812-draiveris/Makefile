@@ -32,7 +32,7 @@ PKG_NAME:=ws2812-draiveris
 # version of what we are downloading
 PKG_VERSION:=0.2
 # version of this makefile
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -58,9 +58,8 @@ endef
 
 
 MAKE_OPTS:= \
-	ARCH="$(LINUX_KARCH)" \
-	CROSS_COMPILE="$(TARGET_CROSS)" \
-	SUBDIRS="$(PKG_BUILD_DIR)"
+	$(KERNEL_MAKE_FLAGS) \
+	M="$(PKG_BUILD_DIR)"
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" \
