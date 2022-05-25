@@ -9,6 +9,14 @@ else
 p44extdevelsner_DEBUG =
 endif
 
+if P44_BUILD_OW
+p44extdevelsner_PLATFORM = -D P44_BUILD_OW=1
+else
+p44extdevelsner_PLATFORM =
+endif
+
+p44extdevelsner_EXTRACFLAGS = -D BOOST_BIND_GLOBAL_PLACEHOLDERS=1
+
 p44extdevelsner_LDADD = $(PTHREAD_LIBS) $(JSONC_LIBS) -ldl
 
 
@@ -19,6 +27,7 @@ p44extdevelsner_CXXFLAGS = \
   ${JSONC_CFLAGS} \
   ${PTHREAD_CFLAGS} \
   ${p44extdevelsner_EXTRACFLAGS} \
+  ${p44extdevelsner_PLATFORM} \
   ${p44extdevelsner_DEBUG}
 
 p44extdevelsner_SOURCES = \
@@ -47,4 +56,5 @@ p44extdevelsner_SOURCES = \
   src/p44utils/utils.cpp \
   src/p44utils/utils.hpp \
   src/p44utils/p44utils_common.hpp \
+  src/p44utils_config.hpp \
   src/main.cpp
