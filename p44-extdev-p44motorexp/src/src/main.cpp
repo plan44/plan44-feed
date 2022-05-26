@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2016-2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+//  Copyright (c) 2016-2022 plan44.ch / Lukas Zeller, Zurich, Switzerland
 //
 //  Author: Lukas Zeller <luz@plan44.ch>
 //
@@ -198,11 +198,14 @@ public:
                 }
               }
               // create driver
-              m->motor = DcMotorDriverPtr(new DcMotorDriver(pwm.c_str(), cw.c_str(), cww.empty() ? NULL : cww.c_str()));
-              m->motor->setCurrentLimiter(
-                 sensor.c_str(), maxCurrent, 100*MilliSecond,
-                 boost::bind(&P44MotorDeviceApp::stopReached, this, m)
-              );
+              m->motor = DcMotorDriverPtr(new DcMotorDriver(
+                AnalogIoPtr(new AnalogIo(pwm.c_str(), true, 0)),
+                DigitalIoPtr(new DigitalIo(cw.c_str(), true)),
+                cww.empty() ? DigitalIoPtr() : DigitalIoPtr(new DigitalIo(cww.c_str(), true))
+              ));
+              m->motor->setCurrentSensor(AnalogIoPtr(new AnalogIo(sensor.c_str(), false, 0)), 100*MilliSecond);
+              m->motor->setCurrentLimits(maxCurrent);
+              m->motor->setStopCallback(boost::bind(&P44MotorDeviceApp::stopReached, this, m, _1, _2, _3));
               motors.push_back(m);
               continue;
             }
@@ -348,11 +351,14 @@ public:
   }
 
 
-  void stopReached(DCMotorPtr aMotor)
+  void stopReached(DCMotorPtr aMotor, double aCurrentPower, int aDirection, ErrorPtr aError)
   {
-    LOG(LOG_NOTICE, "M%d reached fully %s position (current limiter)", aMotor->index, aMotor->isOpening ? "open" : "closed");
-    aMotor->moveTimer.cancel();
-    reportPosition(aMotor, aMotor->isOpening ? 100 : 0);
+    // only handle stops caused by errors (current limiter, endswitches if we had them - we dont)
+    if (Error::notOK(aError)) {
+      LOG(LOG_NOTICE, "M%d reached fully %s position (current limiter)", aMotor->index, aMotor->isOpening ? "open" : "closed");
+      aMotor->moveTimer.cancel();
+      reportPosition(aMotor, aMotor->isOpening ? 100 : 0);
+    }
   }
 
 };

@@ -15,6 +15,7 @@ else
 p44extdevmotorexp_PLATFORM =
 endif
 
+p44extdevmotorexp_EXTRACFLAGS = -D BOOST_BIND_GLOBAL_PLACEHOLDERS=1
 
 p44extdevmotorexp_LDADD = $(PTHREAD_LIBS) $(JSONC_LIBS) -ldl
 
@@ -42,6 +43,8 @@ p44extdevmotorexp_SOURCES = \
   src/p44utils/digitalio.hpp \
   src/p44utils/error.cpp \
   src/p44utils/error.hpp \
+  src/p44utils/extutils.cpp \
+  src/p44utils/extutils.hpp \
   src/p44utils/fdcomm.cpp \
   src/p44utils/fdcomm.hpp \
   src/p44utils/gpio.cpp \
@@ -69,6 +72,8 @@ p44extdevmotorexp_SOURCES = \
   src/p44utils/spi.hpp \
   src/p44utils/utils.cpp \
   src/p44utils/utils.hpp \
+  src/p44utils/valueanimator.cpp \
+  src/p44utils/valueanimator.hpp \
   src/p44utils/p44utils_common.hpp \
   src/p44utils_config.hpp \
   src/main.cpp

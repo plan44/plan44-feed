@@ -1,4 +1,4 @@
-AC_INIT([p44extdevmotorexp], [0.1], [luz@plan44.ch], [p44extdevmotorexp], [http://www.plan44.ch/])
+AC_INIT([p44extdevmotorexp], [1.1], [luz@plan44.ch], [p44extdevmotorexp], [http://www.plan44.ch/])
 AC_PREREQ([2.59])
 
 AC_CONFIG_AUX_DIR(configure_aux)
@@ -35,10 +35,12 @@ AC_CHECK_LIB(json-c, json_tokener_get_error, [], [AC_MSG_ERROR([Could not find J
 
 PKG_PROG_PKG_CONFIG
 
-PKG_CHECK_MODULES([JSONC], [json-c >= 0.10 ], [], [
-  AC_MSG_ERROR([$JSON_PKG_ERRORS])
-])
-
+PKG_CHECK_MODULES([JSONC], [json-c >= 0.13 ],
+  [AC_DEFINE([HAVE_JSONC_VERSION_013], [1], [We have JSONC version 0.13 or later])],
+  [PKG_CHECK_MODULES([JSONC], [json-c >= 0.10 ], [], [
+    AC_MSG_ERROR([$JSON_PKG_ERRORS])
+  ])]
+)
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h unistd.h sys/resource.h], [], [AC_MSG_ERROR([required system header not found])])
