@@ -67,7 +67,7 @@ OpenWrt clones only a shallow (no history) copy of the feed repository. This sav
 
 #### Direct p44b to the information that will control everything
 
-    TARGET_CFG_PACKAGE="plan44/leth-config"
+    TARGET_CFG_PACKAGE="plan44/hmt20-config"
     ../p44build/p44b init feeds/${TARGET_CFG_PACKAGE}/p44build
 
 #### Prepare (patch) the OpenWrt tree for HMT20
@@ -151,11 +151,11 @@ At the time of writing, p44featured monitors up to 24 RFC522 RFID readers connec
 Current log is in /var/log/p44featured/current, to have it displayed live:
 
     tail -F /var/log/p44featured/current
-    
+
 or use the p44l script, which allows to change the log level
 
     p44l 6
-    
+
 
 ### Finally, but optionally: save your build's config, feeds, versions
 
@@ -165,7 +165,7 @@ On the build machine:
 
 This records the precise details of this build into `feeds/plan44/hmt20-config/p44build`, in particular the OpenWrt tree's SHA and `.config` as well as the SHAs of the feeds used.
 
-The idea is that this can be committed back into the leth-config package, as kind of a "head" record for this very leth firmware build, and allows to go back to this point later, even if the OpenWrt tree was used to build other firmware images in between.
+The idea is that this can be committed back into the hmt20-config package, as kind of a "head" record for this very HMT20 firmware build, and allows to go back to this point later, even if the OpenWrt tree was used to build other firmware images in between.
 
 In fact, exactly that is the very purpose of `p44b` - the ability to work and switch between different firmware projects in a single OpenWrt tree.
 
