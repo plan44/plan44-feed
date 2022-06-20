@@ -1,0 +1,65 @@
+/* overlay for installing spi-gpio instead of old
+  # bus<Y>=<devid>,<SCK>,<MOSI>,<MISO>,<mode>,<speedInHz>,<CS>
+  # With mode:
+  #		SPI_CPHA	0x01			// clock phase
+  #		SPI_CPOL	0x02			// clock polarity
+  #		SPI_CS_HIGH	0x04		// chipselect active high?
+  #		SPI_LSB_FIRST	0x08	// per-word bits-on-wire
+  #		SPI_3WIRE	0x10			// SI/SO signals shared
+  #		SPI_LOOP	0x20			// loopback mode
+  #		SPI_NO_CS	0x40			// 1 dev/bus, no chipselect
+  #		SPI_READY	0x80			// slave pulls low to pause
+  #		SPI_TX_DUAL	0x100		// transmit with 2 wires
+  #		SPI_TX_QUAD	0x200		// transmit with 4 wires
+  #		SPI_RX_DUAL	0x400		// receive with 2 wires
+  #		SPI_RX_QUAD	0x800		// receive with 4 wires
+
+  insmod spi-gpio-custom bus0=2,11,5,4,0,100000,23
+
+  compile it with
+
+    dtc -b 0 -@ -O dtb sw-spi.dts -o sw-spi.dtbo
+
+  apply it on the target with
+
+    mkdir /sys/kernel/config/device-tree/overlays/swspi
+    cat /tmp/sw-spi.dtbo >/sys/kernel/config/device-tree/overlays/swspi/dtbo
+    # to check if apply has worked
+    dmesg
+
+    # quick repeated testing with
+    cd /sys/kernel/config/device-tree/overlays; ls; rmdir swspi; mkdir swspi; cat /tmp/sw-spi.dtbo >swspi/dtbo; dmesg -c; cat swspi/status
+
+ */
+
+/dts-v1/;
+/plugin/;
+/ {
+  fragment@0 {
+    target-path = "/";
+    __overlay__ {
+      sw-spi {
+        compatible = "spi-gpio";
+        #address-cells = <0x1>;
+        #size-cells = <0x0>;
+        sck-gpios = <&gpio 11 0>;
+        mosi-gpios = <&gpio 5 0>;
+        miso-gpios = <&gpio 4 0>;
+        cs-gpios = <&gpio 23 0>;
+        num-chipselects = <1>;
+
+        spi-max-frequency = <100000>;
+        spi-cs-high;
+
+        /* clients */
+        spidev@0 {
+          compatible = "linux,spidev";
+          reg = <0>;
+          spi-max-frequency = <10000000>;
+        };
+
+      };
+
+    };
+  };
+};
