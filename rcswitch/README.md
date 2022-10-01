@@ -1,4 +1,4 @@
-**Note by luz@plan44.ch, March 2018:** this OpenWrt/LEDE package is a kernel-module-only
+**Note by luz@plan44.ch, March 2018, Sept 2022:** this OpenWrt package is a kernel-module-only
 extract of Stefan Wendler's original project `rcswitch-kmod`, which can be found
 on [github.com/wendlers/rcswitch-kmod](https://github.com/wendlers/rcswitch-kmod).
 

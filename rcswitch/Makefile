@@ -3,9 +3,9 @@
 # Original project: https://github.com/wendlers/rcswitch-kmod
 #
 # Extracted kernel module and packaged as a independent OpenWrt module
-# by Lukas Zeller <luz@plan44.ch> in 2018
+# by Lukas Zeller <luz@plan44.ch> in 2018..2022
 #
-# Please see README.md for information and visit the
+# Please see README.md for information and visit the original's github project.
 
 
 include $(TOPDIR)/rules.mk
@@ -16,7 +16,7 @@ PKG_NAME:=rcswitch
 # version of what we are downloading
 PKG_VERSION:=1.0
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -46,9 +46,8 @@ endef
 
 
 MAKE_OPTS:= \
-	ARCH="$(LINUX_KARCH)" \
-	CROSS_COMPILE="$(TARGET_CROSS)" \
-	SUBDIRS="$(PKG_BUILD_DIR)"
+	$(KERNEL_MAKE_FLAGS) \
+	M="$(PKG_BUILD_DIR)"
 
 define Build/Compile
 	$(MAKE) -C "$(LINUX_DIR)" \
