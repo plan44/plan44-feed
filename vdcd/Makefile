@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.6.5.10
+PKG_VERSION:=2.7.0.12
 # version of this makefile
-PKG_RELEASE:=173
+PKG_RELEASE:=177
 
 PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=master
-PKG_SOURCE_VERSION:=2e24d1fdaac609e0641fa9a94ba602f2d71a4d6e
+PKG_SOURCE_VERSION:=791b5b23d95f62afdd19bda5cd3091fd3d3d8723
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -66,7 +66,9 @@ CONFIGURE_ARGS += \
 	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb) \
 	$(call autoconf_bool,CONFIG_VDCD_P44FEATURES,p44features) \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
-	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc)
+	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc) \
+	$(call autoconf_bool,CONFIG_VDCD_MODBUS,modbus) \
+	$(call autoconf_bool,CONFIG_VDCD_EMBEDDED_LIBMODBUS,embeddedlibmodbus)
 
 
 define Package/$(PKG_NAME)/install
