@@ -47,7 +47,8 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 // v5 - add ledtype_ws2815_rgb
 // v6 - completely reworked led type handling, separate chip/layout parameters, variable mode with led type header in data
 // v7 - reduce TPassive_max_nS for WS2813 (done for WS2813 in v6 already) to 35uS, more STILL caused occasional flicker
-#define P44LEDCHAIN_VERSION 7
+// v8 - add more R,G,B(,W) ordering layout modes
+#define P44LEDCHAIN_VERSION 8
 
 
 #define LEDCHAIN_MAX_LEDS 2048
@@ -164,6 +165,15 @@ typedef enum {
   ledlayout_grb,
   ledlayout_rgbw,
   ledlayout_grbw,
+  // new modes added in v8
+  ledlayout_rbg,
+  ledlayout_gbr,
+  ledlayout_brg,
+  ledlayout_bgr,
+  ledlayout_rbgw,
+  ledlayout_gbrw,
+  ledlayout_brgw,
+  ledlayout_bgrw,
   num_ledlayouts
 } LedLayout_t;
 
@@ -174,8 +184,24 @@ static const LedLayoutDescriptor_t ledLayoutDescriptors[num_ledlayouts-1] = {
   { .name = "GRB", .channels = 3, .fetchIdx = { 1, 0, 2 } },
   // RGBW data order
   { .name = "RGBW", .channels = 4, .fetchIdx = { 0, 1, 2, 3 } },
-  // SK2812 - GRBW data order
+  // GRBW data order
   { .name = "GRBW", .channels = 4, .fetchIdx = { 1, 0, 2, 3 } },
+  // RBG data order
+  { .name = "RBG", .channels = 3, .fetchIdx = { 0, 2, 1 } },
+  // GBR data order
+  { .name = "GBR", .channels = 3, .fetchIdx = { 1, 2, 0 } },
+  // BRG data order
+  { .name = "BRG", .channels = 3, .fetchIdx = { 2, 0, 1 } },
+  // BGR data order
+  { .name = "BGR", .channels = 3, .fetchIdx = { 2, 1, 0 } },
+  // RBGW data order
+  { .name = "RBGW", .channels = 4, .fetchIdx = { 0, 2, 1, 3 } },
+  // GBRW data order
+  { .name = "GBRW", .channels = 4, .fetchIdx = { 1, 2, 0, 3 } },
+  // BRGW data order
+  { .name = "BRGW", .channels = 4, .fetchIdx = { 2, 0, 1, 3 } },
+  // BGRW data order
+  { .name = "BGRW", .channels = 4, .fetchIdx = { 2, 1, 0, 3 } },
 };
 
 
