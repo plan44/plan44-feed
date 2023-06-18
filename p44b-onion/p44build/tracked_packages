@@ -1,0 +1,3 @@
+# Specify packages for which git revision SHA/name should be recorded with each p44b save
+# One package per line in the form: feedname/packagename, e.g. (without the #):
+#plan44/serialfwd

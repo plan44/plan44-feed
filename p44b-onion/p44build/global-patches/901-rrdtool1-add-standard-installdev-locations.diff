@@ -1,0 +1,14 @@
+--- a/feeds/packages/utils/rrdtool1/Makefile
++++ b/feeds/packages/utils/rrdtool1/Makefile
+@@ -125,6 +125,11 @@ define Build/InstallDev
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/include/rrd.h $(1)/usr/lib/rrdtool-1.0/include/
+ 	$(INSTALL_DIR)  $(1)/usr/lib/rrdtool-1.0/lib
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librrd.{a,so*} $(1)/usr/lib/rrdtool-1.0/lib/
++	# also install in more reasonable locations so automake can find it
++	$(INSTALL_DIR) $(1)/usr/include
++	$(CP) $(PKG_INSTALL_DIR)/usr/include/rrd.h $(1)/usr/include/
++	$(INSTALL_DIR) $(1)/usr/lib
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/librrd.{a,so*} $(1)/usr/lib/
+ endef
+ 
+ $(eval $(call BuildPackage,librrd1))
