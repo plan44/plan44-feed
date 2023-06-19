@@ -1,5 +1,6 @@
 001-gitignore.diff
 002-download-save-gitrev.diff
+003-find-ncurses-on-apple-silicon.diff
 204-mt7628an-pwm-irq.diff
 204b-mt7628an-pwm-no-pin-claims.diff
 207-uboot-envtools-config-init-for-omega2.diff
