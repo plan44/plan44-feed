@@ -14,6 +14,12 @@ config VDCD_UBUS
   help
     Enabling this includes support for ubus API
 
+config VDCD_I2C
+	bool "Include i2c support"
+	default y
+  help
+    Enabling this includes support for I2C based devices, requiring libi2c
+
 config VDCD_EV
 	bool "Base Mainloop on libev"
 	default n
@@ -45,7 +51,7 @@ config VDCD_PNG
     If enabled, vdcd depends on package libpng
 
 config VDCD_RPIWS281X
-  depends on TARGET_brcm2708_bcm2708_DEVICE_rpi || TARGET_brcm2708_bcm2709_DEVICE_rpi-2 || TARGET_brcm2708_bcm2710_DEVICE_rpi-3
+  depends on TARGET_bcm27xx_bcm2708_DEVICE_rpi || TARGET_bcm27xx_bcm2709_DEVICE_rpi-2 || TARGET_bcm27xx_bcm2710_DEVICE_rpi-3
 	bool "Include support for WS281x LED-chains"
 	default n
 	help
@@ -59,4 +65,20 @@ config VDCD_P44FEATURES
     Enabling this includes support for p44features, a set of drivers for
     very specific peripheral hardware and use cases for exhibitions & art project.
 
+config VDCD_MODBUS
+	bool "Include modbus support"
+	default n
+  help
+    Enabling this includes support for modbus
+
+config VDCD_EMBEDDED_LIBMODBUS
+  depends on VDCD_MODBUS
+	bool "embed libmodbus statically"
+	default y
+  help
+    Enabling this embeds libmodbus by building it from the enhanced version
+    in p44utils, rather than using the standard libmodbus.
+    Note: this is required until the additions to libmodbus are accepted upstream.
+
 endif
+

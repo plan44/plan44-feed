@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.6.3.5
+PKG_VERSION:=2.7.0.23
 # version of this makefile
-PKG_RELEASE:=158
+PKG_RELEASE:=191
 
 PKG_SOURCE_PROTO:=git
-#PKG_SOURCE_VERSION:=master
-PKG_SOURCE_VERSION:=2b36f65ed84a754fe3df65749c5cbb306cee64d6
+#PKG_SOURCE_VERSION:=main
+PKG_SOURCE_VERSION:=1d44e6e428d0cc244db84a29e6d3ef06cd654c2e
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -29,10 +29,11 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +i2c-tools +libavahi-client +librt \
+	DEPENDS:=+libstdcpp +boost +libjson-c +libprotobuf-c +libsqlite3 +libopenssl +libavahi-client +librt \
 	  +VDCD_OLA:ola \
-	  +VDCD_PNG:libpng \
 	  +VDCD_UBUS:libubus +VDCD_UBUS:libblobmsg-json \
+	  +VDCD_I2C:libi2c \
+	  +VDCD_PNG:libpng \
 	  +VDCD_RRDB:librrd1 \
 	  +VDCD_EV:libev \
 	  +VDCD_UWSC:libuwsc \
@@ -61,12 +62,15 @@ CONFIGURE_ARGS += \
 	$(if $(CONFIG_DEBUG),--enable-debug) \
 	$(call autoconf_bool,CONFIG_VDCD_OLA,ola) \
 	$(call autoconf_bool,CONFIG_VDCD_UBUS,ubus) \
+	$(call autoconf_bool,CONFIG_VDCD_I2C,i2c) \
 	$(call autoconf_bool,CONFIG_VDCD_PNG,png) \
 	$(call autoconf_bool,CONFIG_VDCD_RPIWS281X,rpiws281x) \
 	$(call autoconf_bool,CONFIG_VDCD_RRDB,rrdb) \
 	$(call autoconf_bool,CONFIG_VDCD_P44FEATURES,p44features) \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
-	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc)
+	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc) \
+	$(call autoconf_bool,CONFIG_VDCD_MODBUS,modbus) \
+	$(call autoconf_bool,CONFIG_VDCD_EMBEDDED_LIBMODBUS,embeddedlibmodbus)
 
 
 define Package/$(PKG_NAME)/install
