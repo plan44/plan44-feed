@@ -12,7 +12,7 @@ to your `feeds.conf.default` (or, more correctly, to a copy of `feeds.conf.defau
 
 The following packages are of general usefulness right now:
 
-- **p44-ledchain**: this is a kernel module written by me for the MT7688/Omega2 which makes use of the hardware PWM in the chip to drive individually addressable WS281x-type LED chains. In contrast to the *ws2812_draiveris* driver (see below) that does the same for AR9331/Omega1, *p44-ledchain* does **not** block IRQs at all. At this time, *p44-ledchain* is extensively tested with a chain of 200 WS2813, and one of 24 P9823 LEDs. The driver also has modes for WS2811, WS2812 and the RGBW SK6812 LEDs.
+- **p44-ledchain**: this is a kernel module written by me for the MT7688/Omega2 which makes use of the hardware PWM in the chip to drive individually addressable WS281x-type LED chains. In contrast to the *ws2812_draiveris* driver (see below) which does the same for AR9331/Omega1, *p44-ledchain* does **not** block IRQs at all. At this time, *p44-ledchain* is extensively tested with up to 4 chains with ~900 WS2815 or WS2813 each. The driver also has modes for other chips like WS2811, WS2812, RGBW SK6812 and different LED color layouts like RGB, GRB etc.
 
 - **serialfwd**: a small utility I use in almost every project which allows to access a serial interface via TCP from a remote host, and also to send and receive a few hex bytes directly.
 
@@ -24,11 +24,11 @@ The following packages are of general usefulness right now:
 
 ## Complete projects
 
-The **\*-config** packages are "umbrella" packages to be used with the [p44b script](https://github.com/plan44/p44build) for various projects of mine. The older projects are still based on OpenWrt 18.06 or even 17.x, recently (re-)built projects are based on OpenWrt 19.07.
+The **\*-config** packages are "umbrella" packages to be used with the [p44b script](https://github.com/plan44/p44build) for various projects of mine. The older projects are still based on OpenWrt 19.07, 18.06 or even 17.x, recently (re-)built projects are based on OpenWrt 22.03.5 or later.
 
 These config packages include everything needed to build the project based on a clean openwrt tree, in particular the subdirectory `p44build/global-patches` contains patches for all changes in the openwrt tree needed to build the project.
 
-The [p44b](https://github.com/plan44/p44build) uses quilt to apply these meta-patches when preparing a project.
+The [p44b script](https://github.com/plan44/p44build) uses quilt to apply these meta-patches when preparing a project.
 
 The idea behind these patches is to avoid forking the openwrt tree, but have the set of needed changes clearly documented in the umbrella *-cofig package.
 The `global-patches` can also be useful resources to port improvements for the Omega2S (such as working i2S ASoC) to other projects.
@@ -41,7 +41,7 @@ The `global-patches` can also be useful resources to port improvements for the O
 - **hermel** and **leth**: firmware for a Omega2S based controller using the PWM outputs for driving WS2813 LED chains for some effects and a scrolling text ticker, and a 2-channel A/D converter for sensor input, used for exhibition objects.
 - **hmt20**: firmware for a Omega2S based controller which allows connecting up to 24 cheap NXP MFRC522 based RFID reader boards and up to 4 WS281x LED chains, used for exhibition objects.
 
-The **\*d** packages (pixelboard, p44featured, ...) are openwrt makefiles for the linux daemon applications that usually are the core part of one of the above projects.
+The **\*d** packages (vdcd, pixelboard, p44featured, ...) are openwrt makefiles for the linux daemon applications that usually are the core part of one of the above projects.
 
 There are also some ports to openwrt for things I wanted to use for a project, e.g.
 
