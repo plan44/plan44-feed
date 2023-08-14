@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=kksdcm-config
 # version of what we are downloading (or is contained in the package)
-PKG_VERSION:=1.1.1
+PKG_VERSION:=1.1.3
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0

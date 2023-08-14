@@ -7,14 +7,14 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=kksdcmd
 # version of what we are downloading
-PKG_VERSION:=1.1.2
+PKG_VERSION:=1.1.3
 # version of this makefile
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_SECONDARY_NAME:=p44mbutil
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=76f80a13d7b2122ae0e21cea09cb3fc73b202aad
+PKG_SOURCE_VERSION:=master
 PKG_MIRROR_HASH:=skip
 #PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/kksdcmd.git
 PKG_SOURCE_URL:=https://github.com/plan44/kksdcmd.git
