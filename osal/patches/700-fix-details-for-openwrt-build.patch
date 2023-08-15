@@ -1,0 +1,20 @@
+--- a/src/linux/osal.c
++++ b/src/linux/osal.c
+@@ -100,7 +100,7 @@ os_mutex_t * os_mutex_create (void)
+       return NULL;
+    }
+ 
+-   CC_STATIC_ASSERT (_POSIX_THREAD_PRIO_INHERIT > 0);
++   //CC_STATIC_ASSERT (_POSIX_THREAD_PRIO_INHERIT > 0);
+    pthread_mutexattr_init (&mattr);
+    pthread_mutexattr_setprotocol (&mattr, PTHREAD_PRIO_INHERIT);
+    pthread_mutexattr_settype (&mattr, PTHREAD_MUTEX_RECURSIVE);
+@@ -555,7 +555,7 @@ os_timer_t * os_timer_create (
+    /* Create timer */
+    sev.sigev_notify            = SIGEV_THREAD_ID;
+    sev.sigev_value.sival_ptr   = timer;
+-   sev._sigev_un._tid          = timer->thread_id;
++   sev.sigev_notify_thread_id  = timer->thread_id;
+    sev.sigev_signo             = SIGALRM;
+    sev.sigev_notify_attributes = NULL;
+ 
