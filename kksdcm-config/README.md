@@ -69,16 +69,18 @@ Go to openwrt directory and check out the current stable release
 
 ```bash
 cd openwrt
-git checkout -b kksdcm v19.07.8
+git checkout -b kksdcm v19.07.10
 ```
 
-Note: At the time of writing this, I'm using the official release tagged `v19.07.8`
+Note: At the time of writing this, I'm using the official release tagged `v19.07.10`
 
 ### Configure the extra feeds we need
 
 ```bash
 # do NOT change feeds.conf.default - custom changes belong into feeds.conf!
 cp feeds.conf.default feeds.conf
+# comment out unused feeds (luci in particular is large)
+sed -i -E -e "/src-git (luci|freifunk|telephony)/s/^/#/" feeds.conf
 # plan44.ch feed
 echo "src-git plan44 https://github.com/plan44/plan44-feed.git;master" >>feeds.conf
 # onion.io feed
@@ -128,6 +130,7 @@ those packages that were recorded present at last 'p44b save':
 ```
 
 - **Note:** there might be a lot of warnings, because sparsely installing packages does not satisfy all possible interdependencies (but should satisfy those that are relevant for building the p44 target)
+- **Note:** this takes a long time because `./scripts/feeds install` can only install one package at a time, and is quite slow
 
 or just install all packages (**warning: many! **) from all feeds:
 
