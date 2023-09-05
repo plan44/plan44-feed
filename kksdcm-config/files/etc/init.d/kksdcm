@@ -102,10 +102,24 @@ boot() {
   omega2-ctrl gpiomux set uart0 gpio # disables console, NCS0 and CLK
   omega2-ctrl gpiomux set uart1 gpio # MISO and MOSI
   omega2-ctrl gpiomux set i2c gpio # NCS1 and IRQ
-  # - kernel modile
+  # - kernel module
   #   Syntax: insmod spi-gpio-custom busBusNum=deviceId,sckGPIO,mosiGPIO,misoGPIO,mode0,speedInHz0[,cs0_GPIO[,mode1,speedInHz1,cs1_GPIO[,mode2....]]]
   #   Note: current implementation of spi-gpio.c does not care about the speed, but just runs at max which is ~1.2MHz on MT7688.
-  insmod spi-gpio-custom bus0=1,13,45,46,0,1000000,12,0,1000000,4
+  # - modeX parameter:
+  #   SPI_CPHA        0x01   // clock phase
+  #   SPI_CPOL        0x02   // clock polarity
+  #   SPI_CS_HIGH     0x04   // chipselect active high?
+  #   SPI_LSB_FIRST   0x08   // per-word bits-on-wire
+  #   SPI_3WIRE       0x10   // SI/SO signals shared
+  #   SPI_LOOP        0x20   // loopback mode
+  #   SPI_NO_CS       0x40   // 1 dev/bus, no chipselect
+  #   SPI_READY       0x80   // slave pulls low to pause
+  #   SPI_TX_DUAL     0x100  // transmit with 2 wires
+  #   SPI_TX_QUAD     0x200  // transmit with 4 wires
+  #   SPI_RX_DUAL     0x400  // receive with 2 wires
+  #   SPI_RX_QUAD     0x800  // receive with 4 wires
+  # - device 1, SCK=GPIO13, MOSI=GPIO45, MISO=GPIO46, mode0=SPI_CS_HIGH, 1Mbit, CS0=GPIO12, mode1=SPI_CS_HIGH, 1Mbit, CS1=GPIO4
+  insmod spi-gpio-custom bus0=1,13,45,46,4,1000000,12,4,1000000,4
   # - enable SPI gate
   echo 1 >/sys/class/gpio/gpio0/value
   # - enable drivers
