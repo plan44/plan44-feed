@@ -1,6 +1,6 @@
 --- a/include/download.mk
 +++ b/include/download.mk
-@@ -205,7 +205,10 @@ define DownloadMethod/rawgit
+@@ -218,7 +218,10 @@ define DownloadMethod/rawgit
  	[ \! -d $(SUBDIR) ] && \
  	git clone $(OPTS) $(URL) $(SUBDIR) && \
  	(cd $(SUBDIR) && git checkout $(VERSION) && \

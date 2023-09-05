@@ -1,6 +1,6 @@
 --- a/.gitignore
 +++ b/.gitignore
-@@ -12,7 +12,7 @@
+@@ -13,7 +13,7 @@
  /logs
  /feeds
  /feeds.conf
@@ -9,10 +9,10 @@
  /overlay
  /package/feeds
  /package/openwrt-packages
-@@ -29,3 +29,8 @@ git-src
- .project
+@@ -32,3 +32,8 @@ git-src
  .cproject
  .ccache
+ .vscode*
 +# p44build additions
 +/patches
 +/.pc

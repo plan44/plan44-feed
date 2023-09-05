@@ -1,14 +1,8 @@
 --- /dev/null
 +++ b/feeds/packages/libs/libuwsc/patches/900-correct-casts-in-buffer-h.patch
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,47 @@
 +--- a/src/buffer/buffer.h
 ++++ b/src/buffer/buffer.h
-+@@ -1,4 +1,4 @@
-+-/* 
-++/*
-+  * MIT License
-+  *
-+  * Copyright (c) 2019 Jianhui Zhao <jianhuizhao329@gmail.com>
 +@@ -131,7 +131,7 @@ static inline void *buffer_put_data(stru
 + 
 + static inline int buffer_put_u8(struct buffer *b, uint8_t val)

@@ -1,0 +1,25 @@
+--- /dev/null
++++ b/target/linux/generic/hack-5.10/999-spi-nor-prevent-trace-for-broken-flash-reset-flag.patch
+@@ -0,0 +1,22 @@
++From: Lukas Zeller, luz@plan44.ch
++--- a/drivers/mtd/spi-nor/core.c
+++++ b/drivers/mtd/spi-nor/core.c
++@@ -2983,8 +2983,18 @@ static int spi_nor_init(struct spi_nor *
++ 		 * reboots (e.g., crashes). Warn the user (or hopefully, system
++ 		 * designer) that this is bad.
++ 		 */
+++		/* Hack by luz@plan44.ch: prevent this (vebose) warning; when targeting
+++		   a third-party platform with this hardware bug, and no way to fix it,
+++		   the reminder does not help and clutters the log. So we just output a
+++		   one-line warning message instead.
+++		 */
+++		/*
++ 		WARN_ONCE(nor->flags & SNOR_F_BROKEN_RESET,
++ 			  "enabling reset hack; may not recover from unexpected reboots\n");
+++		 */
+++		if (nor->flags & SNOR_F_BROKEN_RESET) {
+++  		dev_warn(nor->dev, "enabling broken reset hack; may not recover from unexpected reboots\n");
+++		}
++ 		nor->params->set_4byte_addr_mode(nor, true);
++ 	}
++ 

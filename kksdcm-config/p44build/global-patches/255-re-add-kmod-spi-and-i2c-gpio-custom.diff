@@ -1,0 +1,957 @@
+--- /dev/null
++++ b/package/kernel/i2c-gpio-custom/Makefile
+@@ -0,0 +1,42 @@
++#
++# Copyright (C) 2008 OpenWrt.org
++#
++# This is free software, licensed under the GNU General Public License v2.
++# See /LICENSE for more information.
++#
++
++include $(TOPDIR)/rules.mk
++include $(INCLUDE_DIR)/kernel.mk
++
++PKG_NAME:=i2c-gpio-custom
++PKG_RELEASE:=4
++
++include $(INCLUDE_DIR)/package.mk
++
++define KernelPackage/i2c-gpio-custom
++  SUBMENU:=I2C support
++  TITLE:=Custom GPIO-based I2C device
++  DEPENDS:=@GPIO_SUPPORT +kmod-i2c-core +kmod-i2c-gpio
++  FILES:=$(PKG_BUILD_DIR)/i2c-gpio-custom.ko
++  KCONFIG:=
++endef
++
++define KernelPackage/i2c-gpio-custom/description
++ Kernel module for register a custom i2c-gpio platform device.
++endef
++
++EXTRA_KCONFIG:= \
++	CONFIG_I2C_GPIO_CUSTOM=m
++
++MAKE_OPTS:= \
++	$(KERNEL_MAKE_FLAGS) \
++	M="$(PKG_BUILD_DIR)" \
++	$(EXTRA_KCONFIG)
++
++define Build/Compile
++	$(MAKE) -C "$(LINUX_DIR)" \
++		$(MAKE_OPTS) \
++		modules
++endef
++
++$(eval $(call KernelPackage,i2c-gpio-custom))
+--- /dev/null
++++ b/package/kernel/i2c-gpio-custom/src/Kconfig
+@@ -0,0 +1,10 @@
++config I2C_GPIO_CUSTOM
++	tristate "Custom GPIO-based I2C driver"
++	depends on GENERIC_GPIO
++	select I2C_GPIO
++	help
++	  This is an I2C driver to register 1 to 4 custom I2C buses using
++	  GPIO lines.
++
++	  This support is also available as a module.  If so, the module
++	  will be called i2c-gpio-custom.
+--- /dev/null
++++ b/package/kernel/i2c-gpio-custom/src/Makefile
+@@ -0,0 +1 @@
++obj-${CONFIG_I2C_GPIO_CUSTOM}	+= i2c-gpio-custom.o
+\ No newline at end of file
+--- /dev/null
++++ b/package/kernel/i2c-gpio-custom/src/i2c-gpio-custom.c
+@@ -0,0 +1,298 @@
++/*
++ *  Custom GPIO-based I2C driver
++ *
++ *  Copyright (C) 2007-2008 Gabor Juhos <juhosg@openwrt.org>
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation.
++ *
++ *  Additions:
++ *  - made work with newer kernels (gpio descriptors)
++ *    by Sergey Zakharchenko <szakharchenko@digital-loggers.com>
++ *    (https://github.com/vsiddharthv/i2c-gpio-custom/commit/230f933dc325cc93b0aadf44e6c0711ebfa5587a)
++ *  - use platform_device_unregister() instead of del/put sequence as suggested in earlier fix
++ *    by Sungbo Eo <mans0n@gorani.run> OpenWrt commit a22b7a6, by Lukas Zeller <luz@plan44.ch>
++ *  - bump DRV_VERSION to 0.1.3 to reflect above changes, by Lukas Zeller <luz@plan44.ch>
++ *
++ * ---------------------------------------------------------------------------
++ *
++ *  The behaviour of this driver can be altered by setting some parameters
++ *  from the insmod command line.
++ *
++ *  The following parameters are adjustable:
++ *
++ *	bus0	These four arguments can be arrays of
++ *	bus1	1-8 unsigned integers as follows:
++ *	bus2
++ *	bus3	<id>,<sda>,<scl>,<udelay>,<timeout>,<sda_od>,<scl_od>,<scl_oo>
++ *
++ *  where:
++ *
++ *  <id>	ID to used as device_id for the corresponding bus (required)
++ *  <sda>	GPIO pin ID to used for SDA (required)
++ *  <scl>	GPIO pin ID to used for SCL (required)
++ *  <udelay>	signal toggle delay.
++ *  <timeout>	clock stretching timeout.
++ *  <sda_od>	SDA is configured as open drain.
++ *  <scl_od>	SCL is configured as open drain.
++ *  <scl_oo>	SCL output drivers cannot be turned off.
++ *
++ *  See include/i2c-gpio.h for more information about the parameters.
++ *
++ *  If this driver is built into the kernel, you can use the following kernel
++ *  command line parameters, with the same values as the corresponding module
++ *  parameters listed above:
++ *
++ *	i2c-gpio-custom.bus0
++ *	i2c-gpio-custom.bus1
++ *	i2c-gpio-custom.bus2
++ *	i2c-gpio-custom.bus3
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/platform_device.h>
++
++#include <linux/version.h>
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++#include <linux/gpio/machine.h>
++#include <asm-generic/gpio.h>
++#endif
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 18, 0)
++#include <linux/i2c-gpio.h>
++#else
++#include <linux/platform_data/i2c-gpio.h>
++#endif
++
++#define DRV_NAME	"i2c-gpio-custom"
++#define DRV_DESC	"Custom GPIO-based I2C driver"
++#define DRV_VERSION	"0.1.3"
++
++#define PFX		DRV_NAME ": "
++
++#define BUS_PARAM_ID		0
++#define BUS_PARAM_SDA		1
++#define BUS_PARAM_SCL		2
++#define BUS_PARAM_UDELAY	3
++#define BUS_PARAM_TIMEOUT	4
++#define BUS_PARAM_SDA_OD	5
++#define BUS_PARAM_SCL_OD	6
++#define BUS_PARAM_SCL_OO	7
++
++#define BUS_PARAM_REQUIRED	3
++#define BUS_PARAM_COUNT		8
++#define BUS_COUNT_MAX		4
++
++static unsigned int bus0[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus1[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus2[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus3[BUS_PARAM_COUNT] __initdata;
++
++static unsigned int bus_nump[BUS_COUNT_MAX] __initdata;
++
++#define BUS_PARM_DESC \
++	" config -> id,sda,scl[,udelay,timeout,sda_od,scl_od,scl_oo]"
++
++module_param_array(bus0, uint, &bus_nump[0], 0);
++MODULE_PARM_DESC(bus0, "bus0" BUS_PARM_DESC);
++module_param_array(bus1, uint, &bus_nump[1], 0);
++MODULE_PARM_DESC(bus1, "bus1" BUS_PARM_DESC);
++module_param_array(bus2, uint, &bus_nump[2], 0);
++MODULE_PARM_DESC(bus2, "bus2" BUS_PARM_DESC);
++module_param_array(bus3, uint, &bus_nump[3], 0);
++MODULE_PARM_DESC(bus3, "bus3" BUS_PARM_DESC);
++
++static struct platform_device *devices[BUS_COUNT_MAX];
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++
++#define BUS_NAME_MAX           32
++
++#define GPIOD_TABLE_TEMPLATE {.dev_id=NULL, .table={GPIO_LOOKUP(NULL, 0, "sda", GPIO_OPEN_DRAIN), GPIO_LOOKUP(NULL, 0, "scl", GPIO_OPEN_DRAIN), {}}}
++static struct gpiod_lookup_table gpiod_table_0=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_1=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_2=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_3=GPIOD_TABLE_TEMPLATE;
++#undef GPIOD_TABLE_TEMPLATE
++
++static struct gpiod_lookup_table *gpiod_tables[BUS_COUNT_MAX]={
++	&gpiod_table_0,
++	&gpiod_table_1,
++	&gpiod_table_2,
++	&gpiod_table_3
++};
++
++#endif
++
++static unsigned int nr_devices;
++
++static void i2c_gpio_custom_cleanup(void)
++{
++	int i;
++
++	for (i = 0; i < nr_devices; i++)
++		if (devices[i])
++			platform_device_unregister(devices[i]);
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++	for (i = 0; i < nr_devices; i++) {
++		gpiod_remove_lookup_table(gpiod_tables[i]);
++		kfree(gpiod_tables[i]->dev_id);
++	}
++#endif
++}
++
++static int __init i2c_gpio_custom_add_one(unsigned int id, unsigned int *params)
++{
++	struct platform_device *pdev;
++	struct i2c_gpio_platform_data pdata;
++	int err;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++	struct gpiod_lookup_table *gpiod_table;
++	struct gpio_chip *chip_sda, *chip_scl;
++	char* dev_id;
++#endif
++
++	if (!bus_nump[id])
++		return 0;
++
++	if (bus_nump[id] < BUS_PARAM_REQUIRED) {
++		printk(KERN_ERR PFX "not enough parameters for bus%d\n", id);
++		err = -EINVAL;
++		goto err;
++	}
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++	gpiod_table = gpiod_tables[id];
++
++	chip_sda = gpio_to_chip(params[BUS_PARAM_SDA]);
++	if (!chip_sda) {
++		printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d SDA\n", params[BUS_PARAM_SDA], id);
++		err = -EINVAL;
++		goto err;
++	}
++	gpiod_table->table[0].chip_label = chip_sda->label;
++	gpiod_table->table[0].chip_hwnum = params[BUS_PARAM_SDA] - chip_sda->base;
++
++	chip_scl = gpio_to_chip(params[BUS_PARAM_SCL]);
++	if (!chip_scl) {
++		printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d SCL\n", params[BUS_PARAM_SCL], id);
++		err = -EINVAL;
++		goto err;
++	}
++	gpiod_table->table[1].chip_label = chip_scl->label;
++	gpiod_table->table[1].chip_hwnum = params[BUS_PARAM_SCL] - chip_scl->base;
++
++	dev_id = kmalloc(BUS_NAME_MAX+1, GFP_KERNEL);
++	if (snprintf(dev_id, BUS_NAME_MAX+1, "i2c-gpio.%d", params[BUS_PARAM_ID]) >= BUS_NAME_MAX+1) {
++		printk(KERN_ERR PFX "bus id %d too large\n", id);
++		err = -EINVAL;
++		goto err_free;
++	}
++	gpiod_table->dev_id = dev_id;
++	gpiod_add_lookup_table(gpiod_table);
++#endif
++
++	pdev = platform_device_alloc("i2c-gpio", params[BUS_PARAM_ID]);
++	if (!pdev) {
++		err = -ENOMEM;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++		goto err_remove;
++#else
++		goto err;
++#endif
++	}
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
++	pdata.sda_pin = params[BUS_PARAM_SDA];
++	pdata.scl_pin = params[BUS_PARAM_SCL];
++#endif
++	pdata.udelay = params[BUS_PARAM_UDELAY];
++	pdata.timeout = params[BUS_PARAM_TIMEOUT];
++	pdata.sda_is_open_drain = params[BUS_PARAM_SDA_OD] != 0;
++	pdata.scl_is_open_drain = params[BUS_PARAM_SCL_OD] != 0;
++	pdata.scl_is_output_only = params[BUS_PARAM_SCL_OO] != 0;
++
++	err = platform_device_add_data(pdev, &pdata, sizeof(pdata));
++	if (err)
++		goto err_put;
++
++	err = platform_device_add(pdev);
++	if (err)
++		goto err_put;
++
++	devices[nr_devices++] = pdev;
++	return 0;
++
++err_put:
++	platform_device_put(pdev);
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++err_remove:
++	gpiod_remove_lookup_table(gpiod_table);
++
++err_free:
++	kfree(dev_id);
++#endif
++
++err:
++	return err;
++}
++
++static int __init i2c_gpio_custom_probe(void)
++{
++	int err;
++
++	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
++
++	err = i2c_gpio_custom_add_one(0, bus0);
++	if (err)
++		goto err;
++
++	err = i2c_gpio_custom_add_one(1, bus1);
++	if (err)
++		goto err;
++
++	err = i2c_gpio_custom_add_one(2, bus2);
++	if (err)
++		goto err;
++
++	err = i2c_gpio_custom_add_one(3, bus3);
++	if (err)
++		goto err;
++
++	if (!nr_devices) {
++		printk(KERN_ERR PFX "no bus parameter(s) specified\n");
++		err = -ENODEV;
++		goto err;
++	}
++
++	return 0;
++
++err:
++	i2c_gpio_custom_cleanup();
++	return err;
++}
++
++#ifdef MODULE
++static int __init i2c_gpio_custom_init(void)
++{
++	return i2c_gpio_custom_probe();
++}
++module_init(i2c_gpio_custom_init);
++
++static void __exit i2c_gpio_custom_exit(void)
++{
++	i2c_gpio_custom_cleanup();
++}
++module_exit(i2c_gpio_custom_exit);
++#else
++subsys_initcall(i2c_gpio_custom_probe);
++#endif /* MODULE*/
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org >");
++MODULE_DESCRIPTION(DRV_DESC);
++MODULE_VERSION(DRV_VERSION);
+--- /dev/null
++++ b/package/kernel/spi-gpio-custom/Makefile
+@@ -0,0 +1,42 @@
++#
++# Copyright (C) 2008 OpenWrt.org
++#
++# This is free software, licensed under the GNU General Public License v2.
++# See /LICENSE for more information.
++#
++
++include $(TOPDIR)/rules.mk
++include $(INCLUDE_DIR)/kernel.mk
++
++PKG_NAME:=spi-gpio-custom
++PKG_RELEASE:=2
++
++include $(INCLUDE_DIR)/package.mk
++
++define KernelPackage/spi-gpio-custom
++  SUBMENU:=SPI Support
++  TITLE:=Custom GPIO-based SPI device
++  DEPENDS:=@GPIO_SUPPORT +kmod-spi-bitbang +kmod-spi-gpio +kmod-spi-dev
++  FILES:=$(PKG_BUILD_DIR)/spi-gpio-custom.ko
++  KCONFIG:=
++endef
++
++define KernelPackage/spi-gpio-custom/description
++ Kernel module for register a custom spi-gpio platform device.
++endef
++
++EXTRA_KCONFIG:= \
++	CONFIG_SPI_GPIO_CUSTOM=m
++
++MAKE_OPTS:= \
++	$(KERNEL_MAKE_FLAGS) \
++	M="$(PKG_BUILD_DIR)" \
++	$(EXTRA_KCONFIG)
++
++define Build/Compile
++	$(MAKE) -C "$(LINUX_DIR)" \
++		$(MAKE_OPTS) \
++		modules
++endef
++
++$(eval $(call KernelPackage,spi-gpio-custom))
+--- /dev/null
++++ b/package/kernel/spi-gpio-custom/src/Kconfig
+@@ -0,0 +1,14 @@
++config SPI_GPIO_CUSTOM
++	tristate "Custom GPIO-based SPI driver"
++	depends on GENERIC_GPIO
++	select SPI_GPIO
++	help
++	  This is an SPI driver to register 1 to 4 custom SPI buses using
++	  GPIO lines. Each bus can have up to 8 slaves.
++	  The devices will be exposed to userspace as /dev/spidevX.X
++	  
++	  This module is maily intended to interface microcontrollers
++	  and other SPI devices without a specific kernel driver.
++
++	  This support is also available as a module.  If so, the module
++	  will be called spi-gpio-custom.
+--- /dev/null
++++ b/package/kernel/spi-gpio-custom/src/Makefile
+@@ -0,0 +1 @@
++obj-${CONFIG_SPI_GPIO_CUSTOM}	+= spi-gpio-custom.o
+\ No newline at end of file
+--- /dev/null
++++ b/package/kernel/spi-gpio-custom/src/spi-gpio-custom.c
+@@ -0,0 +1,523 @@
++/*
++ *  Custom GPIO-based SPI driver
++ *
++ *  Copyright (C) 2013 Marco Burato <zmaster.adsl@gmail.com>
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation.
++ *
++ *  Based on i2c-gpio-custom by:
++ *  Copyright (C) 2007-2008 Gabor Juhos <juhosg@openwrt.org>
++ *
++ *  Additions:
++ *  - made work with newer kernels (gpio descriptors)
++ *    by Sergey Zakharchenko <szakharchenko@digital-loggers.com>
++ *    (https://github.com/vsiddharthv/spi-gpio-custom/commit/bcde3a5c71c09e18e68bf0a737167c3489a7f991)
++ *  - bump DRV_VERSION to 0.2 to reflect above change, by Lukas Zeller <luz@plan44.ch>
++ *
++ * ---------------------------------------------------------------------------
++ *
++ *  The behaviour of this driver can be altered by setting some parameters
++ *  from the insmod command line.
++ *
++ *  The following parameters are adjustable:
++ *
++ *	bus0	These four arguments can be arrays of
++ *	bus1	1-8 unsigned integers as follows:
++ *	bus2
++ *	bus3	<id>,<sck>,<mosi>,<miso>,<mode1>,<maxfreq1>,<cs1>,...
++ *
++ *  where:
++ *
++ *  <id>	ID to used as device_id for the corresponding bus (required)
++ *  <sck>	GPIO pin ID to be used for bus SCK (required)
++ *  <mosi>	GPIO pin ID to be used for bus MOSI (required*)
++ *  <miso>	GPIO pin ID to be used for bus MISO (required*)
++ *  <modeX>	Mode configuration for slave X in the bus (required)
++ *		(see /include/linux/spi/spi.h)
++ *  <maxfreqX>	Maximum clock frequency in Hz for slave X in the bus (required)
++ *  <csX>	GPIO pin ID to be used for slave X CS (required**)
++ *
++ *	Notes:
++ *	*	If a signal is not used (for example there is no MISO) you need
++ *		to set the GPIO pin ID for that signal to an invalid value.
++ *	**	If you only have 1 slave in the bus with no CS, you can omit the
++ *		<cs1> param or set it to an invalid GPIO id to disable it. When
++ *		you have 2 or more slaves, they must all have a valid CS.
++ *
++ *  If this driver is built into the kernel, you can use the following kernel
++ *  command line parameters, with the same values as the corresponding module
++ *  parameters listed above:
++ *
++ *	spi-gpio-custom.bus0
++ *	spi-gpio-custom.bus1
++ *	spi-gpio-custom.bus2
++ *	spi-gpio-custom.bus3
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/platform_device.h>
++
++#include <linux/gpio.h>
++#include <linux/spi/spi.h>
++#include <linux/spi/spi_gpio.h>
++
++#include <linux/version.h>
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++#include <linux/gpio/machine.h>
++#include <asm-generic/gpio.h>
++#endif
++
++#define DRV_NAME	"spi-gpio-custom"
++#define DRV_DESC	"Custom GPIO-based SPI driver"
++#define DRV_VERSION	"0.2"
++
++#define PFX		DRV_NAME ": "
++
++#define BUS_PARAM_ID		0
++#define BUS_PARAM_SCK		1
++#define BUS_PARAM_MOSI		2
++#define BUS_PARAM_MISO		3
++#define BUS_PARAM_MODE1		4
++#define BUS_PARAM_MAXFREQ1	5
++#define BUS_PARAM_CS1		6
++
++#define BUS_SLAVE_COUNT_MAX	8
++#define BUS_PARAM_REQUIRED	6
++#define BUS_PARAM_PER_SLAVE	3
++#define BUS_PARAM_COUNT		(4+BUS_PARAM_PER_SLAVE*BUS_SLAVE_COUNT_MAX)
++#define BUS_COUNT_MAX		4
++
++static unsigned int bus0[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus1[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus2[BUS_PARAM_COUNT] __initdata;
++static unsigned int bus3[BUS_PARAM_COUNT] __initdata;
++
++static unsigned int bus_nump[BUS_COUNT_MAX] __initdata;
++
++#define BUS_PARM_DESC \
++	" config -> id,sck,mosi,miso,mode1,maxfreq1[,cs1,mode2,maxfreq2,cs2,...]"
++
++module_param_array(bus0, uint, &bus_nump[0], 0);
++MODULE_PARM_DESC(bus0, "bus0" BUS_PARM_DESC);
++module_param_array(bus1, uint, &bus_nump[1], 0);
++MODULE_PARM_DESC(bus1, "bus1" BUS_PARM_DESC);
++module_param_array(bus2, uint, &bus_nump[2], 0);
++MODULE_PARM_DESC(bus2, "bus2" BUS_PARM_DESC);
++module_param_array(bus3, uint, &bus_nump[3], 0);
++MODULE_PARM_DESC(bus3, "bus3" BUS_PARM_DESC);
++
++static struct platform_device *devices[BUS_COUNT_MAX];
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++
++#define BUS_NAME_MAX           32
++
++/* NB: BUS_SLAVE_COUNT_MAX #CS entries. */
++
++#define GPIOD_TABLE_TEMPLATE				                \
++    {							                \
++	.dev_id=NULL,					                \
++	    .table={					                \
++	    GPIO_LOOKUP(NULL, 0, "sck", GPIO_ACTIVE_HIGH),		\
++	    GPIO_LOOKUP(NULL, 0, NULL, GPIO_ACTIVE_HIGH),		\
++	    GPIO_LOOKUP(NULL, 0, NULL, GPIO_ACTIVE_HIGH),		\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 0,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 1,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 2,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 3,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 4,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 5,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 6,  GPIO_ACTIVE_HIGH),	\
++	    GPIO_LOOKUP_IDX(NULL, 0, NULL, 7,  GPIO_ACTIVE_HIGH),	\
++	    {}						                \
++	}						                \
++    }
++
++static struct gpiod_lookup_table gpiod_table_0=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_1=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_2=GPIOD_TABLE_TEMPLATE;
++static struct gpiod_lookup_table gpiod_table_3=GPIOD_TABLE_TEMPLATE;
++#undef GPIOD_TABLE_TEMPLATE
++
++static struct gpiod_lookup_table *gpiod_tables[BUS_COUNT_MAX]={
++	&gpiod_table_0,
++	&gpiod_table_1,
++	&gpiod_table_2,
++	&gpiod_table_3
++};
++
++#endif
++
++static unsigned int nr_devices;
++
++static void spi_gpio_custom_cleanup(void)
++{
++	int i;
++
++	for (i = 0; i < nr_devices; i++)
++		if (devices[i])
++			platform_device_unregister(devices[i]);
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++	for (i = 0; i < nr_devices; i++) {
++		gpiod_remove_lookup_table(gpiod_tables[i]);
++		kfree(gpiod_tables[i]->dev_id);
++	}
++#endif
++}
++
++static int __init spi_gpio_custom_get_slave_mode(unsigned int id,
++					  unsigned int *params,
++					  int slave_index)
++{
++	int param_index;
++
++	param_index = BUS_PARAM_MODE1+slave_index*BUS_PARAM_PER_SLAVE;
++	if (param_index >= bus_nump[id])
++		return -1;
++
++	return params[param_index];
++}
++static int __init spi_gpio_custom_get_slave_maxfreq(unsigned int id,
++					     unsigned int *params,
++					     int slave_index)
++{
++	int param_index;
++
++	param_index = BUS_PARAM_MAXFREQ1+slave_index*BUS_PARAM_PER_SLAVE;
++	if (param_index >= bus_nump[id])
++		return -1;
++
++	return params[param_index];
++}
++static int __init spi_gpio_custom_get_slave_cs(unsigned int id,
++					unsigned int *params,
++					int slave_index)
++{
++	int param_index;
++
++	param_index = BUS_PARAM_CS1+slave_index*BUS_PARAM_PER_SLAVE;
++	if (param_index >= bus_nump[id])
++		return -1;
++	if (!gpio_is_valid(params[param_index]))
++		return -1;
++
++	return params[param_index];
++}
++
++static int __init spi_gpio_custom_check_params(unsigned int id, unsigned int *params)
++{
++	int i;
++	struct spi_master *master;
++
++	if (bus_nump[id] < BUS_PARAM_REQUIRED) {
++		printk(KERN_ERR PFX "not enough values for parameter bus%d\n",
++		       id);
++		return -EINVAL;
++	}
++
++	if (bus_nump[id] > (1+BUS_PARAM_CS1)) {
++		/* more than 1 device: check CS GPIOs */
++		for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
++			/* no more slaves? */
++			if (spi_gpio_custom_get_slave_mode(id, params, i) < 0)
++				break;
++
++			if (spi_gpio_custom_get_slave_cs(id, params, i) < 0) {
++				printk(KERN_ERR PFX "invalid/missing CS gpio for slave %d on bus %d\n",
++				       i, params[BUS_PARAM_ID]);
++				return -EINVAL;
++			}
++		}
++	}
++
++	if (!gpio_is_valid(params[BUS_PARAM_SCK])) {
++		printk(KERN_ERR PFX "invalid SCK gpio for bus %d\n",
++		       params[BUS_PARAM_ID]);
++		return -EINVAL;
++	}
++
++	master = spi_busnum_to_master(params[BUS_PARAM_ID]);
++	if (master) {
++		spi_master_put(master);
++		printk(KERN_ERR PFX "bus %d already exists\n",
++		       params[BUS_PARAM_ID]);
++		return -EEXIST;
++	}
++
++	return 0;
++}
++
++static int __init spi_gpio_custom_add_one(unsigned int id, unsigned int *params)
++{
++	struct platform_device *pdev;
++	struct spi_gpio_platform_data pdata;
++	int i;
++	int num_cs;
++	int err;
++	struct spi_master *master;
++	struct spi_device *slave;
++	struct spi_board_info slave_info;
++	int mode, maxfreq, cs;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
++	struct gpiod_lookup_table *gpiod_table;
++	int cs_gpio;
++	struct gpio_chip *chip_sck, *chip_mosi, *chip_miso, *chip_cs;
++	char* dev_id;
++#endif
++
++
++	if (!bus_nump[id])
++		return 0;
++
++	err = spi_gpio_custom_check_params(id, params);
++	if (err)
++		goto err;
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++	gpiod_table = gpiod_tables[id];
++
++	chip_sck = gpio_to_chip(params[BUS_PARAM_SCK]);
++	if (!chip_sck) {
++		printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d SCK\n", params[BUS_PARAM_SCK], id);
++		err = -EINVAL;
++		goto err;
++	}
++	gpiod_table->table[0].chip_label = chip_sck->label;
++	gpiod_table->table[0].chip_hwnum = params[BUS_PARAM_SCK] - chip_sck->base;
++
++	if (params[BUS_PARAM_MOSI]) {
++		chip_mosi = gpio_to_chip(params[BUS_PARAM_MOSI]);
++		if (!chip_mosi) {
++			printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d MOSI\n", params[BUS_PARAM_MOSI], id);
++			err = -EINVAL;
++			goto err;
++		}
++		gpiod_table->table[1].chip_label = chip_mosi->label;
++		gpiod_table->table[1].chip_hwnum = params[BUS_PARAM_MOSI] - chip_mosi->base;
++		gpiod_table->table[1].con_id = "mosi";
++	} else {
++		gpiod_table->table[1].chip_label = "mosi-stub-chip";
++		gpiod_table->table[1].con_id = "mosi-stub";
++	}
++
++	if (params[BUS_PARAM_MISO]) {
++		chip_miso = gpio_to_chip(params[BUS_PARAM_MISO]);
++		if (!chip_miso) {
++			printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d MISO\n", params[BUS_PARAM_MISO], id);
++			err = -EINVAL;
++			goto err;
++		}
++		gpiod_table->table[2].chip_label = chip_miso->label;
++		gpiod_table->table[2].chip_hwnum = params[BUS_PARAM_MISO] - chip_miso->base;
++		gpiod_table->table[2].con_id = "miso";
++	} else {
++		gpiod_table->table[2].chip_label = "miso-stub-chip";
++		gpiod_table->table[2].con_id = "miso-stub";
++	}
++
++	for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
++		/* no more slaves? */
++		if (spi_gpio_custom_get_slave_mode(id, params, i) < 0)
++			break;
++
++		cs_gpio = spi_gpio_custom_get_slave_cs(id, params, i);
++		if (cs_gpio >= 0) {
++			chip_cs = gpio_to_chip(cs_gpio);
++			if (!chip_miso) {
++				printk(KERN_ERR PFX "nonexistent GPIO %d for bus%d #CS %d\n", cs_gpio, id, i);
++				err = -EINVAL;
++				goto err;
++			}
++			gpiod_table->table[3 + i].chip_label = chip_cs->label;
++			gpiod_table->table[3 + i].chip_hwnum = cs_gpio - chip_cs->base;
++			gpiod_table->table[3 + i].con_id = "cs";
++		} else {
++			gpiod_table->table[3 + i].chip_label = "cs-stub-chip";
++			gpiod_table->table[3 + i].con_id = "cs-stub";
++		}
++	}
++
++	dev_id = kmalloc(BUS_NAME_MAX+1, GFP_KERNEL);
++	if (snprintf(dev_id, BUS_NAME_MAX+1, "spi_gpio.%d", params[BUS_PARAM_ID]) >= BUS_NAME_MAX+1) {
++		printk(KERN_ERR PFX "bus id %d too large\n", id);
++		err = -EINVAL;
++		goto err_free;
++	}
++	gpiod_table->dev_id = dev_id;
++	gpiod_add_lookup_table(gpiod_table);
++#endif
++
++	/* Create BUS device node */
++
++	pdev = platform_device_alloc("spi_gpio", params[BUS_PARAM_ID]);
++	if (!pdev) {
++		err = -ENOMEM;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++		goto err_remove;
++#else
++		goto err;
++#endif
++	}
++
++	num_cs = 0;
++	for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
++		/* no more slaves? */
++		if (spi_gpio_custom_get_slave_mode(id, params, i) < 0)
++			break;
++
++		if (spi_gpio_custom_get_slave_cs(id, params, i) >= 0)
++			num_cs++;
++	}
++	if (num_cs == 0) {
++		/*
++		 * Even if no CS is used, spi modules expect
++		 * at least 1 (unused)
++		 */
++		num_cs = 1;
++	}
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 17, 0)
++	pdata.sck = params[BUS_PARAM_SCK];
++	pdata.mosi = gpio_is_valid(params[BUS_PARAM_MOSI])
++		? params[BUS_PARAM_MOSI]
++		: SPI_GPIO_NO_MOSI;
++	pdata.miso = gpio_is_valid(params[BUS_PARAM_MISO])
++		? params[BUS_PARAM_MISO]
++		: SPI_GPIO_NO_MISO;
++#endif
++	pdata.num_chipselect = num_cs;
++
++	err = platform_device_add_data(pdev, &pdata, sizeof(pdata));
++	if (err) {
++		platform_device_put(pdev);
++		goto err;
++	}
++
++	err = platform_device_add(pdev);
++	if (err) {
++		printk(KERN_ERR PFX "platform_device_add failed with return code %d\n",
++		       err);
++		platform_device_put(pdev);
++		goto err;
++	}
++
++	/* Register SLAVE devices */
++
++	for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
++		mode = spi_gpio_custom_get_slave_mode(id, params, i);
++		maxfreq = spi_gpio_custom_get_slave_maxfreq(id, params, i);
++		cs = spi_gpio_custom_get_slave_cs(id, params, i);
++
++		/* no more slaves? */
++		if (mode < 0)
++			break;
++
++		memset(&slave_info, 0, sizeof(slave_info));
++		strcpy(slave_info.modalias, "spidev");
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 17, 0)
++		slave_info.controller_data = (void *)((cs >= 0)
++			? cs
++			: SPI_GPIO_NO_CHIPSELECT);
++#endif
++		slave_info.max_speed_hz = maxfreq;
++		slave_info.bus_num = params[BUS_PARAM_ID];
++		slave_info.chip_select = i;
++		slave_info.mode = mode;
++
++		master = spi_busnum_to_master(params[BUS_PARAM_ID]);
++		if (!master) {
++			printk(KERN_ERR PFX "unable to get master for bus %d\n",
++			       params[BUS_PARAM_ID]);
++			err = -EINVAL;
++			goto err_unregister;
++		}
++		slave = spi_new_device(master, &slave_info);
++		spi_master_put(master);
++		if (!slave) {
++			printk(KERN_ERR PFX "unable to create slave %d for bus %d\n",
++			       i, params[BUS_PARAM_ID]);
++			/* Will most likely fail due to unsupported mode bits */
++			err = -EINVAL;
++			goto err_unregister;
++		}
++	}
++
++	devices[nr_devices++] = pdev;
++
++	return 0;
++
++err_unregister:
++	platform_device_unregister(pdev);
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
++err_remove:
++	gpiod_remove_lookup_table(gpiod_table);
++
++err_free:
++	kfree(dev_id);
++#endif
++
++err:
++	return err;
++}
++
++static int __init spi_gpio_custom_probe(void)
++{
++	int err;
++
++	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
++
++	err = spi_gpio_custom_add_one(0, bus0);
++	if (err)
++		goto err;
++
++	err = spi_gpio_custom_add_one(1, bus1);
++	if (err)
++		goto err;
++
++	err = spi_gpio_custom_add_one(2, bus2);
++	if (err)
++		goto err;
++
++	err = spi_gpio_custom_add_one(3, bus3);
++	if (err)
++		goto err;
++
++	if (!nr_devices) {
++		printk(KERN_ERR PFX "no bus parameter(s) specified\n");
++		err = -ENODEV;
++		goto err;
++	}
++
++	return 0;
++
++err:
++	spi_gpio_custom_cleanup();
++	return err;
++}
++
++#ifdef MODULE
++static int __init spi_gpio_custom_init(void)
++{
++	return spi_gpio_custom_probe();
++}
++module_init(spi_gpio_custom_init);
++
++static void __exit spi_gpio_custom_exit(void)
++{
++	spi_gpio_custom_cleanup();
++}
++module_exit(spi_gpio_custom_exit);
++#else
++subsys_initcall(spi_gpio_custom_probe);
++#endif /* MODULE*/
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Marco Burato <zmaster.adsl@gmail.com>");
++MODULE_DESCRIPTION(DRV_DESC);
++MODULE_VERSION(DRV_VERSION);

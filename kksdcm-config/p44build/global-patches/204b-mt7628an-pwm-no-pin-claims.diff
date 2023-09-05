@@ -1,6 +1,6 @@
 --- a/target/linux/ramips/dts/mt7628an.dtsi
 +++ b/target/linux/ramips/dts/mt7628an.dtsi
-@@ -237,9 +237,6 @@
+@@ -221,9 +221,6 @@
  			resets = <&rstctrl 31>;
  			reset-names = "pwm";
  
