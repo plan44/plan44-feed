@@ -22,4 +22,3 @@
 905-libuwsc-correct-casts-in-buffer-h.diff
 906-libjson-c-fix-strict-prototype.diff
 907-libev-avoid-werror-parentheses.diff
-999-TEMP-fix-libubus-hash.diff

@@ -1,4 +1,3 @@
 # feed/package giturl:gitref
-plan44/serialfwd https://github.com/plan44/serialfwd.git:e198c8ec40a31b6e39687125efa159950f55e3e5
-plan44/kksdcmd https://github.com/plan44/kksdcmd.git:76f80a13d7b2122ae0e21cea09cb3fc73b202aad
+plan44/kksdcmd https://github.com/plan44/kksdcmd.git:cef1590c7944ecff5ed6ffeabe70685d0c06b3dc
 onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:e7152ba869b1af10e3c4d22938100962eb1d9b0e

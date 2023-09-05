@@ -4,18 +4,18 @@
  endef
  TARGET_DEVICES += onion_omega2p
  
-+define Device/plan44_kksdcmomega2
++define Device/astrol_kksdcmomega2
 +  IMAGE_SIZE := 16064k
 +  DEVICE_VENDOR := astrol.ch
 +  DEVICE_MODEL := KKS-DCM-OMEGA2
 +  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
 +  SUPPORTED_DEVICES += kksdcmomega2 omega2 omega2p
 +endef
-+TARGET_DEVICES += plan44_kksdcmomega2
++TARGET_DEVICES += astrol_kksdcmomega2
 +
 +define Device/plan44_p44omega2s
 +  IMAGE_SIZE := 16064k
-+  DEVICE_VENDOR := astrol.ch
++  DEVICE_VENDOR := plan44.ch
 +  DEVICE_MODEL := P44-OMEGA2S
 +  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
 +  SUPPORTED_DEVICES += p44omega2s omega2 omega2p
@@ -57,7 +57,7 @@
  	vocore,vocore2-lite|\
  	wavlink,wl-wn576a2)
 --- /dev/null
-+++ b/target/linux/ramips/dts/mt7628an_plan44_p44dsbomega2.dts
++++ b/target/linux/ramips/dts/mt7628an_astrol_kksdcmomega2.dts
 @@ -0,0 +1,192 @@
 +#include "mt7628an.dtsi"
 +

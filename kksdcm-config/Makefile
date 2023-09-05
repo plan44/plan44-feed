@@ -1,4 +1,4 @@
-# Copyright (c) 2021 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2021-2023 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -37,10 +37,10 @@ endef
 
 
 # derive P44 platform identifier
-ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_KKSDCMOmega2),y)
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_astrol_kksdcmomega2),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=kksdcm-omega2
 endif
-ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2),y)
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_plan44_p44omega2s),y)
   P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
 endif
 
