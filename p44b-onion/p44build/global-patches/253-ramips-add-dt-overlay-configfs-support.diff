@@ -1294,8 +1294,8 @@
 + 	$(DTC) -O $(patsubst .%,%,$(suffix $@)) -o $@ -b 0 \
 --- /dev/null
 +++ b/target/linux/ramips/base-files/lib/preinit/90_apply_dt_overlays
-@@ -0,0 +1,19 @@
-+#!/bin/bash
+@@ -0,0 +1,22 @@
++#!/bin/sh
 +
 +do_apply_dt_overlays() {
 +	grep -q configfs /proc/filesystems || return 0
@@ -1303,13 +1303,16 @@
 +	local overlays_dir="/sys/kernel/config/device-tree/overlays"
 +	[ -d "$overlays_dir" ] || return 0
 +	local dto dtoname
-+	for dto in /lib/firmware/device-tree/overlays/*.dto ; do
++	for dto in /lib/firmware/device-tree/overlays/*.dtbo ; do
 +		[ -r "$dto" ] || continue
-+		dtoname="$(basename "$dtbo" .dtbo)"
++		dtoname="$(basename "$dto" .dtbo)"
 +		[ -e "$overlays_dir/$dtoname" ] && continue
 +		echo " - applying device-tree overlay '$dtoname' - "
 +		mkdir "$overlays_dir/$dtoname"
-+		echo "$dto" > "$overlays_dir/$dtoname/path"
++		# passing filename to path always fails with "no memory"...
++		#echo "$dto" > "$overlays_dir/$dtoname/path"
++		# ...so pass data directly - this works
++		cat "$dto" > "$overlays_dir/$dtoname/dtbo"
 +	done
 +}
 +
