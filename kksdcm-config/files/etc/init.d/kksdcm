@@ -102,6 +102,9 @@ boot() {
   omega2-ctrl gpiomux set uart0 gpio # disables console, NCS0 and CLK
   omega2-ctrl gpiomux set uart1 gpio # MISO and MOSI
   omega2-ctrl gpiomux set i2c gpio # NCS1 and IRQ
+  # NOTE: spidev1.0 and spidev1.1 are now instantiated via device tree overlay in
+  #       /lib/firmware/device-tree/overlays/spi-custom.dto
+  # NO LONGER:
   # - kernel module
   #   Syntax: insmod spi-gpio-custom busBusNum=deviceId,sckGPIO,mosiGPIO,misoGPIO,mode0,speedInHz0[,cs0_GPIO[,mode1,speedInHz1,cs1_GPIO[,mode2....]]]
   #   Note: current implementation of spi-gpio.c does not care about the speed, but just runs at max which is ~1.2MHz on MT7688.
@@ -119,7 +122,8 @@ boot() {
   #   SPI_RX_DUAL     0x400  // receive with 2 wires
   #   SPI_RX_QUAD     0x800  // receive with 4 wires
   # - device 1, SCK=GPIO13, MOSI=GPIO45, MISO=GPIO46, mode0=SPI_CS_HIGH, 1Mbit, CS0=GPIO12, mode1=SPI_CS_HIGH, 1Mbit, CS1=GPIO4
-  insmod spi-gpio-custom bus0=1,13,45,46,4,1000000,12,4,1000000,4
+  #insmod spi-gpio-custom bus0=1,13,45,46,4,1000000,12,4,1000000,4
+
   # - enable SPI gate
   echo 1 >/sys/class/gpio/gpio0/value
   # - enable drivers
