@@ -14,7 +14,7 @@ PKG_RELEASE:=6
 PKG_SECONDARY_NAME:=p44mbutil
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=main
+PKG_SOURCE_VERSION:=cef1590c7944ecff5ed6ffeabe70685d0c06b3dc
 PKG_MIRROR_HASH:=skip
 #PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/kksdcmd.git
 PKG_SOURCE_URL:=https://github.com/plan44/kksdcmd.git
