@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=kksdcm-config
 # version of what we are downloading (or is contained in the package)
-PKG_VERSION:=1.2.0
+PKG_VERSION:=1.2.1
 # version of this makefile
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -18,6 +18,10 @@ PKG_CONFIG_DEPENDS := \
 	CONFIG_VERSION_NUMBER
 
 include $(INCLUDE_DIR)/package.mk
+
+# Figure out DTC path to build our overlays
+KERNEL_BUILD_DIR ?= $(BUILD_DIR)/linux-$(BOARD)$(if $(SUBTARGET),_$(SUBTARGET))
+DTC_DIR ?= $(KERNEL_BUILD_DIR)/linux-*/scripts/dtc
 
 define Package/$(PKG_NAME)
 	DEPENDS:=+p44pagekite +uhttpd +kksdcmd
@@ -49,6 +53,12 @@ define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)/etc
 	$(CP) ./files/* $(PKG_BUILD_DIR)/
 endef
+
+
+define Build/Compile
+	$(call Build/Compile/Default,DTC_DIR=$(DTC_DIR))
+endef
+
 
 
 define Package/$(PKG_NAME)/install

@@ -14,5 +14,5 @@ clean:
 	rm $(overlays)
 
 $(overlays) : %.dtbo: dtoverlays/%.dts
-	$(LINUX_DIR)/scripts/dtc/dtc -b 0 -@ -O dtb $< -o $@
+	$(DTC_DIR)/dtc -b 0 -@ -O dtb $< -o $@
 
