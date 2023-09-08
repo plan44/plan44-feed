@@ -45,14 +45,14 @@ Linux: Assuming we want to put the openwrt source tree into the current user's h
 
 ```bash
 cd ~
-git clone -o openwrt.org -b openwrt-19.07 https://git.openwrt.org/openwrt/openwrt.git openwrt
+git clone -o openwrt.org -b openwrt-22.03 https://git.openwrt.org/openwrt/openwrt.git openwrt
 ```
 
 MacOS: Assuming that you've created and mounted a **case sensitive volume named `OpenWrt`** already:
 
 ```bash
 cd /Volumes/OpenWrt
-git clone -o openwrt.org -b openwrt-19.07 https://git.openwrt.org/openwrt/openwrt.git openwrt
+git clone -o openwrt.org -b openwrt-22.03 https://git.openwrt.org/openwrt/openwrt.git openwrt
 ```
 
 ### Get the p44build script
@@ -69,10 +69,10 @@ Go to openwrt directory and check out the current stable release
 
 ```bash
 cd openwrt
-git checkout -b kksdcm v19.07.10
+git checkout -b kksdcm v22.03.5
 ```
 
-Note: At the time of writing this, I'm using the official release tagged `v19.07.10`
+Note: At the time of writing this, I'm using the official release tagged `v22.03.5`
 
 ### Configure the extra feeds we need
 
@@ -82,7 +82,7 @@ cp feeds.conf.default feeds.conf
 # comment out unused feeds (luci in particular is large)
 sed -i -E -e "/src-git (luci|freifunk|telephony)/s/^/#/" feeds.conf
 # plan44.ch feed
-echo "src-git plan44 https://github.com/plan44/plan44-feed.git;master" >>feeds.conf
+echo "src-git plan44 https://github.com/plan44/plan44-feed.git;main" >>feeds.conf
 # onion.io feed
 echo "src-git onion https://github.com/OnionIoT/OpenWRT-Packages.git" >>feeds.conf
 
@@ -138,15 +138,6 @@ or just install all packages (**warning: many! **) from all feeds:
 ./scripts/feeds install -a
 ```
 
-### Some tweaks apparently needed (for now, on macOS)
-
-If python/python3 package is installed, make will try to host-compile it and fail on macOS. As we don't need python at all, just make sure those packages are not installed:
-
-```bash
-./scripts/feeds uninstall python
-./scripts/feeds uninstall python3
-```
-
 ### Configure OpenWrt for the target platform
 
 ```bash
@@ -160,7 +151,7 @@ If python/python3 package is installed, make will try to host-compile it and fai
 ### optionally: Inspect/change config to add extra features
 
 ```bash
-make menuconfig
+./p44b build menuconfig
 ```
 
 ### Build KKSDCM image
@@ -177,9 +168,21 @@ care `make` is really a gnu make version>=4, and if not, tries to use `gmake` in
 
 **Note:** when doing this for the first time, it takes a looooong time (hours). This is because initial OpenWrt build involves creating the compiler toolchain, and the complete linux kernel and tools. Subsequent builds will be faster.
 
-### Flash the firmware image to the Omega2
+If everything went well, the OpenWrt build process will have produced a ready-to-flash firmware image in `bin/targets/ramips/mt7688`.
 
-If everything went well, the OpenWrt build process will have produced a ready-to-flash firmware image in `bin/targets/ramips/mt7688`. You can now send this to the Omega2 and flash it.
+### Package the firmware image
+
+p44b can run a script to archive a copy of the just built image ready for upgrades via SD-Card.
+
+The current packaging script only creates a folder reflecting the version, and copies the image with the correct file name for SD card upgrading.
+
+Future versions might do more, such as signing firmware updates, preparing additional resources for the SD card etc.
+
+```
+p44b package /dir/where/images/should/be/archived
+```
+
+### Flash the firmware image to the Omega2
 
 #### Flash devices via omega2flash utility
 
@@ -214,7 +217,7 @@ sysupgrade -n kksdcm-*.bin
 
 #### Use the auto-upgrade mechanism via SD Card when KKS-DCM is already installed
 
-- copy the built image (see `./p44b status` for getting the full path/filename) into the root of the SDCard and name it `kks-dcm.sysupgrade.bin`.
+- copy the built image (see `./p44b status` for getting the full path/filename) into the root of the SDCard and name it `kks-dcm.sysupgrade.bin` (if you have packaged the image with `p44 package` as shown above, the packaged image file has the correct name already and can be copied directly to the SD).
 - reboot the KKS-DCM with the SDCard inserted.
 - it should automatically upgrade, when successful, the file on the SDCard will be renamed to `kks-dcm.sysupgrade.bin_DONE`, also preventing updating again.
 
