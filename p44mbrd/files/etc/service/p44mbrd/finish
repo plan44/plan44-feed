@@ -1,0 +1,22 @@
+#!/bin/sh
+
+APPNAME=p44mbrd
+KVSPATH=/flash/${APPNAME}_kvs
+
+echo ""
+echo "**************** p44mbrd exited with status $1, waitpid status $2 ********************"
+ps -ww
+echo ""
+
+echo "[`date`] ${APPNAME} exited with exitstatus $1, waitpid status $2" >>/var/log/${APPNAME}/exits.log
+
+if [ $1 == 42 ]; then
+  # exit code 42 factory resets the matter bridge
+  echo "[`date`] ${APPNAME} requests factory reset" >>/var/log/${APPNAME}/exits.log
+  # erase KVS config file
+  rm "${KVSPATH}"
+fi
+
+# just to damp possible crashloops
+sleep 10
+

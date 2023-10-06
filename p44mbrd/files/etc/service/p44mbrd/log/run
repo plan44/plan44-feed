@@ -1,0 +1,47 @@
+#!/bin/sh
+DAEMON=p44mbrd
+LOGDIR=/var/log/${DAEMON}
+
+# in case we have svlogadjust, this is the min number of KB free memory
+# we want to have still left with log history at its max size
+MINFREE=5000
+
+# create logdir (svlogd runs as nobody)
+mkdir -p ${LOGDIR}
+chmod 777 ${LOGDIR}
+
+# default line and filter matching length should be short
+LINELEN=80
+BUFLEN=200
+
+# Allow overriding log configuration
+# - override from flash
+if [ -e /flash/${DAEMON}_logconfig ]; then
+  cp -f /flash/${DAEMON}_logconfig ${LOGDIR}/config
+  LINELEN=400
+  BUFLEN=496
+# - override from tmp
+elif [ -e /tmp/${DAEMON}_logconfig ]; then
+  cp -f /tmp/${DAEMON}_logconfig ${LOGDIR}/config
+  LINELEN=400
+  BUFLEN=496
+# - use default log config
+elif [ -e /etc/${DAEMON}_svlogd.conf ]; then
+  # - daemon specific config exists
+  cp -f /etc/${DAEMON}_svlogd.conf ${LOGDIR}/config
+else
+  # - use completely generic config
+  cp -f /etc/svlogd.conf ${LOGDIR}/config
+fi
+
+if [ -n "${MINFREE}" -a -x /sbin/svlogadjust ]; then
+  # we have svlogadjust, install a cron job to adjust logging history depth to avoid memory exhaustion
+  if ! grep "svlogadjust ${DAEMON}" /etc/crontabs/root; then
+    # check memory situation once an hour and adjust log config if needed
+    echo "42 * * * * svlogadjust ${DAEMON} ${MINFREE}" >>/etc/crontabs/root
+    /etc/init.d/cron restart
+  fi
+fi
+
+# start the log daemon
+exec chpst -unobody svlogd -l ${LINELEN} -b ${BUFLEN} ${LOGDIR}
