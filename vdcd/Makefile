@@ -48,8 +48,8 @@ endef
 
 define Package/$(PKG_NAME)/description
  vdcd is a free (opensource, GPLv3) virtual device connector (vdc) implementation
- for digitalSTROM systems. A vdc integrates third-party automation hardware as
- virtual devices into a digitalSTROM system.
+ for Digital Strom systems. A vdc integrates third-party automation hardware as
+ virtual devices into a Digital Strom system.
 endef
 
 define Package/$(PKG_NAME)/config
