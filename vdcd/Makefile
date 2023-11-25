@@ -7,19 +7,24 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.7.0.23
+PKG_VERSION:=2.7.0.32
 # version of this makefile
 PKG_RELEASE:=191
 
 PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=main
-PKG_SOURCE_VERSION:=1d44e6e428d0cc244db84a29e6d3ef06cd654c2e
+PKG_SOURCE_VERSION:=66c4cf7da630e586d00e6e25c89e0b3704c20682
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+# package is not mirrored anywhere
+PKG_SOURCE_MIRROR:=0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+
+PKG_LICENSE:=GPL-3.0-or-later
+PKG_LICENSE_FILES:=COPYING
 
 PKG_FIXUP:=autoreconf
 
