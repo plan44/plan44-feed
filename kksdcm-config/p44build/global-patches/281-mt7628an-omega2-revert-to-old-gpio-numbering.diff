@@ -13,9 +13,9 @@
  &state_default {
  	gpio {
  		groups = "gpio";
---- a/target/linux/ramips/dts/mt7628an_plan44_p44dsbomega2.dts
-+++ b/target/linux/ramips/dts/mt7628an_plan44_p44dsbomega2.dts
-@@ -52,6 +52,13 @@
+--- a/target/linux/ramips/dts/mt7628an_astrol_kksdcmomega2.dts
++++ b/target/linux/ramips/dts/mt7628an_astrol_kksdcmomega2.dts
+@@ -37,6 +37,13 @@
  
  };
  
