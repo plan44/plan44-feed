@@ -9,10 +9,10 @@ PKG_NAME:=ace-p44script
 # version of what we are downloading
 PKG_VERSION:=1.30.1
 # version of this makefile
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=master
+PKG_SOURCE_VERSION:=main
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/ace-p44script.git
 #PKG_SOURCE_URL:=ssh://plan44@plan44.ch/home/plan44/sharedgit/ace-p44script.git
