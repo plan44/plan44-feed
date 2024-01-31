@@ -7,12 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=serialfwd
 # version of what we are downloading
-PKG_VERSION:=1.0
+PKG_VERSION:=1.1
 # version of this makefile
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=e198c8ec40a31b6e39687125efa159950f55e3e5
+PKG_SOURCE_VERSION:=84f427b03a4e3277bf9ee94f6c172575b4f473e7
+# Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/serialfwd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
