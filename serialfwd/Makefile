@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=serialfwd
 # version of what we are downloading
-PKG_VERSION:=1.1
+PKG_VERSION:=1.2
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=84f427b03a4e3277bf9ee94f6c172575b4f473e7
