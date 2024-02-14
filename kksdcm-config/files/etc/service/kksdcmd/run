@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # default features
-EXECUTABLE=kksdcmd
+APPNAME=kksdcmd
+EXECUTABLE=${APPNAME}
 LOGLEVEL=5
 EXTRAOPTS=
 
@@ -17,12 +18,12 @@ CARDWEBDEFAULTINDEX="/www/sd_default_index.html"
 
 # Allow overriding options
 # - override from flash
-if [ -e /flash/${EXECUTABLE}_debug ]; then
-  source /flash/${EXECUTABLE}_debug
+if [ -e /flash/${APPNAME}_debug ]; then
+  source /flash/${APPNAME}_debug
 fi
 # - override from tmp
-if [ -e /tmp/${EXECUTABLE}_debug ]; then
-  source /tmp/${EXECUTABLE}_debug
+if [ -e /tmp/${APPNAME}_debug ]; then
+  source /tmp/${APPNAME}_debug
 fi
 
 
