@@ -82,7 +82,7 @@ MODULE_PARM_DESC(stepper3, "stepper3" STEPPER_PARM_DESC);
 
 typedef struct {
   const char *name; ///< name of the stepper type
-  u8 substeps; ///< number of substeps
+  int substeps; ///< number of substeps
   const u8 *coilstates; ///< coil connection states (active high, B0=A, B1=B...) for each substep (substeps entries)
 } StepperTypeDescriptor_t;
 
@@ -140,31 +140,21 @@ struct p44stepper_dev {
   s32 currentstep;
   // - target substep to reach
   s32 targetstep;
-  // - [ms] speed (substep interval) to start with
-  u32 startinterval;
-  // - [ms] max speed (substep interval) to step after ramping up
-  u32 maxspeedinterval;
-  // - [ms] ramp up length (time from min to max)
-  u32 rampuptime;
-  // - [ms] ramp down length (time from max to min)
-  u32 rampdowntime;
+  // - [µs] speed (substep interval)
+  u32 stepinterval_us;
 
   // internals
   // - the cdev
   struct cdev cdev;
   // - the device
   struct device *device;
-
   // - stepper state
   u8 coilstate;
-  u32 currentinterval; // [ms]
   int stepinc; // -1, 0 or 1
   // - HR timer to time steps
   struct hrtimer steptimer;
-
-
-//   // spinlock for updating hardware
-//   spinlock_t updatelock;
+  // - timer/main lock
+  spinlock_t lock;
 };
 typedef struct p44stepper_dev *devPtr_t;
 
@@ -184,36 +174,55 @@ static devPtr_t p44stepper_devices[MAX_DEVICES];
 
 // MARK: ===== Motor Controller Implementation
 
+#define COIL_DEBUG 0
 
 static void apply_coilstate(devPtr_t dev, u8 coilstate)
 {
   int i;
   dev->coilstate = coilstate;
+  #if COIL_DEBUG
+  printk(KERN_INFO LOGPREFIX "ABCD: %c%c%c%c\n",
+    coilstate & 0x08 ? 'A' : '-',
+    coilstate & 0x04 ? 'B' : '-',
+    coilstate & 0x02 ? 'C' : '-',
+    coilstate & 0x01 ? 'D' : '-'
+  );
+  #endif
   for (i=0; i<MAX_COIL_GPIOS; i++) {
     int gn = dev->coil_gpio_nos[i];
     if (gn>=0) {
       // apply to this output
-      gpio_set_value(gn, ((coilstate & 0x01)==1) != dev->activelow);
+      gpio_set_value(gn, ((coilstate & (1<<(MAX_COIL_GPIOS-1)))!=0) != dev->activelow);
     }
-    coilstate >>= 1;
+    coilstate <<= 1;
   }
 }
 
 
 static void apply_substep(devPtr_t dev)
 {
+  int sidx;
+  u8 newcoils;
+  u8 coildiffs;
+  u8 intermediate;
+  int substeps = dev->stepperDesc->substeps;
+
   // figure out the current substep
-  u8 sidx = substep % dev->stepperDesc->substeps;
+  sidx = dev->currentstep % substeps;
+  if (sidx<0) sidx += substeps;
+  #if COIL_DEBUG
+  printk(KERN_INFO LOGPREFIX "currentstep = %d, substeps=%d, sidx=%d\n", dev->currentstep, substeps, sidx);
+  #endif
   // apply the current substep
-  u8 newcoils = dev->stepperDesc->coilstates[sidx];
-  u8 coildiffs = newcoils ^ dev->coilstate;
+  newcoils = dev->stepperDesc->coilstates[sidx];
+  coildiffs = newcoils ^ dev->coilstate;
   // intermediate state masks out those that will BECOME active
-  u8 intermediate = newcoils & ~(coildiffs & newcoils);
+  intermediate = newcoils & ~(coildiffs & newcoils);
   if (intermediate!=newcoils) {
     // we need to apply an intermediate to avoid crossover shorts
-    apply_coilstate(intermediate);
+    apply_coilstate(dev, intermediate);
   }
-  apply_coilstate(newcoils);
+  apply_coilstate(dev, newcoils);
 }
 
 
@@ -221,6 +230,7 @@ static void motor_stop(devPtr_t dev)
 {
   // immediate stop (but not unpower)
   dev->stepinc = 0;
+  dev->targetstep = dev->currentstep; // implicit: target reached
   // cancel the timer
 	hrtimer_cancel(&dev->steptimer);
 }
@@ -228,11 +238,10 @@ static void motor_stop(devPtr_t dev)
 
 static void motor_start(devPtr_t dev)
 {
-  dev->currentinterval = dev->startinterval
   dev->stepinc = dev->currentstep>dev->targetstep ? -1 : 1;
-  apply_substep(dev)
+  apply_substep(dev);
   // now running on timer
-  hrtimer_start(&dev->timer, (ktime_t)(dev->currentinterval * NSEC_PER_MSEC), HRTIMER_MODE_REL);
+  hrtimer_start(&dev->steptimer, (ktime_t)(dev->stepinterval_us * NSEC_PER_USEC), HRTIMER_MODE_REL);
 }
 
 
@@ -275,6 +284,7 @@ static void motor_set_currentstep(devPtr_t dev, s32 currentstep)
 {
   motor_stop(dev);
   dev->currentstep = currentstep;
+  dev->targetstep = currentstep;
 }
 
 
@@ -289,41 +299,42 @@ static void motor_set_targetstep(devPtr_t dev, s32 targetstep)
 static enum hrtimer_restart p44stepper_timer_func(struct hrtimer *timer)
 {
   unsigned long irqflags;
+  int rep;
   devPtr_t dev = container_of(timer, struct p44stepper_dev, steptimer);
+  ktime_t timerReloadNs;
 
   spin_lock_irqsave(&dev->lock, irqflags);
-
   if (dev->stepinc!=0) {
     // still moving
-
+    // - do the step
+    dev->currentstep += dev->stepinc;
+    apply_substep(dev);
+    // - done?
+    if (dev->currentstep==dev->targetstep) {
+      // reached position
+      dev->stepinc = 0;
+      timerReloadNs = 0;
+    }
+    else {
+      // need another step
+      timerReloadNs = (ktime_t)dev->stepinterval_us * NSEC_PER_USEC;
+    }
   }
   else {
     // no more timer events needed
     timerReloadNs = 0;
   }
-
-
   spin_unlock_irqrestore(&dev->lock, irqflags);
   if (timerReloadNs>0) {
     // re-arm timer
-    rep = hrtimer_forward_now(&dev->timer, ktime_set(0, timerReloadNs));
+    rep = hrtimer_forward_now(&dev->steptimer, timerReloadNs);
     if (unlikely(rep>1)) {
       // Note: docs are misleading: hrtimer_forward_now() returns number of intervals added. So 1 is the normal case when retriggering a timer
-      printk(KERN_INFO LOGPREFIX "timing error in state=%d, hrtimer_forward returned %d\n", dev->state, rep);
-      SEQ_TRACE_SHOW();
-      // timing failed (another IRQ went in between and blocked our timing for too long)
-      // lock, because timing_failed is an in-lock routine
-      spin_lock_irqsave(&dev->lock, irqflags);
-      SEQ_TRACE_S("tT");
-      timing_failed(dev);
-      spin_unlock_irqrestore(&dev->lock, irqflags);
+      printk(KERN_INFO LOGPREFIX "timing error, hrtimer_forward returned %d\n", rep);
       return HRTIMER_NORESTART;
     }
-    SEQ_TRACE('>');
     return HRTIMER_RESTART;
   }
-  // end of sequence
-  SEQ_TRACE('.');
   return HRTIMER_NORESTART;
 }
 
@@ -337,16 +348,24 @@ static enum hrtimer_restart p44stepper_timer_func(struct hrtimer *timer)
 
 static ssize_t currentstep_show(struct device *device, struct device_attribute *attr, char *buf)
 {
+  unsigned long irqflags;
+  s32 tmp;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%d\n", dev->currentstep);
+  spin_lock_irqsave(&dev->lock, irqflags);
+  tmp = dev->currentstep;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return sysfs_emit(buf, "%d\n", tmp);
 }
 
 static ssize_t currentstep_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
 {
   int tmp;
+  unsigned long irqflags;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
   sscanf(buf, "%d", &tmp);
+  spin_lock_irqsave(&dev->lock, irqflags);
   motor_set_currentstep(dev, tmp);
+  spin_unlock_irqrestore(&dev->lock, irqflags);
   return count;
 }
 
@@ -356,128 +375,99 @@ static DEVICE_ATTR(currentstep, S_IRUSR | S_IWUSR, currentstep_show, currentstep
 static ssize_t targetstep_show(struct device *device, struct device_attribute *attr, char *buf)
 {
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
+  // no lock required, is never changed other than from here
   return sysfs_emit(buf, "%d\n", dev->targetstep);
 }
 
 static ssize_t targetstep_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
 {
   int tmp;
+  unsigned long irqflags;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
   sscanf(buf, "%d", &tmp);
+  spin_lock_irqsave(&dev->lock, irqflags);
   motor_set_targetstep(dev, tmp);
+  spin_unlock_irqrestore(&dev->lock, irqflags);
   return count;
 }
 
 static DEVICE_ATTR(targetstep, S_IRUSR | S_IWUSR, targetstep_show, targetstep_store);
 
 
-static ssize_t startinterval_show(struct device *device, struct device_attribute *attr, char *buf)
+static ssize_t stepinterval_show(struct device *device, struct device_attribute *attr, char *buf)
 {
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", dev->startinterval);
+  // no lock required, is never changed other than from here
+  return sysfs_emit(buf, "%u\n", dev->stepinterval_us);
 }
 
-static ssize_t startinterval_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
+static ssize_t stepinterval_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
 {
   unsigned int tmp;
+  unsigned long irqflags;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
   sscanf(buf, "%u", &tmp);
-  dev->startinterval = tmp;
+  spin_lock_irqsave(&dev->lock, irqflags);
+  dev->stepinterval_us = tmp;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
   return count;
 }
 
-static DEVICE_ATTR(startinterval, S_IRUSR | S_IWUSR, startinterval_show, startinterval_store);
-
-
-
-static ssize_t maxspeedinterval_show(struct device *device, struct device_attribute *attr, char *buf)
-{
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", dev->maxspeedinterval);
-}
-
-static ssize_t maxspeedinterval_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
-{
-  unsigned int tmp;
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  sscanf(buf, "%u", &tmp);
-  dev->maxspeedinterval = tmp;
-  return count;
-}
-
-static DEVICE_ATTR(maxspeedinterval, S_IRUSR | S_IWUSR, maxspeedinterval_show, maxspeedinterval_store);
-
-
-static ssize_t rampuptime_show(struct device *device, struct device_attribute *attr, char *buf)
-{
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", dev->rampuptime);
-}
-
-static ssize_t rampuptime_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
-{
-  unsigned int tmp;
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  sscanf(buf, "%u", &tmp);
-  dev->rampuptime = tmp;
-  return count;
-}
-
-static DEVICE_ATTR(rampuptime, S_IRUSR | S_IWUSR, rampuptime_show, rampuptime_store);
-
-
-static ssize_t rampdowntime_show(struct device *device, struct device_attribute *attr, char *buf)
-{
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", dev->rampdowntime);
-}
-
-static ssize_t rampdowntime_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
-{
-  unsigned int tmp;
-  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  sscanf(buf, "%u", &tmp);
-  dev->rampdowntime = tmp;
-  return count;
-}
-
-static DEVICE_ATTR(rampdowntime, S_IRUSR | S_IWUSR, rampdowntime_show, rampdowntime_store);
+static DEVICE_ATTR(stepinterval, S_IRUSR | S_IWUSR, stepinterval_show, stepinterval_store);
 
 
 static ssize_t power_show(struct device *device, struct device_attribute *attr, char *buf)
 {
+  unsigned long irqflags;
+  int tmp;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", motor_powered(dev));
+  spin_lock_irqsave(&dev->lock, irqflags);
+  tmp = motor_powered(dev);
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return sysfs_emit(buf, "%u\n", tmp);
 }
 
 static ssize_t power_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
 {
+  unsigned long irqflags;
   int tmp;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
   sscanf(buf, "%d", &tmp);
+  spin_lock_irqsave(&dev->lock, irqflags);
   motor_power(dev, tmp);
+  spin_unlock_irqrestore(&dev->lock, irqflags);
   return count;
 }
 
-static DEVICE_ATTR(power, S_IRUSR | S_IWUSR, moving_show, moving_store);
+static DEVICE_ATTR(power, S_IRUSR | S_IWUSR, power_show, power_store);
 
 
 static ssize_t moving_show(struct device *device, struct device_attribute *attr, char *buf)
 {
+  unsigned long irqflags;
+  int tmp;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
-  return sysfs_emit(buf, "%u\n", motor_moving(dev));
+  spin_lock_irqsave(&dev->lock, irqflags);
+  tmp = motor_moving(dev);
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return sysfs_emit(buf, "%u\n", tmp);
 }
 
 static ssize_t moving_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
 {
+  unsigned long irqflags;
   int tmp;
   devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
   sscanf(buf, "%d", &tmp);
-  if (!tmp) motor_stop(dev);
+  if (!tmp) {
+    spin_lock_irqsave(&dev->lock, irqflags);
+    motor_stop(dev);
+    spin_unlock_irqrestore(&dev->lock, irqflags);
+  }
   return count;
 }
 
-static DEVICE_ATTR(moving, S_IRUSR, moving_show, NULL);
+static DEVICE_ATTR(moving, S_IRUSR | S_IWUSR, moving_show, moving_store);
 
 
 
@@ -579,26 +569,23 @@ static int p44stepper_add_device(struct class *class, int minor, devPtr_t *devP,
     err = gpio_request(dev->coil_gpio_nos[i], nm);
     if (err) {
       printk(KERN_ERR LOGPREFIX "gpio_request failed for %s, gpio %d; err=%d\n", nm, dev->coil_gpio_nos[i], err);
-      goto err_free;
+      goto err_free_gpios;
     }
     if (gpio_cansleep(dev->coil_gpio_nos[i])) {
       printk(KERN_ERR LOGPREFIX "gpio %d for %s can sleep -> error, driver needs non-sleeping GPIOs\n", dev->coil_gpio_nos[i], nm);
-      goto err_free;
+      goto err_free_gpios;
     }
     // enable output with inactive level to begin with
     err = gpio_direction_output(dev->coil_gpio_nos[i], dev->activelow);
     if (err) {
       printk(KERN_ERR LOGPREFIX "gpio_direction_output failed for %s, gpio %d; err=%d\n", nm, dev->coil_gpio_nos[i], err);
-      goto err_free;
+      goto err_free_gpios;
     }
   }
   // init operational params
   dev->currentstep = 0;
   dev->targetstep = 0;
-  dev->startinterval = 50;
-  dev->maxspeedinterval = 10;
-  dev->rampuptime = 1000;
-  dev->rampdowntime = 1000;
+  dev->stepinterval_us = 20*USEC_PER_MSEC;
   dev->coilstate = 0; // all coil outputs inactive
   dev->stepinc = 0; // not moving
   // register cdev
@@ -628,14 +615,14 @@ static int p44stepper_add_device(struct class *class, int minor, devPtr_t *devP,
   if (err<0) goto err_free_device;
   err = device_create_file(dev->device, &dev_attr_targetstep);
   if (err<0) goto err_free_device;
-  err = device_create_file(dev->device, &dev_attr_startinterval);
+  err = device_create_file(dev->device, &dev_attr_stepinterval);
   if (err<0) goto err_free_device;
-  err = device_create_file(dev->device, &dev_attr_maxspeedinterval);
+  err = device_create_file(dev->device, &dev_attr_power);
   if (err<0) goto err_free_device;
   err = device_create_file(dev->device, &dev_attr_moving);
   if (err<0) goto err_free_device;
   // init the lock
-//  spin_lock_init(&dev->updatelock);
+  spin_lock_init(&dev->lock);
   // init the timer
   hrtimer_init(&dev->steptimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
   dev->steptimer.function = p44stepper_timer_func;
@@ -653,6 +640,7 @@ err_free_cdev:
   cdev_del(&dev->cdev);
 err_free_gpios:
   for (i = 0; i<MAX_COIL_GPIOS; i++) {
+    // is safe to call for numbers we haven't successfully claimed before
     gpio_free(dev->coil_gpio_nos[i]);
   }
 err_free:
@@ -670,7 +658,7 @@ static void p44stepper_remove_device(struct class *class, int minor, devPtr_t *d
 	BUG_ON(class==NULL || devP==NULL);
   dev = *devP;
   if (!dev) return; // no device to remove
-	// immediate stop
+	// immediate stop (and cancel timer)
 	motor_stop(dev);
 	// destroy device
 	device_destroy(class, MKDEV(p44stepper_major, minor));

@@ -22,7 +22,7 @@ Where
   - **1 = unipolar_hs**: unipolar with half steps (8 substeps per cycle, intermediate steps with only one coil pair powered)
   - All other values are reserved for other types in future versions of this driver
 
-- **coilX_gpio**: GPIO number for the coil connections A,B,C,D
+- **coilX_gpio**: GPIO number for the coil connections A,B,C,D. A/B are the positive/negative subcoils of one phase, B/C positive/negative subcoils of the other phase.
 
 So, the following command will create a driver for an unipolar motor on GPIOs 34...37 with active low outputs:
 
@@ -32,10 +32,11 @@ This will produce a `/sys/class/p44stepper/stepper0` entry in the sysfs with the
 
 - **currentstep**: the current step position. Can be set to a new value to re-adjust or zero the current position. Can be positive or negative withing int32 range. Writing also stops movement and sets targetstep to the same value
 
-- **targetstep**: the step position the motor should reach. Writing a new value starts movement according to *startinterval* and *maxspeedinterval*
+- **targetstep**: the step position the motor should reach. Writing a new value starts movement
 
-- **startinterval**: the substep interval to start movements with
-- **maxspeedinterval**: the smallest substep interval to ramp speed up to
+- **stepinterval**: in microseconds: the step interval -> smaller values, higher speed
 
 - **moving**: 1 when in progress reaching currentstep==targetstep, 0 when stopped. Writing 0 also stops movement.
+
+- **power**: 1 when any coil has power. Writing 0 stops movement and removes power from all coils
 
