@@ -39,4 +39,7 @@ define Package/rtpmidid/install
 	$(INSTALL_BIN) ./files/rtpmidid.init $(1)/etc/init.d/rtpmidid
 endef
 
+CMAKE_OPTIONS+= \
+	-DENABLE_PCH:bool=OFF
+
 $(eval $(call BuildPackage,rtpmidid))
