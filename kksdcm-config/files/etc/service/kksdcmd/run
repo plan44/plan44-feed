@@ -60,6 +60,8 @@ exec ${EXECUTABLE} \
   --mainscript mainscript.txt \
   --datapath /flash \
   --resourcepath /usr/share/kksdcm \
+  --corespi 10 \
+  --modbus 0.0.0.0:502 \
   -l ${LOGLEVEL} \
   ${EXTRAOPTS} \
   </dev/null
