@@ -4,12 +4,24 @@
     "read": {
       "ubus": {
         "kksdcmd": [ "*" ],
+        "uci": [ "*" ],
+        "file": [ "*" ]
       },
+      "file": {
+        "/flash*": [ "*" ]
+      },
+      "uci": [ "network" ]
     },
     "write": {
       "ubus": {
         "kksdcmd": [ "*" ],
+        "uci": [ "*" ],
+        "file": [ "*" ]
       },
+      "file": {
+        "/flash*": [ "*" ]
+      },
+      "uci": [ "network" ]
     }
   }
 }
