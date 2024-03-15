@@ -1,1 +1,0 @@
-<!--#include abspath="/var/log/kksdcmd/current"-->
