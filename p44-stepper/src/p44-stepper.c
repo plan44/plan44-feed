@@ -1,7 +1,7 @@
 /*
  *  p44-stepper.c - kernel module for driving stepper motors using GPIO outputs
  *
- *  Copyright (C) 2025 Lukas Zeller <luz@plan44.ch>
+ *  Copyright (C) 2024 Lukas Zeller <luz@plan44.ch>
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.

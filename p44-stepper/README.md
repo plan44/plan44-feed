@@ -28,7 +28,7 @@ So, the following command will create a driver for an unipolar motor on GPIOs 34
 
     insmod p44-stepper stepper0=1,1,34,35,36,37
 
-This will produce a `/sys/class/p44stepper/stepper0` entry in the sysfs with the following files in it:
+This will produce a `/sys/class/stepper/stepper0` entry in the sysfs with the following files in it:
 
 - **currentstep**: the current step position. Can be set to a new value to re-adjust or zero the current position. Can be positive or negative withing int32 range. Writing also stops movement and sets targetstep to the same value
 
