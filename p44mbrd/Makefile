@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mbrd
 # version of what we are downloading
-PKG_VERSION:=1.0.0.28
+PKG_VERSION:=1.0.0.42
 # version of this makefile
-PKG_RELEASE:=18
+PKG_RELEASE:=20
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=main
+PKG_SOURCE_VERSION:=68e0eb72826e6d50cc8e33562ddeaca6af00b570
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
@@ -51,7 +51,7 @@ $(error PKG_SOURCE_SUBMODULES is not supported, ensure https://github.com/openwr
 endif
 
 # https://github.com/openwrt/openwrt/issues/13016
-TARGET_CXXFLAGS += -Wno-format-nonliteral
+TARGET_CXXFLAGS += -Wno-format-nonliteral -DP44_BUILD_OW=1
 
 # The build environment contains host tools that can be shared between targets
 CHIP_BUILD_ENV_DIR:=$(STAGING_DIR_HOST)/share/chip-build-env
