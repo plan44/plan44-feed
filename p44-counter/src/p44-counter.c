@@ -408,6 +408,9 @@ static void p44counter_remove_device(struct class *class, int minor, devPtr_t *d
   // free the GPIOs
   for (i = 0; i<2; i++) {
     if (dev->gpios[i]<0) continue;
+    // free the irq
+    free_irq(gpio_to_irq(dev->gpios[i]), dev);
+    // free the gpio itself
     gpio_free(dev->gpios[i]);
   }
   // delete dev
