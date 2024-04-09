@@ -66,7 +66,7 @@ int counter2_argc = 0;
 static unsigned int counter3[COUNTER_PARAM_MAX_COUNT] __initdata;
 int counter3_argc = 0;
 
-#define COUNTER_PARM_DESC " config: <mode>,<debounce_us>,<gpioA>[,<gpioB>]"
+#define COUNTER_PARM_DESC " config: <mode>,<default_debounce_us>,<gpioA>[,<gpioB>]"
 
 // parameter declarations
 module_param_array(counter0, int, &counter0_argc, 0000);
@@ -206,6 +206,33 @@ static ssize_t counter_store(struct device *device, struct device_attribute *att
 }
 
 static DEVICE_ATTR(counter, S_IRUSR | S_IWUSR, counter_show, counter_store);
+
+
+static ssize_t debounce_show(struct device *device, struct device_attribute *attr, char *buf)
+{
+  unsigned long irqflags;
+  s32 tmp;
+  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
+  spin_lock_irqsave(&dev->lock, irqflags);
+  tmp = dev->debounce_ns/1000;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return sysfs_emit(buf, "%d\n", tmp);
+}
+
+static ssize_t debounce_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
+{
+  int tmp;
+  unsigned long irqflags;
+  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
+  sscanf(buf, "%d", &tmp);
+  spin_lock_irqsave(&dev->lock, irqflags);
+  dev->debounce_ns = tmp*1000;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return count;
+}
+
+static DEVICE_ATTR(debounce, S_IRUSR | S_IWUSR, debounce_show, debounce_store);
+
 
 
 // MARK: ===== character device file operations
@@ -364,6 +391,7 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
 	}
 	// create the attributes in the /sys/class/counter/counterX directory
   err = device_create_file(dev->device, &dev_attr_counter);
+  err = device_create_file(dev->device, &dev_attr_debounce);
   if (err<0) goto err_free_device;
   // init the lock
   spin_lock_init(&dev->lock);

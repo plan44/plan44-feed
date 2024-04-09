@@ -39,3 +39,4 @@ This will produce a `/sys/class/counter/counter0` entry in the sysfs with the fo
 
 - **count**: the current counter position. Can be set to a new value to re-adjust or zero the current count. Can be positive or negative withing int32 range.
 
+- **debounce**: the debounce time to use in µS. This is initially the same as the module param **debounce_us**, but can be adjusted during operation when needed.
