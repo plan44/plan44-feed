@@ -39,7 +39,8 @@ MODULE_AUTHOR("Lukas Zeller luz@plan44.ch");
 MODULE_DESCRIPTION("Driver for counting edges on GPIO lines");
 // Version history
 // 1.0 - initial version
-MODULE_VERSION("1.0");
+// 1.1 - add `debounce` and `countmode` sysfs files
+MODULE_VERSION("1.1");
 
 #define DEVICE_NAME "counter"
 
@@ -81,12 +82,20 @@ MODULE_PARM_DESC(counter3, "counter3" COUNTER_PARM_DESC);
 
 // MARK: ===== structs
 
-// Mode flags
-// - Bit 0/1: egde flags for gpioA and counting up
-// - Bit 2/3: egde flags for gpioB and counting down
+// Hardware mode flags
+// - Bit 0/1: egde flags for gpioA
+// - Bit 2/3: egde flags for gpioB
 enum {
   pos_edge = 0x01,
   neg_edge = 0x02,
+};
+
+// Counting mode flags
+// - Bit 0: if set, input A edges count down
+// - Bit 1: if set, input B edges count down
+enum {
+  countdown_A = 0x01,
+  countdown_B = 0x02,
 };
 
 
@@ -94,15 +103,16 @@ enum {
 struct p44counter_dev {
   // configuration
   int minor;
-  // - mode flags
+  // - hardware mode flags
   u32 mode;
   // - GPIOs A and B
   int gpios[2];
   // - [ns] debounce time
   u32 debounce_ns;
-
+  // - counting mode flags
+  u32 countMode;
   // operating parameters
-  // - current substep reached
+  // - current counter value
   s32 counter;
 
   // internals
@@ -152,12 +162,12 @@ static irqreturn_t p44counter_edge_irq(int irq, void *dev_id, int gpioidx)
   // valid edge
   dev->lastEdge[gpioidx] = thisEdge;
   if (gpioidx==0) {
-    // gpio A counts up
-    dev->counter++;
+    // gpio A
+    dev->counter += dev->countMode & countdown_A ? -1 : 1;
   }
   else {
-    // gpio B counts down
-    dev->counter--;
+    // gpio B
+    dev->counter += dev->countMode & countdown_B ? -1 : 1;
   }
   spin_unlock_irqrestore(&dev->lock, irqflags);
   return IRQ_HANDLED;
@@ -233,6 +243,31 @@ static ssize_t debounce_store(struct device *device, struct device_attribute *at
 
 static DEVICE_ATTR(debounce, S_IRUSR | S_IWUSR, debounce_show, debounce_store);
 
+
+static ssize_t countmode_show(struct device *device, struct device_attribute *attr, char *buf)
+{
+  unsigned long irqflags;
+  s32 tmp;
+  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
+  spin_lock_irqsave(&dev->lock, irqflags);
+  tmp = dev->countMode;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return sysfs_emit(buf, "%d\n", tmp);
+}
+
+static ssize_t countmode_store(struct device *device, struct device_attribute *attr, const char *buf, size_t count)
+{
+  int tmp;
+  unsigned long irqflags;
+  devPtr_t dev = (devPtr_t)dev_get_drvdata(device);
+  sscanf(buf, "%d", &tmp);
+  spin_lock_irqsave(&dev->lock, irqflags);
+  dev->countMode = tmp;
+  spin_unlock_irqrestore(&dev->lock, irqflags);
+  return count;
+}
+
+static DEVICE_ATTR(countmode, S_IRUSR | S_IWUSR, countmode_show, countmode_store);
 
 
 // MARK: ===== character device file operations
@@ -367,6 +402,7 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
   }
   // init operational params
   dev->counter = 0;
+  dev->countMode = countdown_B; // by default, A counts up and B counts down (as was hardwired in v1+2)
   // register cdev
   // - init the struct contained in our dev struct
   cdev_init(&dev->cdev, &p44counter_fops);
@@ -392,6 +428,7 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
 	// create the attributes in the /sys/class/counter/counterX directory
   err = device_create_file(dev->device, &dev_attr_counter);
   err = device_create_file(dev->device, &dev_attr_debounce);
+  err = device_create_file(dev->device, &dev_attr_countmode);
   if (err<0) goto err_free_device;
   // init the lock
   spin_lock_init(&dev->lock);

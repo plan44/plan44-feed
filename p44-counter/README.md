@@ -19,16 +19,16 @@ after compiling/installing the p44-ledchain kernel module package, activate the 
 Where
 
 - **Cno:** The counter number to use. Can be 0..3.
-- **mode:** counter mode.
-  - **Bit0**: count up rising edges on `gpioA`
-  - **Bit1**: count up falling edges on `gpioA`
-  - **Bit2**: count down rising edges on `gpioB`
-  - **Bit3**: count down falling edges on `gpioB`
+- **mode:** edge detection mode.
+  - **Bit0**: count on rising edges on `gpioA`
+  - **Bit1**: count on falling edges on `gpioA`
+  - **Bit2**: count on rising edges on `gpioB`
+  - **Bit3**: count on falling edges on `gpioB`
   - **Bit4..31**: reserved, must be 0
 - **debounce_us**: debouncing time - if >0, edges detected within `debounce_us`
   microseconds after a detected edge will be ignored
-- **gpioA**: GPIO number to count up edges on (depending on `mode`)
-- **gpioB**: (optional) GPIO number to count down edges on (depending on `mode`)
+- **gpioA**: GPIO number (edges enabled with `mode` count up by default, can be set by `countmode` in sysfs)
+- **gpioB**: (optional) second GPIO number (edges enabled with `mode` count down by default, can be set by `countmode` in sysfs)
 
 So, the following command will create a driver counting up for every positive edge
 found on GPIO34 with a debouncing time of 3mS (3000µS):
@@ -40,3 +40,7 @@ This will produce a `/sys/class/counter/counter0` entry in the sysfs with the fo
 - **count**: the current counter position. Can be set to a new value to re-adjust or zero the current count. Can be positive or negative withing int32 range.
 
 - **debounce**: the debounce time to use in µS. This is initially the same as the module param **debounce_us**, but can be adjusted during operation when needed.
+
+- **countmode**: (default is 0x02 = A counts up, B counts down)
+  - **Bit0**: if set, edges detected on `gpioA` count down, else up
+  - **Bit1**: if set, edges detected on `gpioB` count down, else up
