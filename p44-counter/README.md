@@ -20,10 +20,10 @@ Where
 
 - **Cno:** The counter number to use. Can be 0..3.
 - **mode:** edge detection mode.
-  - **Bit0**: count on rising edges on `gpioA`
-  - **Bit1**: count on falling edges on `gpioA`
-  - **Bit2**: count on rising edges on `gpioB`
-  - **Bit3**: count on falling edges on `gpioB`
+  - **Bit0**: detect rising edges on `gpioA`
+  - **Bit1**: detect falling edges on `gpioA`
+  - **Bit2**: detect rising edges on `gpioB`
+  - **Bit3**: detect falling edges on `gpioB`
   - **Bit4..31**: reserved, must be 0
 - **debounce_us**: debouncing time - if >0, edges detected within `debounce_us`
   microseconds after a detected edge will be ignored
@@ -42,5 +42,13 @@ This will produce a `/sys/class/counter/counter0` entry in the sysfs with the fo
 - **debounce**: the debounce time to use in µS. This is initially the same as the module param **debounce_us**, but can be adjusted during operation when needed.
 
 - **countmode**: (default is 0x02 = A counts up, B counts down)
-  - **Bit0**: if set, edges detected on `gpioA` count down, else up
-  - **Bit1**: if set, edges detected on `gpioB` count down, else up
+  - **Bit0**: if set, edges detected on `gpioA` count down, else up.
+    In quadrature mode: A input inverter
+  - **Bit1**: if set, edges detected on `gpioB` count down, else up.
+    In quadrature mode: B input inverter
+  - **Bit2**: if set, A/B are considered quadrature encoder signals.
+    Otherwise A/B are considered simple edge counting inputs counted according to bit 0/1.
+    (Note: quadrature encoder mode needs detection of all edges, so *mode* parameter at module
+    instantiation time must have all four lower bits set).
+
+

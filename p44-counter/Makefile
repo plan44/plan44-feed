@@ -11,9 +11,9 @@ include $(INCLUDE_DIR)/kernel.mk
 # name
 PKG_NAME:=p44-counter
 # version of what we are downloading
-PKG_VERSION:=1.2
+PKG_VERSION:=1.3
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0

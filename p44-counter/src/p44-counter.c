@@ -40,7 +40,9 @@ MODULE_DESCRIPTION("Driver for counting edges on GPIO lines");
 // Version history
 // 1.0 - initial version
 // 1.1 - add `debounce` and `countmode` sysfs files
-MODULE_VERSION("1.1");
+// 1.2 - add countmode to e.g. change counting direction during operation
+// 1.3 - add quadrature encoder counting mode
+MODULE_VERSION("1.3");
 
 #define DEVICE_NAME "counter"
 
@@ -91,11 +93,19 @@ enum {
 };
 
 // Counting mode flags
-// - Bit 0: if set, input A edges count down
-// - Bit 1: if set, input B edges count down
+// - Bit0: if set, edges detected on `gpioA` count down, else up.
+//         In quadrature mode: A input inverter
+// - Bit1: if set, edges detected on `gpioB` count down, else up.
+//         In quadrature mode: B input inverter
+// - Bit2: if set, A/B are considered quadrature encoder signals.
+//         Otherwise simple edge counting inputs according to bit 0+1
+
+
 enum {
   countdown_A = 0x01,
   countdown_B = 0x02,
+  invertflags = countdown_A|countdown_B,
+  quadrature = 0x04,
 };
 
 
@@ -161,13 +171,28 @@ static irqreturn_t p44counter_edge_irq(int irq, void *dev_id, int gpioidx)
   }
   // valid edge
   dev->lastEdge[gpioidx] = thisEdge;
-  if (gpioidx==0) {
-    // gpio A
-    dev->counter += dev->countMode & countdown_A ? -1 : 1;
+  // evaluate
+  if (dev->countMode & quadrature) {
+    // quadrature encoder signals:
+    //   downcount = A ^ invertA ^ B ^ invertB ^ is_B_edge
+    dev->counter += (
+      (((gpio_get_value(dev->gpios[0]) != // A
+      (dev->countMode & countdown_A)) != // invertA
+      gpio_get_value(dev->gpios[1])) != // B
+      (dev->countMode & countdown_B)) != // invertB
+      (gpioidx==1) // is_B_edge
+    ) ? -1 : 1;
   }
   else {
-    // gpio B
-    dev->counter += dev->countMode & countdown_B ? -1 : 1;
+    // simple edge counting
+    if (gpioidx==0) {
+      // gpio A
+      dev->counter += dev->countMode & countdown_A ? -1 : 1;
+    }
+    else {
+      // gpio B
+      dev->counter += dev->countMode & countdown_B ? -1 : 1;
+    }
   }
   spin_unlock_irqrestore(&dev->lock, irqflags);
   return IRQ_HANDLED;
@@ -451,7 +476,7 @@ err_free_gpios:
     if (dev->gpios[i]<0) continue;
     gpio_free(dev->gpios[i]);
   }
-err_free:
+//err_free:
   kfree(dev);
 err:
   return err;
