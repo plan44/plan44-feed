@@ -1006,7 +1006,7 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
 
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
-  const int ansBufferSize = 512;
+  #define ansBufferSize 512
   char ans[ansBufferSize];
   size_t bytes = 0;
   devPtr_t dev = (devPtr_t)filp->private_data;
