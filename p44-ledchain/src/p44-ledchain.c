@@ -55,6 +55,8 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 #define DEFAULT_MAX_RETRIES 3
 #define MIN_MAXTPASSIVE_NS 5000
 
+#define ANS_BUFFER_SIZE 512
+
 #define LOGPREFIX DEVICE_NAME ": "
 
 // MARK: ===== Module Parameter definitions
@@ -1006,14 +1008,14 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
 
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
-  #define ansBufferSize 512
-  char ans[ansBufferSize];
+  char ans[ANS_BUFFER_SIZE];
+
   size_t bytes = 0;
   devPtr_t dev = (devPtr_t)filp->private_data;
   const char *ansP;
 
   // return "Ready" or "Busy" on first line, some stats on following lines
-  bytes = snprintf(ans, ansBufferSize,
+  bytes = snprintf(ans, ANS_BUFFER_SIZE,
     "%s\n"
     "Last update: %d retries, last timeout=%dnS, min..max irq=%u..%unS, duration=%uuS\n"
     "Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u, min..max update duration=%u..%uuS\n",
@@ -1037,7 +1039,9 @@ static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff
     // update reading index
     dev->read_idx += bytes;
     // now copy to user, which can sleep
-    copy_to_user(buf, ansP, bytes);
+    int result = copy_to_user(buf, ansP, bytes); // resolves -Werror=unused-result. 
+    if (result!=0)
+      printk(KERN_WARNING LOGPREFIX "copy_to_user lost %d bytes\n", result);
   }
   return bytes;
 }
@@ -1276,7 +1280,7 @@ static int __init p44ledchain_init_module(void)
 	}
 	p44ledchain_major = MAJOR(devno);
 	// Create device class
-	p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+	p44ledchain_class = class_create(DEVICE_NAME);  // changed in kernel 6
 	if (IS_ERR(p44ledchain_class)) {
 		err = PTR_ERR(p44ledchain_class);
 		goto err_unregister_region;
