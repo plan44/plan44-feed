@@ -15,6 +15,7 @@
 #include <linux/uaccess.h> // copy_to_user()
 #include <linux/moduleparam.h>
 #include <linux/stat.h>
+#include <linux/version.h>  // kernel version
 
 #include <linux/types.h>
 #include <linux/string.h>
@@ -1005,7 +1006,6 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
   return 0;
 }
 
-
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
   char ans[ANS_BUFFER_SIZE];
@@ -1254,7 +1254,6 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
 
 // MARK: ===== module init and exit
 
-
 static int __init p44ledchain_init_module(void)
 {
   int err;
@@ -1280,7 +1279,12 @@ static int __init p44ledchain_init_module(void)
 	}
 	p44ledchain_major = MAJOR(devno);
 	// Create device class
-	p44ledchain_class = class_create(DEVICE_NAME);  // changed in kernel 6
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
+	p44ledchain_class = class_create(DEVICE_NAME);  // changed in kernel 6.4.0
+#else
+        p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+#endif	
+	
 	if (IS_ERR(p44ledchain_class)) {
 		err = PTR_ERR(p44ledchain_class);
 		goto err_unregister_region;
