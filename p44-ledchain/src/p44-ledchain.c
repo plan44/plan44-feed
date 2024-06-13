@@ -15,6 +15,7 @@
 #include <linux/uaccess.h> // copy_to_user()
 #include <linux/moduleparam.h>
 #include <linux/stat.h>
+#include <linux/version.h>  // kernel version
 
 #include <linux/types.h>
 #include <linux/string.h>
@@ -1004,16 +1005,19 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
 }
 
 
+#define ANS_BUFFER_SIZE 512
+
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
-  #define ansBufferSize 512
-  char ans[ansBufferSize];
+  char ans[ANS_BUFFER_SIZE];
+
   size_t bytes = 0;
   devPtr_t dev = (devPtr_t)filp->private_data;
   const char *ansP;
+  int res;
 
   // return "Ready" or "Busy" on first line, some stats on following lines
-  bytes = snprintf(ans, ansBufferSize,
+  bytes = snprintf(ans, ANS_BUFFER_SIZE,
     "%s\n"
     "Last update: %d retries, last timeout=%dnS, min..max irq=%u..%unS, duration=%uuS\n"
     "Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u, min..max update duration=%u..%uuS\n",
@@ -1037,7 +1041,10 @@ static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff
     // update reading index
     dev->read_idx += bytes;
     // now copy to user, which can sleep
-    copy_to_user(buf, ansP, bytes);
+    res = copy_to_user(buf, ansP, bytes);
+    if (res!=0) {
+      printk(KERN_WARNING LOGPREFIX "copy_to_user lost %d bytes\n", res);
+    }
   }
   return bytes;
 }
@@ -1250,7 +1257,6 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
 
 // MARK: ===== module init and exit
 
-
 static int __init p44ledchain_init_module(void)
 {
   int err;
@@ -1276,7 +1282,11 @@ static int __init p44ledchain_init_module(void)
 	}
 	p44ledchain_major = MAJOR(devno);
 	// Create device class
-	p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
+	p44ledchain_class = class_create(DEVICE_NAME);
+  #else
+  p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+  #endif
 	if (IS_ERR(p44ledchain_class)) {
 		err = PTR_ERR(p44ledchain_class);
 		goto err_unregister_region;
