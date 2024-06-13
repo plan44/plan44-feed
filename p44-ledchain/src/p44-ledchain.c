@@ -1013,6 +1013,7 @@ static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff
   size_t bytes = 0;
   devPtr_t dev = (devPtr_t)filp->private_data;
   const char *ansP;
+  int res;
 
   // return "Ready" or "Busy" on first line, some stats on following lines
   bytes = snprintf(ans, ANS_BUFFER_SIZE,
@@ -1039,9 +1040,10 @@ static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff
     // update reading index
     dev->read_idx += bytes;
     // now copy to user, which can sleep
-    int result = copy_to_user(buf, ansP, bytes); // resolves -Werror=unused-result. 
-    if (result!=0)
-      printk(KERN_WARNING LOGPREFIX "copy_to_user lost %d bytes\n", result);
+    res = copy_to_user(buf, ansP, bytes);
+    if (res!=0) {
+      printk(KERN_WARNING LOGPREFIX "copy_to_user lost %d bytes\n", res);
+    }
   }
   return bytes;
 }
