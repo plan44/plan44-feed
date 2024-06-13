@@ -56,8 +56,6 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 #define DEFAULT_MAX_RETRIES 3
 #define MIN_MAXTPASSIVE_NS 5000
 
-#define ANS_BUFFER_SIZE 512
-
 #define LOGPREFIX DEVICE_NAME ": "
 
 // MARK: ===== Module Parameter definitions
@@ -1006,6 +1004,9 @@ static int p44ledchain_release(struct inode *inode, struct file *filp)
   return 0;
 }
 
+
+#define ANS_BUFFER_SIZE 512
+
 static ssize_t p44ledchain_read(struct file *filp, char *buf, size_t count, loff_t *f_pos)
 {
   char ans[ANS_BUFFER_SIZE];
@@ -1281,12 +1282,11 @@ static int __init p44ledchain_init_module(void)
 	}
 	p44ledchain_major = MAJOR(devno);
 	// Create device class
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
-	p44ledchain_class = class_create(DEVICE_NAME);  // changed in kernel 6.4.0
-#else
-        p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
-#endif	
-	
+  #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
+	p44ledchain_class = class_create(DEVICE_NAME);
+  #else
+  p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+  #endif
 	if (IS_ERR(p44ledchain_class)) {
 		err = PTR_ERR(p44ledchain_class);
 		goto err_unregister_region;
