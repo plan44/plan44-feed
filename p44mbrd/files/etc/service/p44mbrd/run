@@ -15,10 +15,6 @@ EXTRAOPTS=
 
 # derive 12-bit discriminator from unit serial no
 DISCRIMINATOR=$(( (${UNIT_SERIALNO} % 4095)+1 ))
-# setup pin (fixed for now in beta)
-# TODO: maybe we can use the serial number here? probably not allowed, too weak...
-SETUPPIN=20202021
-
 
 # make sure the executable exists
 EXECUTABLEFILE=$(which ${APPNAME})
@@ -53,7 +49,7 @@ exec ${EXECUTABLE} \
   --datapath /flash \
   --resourcepath /usr/share/p44mbrd \
   --factorydata ./factorydata.txt:=/factorydata_debug.txt:_/factorydata_debug.txt \
-  --setuppin ${SETUPPIN} \
+  --dynamicpin \
   --discriminator ${DISCRIMINATOR} \
   --KVS ${KVSPATH} \
   --chiploglevel ${CHIPLOGLEVEL} \
