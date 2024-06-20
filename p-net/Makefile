@@ -24,7 +24,7 @@ PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
 CMAKE_INSTALL:=1
 
-PKG_BUILD_DEPENDS:=+osal
+PKG_BUILD_DEPENDS:=osal
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
