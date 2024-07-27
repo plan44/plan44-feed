@@ -36,7 +36,9 @@ fi
 
 if [ -n "${MINFREE}" -a -x /sbin/svlogadjust ]; then
   # we have svlogadjust, install a cron job to adjust logging history depth to avoid memory exhaustion
-  if ! grep "svlogadjust ${DAEMON}" /etc/crontabs/root; then
+  if ! grep "svlogadjust ${DAEMON} ${MINFREE}" /etc/crontabs/root; then
+    # remove entry with different minfree
+    sed -i -r -e "/.*svlogadjust ${DAEMON}.*/d" /etc/crontabs/root
     # check memory situation once an hour and adjust log config if needed
     echo "42 * * * * svlogadjust ${DAEMON} ${MINFREE}" >>/etc/crontabs/root
     /etc/init.d/cron restart

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2022-2024 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,16 +7,18 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mbrd
 # version of what we are downloading
-PKG_VERSION:=1.0.0.45
+PKG_VERSION:=1.1.0.2
 # version of this makefile
-PKG_RELEASE:=21
+PKG_RELEASE:=23
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=20bf38c45293d73241bc73a969a1592d1eba3ca7
+PKG_SOURCE_VERSION:=0216dc89a2c99e4af1e9f256ce482b9d3bd59cb1
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+# package is not mirrored anywhere
+PKG_SOURCE_MIRROR:=0
 
 
 PKG_LICENSE:=GPL-3.0-or-later
@@ -73,7 +75,8 @@ define Build/Configure
 			--enable-wifi=no \
 			--enable-openthread=no \
 			--enable-network-layer-ble=no \
-			--enable-tracing-support=no
+			--enable-tracing-support=no \
+			--p44-application-version="$(PKG_VERSION)"
 endef
 
 define Build/Compile
