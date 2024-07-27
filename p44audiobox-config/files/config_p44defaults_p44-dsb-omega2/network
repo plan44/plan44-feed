@@ -12,7 +12,7 @@ config globals 'globals'
 config interface 'wlan'
 	option proto 'dhcp'
 	option hostname 'p44-dsb-WiFi'
-	option enabled '0'
+	option disabled '1'
 	option ipv6 '0'
 
 # Ethernet
@@ -20,7 +20,6 @@ config interface 'lan'
 	option ifname 'eth0'
 	option proto 'dhcp'
 	option hostname 'p44-dsb-LAN'
-	option enabled '1'
 	option ipv6 '0'
 
 # AP mode WiFi
@@ -28,5 +27,5 @@ config interface 'wlanap'
 	option proto 'static'
 	option ipaddr '192.168.44.1'
 	option netmask '255.255.255.0'
-	option enabled '0'
+	option disabled '1'
 	option ipv6 '0'

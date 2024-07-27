@@ -12,7 +12,7 @@ config globals 'globals'
 config interface 'wlan'
 	option proto 'dhcp'
 	option hostname 'leth-WiFi'
-	option enabled '0'
+	option disabled '1'
 	option ipv6 '0'
 
 # Ethernet v4
@@ -20,7 +20,6 @@ config interface 'lan'
 	option ifname 'eth0'
 	option proto 'dhcp'
 	option hostname 'leth-LAN'
-	option enabled '1'
 	option ipv6 '0'
 
 # Ethernet v6 link local only
@@ -28,7 +27,7 @@ config interface 'lan6'
 	option ifname 'eth0'
 	option proto 'static'
 	option hostname 'leth-LAN-v6'
-	option enabled '1'
+	option disabled '0'
 	option ipv6 '1'
 
 # AP mode WiFi
@@ -36,5 +35,5 @@ config interface 'wlanap'
 	option proto 'static'
 	option ipaddr '192.168.44.1'
 	option netmask '255.255.255.0'
-	option enabled '1'
+	option disabled '0'
 	option ipv6 '0'

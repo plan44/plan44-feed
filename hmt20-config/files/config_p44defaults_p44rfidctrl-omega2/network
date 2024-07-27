@@ -11,20 +11,20 @@ config globals 'globals'
 config interface 'wlan'
 	option proto 'dhcp'
 	option hostname 'hmt20-WiFi'
-	option enabled '1'
+	option disabled '0'
 
 # station mode WiFi v6
 config interface 'wlanv6'
 	option proto 'dhcpv6'
 	option hostname 'hmt20-WiFi-v6'
-	option enabled '1'
+	option disabled '0'
 
 # Ethernet v4
 config interface 'lan'
 	option ifname 'eth0'
 	option proto 'dhcp'
 	option hostname 'hmt20-LAN'
-	option enabled '1'
+	option disabled '0'
 
 # Ethernet v6
 config interface 'lanv6'
@@ -32,11 +32,11 @@ config interface 'lanv6'
 	option proto 'dhcpv6'
 	option ipv6 '1'
 	option hostname 'hmt20-LAN-v6'
-	option enabled '1'
+	option disabled '0'
 
 # AP mode WiFi
 config interface 'wlanap'
 	option proto 'static'
 	option ipaddr '192.168.44.1'
 	option netmask '255.255.255.0'
-	option enabled '1'
+	option disabled '0'
