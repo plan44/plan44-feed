@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=mg44
 # version of what we are downloading
-PKG_VERSION:=3.13
+PKG_VERSION:=3.14
 # version of this makefile
-PKG_RELEASE:=20
+PKG_RELEASE:=21
 
 PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=main
-PKG_SOURCE_VERSION:=86f246672347e2e40f979a95869d538e6c0cf992
+PKG_SOURCE_VERSION:=dd8cf7ea1d0c6f354ea4c7cb8409d271822d16d6
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/mg44.git
@@ -48,7 +48,7 @@ endef
 
 CONFIGURE_ARGS += \
 	$(if $(CONFIG_DEBUG),--enable-debug) \
-	APPLICATION_VERSION=$(PKG_VERSION)
+	--with-application-version=$(PKG_VERSION)
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
