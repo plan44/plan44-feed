@@ -7,13 +7,13 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.8.0.2
+PKG_VERSION:=2.8.0.8
 # version of this makefile
-PKG_RELEASE:=202
+PKG_RELEASE:=223
 
 PKG_SOURCE_PROTO:=git
 #PKG_SOURCE_VERSION:=main
-PKG_SOURCE_VERSION:=ae43715625939040c2c69f851e7f9e18fc068fe8
+PKG_SOURCE_VERSION:=4773834c02e4e6638eaab8fe470e128bf4943128
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git

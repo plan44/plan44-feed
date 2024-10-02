@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mbrd
 # version of what we are downloading
-PKG_VERSION:=1.1.0.2
+PKG_VERSION:=1.3.0.6
 # version of this makefile
-PKG_RELEASE:=23
+PKG_RELEASE:=26
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=0216dc89a2c99e4af1e9f256ce482b9d3bd59cb1
+PKG_SOURCE_VERSION:=fcd15c4a692d846669d1e186d09adbec319ca38a
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
@@ -32,7 +32,7 @@ PKG_BUILD_DEPENDS:=gn/host
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+libstdcpp +boost +libjson-c +libopenssl +libavahi-client +librt +libev $(CXX_DEPENDS)
+	DEPENDS:=+libstdcpp +boost +libjson-c +libopenssl +libavahi-client +librt +libev +libatomic $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products

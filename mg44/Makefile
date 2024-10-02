@@ -48,7 +48,7 @@ endef
 
 CONFIGURE_ARGS += \
 	$(if $(CONFIG_DEBUG),--enable-debug) \
-	--with-application-version=$(PKG_VERSION)
+	APPLICATION_VERSION=$(PKG_VERSION)
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
