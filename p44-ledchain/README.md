@@ -3,7 +3,7 @@ p44-ledchain for MT7688
 
 This is a kernel module for the MT7688 SoC (as used in onion.io Omega2/Omega2S modules, but also in Linkit Smart 7688, VoCore2, HLK-7688 etc.) which makes use of the SoC's hardware PWM to drive individually addressable WS281x-type RGB and RGBW LED chains.
 
-(c) 2017-2021 by luz@plan44.ch
+(c) 2017-2024 by luz@plan44.ch
 
 ## How does it work
 
@@ -31,7 +31,7 @@ Where
 - **ledtype** selects the correct timing and byte order for different LED types. The ledtype can be composed from adding a chip type and a layout/byte order:
 
   Chip types:
-  
+
   - **0x0001 = WS2811**: RGB LED driver (separate chip, rather ancient). Note: some WS2811 chips reportedly (thanks @Marti-MG!) do not work in this mode - but work fine in WS2813 mode.
   - **0x0002 = WS2812(B)**: RGB LEDs. Note that WS2812 have the most demanding timeout, as the maximum time between two bits may not exceed 10µS, and some chips might need less than 6µS. By default, WS2812 mode assumes 10µS, but if you see flickering in wrong colors then you need to tweak `maxTpassive` down and/or `maxrepeats` up, see [below](#maxtpassive).
   - **0x0003 = WS2813(B)**: 5V RGB LED with relaxed timing and single failed LED bridging. Generally, prefer WS2813 over WS2812 when possible ;-)
@@ -40,22 +40,22 @@ Where
   - **0x0006 = SK6812**: RGBW four channel LED, similar timing to WS2812.
 
   Layouts:
-    
+
   - **0x0100 = RGB**: especially newer WS2815 have RGB byte order
   - **0x0200 = GRB**: most common order for WS281x
   - **0x0300 = RGBW**: some four channel LEDs
   - **0x0400 = GRBW**: usually SK6812 have this layout
 
   For full backwards compatibility with versions 5 and earlier of the *p44-lechain* driver, the following standard types are still supported:
-  
+
   - **0 = WS2811 GRB**: same as 0x0201
   - **1 = WS2812(B) GRB**: same as 0x0202
   - **2 = WS2813(B)/WS2815 GRB**: same as 0x0203
   - **3 = P9823 RGB**: same as 0x0105
   - **4 = SK6812 GRBW**: same as 0x0406
   - **5 = WS2813/WS2815 RGB**: same as 0x0104
-  
-  Furthermore, the type can be set to *variable*: 
+
+  Furthermore, the type can be set to *variable*:
 
   - **0x00FF = variable**: In this mode, the LED type is not fixed, but LED type parameters (chip type, channel layout, custom *maxTpassive*, custom *maxretries*) are sent as a header in every update. This allows higher level software to control the LED type without reloading the kernel driver. This is the mode to be used with p44utils' LedChainArrangements.
 
@@ -68,7 +68,7 @@ But especially in case of WS2812, some chips might need more tight timing. Note 
 So, the following command will create a `/dev/ledchain0` device, which can drive 200 WS2813 LEDs connected without inverter to PWM0.
 
     insmod p44-ledchain ledchain0=0,200,2
-    
+
 or, using the newer flexible layout/chip specification (GRB layout + WS2813 chip):
 
     insmod p44-ledchain ledchain0=0,200,0x203
@@ -92,7 +92,7 @@ It will have a reduced frame rate, because it will probably need a lot of retrie
 Another example: if you want to remain flexible in the type of LEDs without reloading the kernel module, insert it with *variable* led type:
 
     insmod p44-ledchain ledchain0=0,200,0xFF
-    
+
 Now each update sent to `/dev/ledchain0` must contain be prefixed with a 6 byte header, first byte being the header length, then two bytes for the led type (MSB first), then two bytes for *maxTpassive* value in uS (send 0 to use the chip's default *maxTpassive*) and one 1 byte custom *maxretries* (send 0 for default):
 
     #         |HEADER-----------------|LED DATA---------------|

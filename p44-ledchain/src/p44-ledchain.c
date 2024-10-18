@@ -1,7 +1,7 @@
 /*
  *  p44-ledchain.c - A MT7688 SoC hardware PWM based kernel module for driving addressable smart LEDs (WS28xx, SK68xx, ...)
  *
- *  Copyright (C) 2017-2021 Lukas Zeller <luz@plan44.ch>
+ *  Copyright (C) 2017-2024 Lukas Zeller <luz@plan44.ch>
  *
  *  This is free software, licensed under the GNU General Public License v2.
  *  See /LICENSE for more information.
@@ -120,15 +120,15 @@ void __iomem *pwm_base; // set from ioremap()
 #define PWM_CHAN(channel,reg) PWM_ADDR(PWM_CHAN_OFFS(channel,reg))
 #define NUM_DEVICES 4 // number of PWMS = number of devices
 // - PWM channel register offsets
-#define PWMCON			    0x00
-#define PWMHDUR			    0x04
-#define PWMLDUR			    0x08
-#define PWMGDUR			    0x0c
-#define PWMSENDDATA0	  0x20
-#define PWMSENDDATA1	  0x24
-#define PWMWAVENUM	    0x28
-#define PWMDWIDTH		    0x2c
-#define PWMTHRES		    0x30
+#define PWMCON          0x00
+#define PWMHDUR         0x04
+#define PWMLDUR         0x08
+#define PWMGDUR         0x0c
+#define PWMSENDDATA0    0x20
+#define PWMSENDDATA1    0x24
+#define PWMWAVENUM      0x28
+#define PWMDWIDTH       0x2c
+#define PWMTHRES        0x30
 #define PWMSENDWAVENUM  0x34
 
 
@@ -1066,11 +1066,11 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
 {
   int err;
   int pval;
-	struct device *device = NULL;
-	devPtr_t dev = NULL;
-	u16 ltyp;
+  struct device *device = NULL;
+  devPtr_t dev = NULL;
+  u16 ltyp;
 
-	BUG_ON(class==NULL || devP==NULL);
+  BUG_ON(class==NULL || devP==NULL);
 
   // no dev created yet
   *devP = NULL;
@@ -1188,14 +1188,14 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
   // create device
   device = device_create(
     class, NULL, // no parent device
-		MKDEV(p44ledchain_major, minor), NULL, // no additional data
-		devname // device name (format string + more params are allowed)
-	);
-	if (IS_ERR(device)) {
-		err = PTR_ERR(device);
-		printk(KERN_WARNING LOGPREFIX "Error %d while trying to create %s\n", err, devname);
-		goto err_free_cdev;
-	}
+    MKDEV(p44ledchain_major, minor), NULL, // no additional data
+    devname // device name (format string + more params are allowed)
+  );
+  if (IS_ERR(device)) {
+    err = PTR_ERR(device);
+    printk(KERN_WARNING LOGPREFIX "Error %d while trying to create %s\n", err, devname);
+    goto err_free_cdev;
+  }
   // init the lock
   spin_lock_init(&dev->updatelock);
   // init the timer
@@ -1233,25 +1233,25 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
   devPtr_t dev;
   u32 intEnable;
 
-	BUG_ON(class==NULL || devP==NULL);
+  BUG_ON(class==NULL || devP==NULL);
   dev = *devP;
   if (!dev) return; // no device to remove
-	// cancel sending
-	stopSendingPatterns(dev);
-	hrtimer_cancel(&dev->starttimer);
-	// disable PWM interrupts
+  // cancel sending
+  stopSendingPatterns(dev);
+  hrtimer_cancel(&dev->starttimer);
+  // disable PWM interrupts
   intEnable = ioread32(PWM_INT_ENABLE); // currently enabled PWM IRQs
   iowrite32(intEnable & ~((PWM_IRQ_FINISH|PWM_IRQ_UNDERFLOW)<<(dev->pwm_channel*2)), PWM_INT_ENABLE); // disable interrupts of this channel
-	// destroy device
-	device_destroy(class, MKDEV(p44ledchain_major, minor));
-	// delete cdev
-	cdev_del(&dev->cdev);
-	// delete buffer
+  // destroy device
+  device_destroy(class, MKDEV(p44ledchain_major, minor));
+  // delete cdev
+  cdev_del(&dev->cdev);
+  // delete buffer
   kfree(dev->outBuf);
   // delete dev
   kfree(dev);
   *devP = NULL;
-	return;
+  return;
 }
 
 
@@ -1271,26 +1271,26 @@ static int __init p44ledchain_init_module(void)
   // at least one device needs to be defined
   if (ledchain0_argc+ledchain1_argc+ledchain2_argc+ledchain3_argc==0) {
     printk(KERN_WARNING LOGPREFIX "must specify at least one PWM driven LED chain\n");
-		err = -EINVAL;
-		goto err;
+    err = -EINVAL;
+    goto err;
   }
-	// Get a range of minor numbers (starting with 0) to work with */
-	err = alloc_chrdev_region(&devno, 0, NUM_DEVICES, DEVICE_NAME);
-	if (err < 0) {
-		printk(KERN_WARNING LOGPREFIX "alloc_chrdev_region() failed\n");
-		return err;
-	}
-	p44ledchain_major = MAJOR(devno);
-	// Create device class
+  // Get a range of minor numbers (starting with 0) to work with */
+  err = alloc_chrdev_region(&devno, 0, NUM_DEVICES, DEVICE_NAME);
+  if (err < 0) {
+    printk(KERN_WARNING LOGPREFIX "alloc_chrdev_region() failed\n");
+    return err;
+  }
+  p44ledchain_major = MAJOR(devno);
+  // Create device class
   #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
-	p44ledchain_class = class_create(DEVICE_NAME);
+  p44ledchain_class = class_create(DEVICE_NAME);
   #else
   p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
   #endif
-	if (IS_ERR(p44ledchain_class)) {
-		err = PTR_ERR(p44ledchain_class);
-		goto err_unregister_region;
-	}
+  if (IS_ERR(p44ledchain_class)) {
+    err = PTR_ERR(p44ledchain_class);
+    goto err_unregister_region;
+  }
   // map PWM registers
   // TODO: should also do request_mem_region()
   pwm_base = ioremap(MT7688_PWM_BASE, MT7688_PWM_SIZE);
@@ -1364,7 +1364,7 @@ static void __exit p44ledchain_exit_module(void)
   unregister_chrdev_region(MKDEV(p44ledchain_major, 0), NUM_DEVICES);
   // done
   printk(KERN_INFO LOGPREFIX "cleaned up\n");
-	return;
+  return;
 }
 
 

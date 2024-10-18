@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2022 Lukas Zeller <luz@plan44.ch>
+# Copyright (C) 2017-2024 Lukas Zeller <luz@plan44.ch>
 # See LICENSE for more information.
 #
 # Completely rewritten, but made compatible with and partially based on code snippets from
