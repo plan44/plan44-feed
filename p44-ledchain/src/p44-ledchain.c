@@ -49,7 +49,8 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 // v6 - completely reworked led type handling, separate chip/layout parameters, variable mode with led type header in data
 // v7 - reduce TPassive_max_nS for WS2813 (done for WS2813 in v6 already) to 35uS, more STILL caused occasional flicker
 // v8 - add more R,G,B(,W) ordering layout modes
-#define P44LEDCHAIN_VERSION 8
+// v9 - add 16bit support for WS2816, dynamic output buffer (only allocate used leds)
+#define P44LEDCHAIN_VERSION 9
 
 
 #define LEDCHAIN_MAX_LEDS 2048
@@ -213,6 +214,7 @@ typedef struct {
   int T0Passive_double; ///< if set, for a 0 bit the passive time is doubled
   int TPassive_max_nS; ///< max time signal can be passive without reset occurring
   int TReset_nS; ///< time signal must be passive to reset chain
+  u8 bitsperchannel; ///< how many bits per channel
 } LedChipDescriptor_t;
 
 
@@ -224,6 +226,7 @@ typedef enum {
   ledchip_ws2815,
   ledchip_p9823,
   ledchip_sk6812,
+  ledchip_ws2816,
   num_ledchips
 } LedChip_t;
 
@@ -239,7 +242,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 1150ns..1450nS
     // - TReset = >50µS
     .T0Active_nS = 500, .TPassive_min_nS = 1200, .T0Passive_double = 1,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .bitsperchannel = 8
   },
   {
     .name = "WS2812",
@@ -250,7 +254,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 200ns..500nS (actual max is fortunately higher, ~10uS)
     // - TReset = >50µS
     .T0Active_nS = 350, .TPassive_min_nS = 900, .T0Passive_double = 0,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .bitsperchannel = 8
   },
   {
     .name = "WS2813",
@@ -262,7 +267,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >300µS
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 35000, .TReset_nS = 300000
+    .TPassive_max_nS = 35000, .TReset_nS = 300000,
+    .bitsperchannel = 8
   },
   {
     .name = "WS2815",
@@ -274,7 +280,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >300µS
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
     .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
-    .TPassive_max_nS = 35000, .TReset_nS = 300000
+    .TPassive_max_nS = 35000, .TReset_nS = 300000,
+    .bitsperchannel = 8
   },
   {
     .name = "P9823",
@@ -286,7 +293,8 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - TReset = >50µS
     // Note: the T0L and T1H seem to be wrong, using experimentally determined values
     .T0Active_nS = 425, .TPassive_min_nS = 1000, .T0Passive_double = 0,
-    .TPassive_max_nS = 10000, .TReset_nS = 50000
+    .TPassive_max_nS = 10000, .TReset_nS = 50000,
+    .bitsperchannel = 8
   },
   {
     .name = "SK6812",
@@ -297,7 +305,21 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 450ns..750nS (actual max is fortunately higher, ~15uS)
     // - TReset = >50µS
     .T0Active_nS = 300, .TPassive_min_nS = 900, .T0Passive_double = 0,
-    .TPassive_max_nS = 15000, .TReset_nS = 80000
+    .TPassive_max_nS = 15000, .TReset_nS = 80000,
+    .bitsperchannel = 8
+  },
+  {
+    .name = "WS2816",
+    // timing from datasheet:
+    // - T0H = 200ns..320nS
+    // - T0L = 800ns..1200nS
+    // - T1H = 520ns..800nS
+    // - T1L = 480ns..1000nS
+    // - TReset = >280µS
+    // - Note: Don't know if it applies to WS2816, but as safeguard: TxL>35µS causes loosing bits with some chips
+    .T0Active_nS = 300, .TPassive_min_nS = 600, .T0Passive_double = 0,
+    .TPassive_max_nS = 35000, .TReset_nS = 280000,
+    .bitsperchannel = 16
   },
 };
 
@@ -367,6 +389,8 @@ struct p44ledchain_dev {
   int maxTPassiveNs;
   // - number of LEDs
   int num_leds;
+  // - max bits per channel (only for buffer size)
+  int max_bits_per_channel;
   // - max sending repeats
   int maxSendRetries;
   // the device
@@ -760,9 +784,9 @@ static void generateBit(int aBit, devPtr_t dev)
 
 
 // generate bit pattern to be fed into PWM engine from input data word
-static void generateBits(u32 aWord, u8 aNumBits, devPtr_t dev)
+static void generateBits(u64 aWord, u8 aNumBits, devPtr_t dev)
 {
-  u32 inMask = 1L<<(aNumBits-1);
+  u64 inMask = 1LL<<(aNumBits-1);
   int bit;
   while (aNumBits>0) {
     // generate next bit
@@ -835,13 +859,17 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
 {
   LedChip_t chipType;
   LedLayout_t layoutType;
-  u32 ledword;
+  u64 ledword;
   int leds;
   int ncomp;
+  int bytesperchannel;
   int i;
+  int bi;
   int hdrlen;
   u8 *inPtr;
   u32 newPatterns;
+  u32 outBufSz;
+  PWMPattern_t *newBuf;
   #if DATA_DUMP
   int k;
   int idx;
@@ -886,7 +914,7 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
       #if DATA_DUMP
       printk(
         KERN_INFO LOGPREFIX "led type in header: %s %s, custom maxTPassiveNs = %ld, maxSendRetries = %d\n",
-        dev->ledChipDesc->name,  dev->ledLayoutDesc->name, dev->maxTPassiveNs, dev->maxSendRetries
+        dev->ledChipDesc->name,  dev->ledLayoutDesc->name, (long)dev->maxTPassiveNs, dev->maxSendRetries
       );
       #endif
       buff += hdrlen+1;
@@ -896,40 +924,101 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   if (dev->maxTPassiveNs==0) dev->maxTPassiveNs = dev->ledChipDesc->TPassive_max_nS; // 0 = use chip's  default
   // calculate number of LEDs
   ncomp = dev->ledLayoutDesc->channels;
-  leds = len/ncomp;
+  bytesperchannel = (dev->ledChipDesc->bitsperchannel+7)>>3;
+  leds = len/ncomp/bytesperchannel;
   // limit to max
   if (leds>dev->num_leds) leds=dev->num_leds;
   #if STAT_INFO
-  printk(KERN_INFO LOGPREFIX "#%d: Received %d bytes -> data for %d LEDs with %d bytes each\n", dev->pwm_channel, len, leds, ncomp);
+  printk(KERN_INFO LOGPREFIX "#%d: Received %d bytes -> data for %d LEDs with %d channels of %d bytes each\n", dev->pwm_channel, len, leds, ncomp, bytesperchannel);
   #endif
   inPtr = (u8 *)buff;
   #if DATA_DUMP
   // show LED input data
   for (idx=0, k=0; k<leds; k++) {
-    if (ncomp==4) {
-      printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k, inPtr[idx], inPtr[idx+1], inPtr[idx+2], inPtr[idx+3]);
+    if (bytesperchannel>1) {
+      if (ncomp==4) {
+        printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%5d, G=%5d, B=%5d, W=%5d\n", k,
+          (inPtr[(idx+0)*bytesperchannel]<<8)+inPtr[(idx+0)*bytesperchannel+1],
+          (inPtr[(idx+1)*bytesperchannel]<<8)+inPtr[(idx+1)*bytesperchannel+1],
+          (inPtr[(idx+2)*bytesperchannel]<<8)+inPtr[(idx+2)*bytesperchannel+1],
+          (inPtr[(idx+3)*bytesperchannel]<<8)+inPtr[(idx+3)*bytesperchannel+1]
+        );
+      }
+      else {
+        printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%5d, G=%5d, B=%5d\n", k,
+          (inPtr[(idx+0)*bytesperchannel]<<8)+inPtr[(idx+0)*bytesperchannel+1],
+          (inPtr[(idx+1)*bytesperchannel]<<8)+inPtr[(idx+1)*bytesperchannel+1],
+          (inPtr[(idx+2)*bytesperchannel]<<8)+inPtr[(idx+2)*bytesperchannel+1]
+        );
+      }
     }
     else {
-      printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k, inPtr[idx], inPtr[idx+1], inPtr[idx+2]);
+      if (ncomp==4) {
+        printk(KERN_INFO LOGPREFIX "RGBW LED#%03d : R=%3d, G=%3d, B=%3d, W=%3d\n", k,
+          inPtr[idx], inPtr[idx+1], inPtr[idx+2], inPtr[idx+3]
+        );
+      }
+      else {
+        printk(KERN_INFO LOGPREFIX "RGB LED#%03d : R=%3d, G=%3d, B=%3d\n", k,
+          inPtr[idx], inPtr[idx+1], inPtr[idx+2]
+        );
+      }
     }
     idx += ncomp;
   }
   #endif
+  // calculate needed output buffer size
+  outBufSz =
+    leds // = number of leds for now
+    * dev->ledLayoutDesc->channels // * channels
+    * dev->ledChipDesc->bitsperchannel // * number of bits = number of LED bits to send max
+    * 3 // * number of PWM bits per payload bits (max) = number of PWM bits total
+    / 64 // number of PWM patterns
+    * sizeof(PWMPattern_t);
+  // (re-)allocate buffer of proper size
+  if (outBufSz>dev->outBufSize) {
+    // we need a larger buffer
+    newBuf = kzalloc(outBufSz, GFP_KERNEL);
+    #if STAT_INFO
+    printk(KERN_INFO LOGPREFIX "Existing buffer size %d is too small, allocate new buffer sized %d\n", dev->outBufSize, outBufSz);
+    #endif
+    if (newBuf) {
+      // got new buffer, replace old (if any)
+      dev->outBufSize = outBufSz;
+      if (dev->outBuf) {
+        // we already had a buffer, get rid of that
+        kfree(dev->outBuf);
+      }
+      dev->outBuf = newBuf;
+    }
+    else {
+      printk(KERN_WARNING LOGPREFIX "failed to allocate buffer sized %d, keeping old buffer\n", outBufSz);
+    }
+  }
   // generate data into buffer
   initBitGenerator(dev);
   // generate bits into buffer
+  // - input are 8-bit portions (8 or 16 bits per channel)
+  // - output is exactly according to bitsperchannel, which might be less than input bits
   while (leds>0) {
     i = 0;
     ledword = 0;
     while (true) {
-      ledword |= inPtr[dev->ledLayoutDesc->fetchIdx[i]];
+      bi = 0;
+      while(bi<bytesperchannel) {
+        ledword |= (u16)(inPtr[dev->ledLayoutDesc->fetchIdx[i]*bytesperchannel+bi])<<((bytesperchannel-1-bi)*8); // always fetch in 8-bit portions
+        bi++;
+      }
       i++;
       if (i>=ncomp)
         break;
-      ledword <<= 8;
+      ledword <<= dev->ledChipDesc->bitsperchannel; // shift by exact number of bits, could handle non-byte-boundaries between channels
     }
-    generateBits(ledword, ncomp*8, dev);
-    inPtr += ncomp;
+    #if STAT_INFO
+    printk(KERN_INFO LOGPREFIX "generating %d LED bits per channel: ledword: %12llx\n", dev->ledChipDesc->bitsperchannel, ledword);
+    #endif
+    generateBits(ledword, ncomp*dev->ledChipDesc->bitsperchannel, dev);
+    inPtr += ncomp*bytesperchannel; // always advance in 8-bit portions
     // next LED
     leds--;
   }
@@ -950,12 +1039,12 @@ void update_leds(const char *buff, size_t len, devPtr_t dev)
   SEQ_TRACE_SHOW()
   #if STAT_INFO
   printk(
-    KERN_INFO LOGPREFIX "#%d: Previous update had %d retries, last timeout=%unS, min..max irq=%u..%unS, duration=%u..%uuS\n",
-    dev->pwm_channel, dev->sendRetries, dev->last_timeout_ns, dev->min_irq_delay, dev->max_irq_delay, dev->last_update_us
+    KERN_INFO LOGPREFIX "#%d: Previous update had %d retries, last timeout=%unS, min..max irq=%u..%unS, duration=%u (%u..%uuS)\n",
+    dev->pwm_channel, dev->sendRetries, dev->last_timeout_ns, dev->min_irq_delay, dev->max_irq_delay, dev->last_update_us, dev->min_update_us, dev->max_update_us
   );
   printk(
     KERN_INFO LOGPREFIX "#%d: Totals: updates=%u, overruns=%u, retries=%u, errors=%u, irqs=%u\n",
-    dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count
+    dev->pwm_channel, dev->updates, dev->overruns, dev->retries, dev->errors, dev->irq_count
   );
   #else
   if (dev->sendRetries>dev->maxSendRetries) {
@@ -1161,20 +1250,9 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
     }
     dev->maxTPassiveNs = pval;
   }
-  // allocate the buffer for the LED data
-  dev->outBufSize =
-    dev->num_leds // = number of leds
-    * (dev->ledLayoutDesc ? dev->ledLayoutDesc->channels : 4) // * channels (always assume 4 in case of variable layout)
-    * 8 // * number of bits = number of LED bits to send max
-    * 3 // * number of PWM bits per payload bits (max) = number of PWM bits total
-    / 64 // number of PWM patterns
-    * sizeof(PWMPattern_t);
-  dev->outBuf = kzalloc(dev->outBufSize, GFP_KERNEL);
-  if (!dev->outBuf) {
-    printk(KERN_WARNING LOGPREFIX "Cannot allocate PWM data buffer of %d bytes for %s\n", dev->outBufSize, devname);
-    err = -ENOMEM;
-    goto err_free;
-  }
+  // do not yet allocate the buffer for the LED data, as we'll know it only when we get data
+  dev->outBufSize = 0;
+  dev->outBuf = NULL;
   // register cdev
   // - init the struct contained in our dev struct
   cdev_init(&dev->cdev, &p44ledchain_fops);
@@ -1183,7 +1261,7 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
   err = cdev_add(&dev->cdev, MKDEV(p44ledchain_major, minor), 1);
   if (err) {
     printk(KERN_WARNING LOGPREFIX "Error adding cdev, err=%d\n", err);
-    goto err_free_buffer;
+    goto err_free;
   }
   // create device
   device = device_create(
@@ -1206,21 +1284,18 @@ static int p44ledchain_add_device(struct class *class, int minor, devPtr_t *devP
   dev->min_update_us = 10000000; // ten seconds
   // Config summary
   printk(KERN_INFO LOGPREFIX "v%d - Device: /dev/%s\n", P44LEDCHAIN_VERSION, devname);
-  printk(KERN_INFO LOGPREFIX "- PWM channel    : %d\n", dev->pwm_channel);
-  printk(KERN_INFO LOGPREFIX "- PWM buffer size: %u\n", dev->outBufSize);
-  printk(KERN_INFO LOGPREFIX "- Number of LEDs : %d\n", dev->num_leds);
-  printk(KERN_INFO LOGPREFIX "- Inverted       : %d\n", dev->inverted);
-  printk(KERN_INFO LOGPREFIX "- LED type       : %s %s\n", (dev->ledChipDesc ? dev->ledChipDesc->name : "<variable>"), (dev->ledLayoutDesc ? dev->ledLayoutDesc->name : ""));
-  printk(KERN_INFO LOGPREFIX "- Max retries    : %d\n", dev->maxSendRetries);
-  printk(KERN_INFO LOGPREFIX "- Max Tpassive   : %d nS (0=chip default)\n", dev->maxTPassiveNs);
+  printk(KERN_INFO LOGPREFIX "- PWM channel  : %d\n", dev->pwm_channel);
+  printk(KERN_INFO LOGPREFIX "- Max LEDs     : %d\n", dev->num_leds);
+  printk(KERN_INFO LOGPREFIX "- Inverted     : %d\n", dev->inverted);
+  printk(KERN_INFO LOGPREFIX "- LED type     : %s %s\n", (dev->ledChipDesc ? dev->ledChipDesc->name : "<variable>"), (dev->ledLayoutDesc ? dev->ledLayoutDesc->name : ""));
+  printk(KERN_INFO LOGPREFIX "- Max retries  : %d\n", dev->maxSendRetries);
+  printk(KERN_INFO LOGPREFIX "- Max Tpassive : %d nS (0=chip default)\n", dev->maxTPassiveNs);
   // done
   *devP = dev; // pass back new dev
   return 0;
 // wind-down after error
 err_free_cdev:
   cdev_del(&dev->cdev);
-err_free_buffer:
-  kfree(dev->outBuf);
 err_free:
   kfree(dev);
 err:
@@ -1247,7 +1322,7 @@ static void p44ledchain_remove_device(struct class *class, int minor, devPtr_t *
   // delete cdev
   cdev_del(&dev->cdev);
   // delete buffer
-  kfree(dev->outBuf);
+  if (dev->outBuf) kfree(dev->outBuf);
   // delete dev
   kfree(dev);
   *devP = NULL;

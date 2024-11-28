@@ -38,6 +38,7 @@ Where
   - **0x0004 = WS2815**: 12V RGB LED with very simlar timing to WS2813.
   - **0x0005 = P9823**: RGB LED in standard 3mm and 5mm LED case, similar timing as WS2812.
   - **0x0006 = SK6812**: RGBW four channel LED, similar timing to WS2812.
+  - **0x0007 = WS2816**: 5V RGB LED with 16 bit resolution per channel, otherwise similar to WS2813B
 
   Layouts:
 
@@ -59,7 +60,7 @@ Where
 
   - **0x00FF = variable**: In this mode, the LED type is not fixed, but LED type parameters (chip type, channel layout, custom *maxTpassive*, custom *maxretries*) are sent as a header in every update. This allows higher level software to control the LED type without reloading the kernel driver. This is the mode to be used with p44utils' LedChainArrangements.
 
-        The header consists of a lenght byte (must be >=5 in this version of the driver), followed by the **ledtype** (MSB first), followed by 2 bytes (MSB first) custom *maxTpassive* (0 for default), followed by 1 byte custom *maxretries* (0 for default).
+  The header consists of a lenght byte (must be >=5 in this version of the driver), followed by the **ledtype** (MSB first), followed by 2 bytes (MSB first) custom *maxTpassive* (0 for default), followed by 1 byte custom *maxretries* (0 for default).
 
 - optional **maxretries** sets how many time an update is retried (when it could not complete due to IRQ response time not met). By default, this is 3.
 - <a name="maxtpassive"></a>optional **maxTpassive** sets the maximum passive time allowed between bits in nanoseconds. By default, this is set to a known-good value for the LED type.
@@ -95,9 +96,24 @@ Another example: if you want to remain flexible in the type of LEDs without relo
 
 Now each update sent to `/dev/ledchain0` must contain be prefixed with a 6 byte header, first byte being the header length, then two bytes for the led type (MSB first), then two bytes for *maxTpassive* value in uS (send 0 to use the chip's default *maxTpassive*) and one 1 byte custom *maxretries* (send 0 for default):
 
-    #         |HEADER-----------------|LED DATA---------------|
+    #         |HEADER-----------------|LED1 DATA--|LED2 DATA--|
     #         |len lay chp tpasv   rep| RR  GG  BB| RR  GG  BB|
     echo -en '\x05\x02\x03\x00\x00\x00\xFF\x00\x00\xFF\x00\x00' >/dev/ledchain0
+
+### LEDs with more than 8 bits per channel, such as WS2816:
+
+These LEDs need 2 bytes of LED data per channel, MSB first (suffix *h*=high byte=MSB, *l*=low byte=LSB)
+
+    #         |LED1 DATA---------------|LED2 DATA--------------|
+    #         | RRh RRl GGh GGl BBh BBl|RRh RRl GGh GGl BBh BBl|
+    echo -en '\xFF\xFF\x00\x00\x00\x00\xFF\xFF\x00\x00\x00\x00' >/dev/ledchain0
+
+With the *variable* LED type:
+
+    #         |HEADER-----------------|LED1 DATA---------------|LED2 DATA--------------|
+    #         |len lay chp tpasv   rep| RRh RRl GGh GGl BBh BBl|RRh RRl GGh GGl BBh BBl|
+    echo -en '\x05\x02\x07\x00\x00\x00\xFF\xFF\x00\x00\x00\x00\xFF\xFF\x00\x00\x00\x00' >/dev/ledchain0
+
 
 ## p44ledchaintest
 
