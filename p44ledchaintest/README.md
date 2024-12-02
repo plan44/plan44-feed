@@ -49,3 +49,6 @@ Use `-2` for LED which have 16 bit resolution, i.e. 2 bytes per color component.
 The color options (`-c`, `-b`, `-s`) still remain 8bit, but you can use the `-g` option to convert the 8-bit color value into a 16-bit PWM value with better perceived brightness resolution at low levels.
 
 Without `-g`, the 8-bit color value will just be multiplied by 256 for 16-bit LEDs.
+
+You can also use the `-Crr,gg,bb,ww` option to specify the 16bit PWM values directly (in decimal)
+

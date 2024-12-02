@@ -37,6 +37,7 @@ static void usage(const char *name)
   fprintf(stderr, "    -r repeats : how many repeated updates, 0=continuously, (default: %d)\n", DEFAULT_NUMREPEATS);
   fprintf(stderr, "    -e inc : effect increment, (default: %d)\n", DEFAULT_EFFECTINC);
   fprintf(stderr, "    -c rrggbb[ww] : hex color (default: %s)\n", DEFAULT_FGCOLOR);
+  fprintf(stderr, "    -C rrr,ggg,bbb[,www] : decimal color power (direct PWM output)\n");
   fprintf(stderr, "    -b rrggbb[ww] : alternate (background) hex color (default: %s)\n", DEFAULT_BGCOLOR);
   fprintf(stderr, "    -s rrggbb[ww] : color increment added at each step (default: %s)\n", DEFAULT_COLORSTEP);
   fprintf(stderr, "    -H ooccttttrr : send header data (needed for ledchain in variable led type mode)\n");
@@ -95,9 +96,9 @@ int chanbytes = 1;
 int numchannels = 3;
 int pwmgamma = 0;
 int interval = DEFAULT_UPDATEINTERVAL_MS;
-uint8_t fgcolor[4] = { 0xFF, 0, 0, 0 };
-uint8_t bgcolor[4] = { 0, 0, 0x40, 0 };
-uint8_t colorstep[4] = { 0, 0, 0, 0 };
+uint16_t fgcolor[4] = { 0xFFFF, 0, 0, 0 };
+uint16_t bgcolor[4] = { 0, 0, 0x4000, 0 };
+uint16_t colorstep[4] = { 0, 0, 0, 0 };
 int effectinc = DEFAULT_EFFECTINC;
 int repeats = DEFAULT_NUMREPEATS;
 int verbose = 0;
@@ -117,26 +118,41 @@ const int maxchains = 4;
 const int maxhdrlen = 20;
 
 
-void setLed(int ledidx, uint8_t* color)
+void setLed(int ledidx, uint16_t* color)
 {
   int bidx, ch;
   if (pwmgamma) {
-    // use PWM gamma table
+    // use PWM gamma (exponent 4) table from color MSB -> 16bit PWM
     for (ch=0; ch<numchannels; ch++) {
       for (bidx=0; bidx<chanbytes; bidx++) {
-        ledbuffer[(ledidx*numchannels+ch)*chanbytes+bidx] = (bidx==0 ? pwmtable[color[ch]]>>8 : pwmtable[color[ch]]) & 0xFF;
+        ledbuffer[(ledidx*numchannels+ch)*chanbytes+bidx] = (bidx==0 ? pwmtable[color[ch]>>8]>>8 : pwmtable[color[ch]>>8])&0xFF;
       }
     }
   }
   else {
-    // put color 1:1 into MSB, LSB=0
+    // put color 1:1 into MSB (and LSB if chanbytes>1)
     for (ch=0; ch<numchannels; ch++) {
       for (bidx=0; bidx<chanbytes; bidx++) {
-        ledbuffer[(ledidx*numchannels+ch)*chanbytes+bidx] = bidx==0 ? color[ch] : 0;
+        ledbuffer[(ledidx*numchannels+ch)*chanbytes+bidx] = bidx==0 ? color[ch]>>8 : color[ch]&0xFF;
       }
     }
   }
 }
+
+
+void scanhexcol(const char* arg, uint16_t* col)
+{
+  uint16_t col8[4];
+  int i;
+  int n = sscanf(optarg, "%2hx%2hx%2hx%2hx", &col8[0], &col8[1], &col8[2], &col8[3]);
+  for (i=0; i<n; i++) {
+    col[i] = col8[i]<<8;
+  }
+  for (i=n; i<4; i++) {
+    col[i] = 0;
+  }
+}
+
 
 
 int main(int argc, char **argv)
@@ -166,7 +182,7 @@ int main(int argc, char **argv)
   }
 
   int c;
-  while ((c = getopt(argc, argv, "hH:n:24gi:e:r:c:b:s:vFS")) != -1)
+  while ((c = getopt(argc, argv, "hH:n:24gi:e:r:c:C:b:s:vFS")) != -1)
   {
     switch (c) {
       case 'h':
@@ -194,13 +210,16 @@ int main(int argc, char **argv)
         repeats = atoi(optarg);
         break;
       case 'c':
-        sscanf(optarg, "%2hhx%2hhx%2hhx%2hhx", &fgcolor[0], &fgcolor[1], &fgcolor[2], &fgcolor[3]);
+        scanhexcol(optarg, fgcolor);
+        break;
+      case 'C':
+        sscanf(optarg, "%hd,%hd,%hd,%hd", &fgcolor[0], &fgcolor[1], &fgcolor[2], &fgcolor[3]);
         break;
       case 'b':
-        sscanf(optarg, "%2hhx%2hhx%2hhx%2hhx", &bgcolor[0], &bgcolor[1], &bgcolor[2], &bgcolor[3]);
+        scanhexcol(optarg, bgcolor);
         break;
       case 's':
-        sscanf(optarg, "%2hhx%2hhx%2hhx%2hhx", &colorstep[0], &colorstep[1], &colorstep[2], &colorstep[3]);
+        scanhexcol(optarg, colorstep);
         break;
       case 'H':
         headerStr = optarg;
