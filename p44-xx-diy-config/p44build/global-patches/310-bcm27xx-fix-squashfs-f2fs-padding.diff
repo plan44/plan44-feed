@@ -1,0 +1,99 @@
+--- a/target/linux/bcm27xx/image/gen_rpi_sdcard_img.sh
++++ b/target/linux/bcm27xx/image/gen_rpi_sdcard_img.sh
+@@ -22,8 +22,32 @@ BOOTSIZE="$(($2 / 512))"
+ ROOTFSOFFSET="$(($3 / 512))"
+ ROOTFSSIZE="$(($4 / 512))"
+ 
+-dd bs=512 if="$BOOTFS" of="$OUTPUT" seek="$BOOTOFFSET" conv=notrunc
+-dd bs=512 if="$ROOTFS" of="$OUTPUT" seek="$ROOTFSOFFSET" conv=notrunc
+-
++# for sqashfs + f2fs layout, the rootfs image is only the sqashfs part, which
++# is (usually much) smaller than the rootfs partition.
++# The f2fs part (for the overlay) will be created only at first boot
++# into the new image, when mount_root does not detect a valid filesystem already
++# present. To make sure random data from previous installations are not falsely
++# detected (which could and did happen in earlier versions), we add 1 MB zero padding
++# or up to the end of the rootfs partition, whichever is less.
++# While the padding is required for the squashfs+f2fs layout only, it does not
++# interfere with other rootfs partition types such as ext4.
+ 
++# the image itself is usually less than the partition size (ROOTFSSIZE)
++ROOTFSBYTES="$(wc -c < $ROOTFS)"
++ROOTFSIMGSIZE="$(( ($ROOTFSBYTES+511) / 512))"
++# we start padding one block BEFORE image ends
++PADOFFSET="$(($ROOTFSOFFSET + $ROOTFSIMGSIZE - 1))"
++PADSIZE="$(($ROOTFSSIZE - ROOTFSIMGSIZE + 1))"
++# limit the padding to 1M, it needs to be just enough to prevent false fs detection by mount_root
++if (( $PADSIZE > 2048 )); then
++  PADSIZE=2048
++fi
+ 
++# write the boot partition
++dd bs=512 if="$BOOTFS" of="$OUTPUT" seek="$BOOTOFFSET" conv=notrunc
++# pad out some space after rootfs image, overlapping last block
++if (( $PADSIZE > 0 )); then
++  dd bs=512 if=/dev/zero of="$OUTPUT" seek="$PADOFFSET" count="$PADSIZE" conv=notrunc
++fi
++# write the rootfs image which does usually not fill the entire partition
++dd bs=512 if="$ROOTFS" of="$OUTPUT" seek="$ROOTFSOFFSET" conv=notrunc
+--- a/target/linux/bcm27xx/base-files/lib/upgrade/platform.sh
++++ b/target/linux/bcm27xx/base-files/lib/upgrade/platform.sh
+@@ -64,7 +64,17 @@ platform_do_upgrade() {
+ 
+ 		# Separate removal and addtion is necessary; otherwise, partition 1
+ 		# will be missing if it overlaps with the old partition 2
+-		partx -d - "/dev/$diskdev"
++
++		# Note: this will still fail when partition2 is a f2fs. For some reason
++		#		the partition remains blocked and can't be removed, presumably by
++		#		f2fs having something open on the partdev despite being unmounted
++		#		and loopdev removed. So, partx -d will fail, and in consequence,
++		#		partx -a will then fail, too.
++		if ! partx -d - "/dev/$diskdev"; then
++			# removing partition failed, set marker to enable workaround
++			# below in platform_copy_config()
++			touch /tmp/partitions_blocked
++		fi
+ 		partx -a - "/dev/$diskdev"
+ 
+ 		return 0
+@@ -86,14 +96,31 @@ platform_do_upgrade() {
+ }
+ 
+ platform_copy_config() {
+-	local partdev
++	local partdev diskdev
+ 
+-	if export_partdevice partdev 1; then
+-		mkdir -p /boot
+-		[ -f /boot/kernel.img ] || mount -t vfat -o rw,noatime "/dev/$partdev" /boot
+-		cp -af "$UPGRADE_BACKUP" "/boot/$BACKUP_FILE"
+-		tar -C / -zxvf "$UPGRADE_BACKUP" boot/cmdline.txt boot/config.txt
+-		sync
+-		umount /boot
++	if [ -f /tmp/partitions_blocked ]; then
++		# need to work around blocked partition: access possibly grown boot via loop
++		if export_bootdevice && export_partdevice diskdev 0; then
++			get_partitions "/dev/$diskdev" newbootdisk
++			read BOOTNO BOOTOFFS BOOTSZ < /tmp/partmap.newbootdisk
++			BYTEOFFS=$((BOOTOFFS * 512))
++			BYTESZ=$((BOOTSZ * 512))
++			LOOPDEV=$(losetup -f "/dev/$diskdev" -o $BYTEOFFS --sizelimit $BYTESZ --show)
++			mkdir -p /boot
++			[ -f /boot/kernel.img ] || mount -t vfat -o rw,noatime "$LOOPDEV" /boot
++			cp -af "$UPGRADE_BACKUP" "/boot/$BACKUP_FILE"
++			tar -C / -zxvf "$UPGRADE_BACKUP" boot/cmdline.txt boot/config.txt
++			sync
++			umount /boot
++		fi
++	else
++		if export_partdevice partdev 1; then
++			mkdir -p /boot
++			[ -f /boot/kernel.img ] || mount -t vfat -o rw,noatime "/dev/$partdev" /boot
++			cp -af "$UPGRADE_BACKUP" "/boot/$BACKUP_FILE"
++			tar -C / -zxvf "$UPGRADE_BACKUP" boot/cmdline.txt boot/config.txt
++			sync
++			umount /boot
++		fi
+ 	fi
+ }

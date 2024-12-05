@@ -1,0 +1,10 @@
+--- a/include/download.mk
++++ b/include/download.mk
+@@ -228,6 +228,7 @@ define DownloadMethod/rawgit
+ 	rm -rf $(SUBDIR)/.git && \
+ 	$(call dl_tar_pack,$(TMP_DIR)/dl/$(FILE),$(SUBDIR)) && \
+ 	mv $(TMP_DIR)/dl/$(FILE) $(DL_DIR)/ && \
++	sleep 2 && \
+ 	rm -rf $(SUBDIR);
+ endef
+ 

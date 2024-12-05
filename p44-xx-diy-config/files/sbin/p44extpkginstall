@@ -1,0 +1,54 @@
+#!/bin/sh
+
+FLAGFILE="/flash/extpkg_pending"
+LOCKFILE="/tmp/p44extpkginstall.lock"
+EXTRA_PKG_LIST="/flash/extra_packages"
+INSTALL_LOG="/tmp/extra_package_install.log"
+
+if [ ! -f ${FLAGFILE} ]; then
+  # everything ok
+  exit 0
+fi
+if [ -f "${LOCKFILE}" ]; then
+  echo "[p44extpkginstall] installer already running, ${LOCKFILE} exists -> NOP here"
+  echo "###### $(date): installer already running, ${LOCKFILE} exists -> NOP here" >>"${INSTALL_LOG}"
+  exit 1
+fi
+touch "${LOCKFILE}"
+echo "[p44extpkginstall] checking for extra packages to be re-installed"
+OPKG_UPDATED=""
+if [ -f "${EXTRA_PKG_LIST}" ]; then
+  # we have extra packages, check if these are installed
+  PKGS=$(cat "${EXTRA_PKG_LIST}")
+  for PKG in ${PKGS}; do
+    echo "checking package ${PKG}..."
+    opkg status "${PKG}" | grep -q "${PKG}"
+    if [ $? -ne 0 ]; then
+      echo "- package ${PKG} is not installed"
+      # make sure opkg sources are available
+      if [ -z "${OPKG_UPDATED}" ]; then
+        echo "###### $(date): need to re-install extra packages" >>"${INSTALL_LOG}"
+        echo "- updating package feeds"
+        OPKG_UPDATED="yes"
+        if ! opkg update >>"${INSTALL_LOG}" 2>&1 ; then
+          echo "opkg update unsuccessful -> aborting" >>"${INSTALL_LOG}"
+          echo "  ERROR updating package feeds"
+          rm "${LOCKFILE}"
+          exit 1
+        fi
+      fi
+      # install extra package
+      echo "- installing ${PKG} now"
+      if ! opkg install "${PKG}" >>"${INSTALL_LOG}" 2>&1 ; then
+        echo "error installing '${PKG}' -> aborting" >>"${INSTALL_LOG}"
+        echo "  error installing '${PKG}'"
+        rm "${LOCKFILE}"
+        exit 1
+      fi
+    fi
+  done
+fi
+rm "${LOCKFILE}"
+# fully updated
+rm "${FLAGFILE}"
+exit 0

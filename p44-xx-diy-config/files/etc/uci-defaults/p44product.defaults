@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# obtain p44 system information vars
+p44maintd --defs >/tmp/p44defs
+[ -f /tmp/p44defs ] || exit 1 # retry next time
+source /tmp/p44defs
+
+# include product specific UCI (and other) defaults, if any
+[ -f /etc/p44product-${PRODUCT_IDENTIFIER}.defaults ] || exit 0
+source /etc/p44product-${PRODUCT_IDENTIFIER}.defaults
+
+exit 0

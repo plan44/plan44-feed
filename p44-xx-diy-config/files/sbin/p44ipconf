@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# query or set p44-xx IP settings
+if [[ $# -eq 2 ]]; then
+  # modify a IP setting
+  key="$1"
+  val="$2"
+  # DHCP
+  if [[ "${key}" == "dhcp" ]]; then
+    if [[ ${val} -eq 0 ]]; then
+      # disable dhcp, enable static
+      uci -q set network.lan.proto=static
+    else
+      # enable dhcp
+      uci -q set network.lan.proto=dhcp
+    fi
+  elif [[ "${key}" == "ipv6" ]]; then
+    # remove not really existing enable flags
+    uci -q delete network.lan.enabled
+    uci -q delete network.lan6.enabled
+    # always disable on lan
+    uci -q set network.lan.ipv6=0
+    # always enabled on lan6, but disable entire interface when we have no ipv6
+    uci -q set network.lan6.ipv6=1
+    uci -q set network.lan6.disabled=$((!${val}))
+    # modify IPv6 flag for all other interfaces
+    uci -q set network.wlan.ipv6=${val}
+    uci -q set network.loopback.ipv6=${val}
+  elif [[ "${key}" == "ipaddr" ]]; then
+    uci -q set network.lan.ipaddr=${val}
+  elif [[ "${key}" == "netmask" ]]; then
+    uci -q set network.lan.netmask=${val}
+  elif [[ "${key}" == "gatewayip" ]]; then
+    uci -q set network.lan.gateway=${val}
+  elif [[ "${key}" == "dnsip" ]]; then
+    uci -q delete network.lan.dns
+    uci -q add_list network.lan.dns=${val}
+  elif [[ "${key}" == "dnsip2" ]]; then
+    first=$(uci -q get network.lan.dns | sed -n -r -e 's/(^[0-9.]+).*/\1/p')
+    uci -q delete network.lan.dns
+    uci -q add_list network.lan.dns=${first}
+    if [[ ! "${val}" == "0.0.0.0" ]]; then
+      uci -q add_list network.lan.dns=${val}
+    fi
+  elif [[ "${key}" == "commit" ]]; then
+    # commit changes
+    uci -q commit network
+    if [[ "${val}" == "apply" ]]; then
+      # also apply
+      /etc/init.d/network reload
+    fi
+  else
+    echo "unknown ip settings value $1";
+    exit 1
+  fi
+elif [[ $# -eq 0 ]]; then
+  # just query
+  # - DHCP
+  proto=$(uci -q get network.lan.proto)
+  if [[ "${proto}" == "dhcp" ]]; then
+    echo "dhcp=on"
+  else
+    echo "dhcp=off"
+  fi
+  # - IPv6 info
+  v6dis=$(uci -q get network.lan6.disabled)
+  echo "ipv6=$((!${v6dis:-0}))"
+  # - IPv4 settings
+  echo "ipaddr=$(uci -q get network.lan.ipaddr)"
+  echo "netmask=$(uci -q get network.lan.netmask)"
+  echo "gatewayip=$(uci -q get network.lan.gateway)"
+  first=$(uci -q get network.lan.dns | sed -n -r -e 's/(^[0-9.]+).*/\1/p')
+  second=$(uci -q get network.lan.dns | sed -n -r -e 's/^[0-9.]+ +([0-9.]+)/\1/p')
+  echo "dnsip=${first}"
+  echo "dnsip2=${second}"
+  echo "currentip=${STATUS_IPV4}"
+  echo "ipv6_link=$(ip -6 addr show scope link | grep inet6 | awk '{print $2}')"
+  echo "ipv6_global=$(ip -6 addr show scope global | grep inet6 | awk '{print $2}')"
+else
+  echo "usage: $0 [dhcp 0|1 | ipv6 0|1 | ipaddr <ip> | netmask <netmask> | gatewayip <gateway> | dnsip <dns> | dnsip2 <dns> | commit now|apply ]";
+  exit 1
+fi
+

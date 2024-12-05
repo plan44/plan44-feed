@@ -1,0 +1,17 @@
+{
+  "webadmin": {
+    "description": "P44-LC administrator via Web UI",
+    "read": {
+      "ubus": {
+        "vdcd": [ "*" ],
+        "p44dev": [ "*" ],
+      },
+    },
+    "write": {
+      "ubus": {
+        "vdcd": [ "*" ],
+        "p44dev": [ "*" ],
+      },
+    }
+  }
+}

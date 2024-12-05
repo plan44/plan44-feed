@@ -1,0 +1,47 @@
+--- a/package/kernel/linux/modules/sound.mk
++++ b/package/kernel/linux/modules/sound.mk
+@@ -301,6 +301,44 @@ endef
+
+ $(eval $(call KernelPackage,sound-dummy))
+
++
++
++define KernelPackage/sound-virmidi
++	DEPENDS:=+kmod-sound-seq-virmidi
++  $(call AddDepends/sound)
++  TITLE:=Virtual MIDI soundcard
++  KCONFIG:= \
++	CONFIG_SND_VIRMIDI
++  FILES:= \
++	$(LINUX_DIR)/sound/drivers/snd-virmidi.ko
++  AUTOLOAD:=$(call AutoLoad,32,snd-virmidi)
++endef
++
++define KernelPackage/sound-virmidi/description
++ Virtual MIDI device for Alsa when no hardware present
++endef
++
++$(eval $(call KernelPackage,sound-virmidi))
++
++
++define KernelPackage/sound-seq-virmidi
++	DEPENDS:=+kmod-sound-seq
++  $(call AddDepends/sound)
++  TITLE:=Library for virtual MIDI
++  KCONFIG:= \
++	CONFIG_SND_SEQ_VIRMIDI
++  FILES:= \
++	$(LINUX_DIR)/sound/core/seq/snd-seq-virmidi.ko
++  AUTOLOAD:=$(call AutoLoad,32,snd-seq-virmidi)
++endef
++
++define KernelPackage/sound-seq-virmidi/description
++ Library for virtual MIDI
++endef
++
++$(eval $(call KernelPackage,sound-seq-virmidi))
++
++
+ define KernelPackage/sound-hda-core
+   SUBMENU:=$(SOUND_MENU)
+   TITLE:=HD Audio Sound Core Support

@@ -1,0 +1,12 @@
+--- a/include/download.mk
++++ b/include/download.mk
+@@ -70,7 +70,9 @@ define check_download_integrity
+ 	       $$(filter undefined,$$(flavor DownloadChecked/$(FILE)))), \
+     $$(eval DownloadChecked/$(FILE):=1) \
+     $$(if $$(filter-out $$(call gen_sha256sum,$(FILE)),$$(expected_hash)), \
+-      $(DL_DIR)/$(FILE): FORCE) \
++      $$(if $$(filter skip,$(MIRROR_HASH)),, \
++	      $(DL_DIR)/$(FILE): FORCE) \
++	    ) \
+   )
+ endef

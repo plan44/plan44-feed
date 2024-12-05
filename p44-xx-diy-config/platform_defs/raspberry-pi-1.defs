@@ -1,0 +1,20 @@
+PLATFORM_NAME="RaspberryPi"
+
+PLATFORM_SERIALDEV="/dev/ttyAMA0"
+PLATFORM_ENOCEANRESET="missing"
+
+PLATFORM_RED_LED="led.1"
+PLATFORM_GREEN_LED="led.0"
+PLATFORM_BUTTON="missing"
+
+PLATFORM_LEDCHAIN_TYPE="WS2812.GRB"
+PLATFORM_LEDCHAIN_DEVICE="gpio18"
+PLATFORM_LEDCHAIN_NUMLEDS="512"
+
+# default product and producer
+PRODUCT_IDENTIFIER="p44-xx-diy_raspberry-pi-1"
+PRODUCER="DIY"
+
+# boot partition might have dynamic overrides for PRODUCT_IDENTIFIER and PRODUCER
+PLATFORM_PRODUCT_IDENTIFIER_GETTER="cat /boot/p44productidentifier"
+PRODUCER_GETTER="cat /boot/p44producer"

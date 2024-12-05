@@ -1,0 +1,46 @@
+#!/bin/sh
+
+PREPDIR=/tmp/config_backup
+BACKUPFILE=/tmp/config_backup.tgz
+
+CONFIGDIR=/flash
+
+# collect stuff we need
+# - prepare dir
+rm -rf ${PREPDIR}  >/dev/null 2>&1
+mkdir -p ${PREPDIR} >/dev/null 2>&1
+# - defs
+p44maintd --defs >${PREPDIR}/p44defs
+# - platform specifics
+cp /etc/config/network /etc/config/wireless /etc/config/system ${PREPDIR} >/dev/null 2>&1
+# - general
+cp ${CONFIGDIR}/*.sqlite3 ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/webui_authfile ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/*_debug ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/*_runcfg ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/*kite.cfg ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/extra_packages ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/p44custom.defs ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/p44userlevel ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/p44_startup* ${PREPDIR} >/dev/null 2>&1
+cp ${CONFIGDIR}/p44_property_* ${PREPDIR} >/dev/null 2>&1
+# - preliminary matter bridge config
+cp ${CONFIGDIR}/p44mbrd_kvs ${PREPDIR} >/dev/null 2>&1
+# - user's p44script written files (p44script data dir)
+cp -r ${CONFIGDIR}/p44script ${PREPDIR} >/dev/null 2>&1
+# - domain level script storage
+cp -r ${CONFIGDIR}/scripts ${PREPDIR} >/dev/null 2>&1
+# - config specific web pages
+cp -r ${CONFIGDIR}/www ${PREPDIR} >/dev/null 2>&1
+# - also include the complete openwrt config backup, which will document/cover any
+#   special configs, extra packages etc.
+sysupgrade -b ${PREPDIR}/sysupgrade.conf.backup.tgz >/dev/null 2>&1
+
+# Archive
+cd ${PREPDIR}
+tar -czf ${BACKUPFILE} * >/dev/null 2>&1
+
+# now list to stdout for browser to download
+cat ${BACKUPFILE}
+rm ${BACKUPFILE}
+rm -rf ${PREPDIR}

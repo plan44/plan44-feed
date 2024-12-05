@@ -1,0 +1,29 @@
+if [ "${PRODUCT_HAS_DMX}" = '1' ]; then
+  # enable the RS485 output driver
+  echo 11 >/sys/class/gpio/export 2>/dev/null
+  echo out >/sys/class/gpio/gpio11/direction 2>/dev/null
+  echo 1 >/sys/class/gpio/gpio0/value 2>/dev/null
+fi
+if [ "${PRODUCT_HAS_LEDCHAIN}" = '1' ]; then
+  # enable LEDchain data drivers on p44-mini-lx: GPIO0
+  echo 0 >/sys/class/gpio/export
+  echo out >/sys/class/gpio/gpio0/direction
+  echo 0 >/sys/class/gpio/gpio0/value
+fi
+
+# only if we do not have a link on eth0, take care of WiFi
+if ! ip link | grep -E 'eth0:.*state UP'; then
+  # fire up AP when wifi client is not enabled
+  if [ "$(uci -q get wireless.cli_radio0.disabled)" != "0" ]; then
+    # wifi client is disabled, make sure we have the AP
+    uci delete network.wlanap.enabled
+    uci set network.wlanap.disabled="0"
+    uci set wireless.radio0.disabled="0"
+    uci set wireless.ap_radio0.disabled="0"
+    uci commit network
+    uci commit wireless
+  else
+    # wifi client IS enabled, check that it is actually working
+    p44wificonf verify 30 &
+  fi
+fi

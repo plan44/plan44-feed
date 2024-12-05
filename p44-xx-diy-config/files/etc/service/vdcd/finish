@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+echo ""
+echo "**************** vdcd exited with status $1, waitpid status $2 ********************"
+ps -ww
+echo ""
+
+echo "[`date`] vdcd exited with exitstatus $1, waitpid status $2" >>/var/log/vdcd/exits.log
+
+# Note: exit code 1 can happen if "run" script does not start the vdcd at all but exits directly
+#       e.g. in hardware test mode when server cannot be reached
+
+if [ $1 == 4 ]; then
+  # exit code 4 reboots device
+  echo "[`date`] vdcd requests reboot" >>/var/log/vdcd/exits.log
+  echo "[`date`] vdcd requests reboot" >/flash/vdcd_last_exit_3.log
+  reboot
+elif [ $1 == 5 ]; then
+  # exit code 5 shuts down device
+  echo "[`date`] vdcd requests shutdown" >>/var/log/vdcd/exits.log
+  echo "[`date`] vdcd requests shutdown" >/flash/vdcd_last_exit_3.log
+  poweroff
+elif [ $1 == 42 ]; then
+# exit code 42 starts factory reset procedure
+  echo "[`date`] vdcd requests factory reset" >>/var/log/vdcd/exits.log
+  # full factory reset
+  p44maintd --factoryreset 3
+fi

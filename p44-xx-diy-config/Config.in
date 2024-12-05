@@ -1,0 +1,11 @@
+# p44-xx-diy-config configuration
+if PACKAGE_p44-xx-diy-config
+
+config P44_FEED_NAME
+  string
+  prompt "plan44 feed name"
+  default "testing"
+  help
+    Specify plan44 feed name
+
+endif

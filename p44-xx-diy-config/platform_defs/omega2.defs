@@ -1,0 +1,2 @@
+PLATFORM_IDENTIFIER_GETTER="fw_printenv p44platform | sed -r -n -e '/^p44platform=/s/.*=//p'"
+# firmware makefile appends platform and OS identifiers here:

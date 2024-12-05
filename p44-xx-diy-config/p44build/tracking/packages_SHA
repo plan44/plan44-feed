@@ -1,0 +1,7 @@
+# feed/package giturl:gitref
+plan44/vdcd https://github.com/plan44/vdcd.git:ab0faa6fad4281d7e147ae1015a2a0068b556ccc
+plan44/p44mbrd https://github.com/plan44/p44mbrd.git:3bcc26c645d697c19b5d45b2fcecc91fec13dc63
+plan44/p44maintd https://github.com/plan44/p44maintd.git:530f722e1c9f5297054815aa6f91ab46427c3e5f
+plan44/mg44 https://github.com/plan44/mg44.git:dd8cf7ea1d0c6f354ea4c7cb8409d271822d16d6
+plan44/serialfwd https://github.com/plan44/serialfwd.git:76dd1384780d867014fef32d71b5e233c37f7d70
+onion/omega2-ctrl https://github.com/OnionIoT/omega2-ctrl.git:e7152ba869b1af10e3c4d22938100962eb1d9b0e

@@ -1,0 +1,103 @@
+#!/bin/sh
+
+PREPDIR=/tmp/config_restore
+CONFIGDIR=/flash
+RESTOREDCFGDIR=/usr/share/restoredcfg
+
+if [ $# -eq 2 -a "$1" = "--apply" ]; then
+  # apply phase - actually replace config
+  if [ "$2" -eq 0 ]; then
+    rm -rf ${PREPDIR}
+    exit 0
+  fi
+  # - check
+  if [ ! -d ${PREPDIR} ]; then
+    echo "prepared config restore directory ${PREPDIR} not found"
+    exit 1
+  fi
+  # - shut down daemons
+  sv stop p44mbrd vdcd mg44
+  # - replace config
+  cd ${PREPDIR}
+  if [ "$2" -eq 1 -o "$2" -eq 3 ]; then
+    # DS settings
+    # - restore vdcd sqlite3 files
+    rm -f ${CONFIGDIR}/*.sqlite3
+    cp ${PREPDIR}/*.sqlite3 ${CONFIGDIR}
+    # - restore other config (but NOT webui_authfile or *kite.cfg - changing these could block access)
+    cp ${PREPDIR}/*_debug ${CONFIGDIR}
+    cp ${PREPDIR}/*_runcfg ${CONFIGDIR}
+    cp ${PREPDIR}/extra_packages ${CONFIGDIR}
+    cp ${PREPDIR}/p44userlevel ${CONFIGDIR}
+    cp ${PREPDIR}/p44_startup* ${CONFIGDIR}
+    cp ${PREPDIR}/p44_property_* ${CONFIGDIR}
+    cp ${PREPDIR}/p44custom.defs ${CONFIGDIR}
+    # - preliminary matter bridge config
+    cp ${PREPDIR}/p44mbrd_kvs ${CONFIGDIR}
+    # - restore user accessible p44script dir
+    cp -r ${PREPDIR}/p44script ${CONFIGDIR}
+    # - restore domain level script storage
+    cp -r ${PREPDIR}/scripts ${CONFIGDIR}
+    # - restore config specific web pages
+    cp -r ${PREPDIR}/www ${CONFIGDIR}
+    # copy the complete config backup (for p44_startup to pick from or dispose of)
+    if [ -f ${PREPDIR}/p44_startup -a -f ${PREPDIR}/sysupgrade.conf.backup.tgz ]; then
+      if [ ! -d ${RESTOREDCFGDIR} ]; then
+        rm ${RESTOREDCFGDIR}
+        mkdir -p ${RESTOREDCFGDIR}
+      fi
+      cp ${PREPDIR}/sysupgrade.conf.backup.tgz ${RESTOREDCFGDIR}
+    fi
+    # make sure we don't have an old vdsm DB
+    rm -f ${CONFIGDIR}/vdsm.db
+  fi
+  if [ "$2" -eq 2 -o "$2" -eq 3 ]; then
+    # platform specific
+    cp -f ${PREPDIR}/network /etc/config
+    cp -f ${PREPDIR}/wireless /etc/config
+    cp -f ${PREPDIR}/system /etc/config
+  fi
+  # restart the box
+  sync
+  sleep 2
+  reboot
+  # done
+  exit 0
+elif [ $# -eq 2 -a "$1" = "--prepare" ]; then
+  # prepare phase - unpack archive into PREPDIR
+  # - make absolute and check existence
+  BACKUPFILE="$2"
+  if [ ! "${BACKUPFILE:0:1}" = "/" ]; then
+    BACKUPFILE="$(pwd)/${BACKUPFILE}"
+  fi
+  if [ ! -f "${BACKUPFILE}" ]; then
+    echo "config archive file ${BACKUPFILE} not found"
+    exit 1
+  fi
+  # - prepare dir
+  rm -rf ${PREPDIR}
+  mkdir -p ${PREPDIR}
+  # - extract config archive
+  cd ${PREPDIR}
+  tar -xzf "${BACKUPFILE}" >/dev/null 2>&1
+  # - check for proper unpacking
+  if [ $? -ne 0 ]; then
+    echo "Could not extract backup file"
+    rm "${BACKUPFILE}"
+    exit 1
+  fi
+  rm "${BACKUPFILE}"
+  # - check if this is a config at all
+  if [ ! -f  ${PREPDIR}/DsParams.sqlite3 ]; then
+    echo "Incorrect backup file format"
+    rm -rf ${PREPDIR}
+    exit 1
+  fi
+  # - done preparating
+  echo ${PREPDIR}
+  exit 0
+else
+  echo "Usage: $0 --prepare <config archive>.tgz (preparation)"
+  echo "       $0 --apply <mode> (apply and restart, mode: 0=cancel, 1=dS settings, 2=network setting, 3=both)"
+  exit 1
+fi

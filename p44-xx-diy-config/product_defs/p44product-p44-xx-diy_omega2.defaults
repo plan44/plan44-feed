@@ -1,0 +1,20 @@
+if [ ! -f /flash/DsParams.sqlite3 ]; then
+  # device is factory-reset (not just upgraded)
+
+  # configure access point, but keep disabled at this time
+  uci delete network.wlanap.enabled
+  uci set network.wlanap.disabled="1"
+  uci set wireless.radio0.disabled="1"
+  uci set wireless.ap_radio0.disabled="1"
+  uci set wireless.ap_radio0.ssid="p44-xx-diy"
+  uci set wireless.ap_radio0.encryption='psk2'
+  # Note that key must have at least 8 chars, or AP will silently fail to start
+  uci set wireless.ap_radio0.key="12345678"
+  # custom p44autoenable: AP will be activated when CLI or ethernet don't work
+  uci set wireless.ap_radio0.p44autoenable="1"
+  uci commit network
+  uci commit wireless
+
+  # copy setup script from resources into /flash for initial setup
+  cp /usr/share/p44lc/setups/p44-xx-diy-setupscript.p44s /flash/setupscript.p44s
+fi

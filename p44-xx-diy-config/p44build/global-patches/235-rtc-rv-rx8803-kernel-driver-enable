@@ -1,0 +1,26 @@
+--- a/package/kernel/linux/modules/other.mk
++++ b/package/kernel/linux/modules/other.mk
+@@ -682,6 +682,23 @@ endef
+ 
+ $(eval $(call KernelPackage,rtc-rx8025))
+ 
++define KernelPackage/rtc-rv8803
++  SUBMENU:=$(OTHER_MENU)
++  TITLE:=microcrystal RV-8803 / Epson RX-8803, RX-8900
++  DEFAULT:=m if ALL_KMODS && RTC_SUPPORT
++  DEPENDS:=+kmod-i2c-core
++  KCONFIG:=CONFIG_RTC_DRV_RV8803 \
++	CONFIG_RTC_CLASS=y
++  FILES:=$(LINUX_DIR)/drivers/rtc/rtc-rv8803.ko
++  AUTOLOAD:=$(call AutoLoad,50,rtc-rv8803,1)
++endef
++
++define KernelPackage/rtc-rv8803/description
++ Kernel module for microcrystal RV-8803 and Epson RX-8803/RX-8900 I2C RTC chips
++endef
++
++$(eval $(call KernelPackage,rtc-rv8803))
++
+ define KernelPackage/rtc-s35390a
+   SUBMENU:=$(OTHER_MENU)
+   TITLE:=Seico S-35390A

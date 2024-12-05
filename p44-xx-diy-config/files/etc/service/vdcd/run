@@ -1,0 +1,129 @@
+#!/bin/sh
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+# default features
+APPNAME=vdcd
+EXECUTABLE=${APPNAME}
+WITHHUE=${PRODUCT_HAS_HUE}
+WITHOLA=${PRODUCT_HAS_OLA}
+WITHDMX=${PRODUCT_HAS_DMX}
+WITHSTATIC=${PRODUCT_HAS_TINKER}
+WITHEXTERNAL=${PRODUCT_HAS_TINKER}
+WITHLEDCHAIN=${PRODUCT_HAS_LEDCHAIN}
+LOGLEVEL=5
+LOGOPTS="--logsymbols"
+EXTRAOPTS=
+
+INITSCRIPT=
+if [ -n "${PRODUCT_INITSCRIPT}" ]; then
+  INITSCRIPT="--initscript ${PRODUCT_INITSCRIPT}"
+fi
+
+# setup script (runs at startup, until successful, then it is deleted)
+SETUPSCRIPT=
+if [ -f /flash/setupscript.p44s ]; then
+  SETUPSCRIPT="--setupscript /flash/setupscript.p44s"
+fi
+
+# Allow overriding and adding options
+# - config override from flash
+if [ -f /flash/${APPNAME}_runcfg ]; then
+  source /flash/${APPNAME}_runcfg
+fi
+# - config override from tmp
+if [ -f /tmp/${APPNAME}_runcfg ]; then
+  source /tmp/${APPNAME}_runcfg
+fi
+# - debug override from flash
+if [ -f /flash/${APPNAME}_debug ]; then
+  source /flash/${APPNAME}_debug
+fi
+# - debug override from tmp
+if [ -f /tmp/${APPNAME}_debug ]; then
+  source /tmp/${APPNAME}_debug
+fi
+
+# button usage mode
+LLBUTTON=
+if [ "${PLATFORM_BUTTON_LOWLEVEL}" = '1' ]; then
+  LLBUTTON="--llbutton"
+fi
+
+# - adapt defaults depending on userlevel
+if [ "${STATUS_USER_LEVEL}" -gt 0 ]; then
+  WITHSTATIC=1
+  WITHEXTERNAL=1
+fi
+
+# derive values
+HUEDEVICES=
+if [ "${WITHHUE}" = '1' ]; then
+  HUEDEVICES="--huelights"
+fi
+STATICDEVICES=
+if [ "${WITHSTATIC}" = '1' ]; then
+  STATICDEVICES='--staticdevices'
+fi
+EXTERNALDEVICES=
+if [ "${WITHEXTERNAL}" = '1' ]; then
+  EXTERNALDEVICES='--externaldevices 8999 --externalnonlocal'
+fi
+LEDCHAINDEVICES=
+if [ "${WITHLEDCHAIN}" = '1'  -a -n "${PLATFORM_LEDCHAIN_TYPE}" ]; then
+  LEDCHAINDEVICES="--ledchain ${PLATFORM_LEDCHAIN_TYPE}:${PLATFORM_LEDCHAIN_DEVICE}:${PLATFORM_LEDCHAIN_NUMLEDS}"
+fi
+OLADEVICES=
+if [ "${WITHOLA}" = '1' ]; then
+  if [ -x "/usr/bin/olad" ]; then
+    OLADEVICES='--ola'
+  fi
+fi
+DMXDEVICES=
+if [ "${WITHDMX}" = '1' -a -n "${PLATFORM_DMXUART}" ]; then
+  DMXDEVICES="--dmx ${PLATFORM_DMXUART}"
+fi
+
+
+# run the executable
+exec ${EXECUTABLE} \
+  --redled "${PLATFORM_RED_LED}" \
+  --greenled "${PLATFORM_GREEN_LED}" \
+  --button "${PLATFORM_BUTTON}" \
+  ${LLBUTTON} \
+  --productname "${PRODUCT_MODEL}" \
+  --hostname "${UNIT_HOSTNAME}" \
+  --deviceid "${UNIT_SERIALNO}" \
+  --productversion "${FIRMWARE_VERSION}" \
+  --description "${PRODUCT_DESCRIPTION_TEMPLATE}" \
+  --userlevel "${STATUS_USER_LEVEL}" \
+  --bridgeapiport 4444 \
+  --cfgapiport 8090 \
+  --ubusapi \
+  --webuiport 80 \
+  --webuipath "/index.html" \
+  --sshport 22 \
+  --sqlitedir /flash \
+  --datapath /flash \
+  --resourcepath /usr/share/p44xx \
+  --icondir /www/icons \
+  --evaluators \
+  --scripteddevices \
+  --localcontroller \
+  --saveoutputs \
+  --novdcapi \
+  ${SETUPSCRIPT} \
+  ${INITSCRIPT} \
+  ${HUEDEVICES} \
+  ${STATICDEVICES} \
+  ${EXTERNALDEVICES} \
+  ${OLADEVICES} \
+  ${DMXDEVICES} \
+  ${LEDCHAINDEVICES} \
+  -l ${LOGLEVEL} \
+  ${LOGOPTS} \
+  --dontlogerrors \
+  ${EXTRAOPTS} \
+  2>&1 </dev/null

@@ -1,0 +1,2 @@
+# connect rtpmidi -> first virmidi device
+aconnect 128:0 16:0

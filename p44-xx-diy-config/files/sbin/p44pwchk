@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+# check if the password is safe
+rm /tmp/pwchk
+mg44 -A /tmp/pwchk ${PRODUCT_MODEL} ${PRODUCT_WEBADMIN_USER} ${PRODUCT_WEBADMIN_USER}
+Q="$(cat /tmp/pwchk)"
+rm /tmp/pwchk
+grep -q "$Q" /flash/webui_authfile
+UNSAFEPW=$?
+test "${UNSAFEPW}" = "1"

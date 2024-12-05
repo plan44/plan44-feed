@@ -1,0 +1,138 @@
+#!/bin/sh
+
+# query or set p44-lc WiFi settings
+# determine state
+ap=0
+cli=0
+if [[ $(uci -q get wireless.radio0.disabled) == "0" ]]; then
+  # WiFi radio is enabled
+  if [[ $(uci -q get wireless.ap_radio0.disabled) == "0" ]]; then
+    ap=1
+  fi
+  if [[ $(uci -q get wireless.cli_radio0.disabled) == "0" ]]; then
+    cli=1
+  fi
+fi
+
+
+if [[ $# -eq 2 ]]; then
+  # modify a WiFi setting
+  key="$1"
+  val="$2"
+  # on/off
+  if [[ "${key}" == "ap" ]]; then
+    # remove not really existing enable flag
+    uci -q delete network.wlanap.enabled
+    # enable or disable access point
+    if [[ "${val}" == "1" ]]; then
+      uci -q set wireless.radio0.disabled="0"
+      uci -q set network.wlanap.disabled="0"
+      uci -q set wireless.ap_radio0.disabled="0"
+    else
+      uci -q set wireless.ap_radio0.disabled="1"
+      uci -q set network.wlanap.disabled="1"
+      if [[ "${cli}" == "0" ]]; then
+        # disable radio when client is also disabled
+        uci -q set wireless.radio0.disabled="1"
+      fi
+    fi
+  elif [[ "${key}" == "cli" ]]; then
+    # remove not really existing enable flag
+    uci -q delete network.wlan.enabled
+    # enable or disable client
+    if [[ "${val}" == "1" ]]; then
+      uci -q set wireless.radio0.disabled="0"
+      uci -q set network.wlan.disabled="0"
+      uci -q set wireless.cli_radio0.disabled="0"
+    else
+      uci -q set wireless.cli_radio0.disabled="1"
+      uci -q set network.wlan.disabled="1"
+      if [[ "${ap}" == "0" ]]; then
+        # disable radio when access point is also disabled
+        uci -q set wireless.radio0.disabled="1"
+      fi
+    fi
+  elif [[ "${key}" == "commit" ]]; then
+    # commit
+    uci commit network
+    uci commit wireless
+    # activate
+    /etc/init.d/network reload
+    if [[ $(uci -q get wireless.cli_radio0.disabled) == "0" ]]; then
+      wifi
+      # in the background, verify that we actually got a connection in 30 seconds
+      $0 verify 30 &
+    fi
+    if [[ $(uci -q get wireless.ap_radio0.disabled) == "0" ]]; then
+      /etc/init.d/odhcpd reload
+    fi
+  elif [[ "${key}" == "verify" ]]; then
+    # revert to AP enabled when cli should be up but we do not have a default route
+    if [[ $(uci -q get wireless.cli_radio0.disabled) == "0" ]]; then
+      echo "$0 verify $2: CLI/STA is enabled, will check default route in $2 seconds"
+      sleep ${val}
+      if ! ip route | grep -q '^default'; then
+        # is not up
+        echo "$0 verify $2: no default route -> no connection"
+        if [[ $(uci -q get wireless.ap_radio0.disabled) == "1" ]]; then
+          if [[ $(uci -q get wireless.ap_radio0.p44autoenable) == "1" ]]; then
+            # AP is disabled, but has the custom p44autoenable flag
+            echo "$0 verify $2: AP was not enabled, but p44autoenable==1 -> enable it now"
+            $0 ap 1
+          fi
+        fi
+        if [[ $(uci -q get wireless.ap_radio0.disabled) == "0" ]]; then
+          # the AP is enabled, shut down client to allow AP to come up properly
+          $0 cli 0
+          $0 commit now
+          echo "$0 verify $2: disabled STA/CLI to allow AP to come up properly"
+          # signal failure
+          exit 1
+        fi
+      else
+        # is up
+        echo "$0 verify $2: we have a default route, assuming wifi ok (or not required)"
+      fi
+    else
+      echo "$0 verify $2: STA/CLI not enabled, no check needed"
+    fi
+    exit 0
+  else
+    # parameter for either cli or ap
+    if [[ "${key%_*}" == "cli" ]]; then
+      wlanif=cli_radio0
+    elif [[ "${key%_*}" == "ap" ]]; then
+      wlanif=ap_radio0
+    else
+      echo "unknown parameter $key";
+      exit 1
+    fi
+    # apply other params to if according to current mode
+    if [[ "${key#*_}" == "ssid" ]]; then
+      uci set wireless.${wlanif}.ssid="${val}"
+    elif [[ "${key#*_}" == "key" ]]; then
+      uci set wireless.${wlanif}.key="${val}"
+    elif [[ "${key#*_}" == "encryption" ]]; then
+      uci set wireless.${wlanif}.encryption="${val}"
+    else
+      echo "unknown parameter $key";
+      exit 1
+    fi
+  fi
+elif [[ $# -eq 0 ]]; then
+  # just query
+  # - ap
+  echo "ap=${ap}"
+  echo "ap_ssid=$(uci -q get wireless.ap_radio0.ssid)"
+  echo "ap_key=$(uci -q get wireless.ap_radio0.key)"
+  echo "ap_encryption=$(uci -q get wireless.ap_radio0.encryption)"
+  # - cli
+  echo "cli=${cli}"
+  echo "cli_ssid=$(uci -q get wireless.cli_radio0.ssid)"
+  echo "cli_key=$(uci -q get wireless.cli_radio0.key)"
+  echo "cli_encryption=$(uci -q get wireless.cli_radio0.encryption)"
+else
+  echo "usage: $0 [ap 0|1 | cli 0|1 | (ap_|cli_)ssid <ssid> | (ap_|cli_)key <key> | (ap_|cli_)encryption none|psk2 | commit now | verify <seconds>]";
+  exit 1
+fi
+

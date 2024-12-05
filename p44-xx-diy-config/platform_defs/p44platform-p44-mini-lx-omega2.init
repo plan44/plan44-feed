@@ -1,0 +1,26 @@
+# FIXME: this is a ugly hack because for some reason Ethernet 1..4 pins get enabled, so we must disable them again
+# see page 59 of MT7688 datasheet:
+# - 1000003C is AGPIO_CFG register
+# - 00E001FF is found there after startup
+# - we write 00FE01FF to set bits 17..20 (but NOT bit 16, which is eth0!)
+devmem 0x1000003C 32 >/tmp/AGPIO_original.txt
+devmem 0x1000003C 32 0x001E01FF
+# - RS485_TXEN is on GPIO11 -> disable
+omega2-ctrl gpiomux set refclk gpio 2>/dev/null
+echo 11 >/sys/class/gpio/export 2>/dev/null
+echo out >/sys/class/gpio/gpio11/direction 2>/dev/null
+echo 0 >/sys/class/gpio/gpio0/value 2>/dev/null
+# - EXT_LED_DATA_EN is on GPIO0 -> disable
+# - Brd_LED_DATA_EN is on GPIO2 -> disable
+omega2-ctrl gpiomux set i2s gpio 2>/dev/null
+echo 0 >/sys/class/gpio/export 2>/dev/null
+echo out >/sys/class/gpio/gpio0/direction 2>/dev/null
+echo 1 >/sys/class/gpio/gpio0/value 2>/dev/null
+echo 2 >/sys/class/gpio/export 2>/dev/null
+echo out >/sys/class/gpio/gpio2/direction 2>/dev/null
+echo 1 >/sys/class/gpio/gpio2/value 2>/dev/null
+# - LED_DATA0 (internal LEDs) is on GPIO45 (only available when we don't want EnOceanPi via UART1)
+omega2-ctrl gpiomux set uart1 pwm01 2>/dev/null
+# - LED_DATA1/PWM1 is on GPIO15
+# - UART2 is on G16, G17 for RS485
+omega2-ctrl gpiomux set spi_s pwm01_uart2 2>/dev/null

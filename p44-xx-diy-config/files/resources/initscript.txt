@@ -1,0 +1,15 @@
+// initscript sample
+log(4,"initscript sample")
+
+// elevate log for this script
+//logleveloffset(+2)
+
+
+// Note: need delay because external devices are not present immediately after collected devices are initialized (which is when initscript runs)
+//delay(60)
+
+// set logLevelOffset for devices and vdcs
+//vdcapi({ "method":"setProperty", "dSUID":"C08640E9A6FE58B4C001559D06AFDCA700", "properties":{ "x-p44-logLevelOffset":1 } });
+
+// set logLevelOffset for triggers
+//vdcapi({ "method":"setProperty", "dSUID":"root", "properties":{ "x-p44-localController":{ "triggers": { "2":{ "logLevelOffset":1 } } } } });

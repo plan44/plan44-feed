@@ -1,0 +1,39 @@
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+	option ipv6 '1'
+
+config globals 'globals'
+	option ula_prefix 'auto'
+
+# station mode WiFi
+config interface 'wlan'
+	option proto 'dhcp'
+	option hostname 'p44-xx-WiFi'
+	option disabled '1'
+	option ipv6 '0'
+
+# Ethernet v4
+config interface 'lan'
+	option ifname 'eth0'
+	option proto 'dhcp'
+	option hostname 'p44-xx-LAN'
+	option ipv6 '0'
+
+# Ethernet v6 link local only
+config interface 'lan6'
+	option ifname 'eth0'
+	option proto 'static'
+	option hostname 'p44-xx-LAN-v6'
+	option disabled '0'
+	option ipv6 '1'
+
+# AP mode WiFi
+config interface 'wlanap'
+	option proto 'static'
+	option ipaddr '192.168.44.1'
+	option netmask '255.255.255.0'
+	option disabled '1'
+	option ipv6 '0'

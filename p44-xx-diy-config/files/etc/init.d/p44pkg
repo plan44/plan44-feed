@@ -1,0 +1,8 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2018-2024 plan44.ch/luz
+START=98
+
+boot() {
+  # schedule check for need to install packages a while after ifup
+  (sleep 20; p44extpkginstall) &
+}

@@ -1,0 +1,24 @@
+PLATFORM_NAME="P44-MINI-LX Omega2"
+
+# in case we'd add a EnoceanPi, the UART for that would be UART1, but no Enocean Reset
+PLATFORM_SERIALDEV="/dev/ttyS1"
+PLATFORM_ENOCEANRESET="missing"
+
+PLATFORM_DMXUART="/dev/ttyS2"
+
+PLATFORM_LEDCHAIN_INSMOD="p44-ledchain ledchain0=0,1200,0xFF ledchain1=0,1200,0xFF"
+PLATFORM_LEDCHAIN_TYPE="WS2813.GRB"
+PLATFORM_LEDCHAIN_DEVICE="/dev/ledchain1"
+PLATFORM_LEDCHAIN_NUMLEDS="300"
+
+PLATFORM_RED_LED="gpio.18"
+PLATFORM_GREEN_LED="gpio.19"
+PLATFORM_BUTTON="gpio.38"
+
+# default product and producer
+PRODUCT_IDENTIFIER="p44-xxm-lx_p44-mini-lx-omega2"
+PRODUCER="DIY"
+
+# ubootenv might have dynamic overrides for PRODUCT_IDENTIFIER and PRODUCER
+PLATFORM_PRODUCT_IDENTIFIER_GETTER="fw_printenv p44product | sed -r -n -e '/^p44product=/s/.*=//' -e p"
+PRODUCER_GETTER="fw_printenv p44producer | sed -r -n -e '/^p44producer=/s/.*=//p'"

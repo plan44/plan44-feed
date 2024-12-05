@@ -1,0 +1,98 @@
+From 350d9a34623374b54d2f953917466a5db9ec1dc1 Mon Sep 17 00:00:00 2001
+From: Karsten Sperling <ksperling@apple.com>
+Date: Thu, 16 Mar 2023 14:17:26 +1300
+Subject: [PATCH] build: make git sub-modules to fetch configurable
+
+Currently the git protocol downloads all submodules of the target
+repository. This can be unwieldy for repositories with a lot of submodules
+where only a subset are required in the context of the OpenWrt build.
+
+This change adds a PKG_SOURCE_SUBMODULES variable to configure this
+behavior. It takes a space-separated list of submodule paths, or the word
+"skip" to disable submodule downloads entirely. The default is to download
+all submodules, i.e. preserving current behavior.
+
+Signed-off-by: Karsten Sperling <ksperling@apple.com>
+---
+ include/download.mk          | 5 ++++-
+ scripts/dl_github_archive.py | 6 +++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/include/download.mk b/include/download.mk
+index 9ab0b6c08f..e261b14035 100644
+--- a/include/download.mk
++++ b/include/download.mk
+@@ -209,6 +209,7 @@ define DownloadMethod/github_archive
+ 			--subdir="$(SUBDIR)" \
+ 			--source="$(FILE)" \
+ 			--hash="$(MIRROR_HASH)" \
++			--submodules $(SUBMODULES) \
+ 		|| ( $(call DownloadMethod/rawgit) ); \
+ 	)
+ endef
+@@ -222,7 +223,7 @@ define DownloadMethod/rawgit
+ 	[ \! -d $(SUBDIR) ] && \
+ 	git clone $(OPTS) $(URL) $(SUBDIR) && \
+ 	(cd $(SUBDIR) && git checkout $(VERSION) && \
+-	git submodule update --init --recursive) && \
++	$(if $(filter skip,$(SUBMODULES)),true,git submodule update --init --recursive -- $(SUBMODULES))) && \
+ 	echo "Packing checkout..." && \
+ 	export TAR_TIMESTAMP=`cd $(SUBDIR) && git log -1 --format='@%ct'` && \
+ 	rm -rf $(SUBDIR)/.git && \
+@@ -301,6 +302,7 @@ define Download/Defaults
+   MIRROR_MD5SUM:=x
+   VERSION:=
+   OPTS:=
++  SUBMODULES:=
+ endef
+ 
+ define Download/default
+@@ -309,6 +311,7 @@ define Download/default
+   URL_FILE:=$(PKG_SOURCE_URL_FILE)
+   SUBDIR:=$(PKG_SOURCE_SUBDIR)
+   PROTO:=$(PKG_SOURCE_PROTO)
++  SUBMODULES:=$(PKG_SOURCE_SUBMODULES)
+   $(if $(PKG_SOURCE_MIRROR),MIRROR:=$(filter 1,$(PKG_MIRROR)))
+   $(if $(PKG_MIRROR_MD5SUM),MIRROR_MD5SUM:=$(PKG_MIRROR_MD5SUM))
+   $(if $(PKG_MIRROR_HASH),MIRROR_HASH:=$(PKG_MIRROR_HASH))
+diff --git a/scripts/dl_github_archive.py b/scripts/dl_github_archive.py
+index 328d588e78..580b7cba38 100755
+--- a/scripts/dl_github_archive.py
++++ b/scripts/dl_github_archive.py
+@@ -239,6 +239,7 @@ class DownloadGitHubTarball(object):
+         self.version = args.version
+         self.subdir = args.subdir
+         self.source = args.source
++        self.submodules = args.submodules
+         self.url = args.url
+         self._init_owner_repo()
+         self.xhash = args.hash
+@@ -249,6 +250,8 @@ class DownloadGitHubTarball(object):
+ 
+     def download(self):
+         """Download and repack GitHub archive tarball."""
++        if self.submodules and self.submodules != ['skip']:
++            raise self._error('Fetching submodules is not yet supported')
+         self._init_commit_ts()
+         with Path(TMPDIR_DL, keep=True) as dir_dl:
+             # fetch tarball from GitHub
+@@ -262,7 +265,7 @@ class DownloadGitHubTarball(object):
+                     dir0 = os.path.join(dir_untar.path, tarball_prefix)
+                     dir1 = os.path.join(dir_untar.path, self.subdir)
+                     # submodules check
+-                    if self._has_submodule(dir0):
++                    if self.submodules != ['skip'] and self._has_submodule(dir0):
+                         raise self._error('Fetching submodules is not yet supported')
+                     # rename subdir
+                     os.rename(dir0, dir1)
+@@ -415,6 +418,7 @@ def main():
+     parser.add_argument('--version', help='Source code version')
+     parser.add_argument('--source', help='Source tarball filename')
+     parser.add_argument('--hash', help='Source tarball\'s expected sha256sum')
++    parser.add_argument('--submodules', nargs='*', help='List of submodules, or "skip"')
+     args = parser.parse_args()
+     try:
+         method = DownloadGitHubTarball(args)
+-- 
+2.37.5
+

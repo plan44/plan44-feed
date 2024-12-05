@@ -1,0 +1,5 @@
+{ "origincentered": false,
+  "type":"scroller", "fullframe":true,
+  "scrolledview": { "type":"text", "label":"LIGHT", "x":0, "y":0, "sizetocontent":true, "text":"plan44.ch feature light +++ ", "framing":"repeatX" },
+  "offsety":0, "step_x":1, "interval":0.05
+}

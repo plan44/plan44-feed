@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# by default, unbound should not be running (but it is installed!)
+# (unbound consumes quite a lot of memory, and is required only for very specific insular setups)
+# NOTE: in fact, unbound consumes around 10MB, which, together with our standard max log size of 5MB (10 * 500k)
+#       IS MORE THAN the ~14MB that are free in a typical Omega2 vdcd setup and can stall the system.
+#       SO: if unbound is enabled, log max size must be reduced, or unbound config adjusted to use less memory
+/etc/init.d/unbound disable
+
+exit 0

@@ -1,0 +1,5 @@
+# feed giturl:gitref
+matter https://github.com/project-chip/matter-openwrt.git:main
+onion https://github.com/OnionIoT/OpenWRT-Packages.git:openwrt-18.06
+packages https://git.openwrt.org/feed/packages.git:HEAD
+plan44 :p44-xx-open

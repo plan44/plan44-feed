@@ -1,0 +1,4 @@
+#!/bin/sh
+# Note: set /tmp/p44_ntp_time_ok flag when NTP sets the time (to prevent ntpd restarts on further ifup)
+[ $ACTION = "step" ]    && touch /tmp/p44_ntp_time_ok && logger -t ntpd "Time set, stratum=$stratum interval=$poll_interval offset=$offset"
+[ $ACTION = "stratum" ] && logger -t ntpd "Stratum change, stratum=$stratum interval=$poll_interval offset=$offset"

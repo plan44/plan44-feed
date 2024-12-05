@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# ACTION=ifup|ifdown, INTERFACE=lan|lan6|wlan|..., DEVICE=eth0|wlan0|...
+if [ "$ACTION" = "ifup" ]; then
+  if [ "$INTERFACE" = "lan" -o "$INTERFACE" = "lan6" -o "$INTERFACE" = "wlan" ]; then
+    # - restart ntpd in case we haven't got a time update yet
+    if [ ! -f /tmp/p44_ntp_time_ok ]; then
+      # workaround: wired ethernet coming up late apparently can lead to
+      # a non-functional ntpd that does not update time.
+      # Note: /tmp/p44_ntp_time_ok gets set by hotplug.ntp script
+      /etc/init.d/sysntpd restart
+    fi
+    # schedule check for need to install packages a while after ifup
+    (sleep 20; p44extpkginstall) &
+  fi
+fi

@@ -1,0 +1,61 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <daemonname> <minfree_Kb>"
+  exit 1
+fi
+
+DAEMON="$1"
+if [ ! -f /var/log/$DAEMON/config ]; then
+  echo "Error: $1 does not seem to be a daemon with log under svlogd control"
+  exit 1
+fi
+
+# how much memory must be left free when max log size is reached
+MINFREE="$2"
+if [ $MINFREE -lt 1000 ]; then
+  echo "Warning: minimum Kb free cannot be less than 1000, using 1000"
+  MINFREE=1000
+fi
+
+# get current free mem and log size
+MFREE=$(cat /proc/meminfo | egrep -o "MemFree: *\d+" | egrep -o "\d+")
+LSZ=$(du -k -s /var/log/$DAEMON | egrep -o "\d+\>")
+
+# get params from log configuration
+LFSZ=$(( $(cat /var/log/$DAEMON/config | egrep -o "s\d+" | egrep -o "\d+") /1000))
+NLOG=$(cat /var/log/$DAEMON/config | egrep -o "n\d+" | egrep -o "\d+")
+MINNLOG=$(cat /var/log/$DAEMON/config | egrep -o "N\d+" | egrep -o "\d+")
+
+# calculate free memory left when log grows to max (NLOG old logs plus the current one)
+FULLFREE=$(($MFREE+$LSZ - ($NLOG+1)*$LFSZ))
+
+echo "Current $DAEMON log settings: number of backlogs: $MINNLOG..$NLOG (each $LFSZ k)"
+echo "Free with max logs: $FULLFREE k, actually free now: $MFREE k, used by logs: $LSZ k"
+
+logger -p daemon.info -t svlogadjust "$DAEMON: Free with max logs: $FULLFREE k, actually free now: $MFREE k, used by logs: $LSZ k"
+
+# reduce backlog such that in cannot endanger min free space
+# (assuming no other constantly growing memory consumptions)
+if [ $FULLFREE -lt $MINFREE ]; then
+  # full log would leave less than 3MB of free mem
+  logger -s -p daemon.warn -t svlogadjust "$DAEMON: full log would exhaust memory below set limit ($FULLFREE < $MINFREE)"
+  # calculate new max number of backlogs
+  NEWNLOG=$(( $NLOG - ($MINFREE-$FULLFREE+$LFSZ-1)/$LFSZ ))
+  if [ $NEWNLOG -le $MINNLOG ]; then
+    NEWNLOG=$(($MINNLOG+1))
+  fi
+  # only reduce, never increase
+  if [ $NEWNLOG -lt $NLOG ]; then
+    logger -s -p daemon.warn -t svlogadjust "$DAEMON: reducing number of backlogs from $NLOG to $NEWNLOG"
+    sed -E -i -e "s/n\d+/n$NEWNLOG/" /var/log/$DAEMON/config
+    killall -HUP svlogd
+  fi
+  # if we are already below limit, kill history anyway
+  if [ $MFREE -lt $MINFREE ]; then
+    logger -s -p daemon.warn -t svlogadjust "$DAEMON: current free memory $MFREE is already below limit of $MINFREE -> deleting log history"
+    rm /var/log/$DAEMON/@*.s
+  fi
+fi
+
+exit 0

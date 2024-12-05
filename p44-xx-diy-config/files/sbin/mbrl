@@ -1,0 +1,60 @@
+#!/bin/sh
+
+DAEMON="p44mbrd"
+APIDAEMON="vdcd"
+LOGDIR="/var/log/${DAEMON}"
+
+# check options
+DUMP=0
+DUMPALL=0
+BACKLOG=10
+LOGLEVEL=0
+LOGCHANGE=0
+CHIPLOGLEVEL=0
+CHIPLOGCHANGE=0
+for OPT in $@ ; do
+  case "${OPT}" in
+    "-d"|"--dump") DUMP=1;;
+    "-a"|"--all") DUMPALL=1;;
+    "-n"|"--new") BACKLOG=0;;
+    "-l"|"--long") BACKLOG=$((${BACKLOG}+20));;
+    *) if [ $(($OPT)) -ne 0 ]; then
+         if [ "${LOGCHANGE}" -eq "1" ]; then
+           CHIPLOGLEVEL=$((${OPT})); CHIPLOGCHANGE=1;
+         else
+           LOGLEVEL=$((${OPT})); LOGCHANGE=1;
+         fi
+       else
+         if [ "${OPT}" != "-h" ]; then echo "unknown option $OPT"; fi;
+         echo "Usage: $0 [options] [new loglevel [new chiploglevel]]"
+         echo "Note: when only specifying loglevel, chiploglevel will be set loglevel-4"
+         echo "Options:"
+         echo "  -d, --dump : show entire current log, do not wait for more log"
+         echo "  -a, --all  : show all available logs, do not wait for more log"
+         echo "  -n, --new  : wait for and show only new log lines (no backlog)"
+         echo "  -l, --long : extend backlog (by 20 lines) and wait for new log lines"
+         echo "               (can be used more than once)"
+         return 1;
+       fi
+       ;;
+  esac
+done
+
+if [ "${LOGCHANGE}" -eq "1" ]; then
+  if [ "${CHIPLOGCHANGE}" -eq "0" ]; then
+    CHIPLOGLEVEL=$((${LOGLEVEL}-4))
+    if [ ${CHIPLOGLEVEL} -lt 0 ]; then
+      CHIPLOGLEVEL=0
+    fi
+  fi
+  ubus call "${APIDAEMON}" api "{ 'method': 'x-p44-notifyBridge', 'dSUID':'root', 'bridgenotification':'loglevel', 'app':${LOGLEVEL}, 'chip':${CHIPLOGLEVEL} }"
+fi
+
+if [ "${DUMPALL}" -ne "0" ]; then
+  cd "${LOGDIR}"
+  cat @*.s "current"
+elif [ "${DUMP}" -ne "0" ]; then
+  cat "${LOGDIR}/current"
+else
+  tail -F -n "$(($BACKLOG+$LOGCHANGE))" "${LOGDIR}/current"
+fi

@@ -1,0 +1,9 @@
+{ "origincentered": false,
+  "type":"scroller", "fullframe":true,
+  "offset":0, "autopurge":true,
+  "scrolledview": {
+    "type":"stack", "label":"CONTENT", "x":0, "y":0, "sizetocontent":true,
+    "framing":"repeatX", "positioningmode":"appendRight",
+  },
+  "offsety":0, "step_x":1, "interval":0.05
+}

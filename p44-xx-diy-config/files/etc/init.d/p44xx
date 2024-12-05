@@ -1,0 +1,177 @@
+#!/bin/sh /etc/rc.common
+# Copyright (c) 2016-2024 plan44.ch/luz
+START=99
+
+boot() {
+  DEVICE="p44xx"
+  logger -p daemon.info -t ${DEVICE} "preparing for runit"
+
+  # softlink all runit supervise dirs to /var/run
+  PREV=$(pwd)
+  cd /etc/service
+  SERVICES=*
+  mkdir -v -p /var/run/runit
+  for SERV in ${SERVICES}; do
+    # create softlink if not yet existing
+    if [ ! -h /etc/service/${SERV}/supervise ]; then
+      rm -r /etc/service/${SERV}/supervise 2>/dev/null
+      ln -s -f /var/run/runit/supervise.${SERV} /etc/service/${SERV}/supervise
+    fi
+    # check for log
+    if [ -d /etc/service/${SERV}/log ]; then
+      # create softlink if not yet existing
+      if [ ! -h /etc/service/${SERV}/log/supervise ]; then
+        rm -r /etc/service/${SERV}/log/supervise 2>/dev/null
+        ln -s -f /var/run/runit/supervise.${SERV}.log /etc/service/${SERV}/log/supervise
+      fi
+    fi
+  done
+  cd ${PREV}
+
+  # obtain system information vars
+  p44maintd --defs >/tmp/p44defs
+  source /tmp/p44defs
+
+  # test for custom overrides
+  if [ -f "/flash/p44_startup_defs" ]; then
+    logger -p daemon.notice -t ${DEVICE} "custom startup defs"
+    source /flash/p44_startup_defs
+  fi
+
+  # make sure we have a ubus login
+  USERINDEX=0
+  while WEBUSER=$(uci get rpcd.@login[${USERINDEX}].username); do
+    if [ "${WEBUSER}" = "${PRODUCT_WEBADMIN_USER}" ]; then
+      # already exists
+      break;
+    fi
+    WEBUSER=""
+    USERINDEX=$((${USERINDEX}+1))
+  done
+  if [ -z "${WEBUSER}" ]; then
+    # need new default login
+    ID=$(uci add rpcd login)
+    uci -q set rpcd.${ID}.username="${PRODUCT_WEBADMIN_USER}"
+    uci -q set rpcd.${ID}.password=$(uhttpd -m ${PRODUCT_WEBADMIN_USER})
+    uci -q add_list rpcd.${ID}.read="webadmin"
+    uci -q add_list rpcd.${ID}.write="webadmin"
+    uci commit rpcd
+  fi
+
+  # update u2pnpd UPnP announcement details
+  # - uuid gets defined automatically by u2pnpd's uci defaults script
+  uci -q set u2pnpd.@u2pnpd[0].manufacturer="${PRODUCT_COPYRIGHT_HOLDER}"
+  uci -q set u2pnpd.@u2pnpd[0].manufacturerURL="${PRODUCT_INFORMATION_PAGE_LINK}"
+  uci -q set u2pnpd.@u2pnpd[0].modelDescription="${PRODUCT_MODEL_DESCRIPTION}"
+  uci -q set u2pnpd.@u2pnpd[0].modelName="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelNumber="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelName="${PRODUCT_MODEL}"
+  uci -q set u2pnpd.@u2pnpd[0].modelURL="${PRODUCT_INFORMATION_PAGE_LINK}"
+  uci -q set u2pnpd.@u2pnpd[0].serialNumber="${UNIT_SERIALNO}"
+  uci commit u2pnpd
+
+  # make sure no dhcp services (v4, v6) or RA are running at all
+  # - in case a dhcp section exists for lan
+  uci -q set dhcp.lan.dhcpv4=disabled
+  uci -q set dhcp.lan.dhcpv6=disabled
+  uci -q set dhcp.lan.ra=disabled
+  uci -q set dhcp.lan.ignore=1
+  # - in case a dhcp section exists for wlan
+  uci -q set dhcp.wlan.dhcpv4=disabled
+  uci -q set dhcp.wlan.dhcpv6=disabled
+  uci -q set dhcp.wlan.ra=disabled
+  uci -q set dhcp.wlan.ignore=1
+  # - only when being AP, we need to provide DHCPv4
+  if ! uci -q get dhcp.ap >/dev/null; then
+    n=$(uci add dhcp dhcp)
+    uci -q rename dhcp.$n='ap'
+    uci -q set dhcp.ap.interface='wlanap'
+    uci -q set dhcp.ap.dhcpv4=server
+    uci -q set dhcp.ap.start=100
+    uci -q set dhcp.ap.limit=100
+    uci -q set dhcp.ap.leasetime='12h'
+    # also make odhcpd the main dhcp (no dnsmasq installed)
+    uci -q set dhcp.odhcpd.maindhcp="1"
+  fi
+  # commit
+  uci commit dhcp
+
+  # update host name
+  if [ "$(uci get system.@system[0].hostname)" != "${UNIT_HOSTNAME}" ]; then
+    uci -q set system.@system[0].hostname="${UNIT_HOSTNAME}"
+    uci commit system
+    # make sure it applies immediately
+    /etc/init.d/system reload
+    /etc/init.d/avahi-daemon restart
+  fi
+
+  # initialize time zone
+  if ! uci -q get system.@system[0].zonename >/dev/null; then
+    uci -q set system.@system[0].timezone='CET-1CEST,M3.5.0,M10.5.0/3'
+    uci -q set system.@system[0].zonename='Europe/Zurich'
+    uci commit system
+  fi
+
+  # platform specifics
+  if [ -e "/etc/p44platform-${PLATFORM_IDENTIFIER}.init" ]; then
+    logger -p daemon.notice -t ${DEVICE} "custom platform init"
+    source "/etc/p44platform-${PLATFORM_IDENTIFIER}.init"
+  fi
+
+  # product specifics
+  if [ -e "/etc/p44product-${PRODUCT_IDENTIFIER}.init" ]; then
+    logger -p daemon.notice -t ${DEVICE} "custom product init"
+    source "/etc/p44product-${PRODUCT_IDENTIFIER}.init"
+  fi
+
+  # create LED chain device if product has LED chain and needs a module for it
+  if [ "${PRODUCT_HAS_LEDCHAIN}" = '1' -a -n "${PLATFORM_LEDCHAIN_INSMOD}" ]; then
+    # load the kernel module
+    insmod ${PLATFORM_LEDCHAIN_INSMOD}
+  fi
+
+  # enable or disable olad depending on OLA availability
+  if [ "${PRODUCT_HAS_OLA}" = "1" ]; then
+    # make sure olad is configured to run at startup and is running now
+    if [ ! -h /etc/rc.d/S*olad ]; then
+      echo "enabling OLA"
+      /etc/init.d/olad enable
+      /etc/init.d/olad start
+    fi
+  else
+    # make sure olad is not configured to run at startup and is not running now
+    if [ -h /etc/rc.d/S*olad ]; then
+      echo "disabling OLA"
+      /etc/init.d/olad disable
+      /etc/init.d/olad stop
+    fi
+  fi
+
+  # MIDI setup - custom or default
+  if [ "${PRODUCT_HAS_MIDIRTP}" = '1' -a -x "/usr/bin/rtpmidid" -a -x "/usr/bin/aconnect" ]; then
+    logger -p daemon.notice -t ${DEVICE} "midi init"
+    if [ -f "/flash/p44_midisetup" ]; then
+      source "/flash/p44_midisetup"
+    elif [ -f "/etc/p44_midisetup.default" ]; then
+      source "/etc/p44_midisetup.default"
+    fi
+  fi
+
+  # test for custom startup script
+  if [ -f "/flash/p44_startup" ]; then
+    source "/flash/p44_startup"
+  fi
+
+  if [ "${PRODUCT_CONSOLE_LOGS}" != '1' ]; then
+    logger -p daemon.notice -t ${DEVICE} "silencing kernel messages to console now"
+    echo "0" >/proc/sys/kernel/printk
+  fi
+
+  # start runit
+  /sbin/runsvdir-start &
+
+  # start u2pnpd which for some reason does not autostart (or terminates)
+  logger -p daemon.warn -t ${DEVICE} "WORKAROUND: start u2pnpd (again)"
+  /etc/init.d/u2pnpd start
+
+}

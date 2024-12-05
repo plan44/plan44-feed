@@ -1,0 +1,32 @@
+# configuration for plan44 variant of mongoose (mg44)
+
+# "+" prefix = enable on IPv4 + IPv6, "s" suffix = https
+listening_ports +80,+443s
+static_file_cache_control must-revalidate, max-age=30
+ssl_certificate /etc/mongoose/mg.crt
+ssl_cache_timeout 2000
+enable_keep_alive yes
+keep_alive_timeout_ms 2000
+# need 2 threads at least to be able to abort running requests
+num_threads 10
+files_changed_at_restart yes
+document_root /www
+enable_directory_listing no
+authentication_domain ##PRODUCTNAME##
+global_auth_file /flash/webui_authfile
+# - no auth: old, not really working template line, kept because in use as sed search target in some installations
+#extra_auth /api/json/*,/user/index.html
+# - no auth for API, shared js and user page
+#extra_auth /tok/json:/api/json/*:/js/*:/user/index.html
+# - combined admin/user auth for API, shared js and user page (c_auth must include webui_authfile!)
+#extra_auth /tok/json:/api/json/*:/js/*:/user/index.html=/tmp/c_auth
+ssi_pattern **.shtml$|**.txt$
+jsoncsrf_path /tok/json
+nocsrf_paths /api/json/scriptapi
+jsonapi_path /api/json/
+jsonapi_host localhost
+jsonapi_port 8090
+jsoncmd_path /cfg/json/
+jsoncmd_tool /usr/bin/p44maintd
+jsonupload_path /cfg/upload
+uploaddir /tmp

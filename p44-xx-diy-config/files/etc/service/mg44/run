@@ -1,0 +1,57 @@
+#!/bin/sh
+
+APPNAME=mg44
+EXECUTABLE=${APPNAME}
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+# mg44's dynamic SSL loader needs basic library names
+cd /usr/lib
+if [ ! -e libssl.so ]; then
+  ln -s libssl.so.* libssl.so
+fi
+if [ ! -e libcrypto.so ]; then
+  ln -s libcrypto.so.* libcrypto.so
+fi
+cd /
+
+
+# create config file in /tmp from template
+MG44CONF="/tmp/mg44.conf"
+APPARGS=${MG44CONF}
+sed -r -e "s/##PRODUCTNAME##/${PRODUCT_MODEL}/" /etc/mongoose/mg44.conf_template >${MG44CONF}
+
+# Allow overriding and adding options
+# - config override from flash
+if [ -f /flash/${APPNAME}_runcfg ]; then
+  source /flash/${APPNAME}_runcfg
+fi
+# - config override from tmp
+if [ -f /tmp/${APPNAME}_runcfg ]; then
+  source /tmp/${APPNAME}_runcfg
+fi
+# - debug override from flash
+if [ -f /flash/${APPNAME}_debug ]; then
+  source /flash/${APPNAME}_debug
+fi
+# - debug override from tmp
+if [ -f /tmp/${APPNAME}_debug ]; then
+  source /tmp/${APPNAME}_debug
+fi
+
+
+# check if name of the product appears in the password file, if not, we need to reset it anyway
+if ! grep -q ":${PRODUCT_MODEL}:" /flash/webui_authfile; then
+  # auth file does not have an entry for this product, delete it to force default authfile generation
+  rm -f /flash/webui_authfile
+fi
+
+# check if we have a non-zero password file, if not, create default
+if [ ! -s /flash/webui_authfile ]; then
+  mg44 -A /flash/webui_authfile ${PRODUCT_MODEL} ${PRODUCT_WEBADMIN_USER} ${PRODUCT_WEBADMIN_USER}
+fi
+
+# start mg44, using config file from /tmp
+exec ${EXECUTABLE} ${APPARGS} >/dev/null 2>&1
