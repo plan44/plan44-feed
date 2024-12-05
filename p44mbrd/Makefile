@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mbrd
 # version of what we are downloading
-PKG_VERSION:=1.3.0.7
+PKG_VERSION:=1.3.0.10
 # version of this makefile
-PKG_RELEASE:=27
+PKG_RELEASE:=30
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=8b63200bafc06e205b86071d7cdabf3c22530127
+PKG_SOURCE_VERSION:=bdd8fcc6c009383aff3058bbc765a26690496bb4
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
@@ -76,7 +76,8 @@ define Build/Configure
 			--enable-openthread=no \
 			--enable-network-layer-ble=no \
 			--enable-tracing-support=no \
-			--p44-application-version="$(PKG_VERSION)"
+			--p44-application-version="$(PKG_VERSION)" \
+			--p44-debug-attr-access=0
 endef
 
 define Build/Compile
