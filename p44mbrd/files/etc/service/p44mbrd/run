@@ -9,12 +9,14 @@ APPNAME=p44mbrd
 EXECUTABLE=${APPNAME}
 KVSPATH=/flash/${APPNAME}_kvs
 LOGLEVEL=5
-CHIPLOGLEVEL=2
+CHIPLOGLEVEL=1
 LOGOPTS="--logsymbols"
 EXTRAOPTS=
 
 # derive 12-bit discriminator from unit serial no
 DISCRIMINATOR=$(( (${UNIT_SERIALNO} % 4095)+1 ))
+# default: dynamically generate new pin for every start
+SETUPPINOPT="--dynamicpin"
 
 # make sure the executable exists
 EXECUTABLEFILE=$(which ${APPNAME})
@@ -45,11 +47,11 @@ fi
 
 # run the executable
 exec ${EXECUTABLE} \
-  --p44apihost 127.0.0.1 \
+  --p44apihost localhost \
   --datapath /flash \
   --resourcepath /usr/share/p44mbrd \
   --factorydata ./factorydata.txt:=/factorydata_debug.txt:_/factorydata_debug.txt \
-  --dynamicpin \
+  ${SETUPPINOPT} \
   --discriminator ${DISCRIMINATOR} \
   --KVS ${KVSPATH} \
   --chiploglevel ${CHIPLOGLEVEL} \
