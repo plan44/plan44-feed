@@ -12,9 +12,7 @@ PKG_VERSION:=3.14
 PKG_RELEASE:=21
 
 PKG_SOURCE_PROTO:=git
-#PKG_SOURCE_VERSION:=main
 PKG_SOURCE_VERSION:=dd8cf7ea1d0c6f354ea4c7cb8409d271822d16d6
-# Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/mg44.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
