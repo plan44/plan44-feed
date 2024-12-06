@@ -1,0 +1,42 @@
+--- /dev/null
++++ b/tools/sed/patches/100-fix-obstack-invalid-func-def.patch
+@@ -0,0 +1,11 @@
++--- a/lib/obstack.c
+++++ b/lib/obstack.c
++@@ -326,7 +326,7 @@ int obstack_exit_failure = EXIT_FAILURE;
++ #   include <libio/iolibio.h>
++ #  endif
++ 
++-static _Noreturn void
+++static __attribute_noreturn__ void
++ print_and_abort (void)
++ {
++   /* Don't change any of these strings.  Yes, it would be possible to add
+--- /dev/null
++++ b/tools/cpio/patches/100-fix-obstack-invalid-func-def.patch
+@@ -0,0 +1,11 @@
++--- a/gnu/obstack.c
+++++ b/gnu/obstack.c
++@@ -326,7 +326,7 @@ int obstack_exit_failure = EXIT_FAILURE;
++ #   include <libio/iolibio.h>
++ #  endif
++ 
++-static _Noreturn void
+++static __attribute_noreturn__ void
++ print_and_abort (void)
++ {
++   /* Don't change any of these strings.  Yes, it would be possible to add
+--- /dev/null
++++ b/tools/coreutils/patches/100-fix-obstack-invalid-func-def.patch
+@@ -0,0 +1,11 @@
++--- a/lib/obstack.c
+++++ b/lib/obstack.c
++@@ -326,7 +326,7 @@ int obstack_exit_failure = EXIT_FAILURE;
++ #   include <libio/iolibio.h>
++ #  endif
++ 
++-static _Noreturn void
+++static __attribute_noreturn__ void
++ print_and_abort (void)
++ {
++   /* Don't change any of these strings.  Yes, it would be possible to add

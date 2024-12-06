@@ -1,0 +1,34 @@
+001-gitignore.diff
+002-make-git-sub-modules-to-fetch-configurable.diff
+003-find-ncurses-on-apple-silicon.diff
+004-make-package-mirror-hash-skip-work-again.diff
+010-download-save-gitrev.diff
+011-download-prevent-packaging-rm-race.diff
+204-mt7628an-pwm-irq.diff
+204b-mt7628an-pwm-no-pin-claims.diff
+207-uboot-envtools-config-init-for-omega2.diff
+#210-omega2-sound-max98357a-NEEDS-GPIO42.diff # only enable this when GPIO42 is not in use!
+235-rtc-rv-rx8803-kernel-driver-enable
+236-snd-virmidi-kernel-driver-enable
+251-add-dt-overlay-kernel-option.diff
+252-add-gpio-cdev-and-sysfs-kernel-options.diff
+253-ramips-add-dt-overlay-configfs-support.diff
+256-prevent-trace-for-broken-flash-reset.diff
+257-mt7621-re-add-gpio-base-of-property.diff
+280-p44-xxx-omega2.diff # extra device targets for P44-DSB and Omega2S-based-P44 boards
+281-mt7628an-omega2-revert-to-old-gpio-numbering.diff
+#300-files-etc-inittab--no-serial-console.diff # disables serial console
+#301-files-etc-shadow--no-root-login.diff # disables any password based root login
+302-uci-defaults-disable-dhcp-and-ra.diff
+303-u2pnpd-uci-defaults-keep-uuid.diff
+310-bcm27xx-fix-squashfs-f2fs-padding.diff
+900-ola-running-as-root.diff
+901-rrdtool1-add-standard-installdev-locations.diff
+#902-libcec-add-ceclient-install.diff # not needed any more, added to my fork of stintel
+903-avahi-ignore-invalid-service-types.diff
+905-libuwsc-correct-casts-in-buffer-h.diff
+906-libjson-c-fix-strict-prototype.diff
+907-libev-avoid-werror-parentheses.diff
+909-fix-use-after-free-in-libpage.diff
+258-prevent-trace-for-tty-custom-speed.diff
+930-obstack-function-type-fix.diff
