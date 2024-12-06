@@ -37,6 +37,8 @@ The [p44b script](https://github.com/plan44/p44build) uses quilt to apply these 
 The idea behind these patches is to avoid forking the openwrt tree, but have the set of needed changes clearly documented in the umbrella *-cofig package.
 The `global-patches` can also be useful resources to port improvements for the Omega2S (such as working i2S ASoC) to other projects.
 
+- **p44-xx-diy-config**: this is the "umbrella" package that contains everything needed to build installable firmware images to create a full featured P44-XX-DIY standalone SmartLED/DMX/automation controller on an Onion Omega2 or a RaspberryPi 1..4. See [p44-xx-open](https://github.com/plan44/p44-xx-open) for more information.
+
 - **p44ttngw**: a port of a The Things Network (TTN) LoRA gateway to the Omega2, for use with the RAK831 radio.
 - **pixelboard**: a lounge table with a Omega2 based tetris and game of life built into the table plate itself.
 - **p44sbb**: a clock based on Swiss railway splitflap displays
@@ -57,10 +59,3 @@ There are also some ports to openwrt for things I wanted to use for a project, e
 ## Work in progress!
 
 There is and will always be some work-in-progress in this feed, so don't expect everything turnkey ready.
-
-Note that *i2c-tools* is also available in the standard feeds, but in slightly different variation - I needed some modifications for my own projects so I duplicated the package. Fortunately, OpenWrt source feed management is prepared for having multiple versions of the same package - just use the -p option to choose the feed to install a particular package from:
-
-    ./scripts/feeds update plan44
-    ./scripts/feeds install -p plan44 i2c-tools
-
-
