@@ -1,0 +1,37 @@
+/* custom theme specific CSS */
+
+/* #system_contents h2 { margin-top: 4px; margin-bottom: 2px; } */
+/* #system_contents { line-height: 1.0; } */
+
+.ui-popup { background-color: #444 !important; }
+
+#deviceTable th { background-color: #666; }
+#deviceTable tr.vdcrow { background-color: #555; }
+#deviceTable tr.focusdevice { background-color: #3355AA; }
+
+.inputsInfoTable * th { background-color: #555; }
+.inputsInfoTable * td { background-color: #444; }
+
+.constinfobg { background-color: #2A2A2A; }
+
+.daliMatrix td { background-color: #555; }
+
+.varDefs th { background-color: #222; }
+.varDefs td { background-color: #383838; }
+.varDefs input { background-color: #222; color: white; }
+
+.techDetails pre { background-color: #383838; }
+
+/* links within evaluator defs -> lighter color if theme is dark */
+.varDefs a { color:#7ecaff; }
+.varDefs a:hover { color:#ff6161; }
+
+/* non-button links within dialog boxes -> lighter color if theme is dark */
+.dialogbox * a:link:not(.ui-btn) { color:#66CCFE; }
+.dialogbox * a:visited:not(.ui-btn) { color:#A48BFE; }
+
+#vdcDangerousScanButtons { background-color: #675100; }
+
+h1 { color:#bbbbbb }
+h2 { color:#bbbbbb }
+h3 { color:#bbbbbb }

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/js/dialog.js"></script>
+    <script src="/js/p44api.js"></script>
+
+    <title>Tweaking</title>
+
+    <style type="text/css">
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      .devinfo p { }
+      .infovalue { font-weight: bold; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+    </style>
+
+    <script language="javascript1.2" type="text/javascript"><!--
+
+    	var maxHistoryLength = 30;
+    	var jsonhistory = [];
+
+
+      function addToHistory(txt)
+      {
+        var dup = jsonhistory.findIndex(function(e) { return e==txt; });
+        if (dup>=0) {
+          jsonhistory.splice(dup,1);
+          jsonhistory.unshift(txt);
+        }
+        else {
+          // new entry, put in front
+          jsonhistory.unshift(txt);
+          if (jsonhistory.length>maxHistoryLength) jsonhistory.pop();
+        }
+        refreshExamples();
+      }
+
+
+      function refreshExamples()
+      {
+        var selectHtml =
+          '<option value="0">- select template / recent queries -</option>';
+        if (jsonhistory.length>0) {
+          selectHtml +=
+            '<option disabled>history</option>';
+          for (var i=0; i<jsonhistory.length; i++) {
+            selectHtml +=
+              '<option value="' + (i+1).toString() + '">' + jsonhistory[i] + '</option>';
+          }
+        }
+        selectHtml +=
+          '<option disabled>templates</option>' +
+          '<option value="1000">{ "method":"getProperty", "dSUID":"root", "query":{ "model":null, "name":null } }</option>' +
+          '<option value="1001">{ "method":"setProperty", "dSUID":"root", "properties":{ "name":"myName" } }</option>' +
+          '<option value="1002">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "sensorSettings":{"sensIdYYYY":{"x-p44-rrdFilePath":"", "x-p44-rrdConfig":"auto"} } } }</option>' +
+          '<option value="1003">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "scenes":{ "5": {"channels":{ "brightness":{ "value":50 } } } } } }</option>' +
+          '<option value="1004">{ "method":"loglevel", "dSUID":"root", "value":6 }</option>' +
+          '<option value="1001">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "x-p44-logLevelOffset":2 } }</option>' +
+          '<option value="1100">{ "notification":"callScene", "zone_id":0, "group":1, "scene":5, "force":false }</option>' +
+          '<option value="1101">{ "notification":"callScene", "dSUID":"xx", "scene":5, "force":false }</option>' +
+          '<option value="1102">{ "notification":"ping", "dSUID":"xx" }</option>';
+        $('#jsonExamples').html(selectHtml).trigger('create');
+        $('#jsonExamples').val(0).selectmenu('refresh');
+      }
+
+
+      function exampleSelected()
+      {
+        if ($('#jsonExamples').val()!=0) {
+          var text = $('#jsonExamples>option:selected').html();
+          $('#jsonText').val(text);
+          $('#jsonExamples').val(0).selectmenu('refresh');
+          $('#jsonText').focus();
+        }
+      }
+
+
+      $(function()
+      {
+        // document ready
+        var setPropPath = extractSession(location.hash.substr(1));
+        if (setPropPath.length>0) {
+          var elems = setPropPath.split(".");
+          var dsuid = elems.shift();
+          sp = '{ "method":"setProperty", "dSUID":"' + dsuid + '", "properties": ';
+          var ob = 1;
+          var pe;
+          while (pe = elems.shift()) {
+            sp += '{ "' + pe + '": ';
+            ob++; // one more open brackets
+          }
+          sp += '_new_value_';
+          while (ob-- > 0) {
+            sp += ' }';
+          }
+          $('#jsonText').val(sp);
+        }
+
+        refreshExamples();
+
+        // handler for sendVDCAPI button
+        $("#sendVDCAPI").click(function(event) {
+          var endpoint = "vdc";
+          if (event.shiftKey) endpoint = "scriptapi";
+          else if (event.metaKey || event.ctrlKey) endpoint = "featureapi";
+          var txt = $("#jsonText").val().toString();
+          var json = JSON.parse(txt);
+          if (json) {
+            // needs a long timeout, large queries might be sloooow!
+            event.target.setAttribute('style', 'background-color: orange;');
+            apiCall(json, 20000, false, endpoint).done(function(result) {
+              $("#jsonResult").val(JSON.stringify(result, null, 2));
+              addToHistory(txt);
+            }).fail(function(domain, code, message) {
+              $("#jsonResult").val('// apiCall: [' + domain + '] Error ' + code.toString() + ': ' + message);
+            }).always(function() {
+              event.target.removeAttribute('style');
+            });
+          }
+          else {
+            $("#jsonResult").val("// *** invalid JSON ***");
+          }
+        });
+
+      });
+
+
+    --></script>
+
+
+  </head>
+
+  <body>
+
+    <div id="tweak" data-role="page">
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <label for="jsonText">Enter JSON API Query:</label>
+          <input type="text" name="jsonText" id="jsonText" placeholder='{ "method":"mymethod", "param1":"val1", ... }' value="" data-theme="d">
+          <select onchange="exampleSelected()" name="jsonExamples" id="jsonExamples">
+          </select>
+          <button type="button" id="sendVDCAPI" data-inline="true" data-theme="c">Send JSON to vDC API</button>
+          <textarea id="jsonResult"></textarea>
+        </div>
+      </div>
+
+          </div>
+
+  </body>
+
+</html>

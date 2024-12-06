@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+  <link rel="stylesheet" href="/css/themes/p44dark.min.css" />
+  <link rel="stylesheet" href="/css/themes/p44dark.cust.css" />
+  <link rel="stylesheet" href="/css/p44dev.css" />
+  <link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+  <link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+      <script src="/js/jquery.min.js"></script>
+    <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/js/qrcode.min.js"></script>
+
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/dialog.js"></script>
+  <script src="/js/p44api.js"></script>
+  <script src="/js/p44dev.js"></script>
+
+  <title id="html_title_model">P44-LC</title>
+
+
+
+
+  <script type="text/javascript">
+
+  $(function()
+  {
+
+  $('#channelControl').enhanceWithin().popup();
+$('#sceneEditor').enhanceWithin().popup();
+$('#alertMessage').enhanceWithin().popup();
+
+    // initialize app
+    initializeApp();
+  });
+
+  </script>
+
+</head>
+
+<body>
+
+
+    <div id="channelControl" data-theme="a" data-role="popup" data-overlay-theme="a" class="ui-corner-all dialogbox">
+      <div style="padding:10px 20px;">
+        <div id="channelInfoIcon" class="dialogTitleIcon"></div><h3 class="dialogTitleText" id="channelInfoTitle">Device Output Channels</h3>
+        <div id="channelList"></div>
+        <p style="padding-top:20px;"></p>
+        <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+      </div>
+    </div>
+    <div id="sceneEditor" data-theme="a" data-role="popup" data-overlay-theme="a" data-dismissible="false" class="ui-corner-all widedialog">
+      <div style="padding:10px 20px; min-width:480px;">
+        <h3 id="sceneEditorTitle">Scene</h3>
+        <label for="sceneDontcare">Calling scene does not change outputs for this device (but still runs effects)</label>
+        <select name="sceneDontcare" id="sceneDontcareSelect" data-role="slider" data-mini="true">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+        <label for="sceneIgnorePrio">Calling scene overrides local priority</label>
+        <select name="sceneIgnorePrio" id="sceneIgnorePrioSelect" data-role="slider" data-mini="true">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+        <label for="sceneEffect">Scene effect</label>
+        <select name="sceneEffect" id="sceneEffectSelect" onchange="refresh_sceneeffect_deps();" data-mini="true">
+          <option value="0">no effect, immediate transition</option>
+          <option value="1">smooth, normal transition (100mS)</option>
+          <option value="2">slow transition (1min)</option>
+          <option value="3">medium transition (5sec)</option>
+          <option value="4">blink/alert</option>
+          <option value="5">custom transition time according to effect param [mS]</option>
+          <option value="6">run scene script</option>
+        </select>
+
+        <div id="sceneEditorEffectParam" style="display:none">
+          <label for="sceneEffectParam">Parameter for scene effect (valid for blink and custom transition time)</label>
+          <input type="text" autocomplete="off" name="sceneEffectParam" id="sceneEffectParamEdit" value="" >
+        </div>
+
+        <div id="sceneEditorScriptEffect" style="display:none">
+          <h3>Script to execute when scene is called (and effect set for script):</h3>
+          <!--<p class="sceneScriptCheckResult" id="sceneScriptCheck"></p>--><textarea name="sceneScript" id="sceneScriptTextfield" autocomplete="off" placeholder="");"></textarea>
+          <button type="button" id="sceneTestButton" data-mini="true" data-inline="true" data-icon="action">Save + test scene call (with effect + script when enabled)</button>
+          <button type="button" id="sceneStopButton" data-mini="true" data-inline="true" data-icon="forbidden">Stop scene effects/script</button>
+          <div class="scriptLinks">
+            <a href="/script_ref.html" target="_blank">Script+Expression reference</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="sceneScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
+          </div>
+        </div>
+        <p style="padding-top:6px;"></p>
+        <button type="button" id="sceneEditApply" data-theme="c" data-icon="check">Save + Close</button>
+        <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+      </div>
+    </div>
+<div id="alertMessage" data-theme="a" data-role="popup" data-overlay-theme="<?= a;?>" data-dismissible="false" class="ui-corner-all dialogbox">
+  <div data-role="header" class="ui-corner-top">
+    <h1 id="alertTitle">Alert</h1>
+  </div>
+  <div data-role="content" class="ui-corner-bottom ui-content">
+    <p id="alertText">...</p>
+    <button type="button" id="alertAskLater" onclick="closeDialog();" >Remind me later</button>
+    <button type="button" id="alertDismiss">OK</button>
+  </div>
+</div>
+
+
+    <div id="lights" data-role="page" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+<div data-role="navbar" class="ui-state-persist"><ul>
+<li><a href="#lights" class="ui-btn-active ui-state-persist">Lights/Outputs</a></li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#devices">Hardware</a></li>
+<li><a href="#system">System</a></li>
+<li><a href="#title">About</a></li>
+</ul></div>
+</div>
+      <div data-role="content">
+        <div id="roomSelect" class="ui-grid-b" style="margin-bottom: 20px;">
+          <div class="ui-block-a">
+            <select id="lightZoneSelector" style="width=100%;" data-mini="true" onchange="lightZoneSelectorChanged();" ></select>
+          </div>
+          <div class="ui-block-b" id="lightGroupSelectorSpace">
+          </div>
+          <div class="ui-block-c">
+            <button type="button" onclick="refresh_lightslist();" id="refreshLightslist" data-icon="refresh" data-mini="true">Reload list</button>
+          </div>
+        </div>
+        <div id="lightsList">
+        </div>
+        <div id="scenesList">
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="scenenameedit" class="ui-corner-all" dialogbox>
+        <form id="scenenameeditform">
+          <div style="padding:10px 20px;">
+            <h3>Rename Scene</h3>
+            <label for="newSceneName">New name:</label>
+            <input type="text" autocomplete="off" name="newSceneName" id="newSceneName" value="" >
+            <button type="button" id="sceneNameApply" data-theme="c" data-icon="check">Save</button>
+            <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="saveSceneConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Save current settings as scene</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <p>This will save the current state of all devices shown in the list above in the scene - in order to be recalled later.
+          <br/><b>Note:</b> When saving to a area scene, devices that are off will not be included into the scene</p>
+          <button type="button" id="saveSceneNowButton" data-theme="d">Yes, save scene</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="triggers" data-role="page" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+<div data-role="navbar" class="ui-state-persist"><ul>
+<li><a href="#lights">Lights/Outputs</a></li>
+<li><a href="#triggers" class="ui-btn-active ui-state-persist">Triggers</a></li>
+<li><a href="#devices">Hardware</a></li>
+<li><a href="#system">System</a></li>
+<li><a href="#title">About</a></li>
+</ul></div>
+</div>
+      <div data-role="content">
+        <div id="triggersList">
+        </div>
+        <abbr title="Open custom actions page..."></abbr><a target="actions" href="/actions.html" data-mini="true" data-role="button" data-icon="bars" data-theme="a" data-inline="true">Open Custom Actions Page…</a>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="triggerEdit" data-dismissible="false" class="ui-corner-all widedialog">
+        <div style="padding:10px 20px; min-width:480px;">
+          <h3 class="dialogTitleText" id="triggerTitle">Trigger</h3>
+
+          <input type="text" autocomplete="off" name="triggerName" id="triggerNameTextfield" value="" placeholder="my new trigger" >
+
+          <h3>Variables to use in trigger condition:</h3>
+          <p class="evaluationCheckResult" id="triggerVarDefsCheck"></p>
+          <table class="varDefs" width="100%">
+            <thead>
+              <tr><th>variable name</th><th>assigned input</th></tr>
+            </thead>
+            <tbody id="triggerVarDefsBody">
+            </tbody>
+          </table>
+
+          <h3>Condition for trigger:</h3>
+          <p class="evaluationCheckResult" id="triggerConditionCheck"></p>
+          <input type="text" autocomplete="off" name="triggerCondition" id="triggerConditionTextfield" value="" placeholder="e.g.  is_weekday(1,4,5) & after_time(20:15) or is_time(sunrise()+1:30) & between_dates(1.Sep,16.Mar)" >
+          <button type="button" id="triggerConditionTestButton" data-mini="true" data-inline="true" data-icon="check">Save + check condition</button>
+          Triggers:<select name="triggerModeSelect" id="triggerModeSelect" data-mini="true" data-inline="true">
+            <option value="0">never</option>
+            <option value="1">when result becomes true</option>
+            <option value="2">when result changes between true and false</option>
+            <option value="3">when result value changes</option>
+            <option value="4">at every evaluation (use with care!)</option>
+          </select>
+          <div class="scriptLinks">
+            <a href="javascript:openScriptRef();">Script+Expression reference</a>
+          </div>
+
+          <h3>Script to execute when trigger condition is met:</h3>
+          <p class="evaluationCheckResult" id="triggerActionCheck"></p><textarea name="triggerAction" id="triggerActionTextfield" autocomplete="off" placeholder="scene('bright'); /* or with 10 sec transition: */ scene('medium',10) /* or change single light: */ set('lampname', 50);"></textarea>
+          <button type="button" id="triggerActionTestButton" data-mini="true" data-inline="true" data-icon="action">Save + test action</button>
+          <button type="button" id="triggerActionStopButton" data-mini="true" data-inline="true" data-icon="forbidden">Stop action</button>
+          <div class="scriptLinks">
+            <a href="javascript:openScriptRef();">Script+Expression reference</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="triggerActionScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
+          </div>
+          <div id="triggerLogOffset"></div>
+          <p style="padding-top:6px;"></p>
+
+          <label for="showOnActionPage">Show this trigger as actionable item on <a target="actions" href="/actions.html">custom action page</a></label>
+          <select name="showOnActionPage" id="showOnActionPageSelect" onchange="refresh_showonactionpage_deps();" data-role="slider" data-mini="true">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+          <div id="actionPageRenderingOptions" style="display:none" data-mini="true">
+            <table class="fieldsTable" width="100%">
+              <tbody>
+                <tr>
+                  <td width="40%">Section title before this item</td>
+                  <td> <input type="text" autocomplete="off" name="actionSectionTitle" id="actionSectionTitleTextField" value="" placeholder="leave empty for no section title"></td>
+                </tr>
+                <tr>
+                  <td>Item text</td>
+                  <td> <input type="text" autocomplete="off" name="actionName" id="actionNameTextField" value="" placeholder="defaults to trigger name"></td>
+                </tr>
+                <tr>
+                  <td>Item color</td>
+                  <td> <input type="text" autocomplete="off" name="actionColor" id="actionColorTextField" value="" placeholder="#F00 or #FFCA0F style web color specification"></td>
+                </tr>
+                <tr>
+                  <td>Item Type</td>
+                  <td><select id="actionTypeSelect" data-mini="true">
+                    <option value="button">Button</option>
+                    <option value="slider">Slider</option>
+                    <option value="input">Text Input</option>
+                  </select></td>
+                </tr>
+                <tr>
+                  <td>Sorting order</td>
+                  <td> <input type="number" autocomplete="off" name="actionOrder" id="actionOrderTextField" value="" placeholder="number or empty for alphabetical ordering by trigger name"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="padding-top:6px;"></p>
+          <button type="button" id="triggerEditRemove" data-icon="minus">Delete Trigger...</button>
+          <p style="padding-top:6px;"></p>
+          <button type="button" id="triggerEditApply" data-theme="c" data-icon="check">Save + Close</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="removeTriggerConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Delete Trigger</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to delete this trigger?</h3>
+          <button type="button" id="removeTriggerNowButton" data-theme="d">Yes, delete the trigger</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+
+
+    <div id="title" data-role="page" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+<div data-role="navbar" class="ui-state-persist"><ul>
+<li><a href="#lights">Lights/Outputs</a></li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#devices">Hardware</a></li>
+<li><a href="#system">System</a></li>
+<li><a href="#title" class="ui-btn-active ui-state-persist">About</a></li>
+</ul></div>
+</div>
+      <div data-role="content">
+        <div>
+          <div class="centered" data-role="content">
+            <h1 id="about_title_model">P44-LC</h1>
+            <h2 id="about_model_description">light controller</h2>
+            <p>© <span id="about_copyright_years">2017-2024</span> by <a id="about_copyright_link" href="http://plan44.ch/automation" target="_blank">_</a></p>
+          </div>
+
+
+          <h3>Opensource:</h3>
+          <div data-role="collapsible-set" data-mini="true"
+          data-iconpos="right">
+
+            <div data-role="collapsible">
+              <h3>vdcd, p44mbrd, p44utils, p44vdc, p44lrgraphics - © 2013-2024 by plan44.ch, GPLv3 or commercial license</h3>
+
+              <h4><a href="https://plan44.ch/opensource/vdcd" target="_blank">vdcd</a> - automation device controller daemon for Digital Strom and standalone operation</h4>
+              <h4><a href="https://github.com/plan44/p44mbrd" target="_blank">p44mbrd</a> - matter bridge companion daemon for vdcd</h4>
+              <h4><a href="https://github.com/plan44/p44vdc" target="_blank">p44vdc</a> - C++ framework to build virtual device connectors (vdcs) for Digital Strom systems</h4>
+              <h4><a href="https://github.com/plan44/p44utils" target="_blank">p44utils</a> - utility framework in C++ for creating mainloop event based daemon applications</h4>
+              <h4><a href="https://github.com/plan44/p44lrgraphics" target="_blank">p44lrgraphics</a> - low resolution graphics library specialized for LED chains and matrices</h4>
+
+              <p>vdcd, p44mbrd, p44utils, p44vdc and p44lrgraphics (henceforth, <i>the software</i>) is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, either <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank">version 3 of the License</a>, or (at your option) any later version.</p>
+
+              <p><i>The software</i> is distributed in the hope that it will be useful,
+              but WITHOUT ANY WARRANTY; without even the implied warranty of
+              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+              GNU General Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with <i>the software</i>. If not, see <a href="https://www.gnu.org/licenses/" target="_blank">https://www.gnu.org/licenses/</a>.</p>
+
+              <p>Upon request, <i>the software</i> can also be made available under a commercial license from plan44.ch</p>
+
+            </div>
+
+            <div data-role="collapsible">
+              <h3>OpenWrt - © OpenWrt Project, GPL v2</h3>
+
+              <h4><a href="https://openwrt.org" target="_blank">OpenWrt</a> -  Linux distribution for embedded network devices</h4>
+
+              <p>OpenWrt is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, version 2 of the License.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with openwrt. If not, see <a href="https://www.gnu.org/licenses/gpl-2.0.html" target="_blank">https://www.gnu.org/licenses</a>.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>Matter (formerly CHIP) - © Connectivity Standards Alliance, Apache v2</h3>
+
+              <h4><a href="https://github.com/project-chip/connectedhomeip" target="_blank">connectedhomeip</a> -  Matter/CHIP SDK</h4>
+
+              <p>The connectedhomeip source code is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a> as published by the Apache Software Foundation.
+
+              <p>You should have received a copy of the Apache License, Version 2,
+              along with connectedhomeip. If not, see <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache.org/licenses/LICENSE-2.0</a>.</p>
+
+            </div>
+
+
+            <div id="opensource_ola" style="display:none" data-role="collapsible">
+              <h3>Open Lighting Project, OLA - © 2005-2014 Simon Newton, GPL/LGPL</h3>
+
+              <h4><a href="http://www.openlighting.org" target="_blank">OLA</a> - Open Lighting Architecture (interface to various lighting protocols, e.g. DMX512)</h4>
+
+              <p>The files required for libola and libolacommon are licenced under the LGPL, this means you are free to link against the OLA client library in your own programs. The files required for libolaserver and olad are licenced under the GPL.</p>
+
+              <p>You should have received a copy of the GNU General Public License (GPL) and the GNU Lesser General Public License (LGPL)
+              along with <a href="https://github.com/OpenLightingProject/ola">OLA</a>. If not, see <a href="https://www.gnu.org/licenses/" target="_blank">https://www.gnu.org/licenses/</a>.</p>
+
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery mobile - © jQuery Foundation, Inc. and other contributors, MIT license</h3>
+
+              <h4><a href="http://jquerymobile.com" target="_blank">jQuery mobile</a> - Touch-Optimized Web Framework for Smartphones &amp; Tablets</h4>
+              <p>Copyright <a href="http://jquery.com/" target="_blank">jQuery Foundation, Inc.</a> and other contributors</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining
+              a copy of this software and associated documentation files (the
+              "Software"), to deal in the Software without restriction, including
+              without limitation the rights to use, copy, modify, merge, publish,
+              distribute, sublicense, and/or sell copies of the Software, and to
+              permit persons to whom the Software is furnished to do so, subject to
+              the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be
+              included in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+              LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+              OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+              WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>civetweb - © 2013-2017 The CivetWeb developers, MIT license</h3>
+
+              <h4><a href="https://github.com/civetweb/civetweb" target="_blank">civetweb</a> - embedded C/C++ web server</h4>
+              <p>Copyright (c) 2013-2017 The CivetWeb developers</p>
+              <p>Copyright (c) 2004-2013 Sergey Lyubka</p>
+              <p>Copyright (c) 2013 No Face Press, LLC (Thomas Davis)</p>
+              <p>Copyright (c) 2013 F-Secure Corporation</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the Software), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+
+            <div data-role="collapsible">
+              <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="http://avahi.org" target="_blank">avahi</a> - service discovery on a local network via the mDNS/DNS-SD</h4>
+              <p>Copyright (c) 2004 avahi.org</p>
+
+              <p>avahi is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>avahi is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with avahi; if not, see <a href="https://www.gnu.org/licenses/" target="_blank">https://www.gnu.org/licenses/</a></p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>sqlite3pp - © 2012 Wongoo Lee, MIT license</h3>
+
+              <h4><a href="https://code.google.com/p/sqlite3pp/" target="_blank">sqlite3pp</a> - light C++ wrapper for SQLite3 API</h4>
+              <p>Copyright (c) 2012 Wongoo Lee (iwongu at gmail dot com)</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+              of this software and associated documentation files (the "Software"), to deal
+              in the Software without restriction, including without limitation the rights
+              to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+              copies of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included in
+              all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+              THE SOFTWARE.</p>
+            </div>
+
+
+            <div data-role="collapsible">
+              <h3>Ace - © 2010, Ajax.org B.V., BSD 3 clause license</h3>
+
+              <h4><a href="https://ace.c9.io/" target="_blank">Ace</a> - embeddable code editor written in JavaScript</h4>
+              <p>Copyright (c) 2010, Ajax.org B.V.<br/>
+              All rights reserved.</p>
+
+              <p>Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are met:</p>
+
+              <ul>
+              <li>Redistributions of source code must retain the above copyright
+              notice, this list of conditions and the following disclaimer.</li>
+              <li>Redistributions in binary form must reproduce the above copyright
+              notice, this list of conditions and the following disclaimer in the
+              documentation and/or other materials provided with the distribution.</li>
+              <li>Neither the name of Ajax.org B.V. nor the
+              names of its contributors may be used to endorse or promote products
+              derived from this software without specific prior written permission.</li>
+              </ul>
+
+              <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+              ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+              WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+              DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+              DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+              (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+              LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+              ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+              (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+              SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>libmodbus - © 2019 libmodbus.org, LGPL v2.1 or later</h3>
+
+              <h4><a href="https://www.libmodbus.org" target="_blank">libmodbus</a> - A Modbus library for Linux, Mac OS X, FreeBSD, QNX and Win32</h4>
+              <p>Copyright (c) 2019 libmodbus.org / Stéphane Raimbault</p>
+
+              <p>libmodbus is free software; you can redistribute it and/or modify it
+              under the terms of the GNU Lesser General Public License as
+              published by the Free Software Foundation; either version 2.1 of the
+              License, or (at your option) any later version.</p>
+
+              <p>libmodbus is distributed in the hope that it will be useful, but WITHOUT
+              ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+              or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+              Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU Lesser General Public
+              License along with libmodbus; if not, see <a href="https://www.gnu.org/licenses/" target="_blank">https://www.gnu.org/licenses/</a></p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>RtpMidid - © 2019-2023 David Moreno Montero, GPL v3 or later</h3>
+
+              <h4><a href="https://github.com/davidmoreno/rtpmidid" target="_blank">RtpMidid</a> - RTP MIDI User Space Driver Daemon for Linux</h4>
+              <p>Copyright (C) 2019-2023 David Moreno Montero &lt;dmoreno@coralbits.com&gt;</p>
+
+              <p>This program is free software: you can redistribute it and/or modify
+              it under the terms of the GNU General Public License as published by
+              the Free Software Foundation, either version 3 of the License, or
+              (at your option) any later version.</p>
+
+              <p>This program is distributed in the hope that it will be useful,
+              but WITHOUT ANY WARRANTY; without even the implied warranty of
+              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+              GNU General Public License for more details.</p>
+
+              <p>You should have received a copy of the GNU General Public License
+              along with this program.  If not, see <a href="https://www.gnu.org/licenses/" target="_blank">https://www.gnu.org/licenses/</a>.</p>
+            </div>
+
+
+            <div data-role="collapsible">
+              <h3>json-c - © 2009-2012 Eric Haszlakiewicz, MIT license</h3>
+
+              <h4><a href="https://github.com/json-c/json-c" target="_blank">json-c</a> - JSON library for C</h4>
+              <p>Copyright (c) 2004, 2005 Metaparadigm Pte Ltd<br/>
+              Copyright (c) 2009-2012 Eric Haszlakiewicz</p>
+
+              <p>Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"),
+              to deal in the Software without restriction, including without limitation
+              the rights to use, copy, modify, merge, publish, distribute, sublicense,
+              and/or sell copies of the Software, and to permit persons to whom the
+              Software is furnished to do so, subject to the following conditions:</p>
+
+              <p>The above copyright notice and this permission notice shall be included
+              in all copies or substantial portions of the Software.</p>
+
+              <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+              FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+              AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+              LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+              SOFTWARE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>protobuf-c - © 2008-2013, Dave Benson, BSD 2 clause license</h3>
+
+              <h4><a href="https://github.com/protobuf-c/protobuf-c" target="_blank">protobuf-c</a> - google protocol buffer implementation for C</h4>
+              <p>Copyright (c) 2008-2013, Dave Benson.  All rights reserved.</p>
+
+              <p>Redistribution and use in source and binary forms, with or without
+              modification, are permitted provided that the following conditions are
+              met:</p>
+
+              <ul>
+              <li>Redistributions of source code must retain the above copyright
+              notice, this list of conditions and the following disclaimer.</li>
+              <li>Redistributions in binary form must reproduce the above
+              copyright notice, this list of conditions and the following disclaimer
+              in the documentation and/or other materials provided with the
+              distribution.</li>
+              </ul>
+
+              <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+              "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+              LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+              A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+              OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+              SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+              LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+              DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+              THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+              (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+              OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+            </div>
+
+            <div data-role="collapsible">
+              <h3>jQuery Sapling - © Tamer Aydin, MIT license</h3>
+
+              <h4><a href="http://tamerayd.in/jquery-sapling/" target="_blank">jQuery Sapling</a> - ultra-lightweight tree/accordion plugin</h4>
+
+              <p><a href="http://tameraydin.mit-license.org/" target="_blank">MIT License</a></p>
+            </div>
+
+            <div data-role="collapsible">
+
+              <h3>jquery-resizable - © 2015-2019 Rick Strahl, West Wind Technologies, MIT license</h3>
+
+              <h4><a href="https://github.com/RickStrahl/jquery-resizable/" target="_blank">jquery-resizable</a> - ultra-lightweight plugin for resizable panels</h4>
+
+              <p><a href="https://github.com/RickStrahl/jquery-resizable/blob/master/LICENSE.md/" target="_blank">MIT License</a></p>
+            </div>
+
+            <div data-role="collapsible">
+
+              <h3>shortcuts.js - © Binny V A, BSD license</h3>
+
+              <h4><a href="http://www.openjs.com/scripts/events/keyboard_shortcuts/" target="_blank">shortcuts.js</a> - handling shortcuts in javascript</h4>
+
+              <p>BSD License</p>
+            </div>
+
+          </div>
+
+
+
+        </div>
+      </div>
+    </div>
+
+    <div id="devices" data-role="page" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+<div data-role="navbar" class="ui-state-persist"><ul>
+<li><a href="#lights">Lights/Outputs</a></li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#devices" class="ui-btn-active ui-state-persist">Hardware</a></li>
+<li><a href="#system">System</a></li>
+<li><a href="#title">About</a></li>
+</ul></div>
+</div>
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <button type="button" class="p44-longclickable" p44-handler="doRefreshDeviceList" id="refreshDevicelist" data-icon="refresh" data-inline="true" data-mini="true">Reload list</button>
+          <button type="button" onclick="identify();" id="identifyButton" data-inline="true" data-mini="true">Identify device...</button>
+          <button type="button" onclick="learn(false);" id="startLearn" data-inline="true" data-mini="true">Device learn in/out...</button>
+          <button type="button" onclick="learn(true);" id="startLearnNoProximity" data-inline="true" data-mini="true">Learn <span style="color:red">buttons w/o proximity check</span>...</button>
+          <a target="_blank" id="devices_compatpage_link" href="http://plan44.ch/automation/info.php">device compatibility information</a>
+        </div>
+        <div id="deviceList">
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" data-overlay-theme="a" id="learnWait" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Learning</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <div id="learnRequest"><p style="color:orange; font-weight:bold;">Please press learn button on device to be learned in or out now!</p></div>
+          <div id="learnResult"></div>
+          <button type="button" id="learnOK" onclick="closeDialog();" data-theme="c">OK</button>
+          <button type="button" id="learnCancel" onclick="stopLearn();" >Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="identifyWait" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Identifying</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <div id="identifyRequest"><p style="color:orange; font-weight:bold;">Please press button on device to be identified!</p></div>
+          <div id="identifyResult"></div>
+          <button type="button" id="identifyOK" onclick="closeDialog();" data-theme="c">OK</button>
+          <button type="button" id="identifyCancel" onclick="stopIdentify();" >Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="customioCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create Custom I/O (GPIO, i2c, SPI, ...) device</h3>
+          <p><span style="color:red">Expert users only! Configuring wrong low level devices can damage the device permanently!</span></p>
+          <label for="custom_devicetype">Type of device:</label>
+          <select name="custom_devicetype" onchange="refresh_customio_deps();" id="custom_devicetype_select" data-mini="true" >
+            <option value="none">-</option>
+            <option value="digitalio">digital input or output</option>
+            <option value="analogio">analog input or output</option>
+            <option value="console">console based debug device</option>
+            <option value="custom">custom (enter device specification manually)</option>
+          </select>
+          <label for="customdev_name">Device name:</label>
+          <input type="text" autocomplete="off" name="customdev_name" id="customdev_name_textfield" value="" placeholder="Device name" class="p44-input-clear">
+          <div class="digitalio_group" style="display:none">
+            <label for="digitalio_behaviour">Digital I/O Behaviour:</label>
+            <select name="digitalio_behaviour" onchange="refresh_customio_deps();" id="digitalio_behaviour_select" data-mini="true" >
+              <option value="none">-</option>
+              <option value="button">pushbutton</option>
+              <option value="input">automation input</option>
+              <option value="light">on-off light output</option>
+              <option value="relay">relay output</option>
+            </select>
+            <label for="digitalio_pinopt">Digital I/O Options:</label>
+            <select name="digitalio_pinopt" id="digitalio_pinopt_select" data-mini="true" >
+              <option value="X" selected="1">normal</option>
+              <option value="/">inverted</option>
+              <option value="+/">inverted with pull-up (if pin supports it)</option>
+            </select>
+            <label for="digitalio_device">Digital I/O Device:</label>
+            <select name="digitalio_device" onchange="refresh_customio_deps();" id="digitalio_device_select" data-mini="true" >
+              <option value="none">-</option>
+              <option value="gpio">Linux GPIO</option>
+              <option value="led">Linux LED output</option>
+              <option value="i2c">i2c bus device</option>
+              <option value="spi">SPI device</option>
+            </select>
+          </div>
+          <div class="custom_group" style="display:none">
+            <p><span style="color:red">REALLY Expert users only! You need to know what you are doing!</span></p>
+            <label for="custom_devicetype">Custom device type:</label>
+            <input type="text" autocomplete="off" name="custom_devicetype" id="custom_devicetype_textfield" value="" placeholder="digitalio" >
+            <label for="custom_devicespec">Custom device specification:</label>
+            <input title="<pinspec>:<iotype>[;<options>]
+- iotypes digital: input, light, relay, blind
+- iotypes analog: dimmer, rgbdimmer, cwwwdimmer, sensor
+- For iotype sensor: sensor;<type>;<usage>;<interval>;<scale>;<offset>;<resolution>;<outmin>;<outmax>" type="text" autocomplete="off" name="custom_devicespec" id="custom_devicespec_textfield" value="" placeholder="i2c1.PCF8574@20.0:light or i2c0.MAX1161x@33.3:sensor;32;3;0;0.0244;0;0.5;0;100" >
+          </div>
+          <div class="analogio_group" style="display:none">
+            <label for="analogio_behaviour">Analog I/O Behaviour:</label>
+            <select name="analogio_behaviour" onchange="refresh_customio_deps();" id="analogio_behaviour_select" data-mini="true" >
+              <option value="none">-</option>
+              <option value="dimmer">light dimmer (single output)</option>
+              <option value="rgbdimmer">RGB light dimmer (3 outputs - R,G,B)</option>
+              <option value="rgbwdimmer">RGBW light dimmer (4 outputs - R,G,B and White)</option>
+              <option value="cwwwdimmer">CW/WW light dimmer (2 outputs - CW, WW)</option>
+              <option value="valve">Heating valve (0..100%)</option>
+              <option value="sensor;1;1;30">Room temperature sensor</option>
+              <option value="sensor;1;2;30">Outdoor temperature sensor</option>
+              <option value="sensor;0;0;15">Generic unitless sensor</option>
+              <option value="sensor;32;3;1;1;0;1;0;100">User Dimmer Input 0..100%</option>
+            </select>
+            <label for="analogio_device">Analog I/O Device:</label>
+            <select name="analogio_device" onchange="refresh_customio_deps();" id="analogio_device_select" data-mini="true" >
+              <option value="none">-</option>
+              <option value="pwm">pwm output device</option>
+              <option value="i2c">i2c bus device</option>
+              <option value="spi">SPI device</option>
+            </select>
+          </div>
+          <div class="consoleio_group" style="display:none">
+            <label for="consoleio_behaviour">Console I/O Behaviour:</label>
+            <select name="consoleio_behaviour" onchange="refresh_customio_deps();" id="consoleio_behaviour_select" data-mini="true" >
+              <option value="none">-</option>
+              <option value="button">Simulated pushbutton (console key)</option>
+              <option value="rocker">Simulated up/down rocker button (2 console keys)</option>
+              <option value="input">Simulated binary input (console key)</option>
+              <option value="sensor">Simulated 0..50 sensor value (tunable with 2 console keys)</option>
+              <option value="dimmer">Simulated dimmer (value shown on console)</option>
+              <option value="colordimmer">Simulated color dimmer (values shown on console)</option>
+              <option value="valve">Simulated heating valve (value shown on console)</option>
+            </select>
+          </div>
+          <div class="gpio_group" style="display:none">
+            <label for="gpio_pin">GPIO number:</label>
+            <input type="number" autocomplete="off" name="gpio_pin" id="gpio_pin_textfield" value="" placeholder="GPIO number" >
+          </div>
+          <div class="pwm_group" style="display:none">
+            <label for="pwm_chip">PWM chip:</label>
+            <input type="number" autocomplete="off" name="pwm_chip" id="pwm_chip_textfield" value="" placeholder="PWM chip number" >
+            <label for="pwm_channel">PWM channel:</label>
+            <input type="number" autocomplete="off" name="pwm_channel" id="pwm_channel_textfield" value="" placeholder="PWM channel number" >
+            <label for="pwm_period">PWM pewriod in nS:</label>
+            <input type="number" autocomplete="off" name="pwm_period" id="pwm_period_textfield" value="50000" placeholder="PWM period in nS" >
+          </div>
+          <div class="led_group" style="display:none">
+            <label for="led_pin">LED number:</label>
+            <input type="number" autocomplete="off" name="led_pin" id="led_pin_textfield" value="" placeholder="LED number" >
+          </div>
+          <div class="i2c_group" style="display:none">
+            <label for="i2c_bus">i2c bus number:</label>
+            <select name="i2c_bus" id="i2c_bus_select" data-mini="true" >
+              <option value="0">i2c bus #0</option>
+              <option value="1">i2c bus #1</option>
+              <option value="2">i2c bus #2</option>
+              <option value="3">i2c bus #3</option>
+            </select>
+            <div class="digitalio_group" style="display:none">
+              <label for="digitalio_i2c_chip">i2c digital I/O chip driver:</label>
+              <select name="digitalio_i2c_chip" id="digitalio_i2c_chip_select" data-mini="true" >
+                <option value="none">-</option>
+                <option value="TCA9555">TCA9555 - 16 digital I/O pins</option>
+                <option value="MCP23017">MCP23017 - 16 digital I/O pins</option>
+                <option value="PCF8574">PCF8574 - 8 digital OC I/O pins</option>
+              </select>
+            </div>
+            <div class="analogio_group" style="display:none">
+              <label for="analogio_i2c_chip">i2c analog I/O chip driver:</label>
+              <select name="analogio_i2c_chip" id="analogio_i2c_chip_select" data-mini="true" >
+                <option value="none">-</option>
+                <option value="PCA9685">PCA9685 - 16 PWM outputs (noninverted, totem pole)</option>
+                <option value="PCA9685-I">PCA9685 - 16 PWM outputs (inverted, totem pole)</option>
+                <option value="PCA9685-O">PCA9685 - 16 PWM outputs (noninverted, open drain)</option>
+                <option value="PCA9685-OI">PCA9685 - 16 PWM outputs (inverted, open drain)</option>
+                <option value="LM75-9">LM75 - Temperature sensor (9 bit precision)</option>
+                <option value="LM75-11">LM75 - Temperature sensor (11 bit precision)</option>
+                <option value="MCP3021">MCP3021 - single channel 10bit A/D converter</option>
+                <option value="MAX1161x">MAX1161x - 4/8/12 channel A/D converters</option>
+              </select>
+            </div>
+            <label for="i2c_address">i2c (hex) address:</label>
+            <input type="text" autocomplete="off" name="i2c_address" id="i2c_address_textfield" value="" placeholder="i2c device address (in hex)" >
+            <label for="i2c_pin">I/O pin number (first of 3 for RGB, first of 4 for RGBW dimmer):</label>
+            <input type="number" autocomplete="off" name="i2c_pin" id="i2c_pin_textfield" value="" placeholder="i2c I/O pin" >
+          </div>
+          <div class="spi_group" style="display:none">
+            <label for="spi_bus">SPI interface:</label>
+            <select name="spi_bus" id="spi_bus_select" data-mini="true" >
+              <option value="0">spidev0.0</option>
+              <option value="1">spidev0.1</option>
+              <option value="10">spidev1.0</option>
+              <option value="11">spidev1.1</option>
+            </select>
+            <div class="digitalio_group" style="display:none">
+              <label for="digitalio_spi_chip">SPI digital I/O chip driver:</label>
+              <select name="digitalio_spi_chip" id="digitalio_spi_chip_select" data-mini="true" >
+                <option value="none">-</option>
+                <option value="MCP23S17">MCP23S17 - 16 digital I/O pins</option>
+              </select>
+            </div>
+            <div class="analogio_group" style="display:none">
+              <label for="analogio_spi_chip">SPI analog I/O chip driver:</label>
+              <select name="analogio_spi_chip" id="analogio_spi_chip_select" data-mini="true" >
+                <option value="none">-</option>
+                <option value="MCP3008">MCP3008 - General purpose 8 channel 10bit A/D converter</option>
+                <option value="MCP3002">MCP3002 - General purpose 2 channel 10bit A/D converter</option>
+              </select>
+            </div>
+            <label for="spi_address">SPI device address (hex):</label>
+            <input type="text" autocomplete="off" name="spi_address" id="spi_address_textfield" value="" placeholder="SPI device address (in hex)" >
+            <label for="spi_pin">I/O pin number</label>
+            <input type="number" autocomplete="off" name="spi_pin" id="spi_pin_textfield" value="" placeholder="SPI I/O pin" >
+          </div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createCustomIODevice();" id="customioCreateDeviceApply" data-theme="c" data-icon="check">Create device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="dmxCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create DMX512 device</h3>
+          <label for="dmx_devicetype">Type of device:</label>
+          <select name="dmx_devicetype" onchange="refresh_dmx_deps();" id="dmx_devicetype_select" data-mini="true" >
+            <option value="none">-</option>
+            <option value="dimmer">single channel dimmer</option>
+            <option value="colordimmer">RGB(WA) 3-5 channel color dimmer</option>
+            <option value="movinglight">RGB(WA) h/v moving light</option>
+          </select>
+          <label for="dmxdev_name">Device name:</label>
+          <input type="text" autocomplete="off" name="dmxdev_name" id="dmxdev_name_textfield" value="" placeholder="Device name" >
+          <div class="dmx_dimmer_group" style="display:none">
+            <label for="dmx_dimmer_channel">DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_dimmer_channel" id="dmx_dimmer_channel_textfield" value="" placeholder="DMX channel number" >
+          </div>
+          <div class="dmx_color_group" style="display:none">
+            <label for="dmx_red_channel">Red DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_red_channel" id="dmx_red_channel_textfield" value="" placeholder="red DMX channel" >
+            <label for="dmx_green_channel">Green DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_green_channel" id="dmx_green_channel_textfield" value="" placeholder="green DMX channel" >
+            <label for="dmx_blue_channel">Blue DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_blue_channel" id="dmx_blue_channel_textfield" value="" placeholder="blue DMX channel" >
+            <label for="dmx_white_channel">Optional white DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_white_channel" id="dmx_white_channel_textfield" value="" placeholder="(optional) white DMX channel" >
+            <label for="dmx_amber_channel">Optional amber DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_amber_channel" id="dmx_amber_channel_textfield" value="" placeholder="(optional) amber DMX channel" >
+          </div>
+          <div class="dmx_position_group" style="display:none">
+            <label for="dmx_hpos_channel">Horizontal position DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_hpos_channel" id="dmx_hpos_channel_textfield" value="" placeholder="horizontal position DMX channel" >
+            <label for="dmx_vpos_channel">Vertical position DMX channel number:</label>
+            <input type="number" autocomplete="off" name="dmx_vpos_channel" id="dmx_vpos_channel_textfield" value="" placeholder="vertical position DMX channel" >
+          </div>
+          <div class="dmx_static_group">
+            <label for="dmx_static_channels">Optional additional config (X=channel=value[,X=channel=value]):</label>
+            <input type="text" autocomplete="off" name="dmx_static_channels" id="dmx_static_channels_textfield" value="" placeholder="X=8=255,X=3=8" >
+          </div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createDmxDevice();" id="dmxCreateDeviceApply" data-theme="d" data-icon="check">Create device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="enoceanCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create EnOcean actor device</h3>
+          <label for="enocean_profile">Type of device:</label>
+          <select name="enocean_profile" id="enocean_profile_select" data-mini="true" >
+            <option value="0">-</option>
+            <option value="16774909">on/off relay</option>
+            <option value="16774908">on/off light</option>
+            <option value="16774910">jalousie controller</option>
+            <option value="16732161">ExtremeLine Heat Tube</option>
+          </select>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createEnoceanDevice();" id="enoceanCreateDeviceApply" data-theme="c" data-icon="check">Create device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="bridgeCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create matter bridging device</h3>
+          <p>Bridging devices can map local scenes to virtual matter devices in different ways. This can be a useful workaround as long as matter side scene support in controlling home automation systems is not yet complete.</p>
+          <label for="bridge_type">Type of bridge:</label>
+          <select name="bridge_type" id="bridge_type_select" data-mini="true" class="p44-input-clear" onchange="refresh_bridgetype_deps();">
+            <option value="0">-</option>
+            <option title="On/Off device in matter, mapped to room on/off or global call/undo" value="onoff">on-off room state bridge</option>
+            <option title="Dimmer device in matter, mapped to nearest room scene levels" value="fivelevel">five level (0,25,50,75,100%) room state bridge</option>
+            <option title="Contact input in matter, gets set when specific scene is called in room or globally" value="sceneresponder">scene responder bridge</option>
+            <option title="On/Off device in matter, when changes to on, gets specific scene call (and optionally undo when changes to off)" value="scenecaller">scene caller bridge</option>
+            <option title="Dimmer device in matter, dims room or area in P44" value="dimmerdial">room or area dimmer bridge</option>
+          </select>
+          <label for="bridge_initialgroup">Group/color</label>
+          <select name="bridge_initialgroup" id="bridge_initialgroup_select" data-mini="true" class="p44-input-clear">
+            <option value="0">default</option>
+            <option value="1">light 🟡</option>
+            <option value="2">shadow ⚪️</option>
+            <option value="3">heating 🔵</option>
+            <option value="9">cooling 🔵</option>
+            <option value="10">ventilation 🔵</option>
+            <option value="8">app/joker ⚫️</option>
+          </select>
+          <div id="bridge_specificscene_controls" style="display: none;">
+            <label for="bridge_onscene">Scene for activation:</label>
+            <select name="bridge_onscene" id="bridge_onscene_select" data-mini="true" class="p44-input-clear"></select>
+            <label for="bridge_offscene">Deactivation by:</label>
+            <select name="bridge_offscene" id="bridge_offscene_select" data-mini="true" class="p44-input-clear"></select>
+          </div>
+          <label for="bridgedevice_name">Bridge name:</label>
+          <input type="text" autocomplete="off" name="bridgedevice_name" id="bridgedevice_name_textfield" value="" placeholder="Name for bridge device"  class="p44-input-clear">
+          <p style="padding-top:20px;"></p>
+          <button type="button" title="The bridging device gets immediately visible to paired matter smarthomes - use this if you need no further configuration" onclick="createBridgeDevice(true);" data-theme="c" data-icon="check">Create bridging device and activate</button>
+          <button type="button" title="Only create, but do not yet activate the bridging device. Use this when you want to adjust settings like group/color before." onclick="createBridgeDevice(false);" data-theme="c" data-icon="check">Create bridging device, activate later</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+
+      <div data-role="popup" data-overlay-theme="a" id="eldatCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create ELDAT actor device</h3>
+          <label for="eldat_type">Type of device:</label>
+          <select name="eldat_type" id="eldat_type_select" data-mini="true" >
+            <option value="99999">-</option>
+            <option value="5">on/off relay</option>
+            <option value="4">on/off light</option>
+          </select>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createEldatDevice();" id="eldatCreateDeviceApply" data-theme="c" data-icon="check">Create device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+
+
+
+      <div data-role="popup" data-overlay-theme="a" id="rgbchainCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create RGB LED chain (WS281x) device</h3>
+          <label for="rgbchaindev_name">Device name:</label>
+          <input type="text" autocomplete="off" name="rgbchaindev_name" id="rgbchaindev_name_textfield" value="" placeholder="Device name"  class="p44-input-clear" >
+          <label for="rgbchaindev_uniqueid">Unique ID (determines the dSUID):</label>
+          <input title="Unique ID - enter specific dSUID, or any unique string - or leave empty to generate a random ID" type="text" autocomplete="off" name="rgbchaindev_uniqueid" id="rgbchaindev_uniqueid_textfield" value="" placeholder="Enter unique id - or leave empty for automatic ID" class="p44-input-clear" >
+          <label for="rgbchain_type">Type:</label>
+          <select name="rgbchain_type" id="rgbchain_type_select" data-mini="true" >
+            <option title="Feature light device with color light channels plus extra channels for positioning, sizing and color gradient effects" value="feature">Feature light with color effects</option>
+            <option title="Color light device consisting of a linear segment or rectangular area with standard color channels" value="area">Simple rectangular area (part of a strip or matrix)</option>
+          </select>
+          <label for="rgbchain_autosize">Light size:</label>
+          <select title="Enable automatic sizing, which means the light is automatically adjusted in size and position to the root view (total LED area)" name="rgbchain_autosize" id="rgbchain_autosize" onchange="refresh_rgbchain_autosize_deps();" data-role="slider">
+            <option value="0">fixed</option>
+            <option value="1">auto</option>
+          </select>
+          <div id="rgbchain_manualsize">
+            <label for="rgbchain_x">Device x position in LED matrix:</label>
+            <input type="number" autocomplete="off" name="rgbchain_x" id="rgbchain_x_textfield" value="" placeholder="0 .. Matrix x size-1" >
+            <label for="rgbchain_dx">Size in x direction:</label>
+            <input type="number" autocomplete="off" name="rgbchain_dx" id="rgbchain_dx_textfield" value="" placeholder="0 .. Matrix x size-1" >
+            <label for="rgbchain_y">Device y position in LED matrix:</label>
+            <input type="number" autocomplete="off" name="rgbchain_y" id="rgbchain_y_textfield" value="0" placeholder="0 .. Matrix y size-1" >
+            <label for="rgbchain_dy">Size in y direction:</label>
+            <input type="number" autocomplete="off" name="rgbchain_dy" id="rgbchain_dy_textfield" value="1" placeholder="0 .. Matrix y size-1" >
+          </div>
+          <label for="rgbchain_zorder">Z-Order (highest number means frontmost):</label>
+          <input type="number" autocomplete="off" name="rgbchain_zorder" id="rgbchain_zorder_textfield" value="0" placeholder="integer number" >
+          <label for="rgbchaindev_cfg">Feature view type/config:</label>
+          <input title="A view type (e.g. 'stack' for scripted lights or 'torch' for flame effect), or the name of a view config JSON file (e.g. 'plan44text.json'), or a JSON object containing view config" type="text" autocomplete="off" name="rgbchaindev_cfg" id="rgbchaindev_cfg_textfield" value="" placeholder="optional view type name or configuration" >
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createRGBLedChainDevice();" id="rgbchainCreateDeviceApply" data-theme="c" data-icon="check">Create device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="evaluatorCreateDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create Sensor Evaluator device</h3>
+          <p>Evaluator devices provide a binary input, a two-way button or a sensor value, which is calculated from other device's sensor and input values</p>
+          <label for="evaluator_devicetype">Evaluator result type:</label>
+          <select name="evaluator_devicetype" id="evaluator_devicetype_select" onchange="refresh_evaluator_grouping_deps();" data-mini="true" >
+            <option value="input">binary input</option>
+            <option value="rocker">simulated two-way button</option>
+            <option value="internalaction">internal action trigger</option>
+            <option value="sensor">sensor value</option>
+          </select>
+                    <div id="evaluator_sensorconfig" style="display:none">
+            <label for="evaluator_sensortype">Sensor type:</label>
+            <select name="evaluator_sensortype" id="evaluator_sensortype_select" data-mini="true" >
+              <option value="0">undefined</option>
+              <option value="1">temperature in degrees celsius</option>
+              <option value="2">relative humidity in %</option>
+              <option value="3">illumination in lux</option>
+              <option value="4">supply voltage level in Volts</option>
+              <option value="5">CO (carbon monoxide) concentration in ppm</option>
+              <option value="6">Radon activity in Bq/m3</option>
+              <option value="7">gas type sensor</option>
+              <option value="8">particles <10µm in μg/m3</option>
+              <option value="9">particles <2.5µm in μg/m3</option>
+              <option value="10">particles <1µm in μg/m3</option>
+              <option value="11">room operating panel set point, 0..1</option>
+              <option value="12">fan speed, 0..1 (0=off, <0=auto)</option>
+              <option value="13">wind speed in m/s</option>
+              <option value="14">Power in W</option>
+              <option value="15">Electric current in A</option>
+              <option value="16">Energy in kWh</option>
+              <option value="17">Apparent electric power in VA</option>
+              <option value="18">Air pressure in hPa</option>
+              <option value="19">Wind direction in degrees</option>
+              <option value="20">Sound pressure level in dB</option>
+              <option value="21">Precipitation in mm/m2</option>
+              <option value="22">CO2 (carbon dioxide) concentration in ppm</option>
+              <option value="23">gust speed in m/S</option>
+              <option value="24">gust direction in degrees</option>
+              <option value="25">Generated power in W</option>
+              <option value="26">Generated energy in kWh</option>
+              <option value="27">Water quantity in liters</option>
+              <option value="28">Water flow rate in liters/second</option>
+              <option value="29">Length in meters</option>
+              <option value="30">mass in grams</option>
+              <option value="31">time in seconds</option>
+            </select>
+                        <label for="evaluator_sensorusage">Sensor usage:</label>
+            <select name="evaluator_sensorusage" id="evaluator_sensorusage_select" data-mini="true" >
+              <option value="0">undefined</option>
+              <option value="1">room</option>
+              <option value="2">outdoor</option>
+              <option value="3">user interaction</option>
+              <option value="4">accumulated total</option>
+              <option value="5">last run (of an activity)</option>
+              <option value="6">average (per run activity)</option>
+            </select>
+          </div>
+          <label for="evaluator_name">Evaluator name:</label>
+          <input type="text" autocomplete="off" name="evaluator_name" id="evaluator_name_textfield" value="" placeholder="Name for evaluator device" >
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createEvaluatorDevice();" id="evaluatorCreateDeviceApply" data-theme="c" data-icon="check">Create evaluator</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="evaluatorDeviceEdit" data-dismissible="false" class="ui-corner-all widedialog">
+        <div style="padding:10px 20px; min-width:480px;">
+          <div class="dialogTitleIcon" id="evaluatorIcon"></div><h3 class="dialogTitleText" id="evaluatorTitle">Evaluator</h3>
+          <h3>Variables to use in condition expressions:</h3>
+          <p class="evaluationCheckResult" id="evaluatorVarDefsCheck"></p>
+          <table class="varDefs" width="100%">
+            <thead>
+              <tr><th>variable name</th><th>assigned input</th></tr>
+            </thead>
+            <tbody id="evaluatorVarDefsBody">
+            </tbody>
+          </table>
+          <div id="evaluatorEdit_sensor" style="display:none">
+            <h3>Calculation for sensor value:</h3>
+            <p class="evaluationCheckResult" id="evaluatorSensorCalcCheck"></p>
+            <input type="text" autocomplete="off" name="evaluatorSensorCalc" id="evaluatorSensorCalcTextfield" value="" placeholder="e.g. (Current1+Current2)*230" >
+            <a class="referencelink" href="javascript:openScriptRef();">Script+Expressions reference</a>          </div>
+          <div id="evaluatorEdit_boolean" style="display:none">
+            <h3>Condition for result switching to ON:</h3>
+            <p class="evaluationCheckResult" id="evaluatorOnConditionCheck"></p>
+            <input type="text" autocomplete="off" name="evaluatorOnCondition" id="evaluatorOnConditionTextfield" value="" placeholder="e.g. Sensor1 > 21.5" >
+            <a class="referencelink" href="javascript:openScriptRef();">Script+Expressions reference</a>            <div data-role="fieldcontain" class="ui-field-contain">
+              <label class="p44-mini-input" for="evaluatorOnTime">Minimum time on-condition must be met [Seconds]</label>
+              <input type="number" autocomplete="off" name="evaluatorOnTime" id="evaluatorOnTimeTextfield" value="" placeholder="Seconds" data-mini="true" >
+              <div class="p44-mini-input-end"></div>
+            </div>
+            <h3>Condition for result switching to OFF:</h3>
+            <p id="evaluatorEdit_actionHint" style="display:none">Note: can be left empty to just trigger action whenever ON condition <i>becomes</i> true</p>
+            <p class="evaluationCheckResult" id="evaluatorOffConditionCheck"></p>
+            <input type="text" autocomplete="off" name="evaluatorOffCondition" id="evaluatorOffConditionTextfield" value="" placeholder="e.g. (Sensor1+Sensor2)/2 < 18.5  & Sensor3 != 0" >
+            <a class="referencelink" href="javascript:openScriptRef();">Script+Expressions reference</a>            <div data-role="fieldcontain" class="ui-field-contain">
+              <label class="p44-mini-input" for="evaluatorOffTime">Minimum time off-condition must be met [Seconds]</label>
+              <input type="number" autocomplete="off" name="evaluatorOffTime" id="evaluatorOffTimeTextfield" value="" placeholder="Seconds" data-mini="true" >
+              <div class="p44-mini-input-end"></div>
+            </div>
+          </div>
+          <button type="button" id="evaluatorCheckButton" data-mini="true" data-icon="check">Save + Check Expressions</button>
+          <p style="padding-top:4px;"></p>
+          <div id="evaluatorEdit_action" style="display:none">
+            <h3>Action to execute on state change:</h3>
+            <p class="evaluationCheckResult" id="evaluatorActionCheck"></p><textarea name="evaluatorAction" id="evaluatorActionTextfield" autocomplete="off" placeholder="/* example with 10 sec timeout: */ posturl('https://my.server.com/thing', 10, '{&quot;data&quot;:' + result + '}');"></textarea>
+            <button type="button" id="evaluatorOnActionTestButton" data-mini="true" data-inline="true" data-icon="check">Save + test on-action</button>
+            <button type="button" id="evaluatorOffActionTestButton" data-mini="true" data-inline="true" data-icon="check">Save + test off-action</button>
+            <button type="button" id="evaluatorActionStopButton" data-mini="true" data-inline="true" data-icon="forbidden">Stop running action</button>
+            <div class="scriptLinks">
+              <a href="javascript:openScriptRef();">Script+Expression reference</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="evaluatorActionScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
+            </div>
+          </div>
+          <div id="evaluatorLogOffset"></div>
+          <p style="padding-top:6px;"></p>
+          <button type="button" id="evaluatorDeviceEditApply" data-theme="c" data-icon="check">Save + Close</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="scriptedDeviceCreate" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Create custom device implemented in p44Script</h3>
+          <p><span class="warning">Warning: advanced programming:</span> devices implemented in p44script are a very flexible method to integrate external hardware or data sources with little effort. However, creating scripted devices requires some programming skills and readup in the documentation.</p>
+          <label for="scripteddevInitmsg">Custom device <i>init</i> message (JSON)</label>
+          <textarea name="scripteddevInitmsg" id="scripteddevInitmsgTextfield" autocomplete="off" placeholder="{ 'message':'init', 'protocol':'simple', 'name':'demo light', 'output':'light' }"></textarea>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="createScriptedDevice();" id="scriptedDeviceCreateApply" data-theme="c" data-icon="check">Create custom device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="scriptedDeviceEdit" data-dismissible="false" class="ui-corner-all widedialog">
+        <div style="padding:10px 20px; min-width:480px;">
+          <div class="dialogTitleIcon" id="scriptedDeviceIcon"></div><h3 class="dialogTitleText" id="scriptedDeviceTitle">Custom Device with p44Script implementation</h3>
+          <h3>Device init message:</h3>
+          <pre id="scriptedDeviceInitMessage" class="custdev_initmsg constinfobg clickselect"></pre>
+          <h3>Device implementation:</h3>
+          <p class="evaluationCheckResult" id="scriptedDeviceCheckResult"></p><textarea name="scriptedDeviceImplementation" id="scriptedDeviceImplementationTextfield" autocomplete="off" placeholder="on (message()) as m { log('vdc->device message: %s', m) }"></textarea>
+          <button type="button" id="scriptedDeviceRestartButton" data-mini="true" data-inline="true" data-icon="refresh">Save + restart implementation script</button>
+          <button type="button" id="scriptedDeviceStopButton" data-mini="true" data-inline="true" data-icon="forbidden">Stop implementation script</button>
+          <div class="scriptLinks">
+            <a href="javascript:openScriptRef();">Script+Expression reference</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="scriptedDeviceScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
+          </div>
+          <div id="scriptedDeviceLogOffset"></div>
+          <p style="padding-top:6px;"></p>
+          <button type="button" id="scriptedDeviceEditApply" data-theme="c" data-icon="check">Save + Close</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-history="false" data-role="popup" data-overlay-theme="a" id="deviceInfo" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div class="dialogTitleIcon" id="deviceInfoIcon"></div><h3 class="dialogTitleText" id="deviceInfoTitle">Device Infomation</h3>
+          <div id="deviceInfoShow"></div>
+          <div class="techDetails">
+            <a onclick="show('#deviceTechDetails')">Technical details...</a>
+            <div id="deviceTechDetails" class="expanded" style="display:none">
+              <pre id="deviceP44Description" class="infovalue">[none]</pre>
+              <a id="deviceOpenPropsLink">open property tree view</a>
+            </div>
+          </div>
+          <div id="deviceInfoExtraControls"></div>
+          <div id="deviceBridgingControls"></div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="addressablenameedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Rename</h3>
+          <label for="newAddressableName">New name:</label>
+          <input type="text" autocomplete="off" name="newAddressableName" id="newAddressableName" value="" >
+          <button type="button" id="addressableNameApply" data-theme="c" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="newzonecreate" class="ui-corner-all dialogbox">
+        <form id="newzonecreateform">
+          <div style="padding:10px 20px;">
+            <h3>Create new zone</h3>
+            <label for="newZoneName">Name of new zone:</label>
+            <input type="text" name="newZoneName" id="newZoneName" value="">
+            <button type="button" id="newZoneApply" data-icon="check">Create zone</button>
+            <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="zoneeditor" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Edit Zones</h3>
+          <div id="zoneeditorlist">
+          </div>
+          <button type="button" onclick="closeDialog(function(){refresh_devicelist()});" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="zonenameedit" class="ui-corner-all" dialogbox>
+        <div style="padding:10px 20px;">
+          <h3>Rename Zone</h3>
+          <label for="renamedZoneName">New name:</label>
+          <input type="text" autocomplete="off" name="renamedZoneName" id="renamedZoneName" value="" >
+          <button type="button" id="zoneRenameApply" data-theme="c" data-icon="check">Save</button>
+          <button type="button" id="zoneRenameCancel" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="removeZoneConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Delete Zone</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to delete this zone?</h3>
+          <button type="button" id="removeZoneNowButton" data-theme="d">Yes, delete the zone</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="buttonSettings" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div id="buttonSettingsIcon" class="dialogTitleIcon"></div><h3 class="dialogTitleText" id="buttonSettingsTitle">Button Settings</h3>
+          <label for="buttonFunc">Button function:</label>
+          <select id="buttonFuncSelect" data-mini="true" onchange="refresh_buttontype_deps();">
+            <option value="5">room</option>
+            <option value="1">area 1</option>
+            <option value="2">area 2</option>
+            <option value="3">area 3</option>
+            <option value="4">area 4</option>
+            <option value="6">room preset 10-14</option>
+            <option value="7">room preset 20-24</option>
+            <option value="8">room preset 30-34</option>
+            <option value="9">room preset 40-44</option>
+            <option value="10">area 1 + preset 12-14</option>
+            <option value="11">area 2 + preset 22-24</option>
+            <option value="12">area 3 + preset 32-34</option>
+            <option value="13">area 4 + preset 42-44</option>
+            <option value="15">custom (trigger)</option>
+            <option value="1000">scene action button</option>
+            <option value="1001">forced scene action button</option>
+            <option value="1002">scene undo button</option>
+          </select>
+          <div id="buttonGroupControls">
+          </div>
+          <label for="buttonMode">Button mode:</label>
+          <select id="buttonModeSelect" data-mini="true" onchange="refresh_buttontype_deps();">
+            <option value="0">click+dim</option>
+            <option value="1">click only</option>
+            <option value="2">dim only</option>
+          </select>
+
+          <div id="actionButtonControls" style="display:none;">
+            <label for="buttonScene">Scene action:</label>
+            <select name="buttonScene" id="buttonSceneSelect" data-mini="true" class="p44-input-clear"></select>
+          </div>
+
+          <div id="dimbuttoncontrols" style="display:none;">
+            <label for="buttonChannel">Button dimming channel:</label>
+            <select id="buttonChannelSelect" data-mini="true" >
+              <option value="0">default (brightness/position/intensity)</option>
+              <option value="2">color hue</option>
+              <option value="3">color saturation</option>
+              <option value="4">white color temperature</option>
+              <option value="9">shade angle outside</option>
+              <option value="10">shade angle inside</option>
+              <option value="12">airflow direction</option>
+              <option value="14">airflow flap position</option>
+              <option value="15">airflow louver position</option>
+            </select>
+          </div>
+
+          <p style="padding-top:20px;"></p>
+          <button type="button" id="buttonSettingsApply" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="sensorSettings" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div id="sensorSettingsIcon" class="dialogTitleIcon"></div><h3 class="dialogTitleText" id="sensorSettingsTitle">Sensor Settings</h3>
+          <div id="sensorGroupControls">
+          </div>
+          <div id="userSensorControls">
+            <label for="sensorFunc">Sensor function:</label>
+            <select id="sensorFuncSelect" data-mini="true" >
+              <option value="0">none</option>
+              <option value="5">room dimmer</option>
+              <option value="1">area 1 dimmer</option>
+              <option value="2">area 2 dimmer</option>
+              <option value="3">area 3 dimmer</option>
+              <option value="4">area 4 dimmer</option>
+              <option value="6">room dimmer including on/off</option>
+              <option value="10">area 1 dimmer including on/off</option>
+              <option value="11">area 2 dimmer including on/off</option>
+              <option value="12">area 3 dimmer including on/off</option>
+              <option value="13">area 4 dimmer including on/off</option>
+              <option value="15">custom</option>
+            </select>
+            <label for="sensorChannel">Sensor dimming channel:</label>
+            <select id="sensorChannelSelect" data-mini="true" >
+              <option value="0">default (brightness/position/intensity)</option>
+              <option value="2">color hue</option>
+              <option value="3">color saturation</option>
+              <option value="4">white color temperature</option>
+              <option value="192">vertical position</option>
+              <option value="193">horizontal position</option>
+              <option value="196">rotation</option>
+              <option value="9">shade angle outside</option>
+              <option value="10">shade angle inside</option>
+              <option value="12">airflow direction</option>
+              <option value="14">airflow flap position</option>
+              <option value="15">airflow louver position</option>
+            </select>
+          </div>
+
+          <p style="padding-top:20px;"></p>
+          <button type="button" id="sensorSettingsApply" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="removeDeviceConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Remove Device</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to remove this device?</h3>
+          <p>Note: This cannot be undone - to use the device again, depending on the device type you need to learn it in again or re-create it via the "+device" button.</p>
+          <button type="button" id="removeDeviceNowButton" data-theme="d">Yes, remove the device</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="vdcInfo" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div id="vdcInfoIcon" class="dialogTitleIcon"></div><h3 class="dialogTitleText" id="vdcInfoTitle">vdc Infomation</h3>
+          <div id="vdcInfoShow"></div>
+          <div class="techDetails">
+            <a onclick="show('#vdcTechDetails')">Technical details...</a>
+            <div id="vdcTechDetails" class="expanded" style="display:none">
+              <pre id="vdcP44Description" class="infovalue">[none]</pre>
+              <a id="vdcOpenPropsLink">open property tree view</a>
+            </div>
+          </div>
+          <div id="vdcInfoExtraControls"></div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="vdcScanChoices" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Scan for devices</h3>
+          <p>Note: scanning for devices might take several minutes depending on type of scan and current state of connected devices.</p>
+          <div id="vdcScanButtons"></div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="singleDevice" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div id="singleDeviceIcon"></div><h3 id="singleDeviceTitle">Single Device Actions, States, Properties</h3>
+          <div id="singleDeviceActions">
+            <label for="singleDevice_action">Standard action:</label>
+            <select name="singleDevice_action" onchange="refresh_action_deps();" id="singleDevice_action_select" data-mini="true" ></select>
+            <div id="singleDeviceActionParams"></div>
+            <button id="singleDevice_invoke_button" type="button" data-theme="d" data-mini="true" data-icon="forward">invoke action</button>
+          </div>
+          <div id="singleDeviceStates"></div>
+          <div id="singleDeviceProperties"></div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+
+
+      <div data-role="popup" data-overlay-theme="a" id="inputInfo" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <div id="inputInfoIcon" class="dialogTitleIcon"></div><h3 class="dialogTitleText" id="inputInfoTitle">Device Sensors and Inputs</h3>
+          <div id="inputList"></div>
+          <p style="padding-top:20px;"></p>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+
+
+
+
+      <div data-role="popup" data-overlay-theme="a" id="hueBridgeOptions" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Set hue bridge IP address (or complete API URL)</h3>
+          <p>
+            Note: this sets a fixed IP address or API URL to communicate with a hue bridge.
+            <span style="color:red">You still need to perform a learn-in to connect the bridge afterwards!</span>.
+            <br/>Leave the field empty to return to automatic search for hue bridges in the network.
+          </p>
+          <label for="hueBridgeAPI">IP address:</label>
+          <input type="text" autocomplete="off" name="hueBridgeLoc" id="hueBridgeLoc" value="" >
+          <button type="button" id="saveHueApiUrlButton" data-theme="c">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div data-role="page" id="system" data-theme="a">
+      <div data-role="header" data-position="fixed" data-fullscreen="false" data-tap-toggle="true">
+<div data-role="navbar" class="ui-state-persist"><ul>
+<li><a href="#lights">Lights/Outputs</a></li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#devices">Hardware</a></li>
+<li><a href="#system" class="ui-btn-active ui-state-persist">System</a></li>
+<li><a href="#title">About</a></li>
+</ul></div>
+</div>
+      <div data-role="content">
+        <div id="system_contents" data-role="content">
+          <h2>System</h2>
+          <p id="diyWarning" style="display:none"><b>Please note:</b> This installation has been created from a do-it-yourself image or package provided from plan44.ch to the maker community.
+          <br/>It is <em>not a commercial product</em> and is <em>not <b>eligible</b> for support or firmware updates</em> (it <i>occasionally</i> might get a firmware update, though).
+          <br/>It is meant as a experimental platform - if you want a supported product instead, <em>please buy one from plan44.ch</em>
+          <br/>If you want to support the opensource development of this device, please consider becoming <a target="_blank" href="https://github.com/sponsors/plan44">plan44 github sponsor</a></p>
+          <div class="ui-grid-a">
+            <div class="ui-block-a" id="systemInfo"></div>
+            <div class="ui-block-b">
+              <button type="button" id="restart" onclick="openDialog('#restartConfirm');" data-mini="true" data-inline="true" >Restart...</button>
+              <button type="button" id="shutdown" onclick="openDialog('#shutdownConfirm');" data-mini="true" data-inline="true" >Shutdown...</button>
+              <br/>
+              <button type="button" id="configbackup" onclick="system_backup_config();" data-mini="true" data-inline="true" >Download configuration backup</button>
+              <br/>
+              <button type="button" id="configrestore" onclick="openDialog('#configRestoreDialog')" data-mini="true" data-inline="true" >Restore config…</button>
+              <button type="button" id="factoryreset" onclick="openDialog('#factoryResetConfirm');" data-mini="true" data-inline="true" >Factory reset…</button>
+              <br/>
+              <button type="button" class="p44-longclickable" p44-handler="openNameEdit" id="nameeditbtn" data-mini="true" data-inline="true">Rename...</button>
+              <button type="button" onclick="openDialog('#pwdedit');" id="pweditbtn" data-mini="true" data-inline="true">Change Web access password…</button>
+            </div>
+            <div class="ui-block-a" id="clock"></div>
+            <div class="ui-block-b">
+              <button type="button" class="p44-longclickable" p44-handler="openTzLocationEdit" id="tzlocationeditbtn" data-mini="true" data-inline="true">Location and Timezone...</button>
+            </div>
+          </div>
+          <div class="ui-grid-a">
+            <div class="ui-block-b" id="bridge">
+              <h2>Script Development</h2>
+            </div>
+            <div class="ui-block-b">
+              <div class="buttonblock">
+                <button type="button" title="Show the p44script IDE in a separate tab or window" id="openP44ScriptIDEBtn" onclick="openScriptInIDE();" data-mini="true" data-inline="true" >Show p44script IDE…</button>
+                <button type="button" title="Edit the device's main script in the p44script IDE" id="openMainscriptBtn" onclick="openScriptInIDE('mainscript');" data-mini="true" data-inline="true" >Edit Mainscript…</button>
+                <button type="button" title="Show the p44script short reference documentation in a separate tab or window" id="openDocsBtn" onclick="openScriptRef();" data-mini="true" data-inline="true" >Docs…</button>
+                <button id="openLEDSimButton" type="button" title="Show the SmartLED simulator / debugger " id="openLEDSimBtn" onclick="openLEDSim();" data-mini="true" data-inline="true" >LED sim…</button>
+              </div>
+            </div>
+          </div>
+          <div class="ui-grid-a">
+            <div class="ui-block-b" id="bridge">
+              <h2>Matter Bridge (<span class="warningtext">beta!</span>)</h2>
+            </div>
+            <div class="ui-block-b">
+              <div class="buttonblock">
+                <button type="button" title="Show Matter bridge configuration" id="openBridgeInfo" onclick="openMatterBridgeConfig();" data-mini="true" data-inline="true" >Matter bridge…</button>
+              </div>
+            </div>
+          </div>
+          <h2>Network</h2>
+          <div class="ui-grid-a">
+            <div class="ui-block-b" id="ipconfig"></div>
+            <div class="ui-block-b">
+              <button type="button" class="p44-longclickable" p44-handler="openNetworkConfig" id="ipeditbtn" data-mini="true" data-inline="true">Edit network settings…</button>
+            </div>
+          </div>
+          <h2>Logs</h2>
+          <div id="vdcdlogs">
+            <h3>complete <a target="_blank" href="vdcd_current_log.txt">current</a> /
+            <a target="_blank" href="vdcd_previous_log.txt">previous</a> log -
+            last lines (<a href="javascript:refresh_vdcd_log();show('#logtext')">show/refresh</a>, <a href="javascript:toggleLogWrap();">toggle wrap</a>) -
+            <a title="statistics" href="javascript:set_vdcd_loglevel(8);show('#logtext')">stats</a> -
+            set loglevel
+            <a title="debug" href="javascript:set_vdcd_loglevel(7);">7</a>
+            <a title="detailed" href="javascript:set_vdcd_loglevel(6);">6</a>
+            <a title="standard" href="javascript:set_vdcd_loglevel(5);">5</a>
+            <a title="quiet" href="javascript:set_vdcd_loglevel(4);">4</a>
+            </h3>
+            <div id="logtext" style="display:none;">
+              <a title="hide log" href="javascript:hide('#logtext')">(hide)</a>
+              <pre id="vdcd_tail_log">...</pre>
+            </div>
+          </div>
+          <div id="p44mbrdlogs" display="none">
+            <h3>matter - complete <a target="_blank" href="p44mbrd_current_log.txt">current</a> /
+            <a target="_blank" href="p44mbrd_previous_log.txt">previous</a> log -
+            <a title="statistics" href="javascript:setBridgeLoglevel(8,undefined);">stats</a> -
+            set loglevel - for app:
+            <a title="debug" href="javascript:setBridgeLoglevel(7,undefined);">7</a>
+            <a title="detailed" href="javascript:setBridgeLoglevel(6,undefined);">6</a>
+            <a title="standard" href="javascript:setBridgeLoglevel(5,undefined);">5</a>
+            <a title="quiet" href="javascript:setBridgeLoglevel(4,0);">4</a> -
+            for chip:
+            <a title="detail" href="javascript:setBridgeLoglevel(undefined,3);">3</a>
+            <a title="progress" href="javascript:setBridgeLoglevel(undefined,2);">2</a>
+            <a title="error" href="javascript:setBridgeLoglevel(undefined,1);">1</a>
+            <a title="quiet" href="javascript:setBridgeLoglevel(undefined,0);">0</a>
+            </h3>
+            <pre id="vdcd_tail_log">...</pre>
+          </div>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="pwdedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Set new password</h3>
+          <label for="newPassword">Enter new password:</label>
+          <input type="password" name="newPassword" id="newPassword" value="" >
+          <label for="verifyPassword">Enter new password again:</label>
+          <input type="password" name="verifyPassword" id="verifyPassword" value="" >
+          <button type="button" onclick="setNewPassword();" data-theme="d" data-icon="check">Change Password</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="nameedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Rename the entire device</h3>
+          <label for="newBridgeName">New name:</label>
+          <input type="text" autocomplete="off" name="newBridgeName" id="newBridgeName" value="" >
+          <button type="button" onclick="setBridgeName();" id="bridgeNameApply" data-theme="c" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="tzlocationedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Location and Time Zone</h3>
+          <label for="timeZoneSelect">Time Zone:</label>
+          <select name="timeZoneSelect" id="timeZoneSelect" data-mini="true" >
+            <optgroup label="Europe">
+              <option value="Europe/Amsterdam">Amsterdam</option>
+              <option value="Europe/Andorra">Andorra</option>
+              <option value="Europe/Astrakhan">Astrakhan</option>
+              <option value="Europe/Athens">Athens</option>
+              <option value="Europe/Belgrade">Belgrade</option>
+              <option value="Europe/Berlin">Berlin</option>
+              <option value="Europe/Bratislava">Bratislava</option>
+              <option value="Europe/Brussels">Brussels</option>
+              <option value="Europe/Bucharest">Bucharest</option>
+              <option value="Europe/Budapest">Budapest</option>
+              <option value="Europe/Busingen">Busingen</option>
+              <option value="Europe/Chisinau">Chisinau</option>
+              <option value="Europe/Copenhagen">Copenhagen</option>
+              <option value="Europe/Dublin">Dublin</option>
+              <option value="Europe/Gibraltar">Gibraltar</option>
+              <option value="Europe/Guernsey">Guernsey</option>
+              <option value="Europe/Helsinki">Helsinki</option>
+              <option value="Europe/Isle of Man">Isle of Man</option>
+              <option value="Europe/Istanbul">Istanbul</option>
+              <option value="Europe/Jersey">Jersey</option>
+              <option value="Europe/Kaliningrad">Kaliningrad</option>
+              <option value="Europe/Kiev">Kiev</option>
+              <option value="Europe/Kirov">Kirov</option>
+              <option value="Europe/Lisbon">Lisbon</option>
+              <option value="Europe/Ljubljana">Ljubljana</option>
+              <option value="Europe/London">London</option>
+              <option value="Europe/Luxembourg">Luxembourg</option>
+              <option value="Europe/Madrid">Madrid</option>
+              <option value="Europe/Malta">Malta</option>
+              <option value="Europe/Mariehamn">Mariehamn</option>
+              <option value="Europe/Minsk">Minsk</option>
+              <option value="Europe/Monaco">Monaco</option>
+              <option value="Europe/Moscow">Moscow</option>
+              <option value="Europe/Oslo">Oslo</option>
+              <option value="Europe/Paris">Paris</option>
+              <option value="Europe/Podgorica">Podgorica</option>
+              <option value="Europe/Prague">Prague</option>
+              <option value="Europe/Riga">Riga</option>
+              <option value="Europe/Rome">Rome</option>
+              <option value="Europe/Samara">Samara</option>
+              <option value="Europe/San Marino">San Marino</option>
+              <option value="Europe/Sarajevo">Sarajevo</option>
+              <option value="Europe/Saratov">Saratov</option>
+              <option value="Europe/Simferopol">Simferopol</option>
+              <option value="Europe/Skopje">Skopje</option>
+              <option value="Europe/Sofia">Sofia</option>
+              <option value="Europe/Stockholm">Stockholm</option>
+              <option value="Europe/Tallinn">Tallinn</option>
+              <option value="Europe/Tirane">Tirane</option>
+              <option value="Europe/Ulyanovsk">Ulyanovsk</option>
+              <option value="Europe/Uzhgorod">Uzhgorod</option>
+              <option value="Europe/Vaduz">Vaduz</option>
+              <option value="Europe/Vatican">Vatican</option>
+              <option value="Europe/Vienna">Vienna</option>
+              <option value="Europe/Vilnius">Vilnius</option>
+              <option value="Europe/Volgograd">Volgograd</option>
+              <option value="Europe/Warsaw">Warsaw</option>
+              <option value="Europe/Zagreb">Zagreb</option>
+              <option value="Europe/Zaporozhye">Zaporozhye</option>
+              <option value="Europe/Zurich">Zürich</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option value="Africa/Abidjan">Abidjan</option>
+              <option value="Africa/Accra">Accra</option>
+              <option value="Africa/Addis Ababa">Addis Ababa</option>
+              <option value="Africa/Algiers">Algiers</option>
+              <option value="Africa/Asmara">Asmara</option>
+              <option value="Africa/Bamako">Bamako</option>
+              <option value="Africa/Bangui">Bangui</option>
+              <option value="Africa/Banjul">Banjul</option>
+              <option value="Africa/Bissau">Bissau</option>
+              <option value="Africa/Blantyre">Blantyre</option>
+              <option value="Africa/Brazzaville">Brazzaville</option>
+              <option value="Africa/Bujumbura">Bujumbura</option>
+              <option value="Africa/Cairo">Cairo</option>
+              <option value="Africa/Casablanca">Casablanca</option>
+              <option value="Africa/Ceuta">Ceuta</option>
+              <option value="Africa/Conakry">Conakry</option>
+              <option value="Africa/Dakar">Dakar</option>
+              <option value="Africa/Dar es Salaam">Dar es Salaam</option>
+              <option value="Africa/Djibouti">Djibouti</option>
+              <option value="Africa/Douala">Douala</option>
+              <option value="Africa/El Aaiun">El Aaiun</option>
+              <option value="Africa/Freetown">Freetown</option>
+              <option value="Africa/Gaborone">Gaborone</option>
+              <option value="Africa/Harare">Harare</option>
+              <option value="Africa/Johannesburg">Johannesburg</option>
+              <option value="Africa/Juba">Juba</option>
+              <option value="Africa/Kampala">Kampala</option>
+              <option value="Africa/Khartoum">Khartoum</option>
+              <option value="Africa/Kigali">Kigali</option>
+              <option value="Africa/Kinshasa">Kinshasa</option>
+              <option value="Africa/Lagos">Lagos</option>
+              <option value="Africa/Libreville">Libreville</option>
+              <option value="Africa/Lome">Lome</option>
+              <option value="Africa/Luanda">Luanda</option>
+              <option value="Africa/Lubumbashi">Lubumbashi</option>
+              <option value="Africa/Lusaka">Lusaka</option>
+              <option value="Africa/Malabo">Malabo</option>
+              <option value="Africa/Maputo">Maputo</option>
+              <option value="Africa/Maseru">Maseru</option>
+              <option value="Africa/Mbabane">Mbabane</option>
+              <option value="Africa/Mogadishu">Mogadishu</option>
+              <option value="Africa/Monrovia">Monrovia</option>
+              <option value="Africa/Nairobi">Nairobi</option>
+              <option value="Africa/Ndjamena">Ndjamena</option>
+              <option value="Africa/Niamey">Niamey</option>
+              <option value="Africa/Nouakchott">Nouakchott</option>
+              <option value="Africa/Ouagadougou">Ouagadougou</option>
+              <option value="Africa/Porto-Novo">Porto-Novo</option>
+              <option value="Africa/Sao Tome">Sao Tome</option>
+              <option value="Africa/Tripoli">Tripoli</option>
+              <option value="Africa/Tunis">Tunis</option>
+              <option value="Africa/Windhoek">Windhoek</option>
+            </optgroup>
+            <optgroup label="America">
+              <option value="America/Adak">Adak</option>
+              <option value="America/Anchorage">Anchorage</option>
+              <option value="America/Anguilla">Anguilla</option>
+              <option value="America/Antigua">Antigua</option>
+              <option value="America/Araguaina">Araguaina</option>
+              <option value="America/Argentina/Buenos Aires">Argentina/Buenos Aires</option>
+              <option value="America/Argentina/Catamarca">Argentina/Catamarca</option>
+              <option value="America/Argentina/Cordoba">Argentina/Cordoba</option>
+              <option value="America/Argentina/Jujuy">Argentina/Jujuy</option>
+              <option value="America/Argentina/La Rioja">Argentina/La Rioja</option>
+              <option value="America/Argentina/Mendoza">Argentina/Mendoza</option>
+              <option value="America/Argentina/Rio Gallegos">Argentina/Rio Gallegos</option>
+              <option value="America/Argentina/Salta">Argentina/Salta</option>
+              <option value="America/Argentina/San Juan">Argentina/San Juan</option>
+              <option value="America/Argentina/San Luis">Argentina/San Luis</option>
+              <option value="America/Argentina/Tucuman">Argentina/Tucuman</option>
+              <option value="America/Argentina/Ushuaia">Argentina/Ushuaia</option>
+              <option value="America/Aruba">Aruba</option>
+              <option value="America/Asuncion">Asuncion</option>
+              <option value="America/Atikokan">Atikokan</option>
+              <option value="America/Bahia">Bahia</option>
+              <option value="America/Bahia Banderas">Bahia Banderas</option>
+              <option value="America/Barbados">Barbados</option>
+              <option value="America/Belem">Belem</option>
+              <option value="America/Belize">Belize</option>
+              <option value="America/Blanc-Sablon">Blanc-Sablon</option>
+              <option value="America/Boa Vista">Boa Vista</option>
+              <option value="America/Bogota">Bogota</option>
+              <option value="America/Boise">Boise</option>
+              <option value="America/Cambridge Bay">Cambridge Bay</option>
+              <option value="America/Campo Grande">Campo Grande</option>
+              <option value="America/Cancun">Cancun</option>
+              <option value="America/Caracas">Caracas</option>
+              <option value="America/Cayenne">Cayenne</option>
+              <option value="America/Cayman">Cayman</option>
+              <option value="America/Chicago">Chicago</option>
+              <option value="America/Chihuahua">Chihuahua</option>
+              <option value="America/Costa Rica">Costa Rica</option>
+              <option value="America/Creston">Creston</option>
+              <option value="America/Cuiaba">Cuiaba</option>
+              <option value="America/Curacao">Curacao</option>
+              <option value="America/Danmarkshavn">Danmarkshavn</option>
+              <option value="America/Dawson">Dawson</option>
+              <option value="America/Dawson Creek">Dawson Creek</option>
+              <option value="America/Denver">Denver</option>
+              <option value="America/Detroit">Detroit</option>
+              <option value="America/Dominica">Dominica</option>
+              <option value="America/Edmonton">Edmonton</option>
+              <option value="America/Eirunepe">Eirunepe</option>
+              <option value="America/El Salvador">El Salvador</option>
+              <option value="America/Fort Nelson">Fort Nelson</option>
+              <option value="America/Fortaleza">Fortaleza</option>
+              <option value="America/Glace Bay">Glace Bay</option>
+              <option value="America/Godthab">Godthab</option>
+              <option value="America/Goose Bay">Goose Bay</option>
+              <option value="America/Grand Turk">Grand Turk</option>
+              <option value="America/Grenada">Grenada</option>
+              <option value="America/Guadeloupe">Guadeloupe</option>
+              <option value="America/Guatemala">Guatemala</option>
+              <option value="America/Guayaquil">Guayaquil</option>
+              <option value="America/Guyana">Guyana</option>
+              <option value="America/Halifax">Halifax</option>
+              <option value="America/Havana">Havana</option>
+              <option value="America/Hermosillo">Hermosillo</option>
+              <option value="America/Indiana/Indianapolis">Indiana/Indianapolis</option>
+              <option value="America/Indiana/Knox">Indiana/Knox</option>
+              <option value="America/Indiana/Marengo">Indiana/Marengo</option>
+              <option value="America/Indiana/Petersburg">Indiana/Petersburg</option>
+              <option value="America/Indiana/Tell City">Indiana/Tell City</option>
+              <option value="America/Indiana/Vevay">Indiana/Vevay</option>
+              <option value="America/Indiana/Vincennes">Indiana/Vincennes</option>
+              <option value="America/Indiana/Winamac">Indiana/Winamac</option>
+              <option value="America/Inuvik">Inuvik</option>
+              <option value="America/Iqaluit">Iqaluit</option>
+              <option value="America/Jamaica">Jamaica</option>
+              <option value="America/Juneau">Juneau</option>
+              <option value="America/Kentucky/Louisville">Kentucky/Louisville</option>
+              <option value="America/Kentucky/Monticello">Kentucky/Monticello</option>
+              <option value="America/Kralendijk">Kralendijk</option>
+              <option value="America/La Paz">La Paz</option>
+              <option value="America/Lima">Lima</option>
+              <option value="America/Los Angeles">Los Angeles</option>
+              <option value="America/Lower Princes">Lower Princes</option>
+              <option value="America/Maceio">Maceio</option>
+              <option value="America/Managua">Managua</option>
+              <option value="America/Manaus">Manaus</option>
+              <option value="America/Marigot">Marigot</option>
+              <option value="America/Martinique">Martinique</option>
+              <option value="America/Matamoros">Matamoros</option>
+              <option value="America/Mazatlan">Mazatlan</option>
+              <option value="America/Menominee">Menominee</option>
+              <option value="America/Merida">Merida</option>
+              <option value="America/Metlakatla">Metlakatla</option>
+              <option value="America/Mexico City">Mexico City</option>
+              <option value="America/Miquelon">Miquelon</option>
+              <option value="America/Moncton">Moncton</option>
+              <option value="America/Monterrey">Monterrey</option>
+              <option value="America/Montevideo">Montevideo</option>
+              <option value="America/Montserrat">Montserrat</option>
+              <option value="America/Nassau">Nassau</option>
+              <option value="America/New York">New York</option>
+              <option value="America/Nipigon">Nipigon</option>
+              <option value="America/Nome">Nome</option>
+              <option value="America/Noronha">Noronha</option>
+              <option value="America/North Dakota/Beulah">North Dakota/Beulah</option>
+              <option value="America/North Dakota/Center">North Dakota/Center</option>
+              <option value="America/North Dakota/New Salem">North Dakota/New Salem</option>
+              <option value="America/Ojinaga">Ojinaga</option>
+              <option value="America/Panama">Panama</option>
+              <option value="America/Pangnirtung">Pangnirtung</option>
+              <option value="America/Paramaribo">Paramaribo</option>
+              <option value="America/Phoenix">Phoenix</option>
+              <option value="America/Port of Spain">Port of Spain</option>
+              <option value="America/Port-au-Prince">Port-au-Prince</option>
+              <option value="America/Porto Velho">Porto Velho</option>
+              <option value="America/Puerto Rico">Puerto Rico</option>
+              <option value="America/Punta Arenas">Punta Arenas</option>
+              <option value="America/Rainy River">Rainy River</option>
+              <option value="America/Rankin Inlet">Rankin Inlet</option>
+              <option value="America/Recife">Recife</option>
+              <option value="America/Regina">Regina</option>
+              <option value="America/Resolute">Resolute</option>
+              <option value="America/Rio Branco">Rio Branco</option>
+              <option value="America/Santarem">Santarem</option>
+              <option value="America/Santiago">Santiago</option>
+              <option value="America/Santo Domingo">Santo Domingo</option>
+              <option value="America/Sao Paulo">Sao Paulo</option>
+              <option value="America/Scoresbysund">Scoresbysund</option>
+              <option value="America/Sitka">Sitka</option>
+              <option value="America/St Barthelemy">St Barthelemy</option>
+              <option value="America/St Johns">St Johns</option>
+              <option value="America/St Kitts">St Kitts</option>
+              <option value="America/St Lucia">St Lucia</option>
+              <option value="America/St Thomas">St Thomas</option>
+              <option value="America/St Vincent">St Vincent</option>
+              <option value="America/Swift Current">Swift Current</option>
+              <option value="America/Tegucigalpa">Tegucigalpa</option>
+              <option value="America/Thule">Thule</option>
+              <option value="America/Thunder Bay">Thunder Bay</option>
+              <option value="America/Tijuana">Tijuana</option>
+              <option value="America/Toronto">Toronto</option>
+              <option value="America/Tortola">Tortola</option>
+              <option value="America/Vancouver">Vancouver</option>
+              <option value="America/Whitehorse">Whitehorse</option>
+              <option value="America/Winnipeg">Winnipeg</option>
+              <option value="America/Yakutat">Yakutat</option>
+              <option value="America/Yellowknife">Yellowknife</option>
+            </optgroup>
+            <optgroup label="Asia">
+              <option value="Asia/Aden">Aden</option>
+              <option value="Asia/Almaty">Almaty</option>
+              <option value="Asia/Amman">Amman</option>
+              <option value="Asia/Anadyr">Anadyr</option>
+              <option value="Asia/Aqtau">Aqtau</option>
+              <option value="Asia/Aqtobe">Aqtobe</option>
+              <option value="Asia/Ashgabat">Ashgabat</option>
+              <option value="Asia/Atyrau">Atyrau</option>
+              <option value="Asia/Baghdad">Baghdad</option>
+              <option value="Asia/Bahrain">Bahrain</option>
+              <option value="Asia/Baku">Baku</option>
+              <option value="Asia/Bangkok">Bangkok</option>
+              <option value="Asia/Barnaul">Barnaul</option>
+              <option value="Asia/Beirut">Beirut</option>
+              <option value="Asia/Bishkek">Bishkek</option>
+              <option value="Asia/Brunei">Brunei</option>
+              <option value="Asia/Chita">Chita</option>
+              <option value="Asia/Choibalsan">Choibalsan</option>
+              <option value="Asia/Colombo">Colombo</option>
+              <option value="Asia/Damascus">Damascus</option>
+              <option value="Asia/Dhaka">Dhaka</option>
+              <option value="Asia/Dili">Dili</option>
+              <option value="Asia/Dubai">Dubai</option>
+              <option value="Asia/Dushanbe">Dushanbe</option>
+              <option value="Asia/Famagusta">Famagusta</option>
+              <option value="Asia/Gaza">Gaza</option>
+              <option value="Asia/Hebron">Hebron</option>
+              <option value="Asia/Ho Chi Minh">Ho Chi Minh</option>
+              <option value="Asia/Hong Kong">Hong Kong</option>
+              <option value="Asia/Hovd">Hovd</option>
+              <option value="Asia/Irkutsk">Irkutsk</option>
+              <option value="Asia/Jakarta">Jakarta</option>
+              <option value="Asia/Jayapura">Jayapura</option>
+              <option value="Asia/Jerusalem">Jerusalem</option>
+              <option value="Asia/Kabul">Kabul</option>
+              <option value="Asia/Kamchatka">Kamchatka</option>
+              <option value="Asia/Karachi">Karachi</option>
+              <option value="Asia/Kathmandu">Kathmandu</option>
+              <option value="Asia/Khandyga">Khandyga</option>
+              <option value="Asia/Kolkata">Kolkata</option>
+              <option value="Asia/Krasnoyarsk">Krasnoyarsk</option>
+              <option value="Asia/Kuala Lumpur">Kuala Lumpur</option>
+              <option value="Asia/Kuching">Kuching</option>
+              <option value="Asia/Kuwait">Kuwait</option>
+              <option value="Asia/Macau">Macau</option>
+              <option value="Asia/Magadan">Magadan</option>
+              <option value="Asia/Makassar">Makassar</option>
+              <option value="Asia/Manila">Manila</option>
+              <option value="Asia/Muscat">Muscat</option>
+              <option value="Asia/Nicosia">Nicosia</option>
+              <option value="Asia/Novokuznetsk">Novokuznetsk</option>
+              <option value="Asia/Novosibirsk">Novosibirsk</option>
+              <option value="Asia/Omsk">Omsk</option>
+              <option value="Asia/Oral">Oral</option>
+              <option value="Asia/Phnom Penh">Phnom Penh</option>
+              <option value="Asia/Pontianak">Pontianak</option>
+              <option value="Asia/Pyongyang">Pyongyang</option>
+              <option value="Asia/Qatar">Qatar</option>
+              <option value="Asia/Qostanay">Qostanay</option>
+              <option value="Asia/Qyzylorda">Qyzylorda</option>
+              <option value="Asia/Riyadh">Riyadh</option>
+              <option value="Asia/Sakhalin">Sakhalin</option>
+              <option value="Asia/Samarkand">Samarkand</option>
+              <option value="Asia/Seoul">Seoul</option>
+              <option value="Asia/Shanghai">Shanghai</option>
+              <option value="Asia/Singapore">Singapore</option>
+              <option value="Asia/Srednekolymsk">Srednekolymsk</option>
+              <option value="Asia/Taipei">Taipei</option>
+              <option value="Asia/Tashkent">Tashkent</option>
+              <option value="Asia/Tbilisi">Tbilisi</option>
+              <option value="Asia/Tehran">Tehran</option>
+              <option value="Asia/Thimphu">Thimphu</option>
+              <option value="Asia/Tokyo">Tokyo</option>
+              <option value="Asia/Tomsk">Tomsk</option>
+              <option value="Asia/Ulaanbaatar">Ulaanbaatar</option>
+              <option value="Asia/Urumqi">Urumqi</option>
+              <option value="Asia/Ust-Nera">Ust-Nera</option>
+              <option value="Asia/Vientiane">Vientiane</option>
+              <option value="Asia/Vladivostok">Vladivostok</option>
+              <option value="Asia/Yakutsk">Yakutsk</option>
+              <option value="Asia/Yangon">Yangon</option>
+              <option value="Asia/Yekaterinburg">Yekaterinburg</option>
+              <option value="Asia/Yerevan">Yerevan</option>
+            </optgroup>
+            <optgroup label="Atlantic">
+              <option value="Atlantic/Azores">Azores</option>
+              <option value="Atlantic/Bermuda">Bermuda</option>
+              <option value="Atlantic/Canary">Canary</option>
+              <option value="Atlantic/Cape Verde">Cape Verde</option>
+              <option value="Atlantic/Faroe">Faroe</option>
+              <option value="Atlantic/Madeira">Madeira</option>
+              <option value="Atlantic/Reykjavik">Reykjavik</option>
+              <option value="Atlantic/South Georgia">South Georgia</option>
+              <option value="Atlantic/St Helena">St Helena</option>
+              <option value="Atlantic/Stanley">Stanley</option>
+            </optgroup>
+            <optgroup label="Australia">
+              <option value="Australia/Adelaide">Australia/Adelaide</option>
+              <option value="Australia/Brisbane">Australia/Brisbane</option>
+              <option value="Australia/Broken Hill">Australia/Broken Hill</option>
+              <option value="Australia/Currie">Australia/Currie</option>
+              <option value="Australia/Darwin">Australia/Darwin</option>
+              <option value="Australia/Eucla">Australia/Eucla</option>
+              <option value="Australia/Hobart">Australia/Hobart</option>
+              <option value="Australia/Lindeman">Australia/Lindeman</option>
+              <option value="Australia/Lord Howe">Australia/Lord Howe</option>
+              <option value="Australia/Melbourne">Australia/Melbourne</option>
+              <option value="Australia/Perth">Australia/Perth</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+            </optgroup>
+            <optgroup label="Indian">
+              <option value="Indian/Antananarivo">Antananarivo</option>
+              <option value="Indian/Chagos">Chagos</option>
+              <option value="Indian/Christmas">Christmas</option>
+              <option value="Indian/Cocos">Cocos</option>
+              <option value="Indian/Comoro">Comoro</option>
+              <option value="Indian/Kerguelen">Kerguelen</option>
+              <option value="Indian/Mahe">Mahe</option>
+              <option value="Indian/Maldives">Maldives</option>
+              <option value="Indian/Mauritius">Mauritius</option>
+              <option value="Indian/Mayotte">Mayotte</option>
+              <option value="Indian/Reunion">Reunion</option>
+            </optgroup>
+            <optgroup label="Pacific">
+              <option value="Pacific/Apia">Apia</option>
+              <option value="Pacific/Auckland">Auckland</option>
+              <option value="Pacific/Bougainville">Bougainville</option>
+              <option value="Pacific/Chatham">Chatham</option>
+              <option value="Pacific/Chuuk">Chuuk</option>
+              <option value="Pacific/Easter">Easter</option>
+              <option value="Pacific/Efate">Efate</option>
+              <option value="Pacific/Enderbury">Enderbury</option>
+              <option value="Pacific/Fakaofo">Fakaofo</option>
+              <option value="Pacific/Fiji">Fiji</option>
+              <option value="Pacific/Funafuti">Funafuti</option>
+              <option value="Pacific/Galapagos">Galapagos</option>
+              <option value="Pacific/Gambier">Gambier</option>
+              <option value="Pacific/Guadalcanal">Guadalcanal</option>
+              <option value="Pacific/Guam">Guam</option>
+              <option value="Pacific/Honolulu">Honolulu</option>
+              <option value="Pacific/Kiritimati">Kiritimati</option>
+              <option value="Pacific/Kosrae">Kosrae</option>
+              <option value="Pacific/Kwajalein">Kwajalein</option>
+              <option value="Pacific/Majuro">Majuro</option>
+              <option value="Pacific/Marquesas">Marquesas</option>
+              <option value="Pacific/Midway">Midway</option>
+              <option value="Pacific/Nauru">Nauru</option>
+              <option value="Pacific/Niue">Niue</option>
+              <option value="Pacific/Norfolk">Norfolk</option>
+              <option value="Pacific/Noumea">Noumea</option>
+              <option value="Pacific/Pago Pago">Pago Pago</option>
+              <option value="Pacific/Palau">Palau</option>
+              <option value="Pacific/Pitcairn">Pitcairn</option>
+              <option value="Pacific/Pohnpei">Pohnpei</option>
+              <option value="Pacific/Port Moresby">Port Moresby</option>
+              <option value="Pacific/Rarotonga">Rarotonga</option>
+              <option value="Pacific/Saipan">Saipan</option>
+              <option value="Pacific/Tahiti">Tahiti</option>
+              <option value="Pacific/Tarawa">Tarawa</option>
+              <option value="Pacific/Tongatapu">Tongatapu</option>
+              <option value="Pacific/Wake">Wake</option>
+              <option value="Pacific/Wallis">Wallis</option>
+            </optgroup>
+            <optgroup label="Polar">
+              <option value="Antarctica/Casey">Casey</option>
+              <option value="Antarctica/Davis">Davis</option>
+              <option value="Antarctica/DumontDUrville">DumontDUrville</option>
+              <option value="Antarctica/Macquarie">Macquarie</option>
+              <option value="Antarctica/Mawson">Mawson</option>
+              <option value="Antarctica/McMurdo">McMurdo</option>
+              <option value="Antarctica/Palmer">Palmer</option>
+              <option value="Antarctica/Rothera">Rothera</option>
+              <option value="Antarctica/Syowa">Syowa</option>
+              <option value="Antarctica/Troll">Troll</option>
+              <option value="Antarctica/Vostok">Vostok</option>
+              <option value="Arctic/Longyearbyen">Longyearbyen</option>
+            </optgroup>
+          </select>
+          <label for="longitudeEdit">Longitude (degrees east of Greenwich):</label>
+          <input type="text" autocomplete="off" name="longitudeEdit" id="longitudeEdit" value="" >
+          <label for="latitudeEdit">Latitude (degrees north of equator):</label>
+          <input type="text" autocomplete="off" name="latitudeEdit" id="latitudeEdit" value="" >
+          <button type="button" onclick="setTzLocation();" id="tzLocationApply" data-theme="c" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="ipedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Network Settings</h3>
+          <label for="dhcp">DHCP:</label>
+          <select name="dhcp" id="dhcp" onchange="refresh_dhcp_deps();" data-role="slider">
+            <option value="0">Off</option>
+            <option value="1">On</option>
+          </select>
+          <label for="ipAddr">IP address:</label>
+          <input type="text" autocomplete="off" name="ipAddr" id="ipAddr" value="" placeholder="x.x.x.x" >
+          <label for="ipMask">Subnet mask:</label>
+          <input type="text" autocomplete="off" name="ipMask" id="ipMask" value="" placeholder="255.x.x.x" >
+          <label for="ipGW">Gateway:</label>
+          <input type="text" autocomplete="off" name="ipGW" id="ipGW" value="" placeholder="x.x.x.x" >
+          <label for="ipDNS1">DNS server 1:</label>
+          <input type="text" autocomplete="off" name="ipDNS1" id="ipDNS1" value="" placeholder="x.x.x.x" >
+          <label for="ipDNS2">DNS server 2:</label>
+          <input type="text" autocomplete="off" name="ipDNS2" id="ipDNS2" value="" placeholder="x.x.x.x" >
+          <label for="ipv6">IPv6:</label>
+          <select name="ipv6" id="ipv6" data-role="slider">
+            <option value="0">Off</option>
+            <option value="1">On</option>
+          </select>
+          <button type="button" onclick="applyIpSettings();" id="ipApply" data-theme="d" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="wifiedit" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>WiFi Settings</h3>
+
+          <label for="wifi_cli">Use Wifi to connect to LAN:</label>
+          <select name="wifi_cli" id="wifi_cli" onchange="refresh_wifimode_deps();" data-role="slider">
+            <option value="0">Off</option>
+            <option value="1">On</option>
+          </select>
+          <div id="cli_params" style="display:none">
+            <label for="cli_ssid">SSID:</label>
+            <input type="text" autocomplete="off" name="cli_ssid" id="cli_ssid" value="" placeholder="Wifi name to connect to" >
+            <label for="cli_sec">Security:</label>
+            <select name="cli_sec" id="cli_sec" data-mini="true">
+              <option value="none">none</option>
+              <option value="psk2">PSK2</option>
+            </select>
+            <label for="cli_key">Password:</label>
+            <input type="text" autocomplete="off" name="cli_key" id="cli_key" value="">
+          </div>
+
+          <label for="wifi_ap">Create Wifi Access Point:</label>
+          <select name="wifi_ap" id="wifi_ap" onchange="refresh_wifimode_deps();" data-role="slider">
+            <option value="0">Off</option>
+            <option value="1">On</option>
+          </select>
+          <div id="ap_params" style="display:none">
+            <label for="ap_ssid">Access Point SSID:</label>
+            <input type="text" autocomplete="off" name="ap_ssid" id="ap_ssid" value="" placeholder="Access point SSID" >
+            <label for="ap_sec">Access Point Security:</label>
+            <select name="ap_sec" id="ap_sec" data-mini="true">
+              <option value="none">none</option>
+              <option value="psk2">PSK2</option>
+            </select>
+            <label for="ap_key">Access Point Password:</label>
+            <input type="text" autocomplete="off" name="ap_key" id="ap_key" value="" placeholder="password, min 8 chars">
+          </div>
+
+          <p>Note: changing WiFi settings might cause loosing network connection if currently connected through WiFi. If you cannot reach the device afterwards, connect via ethernet cable and re-adjust Wifi settings.</p>
+          <button type="button" onclick="applyWifiSettings();" id="wifiApply" data-theme="d" data-icon="check">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="matterBridgeConfig" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Matter Bridge</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <p><b>Please note:</b> <span class="warningtext">the matter bridge is currently in beta, and is not yet certified. Use it on your own risk</span> and please be aware that once a certified version gets released, you very likely need to reset and re-commission the bridge with your controller(s).</p>
+          <div id="matterBridgeInfo"></div>
+          <div id="matterBridgeButtons">
+            <button type="button" title="Restart the matter bridge component in this device" onclick="restartMatterBridge(1);" data-icon="recycle">Restart Matter Bridge</button>
+            <button type="button" title="Reset matter bridge - deletes all commissioning information" onclick="openDialog('#matterBridgeResetConfirm');" data-theme="d" data-icon="alert">Reset Matter Bridge...</button>
+            <button type="button" title="Disable matter bridge functionality in this device" onclick="openDialog('#matterBridgeDisableConfirm');" data-theme="d" data-icon="power">Disable Matter Bridge...</button>
+          </div>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="matterBridgeEnable" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Enable Matter Bridge</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to enable matter bridge functionality?</h3>
+          <p>The (beta) matter bridge functionality in this devices is currently not enabled.</p>
+          <p>Using the button below, you can enable  matter bridge functionality in this device. Doing so just makes the device <i>ready</i> for possibly using
+          matter, but otherwise does not change anything. After restart, you can re-open this dialog which will then offer options for commissioning this device with
+          a matter-enabled smarthome ecosystem.</p>
+          <p><b>Please note:</b> <span class="warningtext">the matter bridge is currently in beta, and is not yet certified. Use it on your own risk</span></p>
+          <button type="button" onclick="enableMatterBridge(true);" data-theme="d" data-icon="power">Yes, enable matter bridge and restart device now</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">No, cancel</button>
+        </div>
+      </div>
+
+
+
+      <div data-role="popup" data-overlay-theme="a" id="matterBridgeResetConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Reset Matter bridge</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to reset the matter bridge?</h3>
+          <p>This <b>deletes all commissioning data</b>, which means the bridge will no longer be on the fabrics it was previously commissioned into (not "paired" any more). To re-connect, you need to <b>delete the bridge</b> from the controlling smart home system(s) first <b>and then</b> re-start adding the bridge and its devices. This might involve re-assinging names, rooms etc. on the smart home system side.</p>
+          <button type="button" onclick="restartMatterBridge(42);" data-icon="alert" data-theme="d">Yes, reset the bridge</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">No, cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="matterBridgeDisableConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Disable Matter bridge</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you really want to disable the matter bridge?</h3>
+          <p>Disabling the matter bridge will <b>remove all matter connectivity, and make this device unavailable in all smart home systems it
+          has been commissioned into</b> so far.</p>
+          <p>Commissioning data however will not be deleted, so when matter functionality is re-enabled later,
+          matter connectivity will be restored (but note that long unused commissioning information may eventually time out).</p>
+          <button type="button" onclick="enableMatterBridge(false);" data-icon="alert" data-theme="d">Yes, disable the matter bridge and restart device now</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">No, cancel</button>
+        </div>
+      </div>
+
+
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="neteditWait" class="ui-content">
+        <h3>Applying network settings - please wait</h3>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="restartWait" class="ui-content">
+        <h3>Restarting system - please wait...</h3>
+        <p>Page will reload automatically</p>
+        <div id="restartWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="restartConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Restart</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to restart?</h3>
+          <p>Note: Depending on the number of devices connected, after restart it can take up to a few minutues until all devices are accessible again</p>
+          <button type="button" id="restartNow" onclick="system_restart();" data-theme="d">Restart</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="shutdownConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Shut down</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Do you want to shut down the device?</h3>
+          <p><span class="warning">Warning: The device will not start again automatically</span>, it needs to be powered off and on again to restart!</p>
+          <p>Note: shutdown is recommended before powering off the device to make sure all settings are properly saved before power is removed.</p>
+          <button type="button" id="shutdownNow" onclick="system_shutdown();" data-theme="d">Shutdown</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="shutdownInfo" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Shutting down</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">The device will shut down now</h3>
+          <p style="color:red; font-weight:bold">Please wait at least one minute before removing power.</p>
+          <p>After powering up again, you need to reload this website in the browser.</p>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="ipRestartAsk" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>network settings changed</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">System must be restarted to apply network settings changes</h3>
+          <button type="button" onclick="closeDialog();" >Later</button>
+          <button type="button" id="ipRestart" onclick="restartAfterIPChange();" data-theme="c">Restart now</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="factoryResetConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Factory Reset</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restores settings to factory defaults</h3>
+          <p><b><span class="warningtext">Warning: You will loose all device and scene configuration and all paired devices</span> (unless you have a backup)!</b></p>
+          <p style="font-weight:bold">Usually, factory reset should only be used when initializing a device for a new installation, or when configuration data is broken such that the device does not function properly any more.</p>
+          <button type="button" onclick="system_factoryreset(1);" id="factoryResetData" data-theme="d">Factory reset except network settings</button>
+          <button type="button" onclick="system_factoryreset(3);" id="factoryResetAll" data-theme="d">Factory reset including network settings</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+      <div data-role="popup" data-overlay-theme="a" id="configRestoreDialog" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Restore from backup</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restore settings from backup file</h3>
+          <label for="configArchiveFile">Select backup file to restore:</label>
+          <input type="file" id="configArchiveFile" name="configbackupfile" accept=".tgz,.p44cfg"/>
+          <button type="button" id="configRestoreStart" onclick="system_restore_config();" data-inline="false" data-theme="d">Restore...</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" id="configRestoreConfirm" class="ui-corner-all dialogbox">
+        <div data-role="header" class="ui-corner-top">
+          <h1>Restoring config</h1>
+        </div>
+        <div data-role="content" class="ui-corner-bottom ui-content">
+          <h3 class="ui-title">Restores settings to factory defaults</h3>
+          <p id="restoreDeviceInfo"></p>
+          <ul id="restoreCompatWarnings"></ul>
+          <p><b>Warning: <span class="warningtext">Current configuration data will be overwritten</span> with data from backup</b> (except for password)!</p>
+          <button type="button" onclick="system_restore_apply(1);" id="configRestoreData" data-theme="d">Restore config but not network settings</button>
+          <button type="button" onclick="system_restore_apply(3);" id="configRestoreAll" data-theme="d">Restore config including network settings</button>
+          <button type="button" onclick="system_restore_apply(0);" id="configRestoreCancel" >Cancel</button>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="restoreConfigWait" class="ui-content" >
+        <h3>Restoring config and restarting system - please wait...</h3>
+        <p>Page will reload automatically.</p>
+        <div id="restoreConfigWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+      <div data-role="popup" data-overlay-theme="a" data-dismissible="false" id="factoryResetWait" class="ui-content">
+        <h3>Resetting to factory defaults and restarting system - please wait...</h3>
+        <p>Page will reload automatically.</p>
+        <p>Note: If you have reset network settings, device may re-start with a different IP address</p>
+        <div id="factoryResetWaitProgress" class="p44_progressbar">
+          <div class="p44_progressbar_text">-</div>
+          <div class="p44_progressbar_gauge"></div>
+        </div>
+      </div>
+
+
+
+    </div>
+
+
+  </body>
+
+</html>

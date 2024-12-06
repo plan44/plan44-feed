@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>LED View Debugger</title>
+
+  <link rel="stylesheet" href="/css/dbg.css" />
+
+  <style type="text/css" media="screen">
+
+    #setup {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #pixelpanel {
+      background-color: #222222;
+    }
+
+    #pixels {
+      padding: 8px;
+      flex: 0 1 auto;
+      overflow: scroll;
+      background-color: #222222;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start safe;
+      /* max-height: 80vh; */
+    }
+    .row {
+      flex: 3 0 auto;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: row;
+      justify-content: center safe;
+    }
+    .pix {
+      flex: 10 0 auto;
+      margin: 1px;
+      padding: 0;
+      aspect-ratio: 1 / 1;
+      min-width: 5px;
+      min-height: 5px;
+    }
+
+    #status {
+      flex: 10 3 30vh;
+    }
+
+    #config {
+      flex: 0 0 40px;
+      /* min-height: 60px; */
+    }
+
+    .contextmarker {
+      background: #00ff5933;
+      position: absolute;
+      width: 100% !important;
+      left: 0 !important;
+    }
+    .errormarker {
+      background: #ff00007d;
+      position: absolute;
+      width: 100% !important;
+      left: 0 !important;
+    }
+
+  </style>
+
+</head>
+
+<body class="main background">
+
+  <div id="setup" class="section controls">
+    <div class="bar">
+      <div class="baritem">
+        <select id="view_selector" onchange="view_selected();" title="Select the view to show" class="icontxt i-dropdown">
+        </select>
+      </div>
+      <div class="baritem">
+        <div class="label">Size x/y:</div>
+        <input id="dx" type="number" value="40" onblur="update(gUpdatingPaused)" placeholder="x size"/>
+        <input id="dy" type="number" value="10" onblur="update(gUpdatingPaused)" placeholder="y size"/>
+        <button onclick="autosize()" title="Resize LED display area from view dimensions" class="icontxt i-resize">auto</button>
+      </div>
+      <div class="baritem">
+        <div class="label">Origin x/y:</div>
+        <input id="x" type="number" value="0" onblur="update(gUpdatingPaused)" placeholder="origin x"/>
+        <input id="y" type="number" value="0" onblur="update(gUpdatingPaused)" placeholder="origin y"/>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="baritem">
+        <button onclick="updating_pause(true)" title="[F8] Pause View updating" class="icon i-pause">&nbsp;</button>
+        <button onclick="updating_pause(false)" title="[F8] Resume View updating" class="icon i-play">&nbsp;</button>
+        <button onclick="update(true)" title="[F6] Update View once" class="icon i-step">&nbsp;</button>
+      </div>
+      <div class="baritem">
+        <div class="label">Refresh [mS]</div>
+        <input id="rate" type="number" value="100" min="50" onblur="update(gUpdatingPaused)" placeholder="refresh interval in mS"/>
+      </div>
+      <div class="baritem">
+        <div class="label">Max pixel size</div>
+        <input id="maxpx" type="number" value="25" min="5" max="42" onblur="update(gUpdatingPaused)" placeholder="max pixel size"/>
+      </div>
+    </div>
+  </div>
+
+  <div id="panels" class="panel-container-vertical section">
+
+    <div id="pixelpanel" class="section resizable" style="transition: all;">
+      <div id="pixels"></div>
+    </div>
+
+    <div id="h_splitter" class="splitter-horizontal" style="touch-action: none;"></div>
+
+    <div id="statuspanel" class="section panel-bottom resizable" style="transition: all;">
+      <div id="status"></div>
+    </div>
+
+  </div>
+
+  <div id="config" class="section controls">
+    <div class="bar">
+      <div class="baritem">
+        <button onclick="configure()" title="[F9] configure current view with selected text or text typed after green context bar" class="icon i-execute">&nbsp;</button>
+        <button onclick="update_status()" title="[F5] Refresh status and view hierarchy" class="icon i-reload">&nbsp;</button>
+        <button onclick="clear_status()" title="[Cmd/Ctrl-K] Clear status area, keep current line or selected text" class="icon i-clear">&nbsp;</button>
+        <button onclick="togglefold()" title="[Shift-F2] Collapse/Expand Status JSON" class="icon i-levels">&nbsp;</button>
+      </div>
+      <div class="baritem expand">&nbsp;</div>
+      <div class="baritem">
+        <button onclick="togglejson()" title="[F4] Show/Hide JSON view status area" class="icon i-panel_b">&nbsp;</button>
+        <button onclick="openLrgRef()" title="[F1] Help" class="icon i-docs">&nbsp;</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+<script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/jquery-resizable.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/p44api.js"></script>
+<script src="/js/dbg.js"></script>
+<script src="/js/shortcuts.js"></script>
+
+<script>
+
+
+function setup_globalshortcuts()
+{
+  shortcut.add("command+K", function(event) {
+    clear_status()
+    return true
+  })
+  shortcut.add("F1", function(event) {
+    openLrgRef()
+    return true
+  })
+  // F2 is folding in ace
+  shortcut.add("shift+F2", function(event) {
+    togglefold()
+    return true
+  })
+  shortcut.add("F4", function(event) {
+    togglejson()
+    return true
+  })
+  shortcut.add("F5", function(event) {
+    update_status(true)
+    return true
+  })
+  shortcut.add("F6", function(event) {
+    update(true)
+    return true
+  })
+  shortcut.add("F8", function(event) {
+    updating_pause(!gUpdatingPaused)
+    return true
+  })
+  shortcut.add("F9", function(event) {
+    configure()
+    return true
+  })
+}
+
+
+function setup_globalevents()
+{
+  // whenever the window gets focus, load the list (there could be new scripts added)
+  window.addEventListener("focus", function(event) {
+    update_view_hierarchy()
+  })
+}
+
+
+function setup_panels()
+{
+  // jquery-resizable setup
+  $("#pixelpanel").resizable({
+    handleSelector: ".splitter-horizontal",
+    resizeWidth: false,
+  });
+}
+
+
+var statusview
+
+var gStatusMarker = null
+
+function setup_status()
+{
+  // ace setup
+  statusview = ace.edit("status")
+  statusview.setTheme("ace/theme/tomorrow_night")
+  statusview.setOptions({
+    showPrintMargin: false,
+    readOnly: false,
+    useSoftTabs: true,
+    enableBasicAutocompletion: false,
+    enableLiveAutocompletion: false,
+    enableSnippets: false,
+  })
+  var session = ace.createEditSession("", "ace/mode/json")
+  session.setOptions({
+    tabSize: 2,
+    newLineMode: "unix",
+    useWorker: false,  // no syntax checking
+  })
+  statusview.setSession(session)
+  statusview.renderer.setOptions({
+    showGutter: true,
+    scrollPastEnd: 0.25,
+    showPrintMargin: false,
+    showLineNumbers: false,
+  })
+  statusview.commands.bindKeys({
+    "Return": function() { configure() },
+    "F9": function() { configure() }
+  });
+}
+
+
+var lrgRefWindow = undefined;
+
+function openLrgRef()
+{
+  // TODO: separate LRG ref
+  if (!lrgRefWindow || lrgRefWindow.closed) {
+    lrgRefWindow = window.open('/script_ref.html', 'p44script-reference');
+  }
+  else {
+    lrgRefWindow.focus();
+  }
+}
+
+
+function togglejson(show)
+{
+  togglePanel('#status', '#pixelpanel', show)
+}
+
+
+var gFolded = false
+
+function togglefold(fold)
+{
+  if (fold!==undefined) {
+    gFolded = fold
+  }
+  else {
+    gFolded = !gFolded
+  }
+  if (gFolded) {
+    statusview.execCommand("foldToLevel1")
+  }
+  else {
+    statusview.execCommand("unfoldall")
+  }
+}
+
+
+var dynstyle;
+
+var updateTimeout = false
+
+var gParamsUpdating = false
+
+var gUpdatingPaused = false;
+
+
+function updating_pause(pause)
+{
+  gUpdatingPaused = pause;
+  update()
+}
+
+
+function update(once)
+{
+  clearTimeout(updateTimeout)
+  if (gParamsUpdating || (gUpdatingPaused && !once)) return;
+
+  var viewid = $('#view_selector').val()
+  var x = parseInt($('#x').val()) || 0
+  var y = parseInt($('#y').val()) || 0
+  var dx = parseInt($('#dx').val()) || 40
+  var dy = parseInt($('#dy').val()) || 10
+  var sz = parseInt($('#sz').val()) || 15
+  var rate = parseInt($('#rate').val()) || 50
+  var sz = parseInt($('#maxpx').val()) || 25
+
+  // set pixel style
+  dynstyle.innerHTML = '.dpix { max-width:' + sz + 'px; max-height:' + sz + 'px; }';
+
+  mg44token().done(function () {
+    var url = constructUri('' + '/api/json/leddata');
+    var jsonquery = {
+      x:x, y:y, dx:dx, dy:dy, view:viewid
+    }
+    var jdata = JSON.stringify(jsonquery);
+    var xhr = $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'text', // we expect text string
+      timeout: 1000, // no point in waiting longer
+      data: jdata,
+      xhrFields: {
+        withCredentials: true
+      }
+    }).done(function(pixdata) {
+      // show the pixels
+      var pixhtml = ''
+      for(var oy = dy-1; oy>=0; oy--) {
+        pixhtml += '<div class="row">'
+        for(var ox = 0; ox<dx; ox++) {
+          var offs = (oy*dx+ox)*6
+          pixhtml += '<div class="pix dpix" style="background-color:#' + pixdata.substring(offs,offs+6) + '"></div>'
+        }
+        pixhtml += '</div>'
+      }
+      $('#pixels').html(pixhtml)
+      // reschedule
+      if (rate>=50 && !once) {
+        updateTimeout = setTimeout(update, rate)
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.log("led data error: " + textStatus);
+    })
+  })
+}
+
+
+function get_status(viewid)
+{
+  var dfd = $.Deferred();
+  var call = { status: true }
+  if (viewid) call.view = viewid
+  mg44Call(
+    '/api/json/leddata',
+    call,
+    1000
+  ).done(function(answer) {
+    // start with contents of this view
+    dfd.resolve(answer.result)
+  })
+  return dfd.promise();
+}
+
+
+function add_view_opts(sel, view, prefix, indent, currentsel)
+{
+  // add this view
+  var opt = document.createElement("option")
+  opt.value = view.id
+  opt.innerHTML = '&nbsp;'.repeat(indent) + prefix + escapehtml(view.label) + " (" + escapehtml(view.type) + ")"
+  if (currentsel==view.id) opt.selected = true
+  sel.append(opt)
+  // check for subviews
+  for (var i=0; view.layers && i<view.layers.length; i++) add_view_opts(sel, view.layers[i], prefix, indent+2, currentsel)
+  // check for scrolled views
+  if (view.scrolledview) add_view_opts(sel, view.scrolledview, prefix, indent+2, currentsel)
+  // check for steps
+  for (var i=0; view.steps && i<view.steps.length; i++) add_view_opts(sel, view.steps[i].view, prefix, indent+2, currentsel)
+}
+
+
+function update_view_selector(status)
+{
+  gParamsUpdating = true;
+  var sel = $('#view_selector')
+  var currentsel = sel.val()
+  sel.empty()
+  add_view_opts(sel, status, '', 0, currentsel)
+  gParamsUpdating = false;
+}
+
+
+function update_view_hierarchy()
+{
+  get_status().done(function(status) {
+    update_view_selector(status)
+  })
+}
+
+
+function status_clearmarker()
+{
+  if (gStatusMarker) statusview.getSession().removeMarker(gStatusMarker)
+  gStatusMarker = null
+}
+
+
+function status_print(text, marker, nolf)
+{
+  var session = statusview.getSession()
+  var row =  session.getLength()
+  session.insert({
+    row: row,
+    column: 0
+  }, text + (nolf ? "" : "\n"))
+  if (marker) {
+    // new marker
+    status_clearmarker()
+    require(["ace/range"], function(range) {
+      gStatusMarker = session.addMarker(new range.Range(row-1, 0, row-1, 2000), marker, "line")
+    })
+  }
+  statusview.scrollToLine(session.getLength(), true, true)
+}
+
+
+function status_prompt()
+{
+  var title = $('#view_selector>option:selected').text().trim();
+  status_print("/* Context: " + title + " */", 'contextmarker')
+  statusview.focus()
+}
+
+
+function update_status()
+{
+  var dfd = $.Deferred();
+  get_status($('#view_selector').val()).done(function(status) {
+    // update view hierarchy
+    update_view_hierarchy()
+    // add status of currently selected view
+    var title = $('#view_selector>option:selected').text().trim();
+    status_print("")
+    status_print("/* view status of: " + title + " */")
+    status_print(JSON.stringify(status, null, 2))
+    status_print("")
+    status_prompt()
+    togglefold(gFolded) // also fold/unfold new content
+    dfd.resolve()
+  })
+  return dfd.promise();
+}
+
+
+function clear_status()
+{
+  // salvage started input or selected text
+  var inp = getinput(statusview, gStatusMarker, true, true)
+  status_clearmarker()
+  statusview.getSession().setValue("")
+  status_prompt()
+  if (inp && inp.text) status_print(inp.text, false, true)
+}
+
+
+function view_selected()
+{
+  clearTimeout(updateTimeout)
+  update_status().done(function() {
+    update(gUpdatingPaused);
+  })
+}
+
+
+function update_frame(rect)
+{
+  gParamsUpdating = true;
+  $('#x').val(rect.x).change()
+  $('#y').val(rect.y).change()
+  $('#dx').val(rect.dx).change()
+  $('#dy').val(rect.dy).change()
+  gParamsUpdating = false;
+}
+
+
+function autosize()
+{
+  $('#pixelpanel').css('height', 'auto') // release from fixed height set by js-resizable
+  clearTimeout(updateTimeout)
+  get_status($('#view_selector').val()).done(function(status) {
+    if (status.dx>0 && status.dy>0) {
+      // user rootview frame for display
+      update_frame(status)
+      view_selected()
+    }
+  })
+}
+
+
+function looseJsonParse(obj) {
+  return eval?.(`"use strict";(${obj})`);
+}
+
+function configure()
+{
+  var inp = getinput(statusview, gStatusMarker, true, false)
+  if (inp) {
+    if (!inp.atend) {
+      // echo command at end first
+      status_print(inp.text)
+    }
+    if (inp.text && inp.text.length>0) {
+      // something to configure
+      var jsontext = inp.text.trim()
+      if (jsontext.substring(jsontext.length-1)==',') {
+        // strip trailing comma
+        jsontext = jsontext.substring(0, jsontext.length-1)
+      }
+      if (jsontext.substring(0,1)!='{') {
+        // auto-add braces
+        jsontext = '{' + jsontext + '}'
+      }
+      try {
+        //var cfgjson = JSON.parse(jsontext)
+        var cfgjson = looseJsonParse(jsontext)
+      }
+      catch (e) {
+        status_print("/* JSON error: " + e, 'errormarker')
+      }
+      if (cfgjson) {
+        var viewid = $('#view_selector').val()
+        var call = { configure: cfgjson }
+        if (viewid) call.view = viewid
+        alertError(mg44Call(
+          '/api/json/leddata',
+          call,
+          1000
+        ).done(function(answer) {
+          console.log(answer)
+          view_selected()
+        }))
+      }
+    }
+  }
+}
+
+
+function inital_params()
+{
+  var dfd = $.Deferred();
+  get_status().done(function(status) {
+    update_view_selector(status)
+    // query covered area
+    mg44Call(
+      '/api/json/leddata',
+      { cover: true },
+      1000
+    ).done(function(answer) {
+      if (answer.result.dx>0 && answer.result.dy>0) {
+        // use cover for display frame
+        update_frame(answer.result)
+      }
+      else if (status.dx>0 && status.dy>0) {
+        // user rootview frame for display
+        update_frame(status)
+      }
+      dfd.resolve()
+    })
+  })
+  return dfd.promise();
+}
+
+
+$(document).ready(function() {
+
+  // create style
+  dynstyle = document.createElement('style');
+  dynstyle.type = 'text/css';
+  document.getElementsByTagName('head')[0].appendChild(dynstyle);
+
+  setup_status()
+  setup_globalshortcuts()
+  setup_panels()
+
+  // query covered area
+  inital_params().done(function() {
+    view_selected()
+  })
+})
+
+
+</script>
+
+</html>

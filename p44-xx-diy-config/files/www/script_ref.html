@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>p44script short reference</title>
+
+  <link rel="stylesheet" href="css/devicedocs.css">
+
+  
+
+  
+  
+
+  
+
+  <script>
+
+    var techDocsWindow = undefined
+    var lasturl = undefined
+
+    function openTechDocs(url)
+    {
+      if (!techDocsWindow || !lasturl || techDocsWindow.closed || url!=lasturl) {
+        lasturl = url
+        techDocsWindow = window.open(url, 'p44-techdocs')
+      }
+      else {
+        techDocsWindow.focus()
+      }
+    }
+
+  </script>
+
+</head>
+
+<body>
+
+  <h1>p44script short reference</h1>
+
+  <p><strong>Note:</strong> This short reference is built into your P44 device and is available offline without internet connection. For more technical documentation about p44script and advanced configuration, see the on-line technical documentation site instead.
+  It is available <a href="javascript:openTechDocs('https://plan44.ch/p44-techdocs/de/script_ref/');">in German</a> and <a href="javascript:openTechDocs('https://plan44.ch/p44-techdocs/en/script_ref/');">in English</a>.</p>
+
+  <hr/>
+
+  <ul>
+  
+      <li><a href="#about-p44script">About p44script</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#comments">Comments</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#literals">Literals</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#named-values">Named Values</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#operators">Operators</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#variables">Variables</a></li>
+      <ul>
+      
+          <li><a href="#local-variables">Local Variables</a></li>
+      
+          <li><a href="#global-variables">Global Variables</a></li>
+      
+          <li><a href="#assigning-values-to-variables">Assigning Values to Variables</a></li>
+      
+          <li><a href="#deleting-variables">Deleting Variables</a></li>
+      
+      </ul>
+  
+      <li><a href="#multiple-script-statements">Multiple Script Statements</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#control-flow">Control Flow</a></li>
+      <ul>
+      
+          <li><a href="#conditionals">Conditionals</a></li>
+      
+          <li><a href="#loops">Loops</a></li>
+      
+          <li><a href="#return">Return</a></li>
+      
+          <li><a href="#catching-errors">Catching Errors</a></li>
+      
+      </ul>
+  
+      <li><a href="#user-defined-functions">User Defined Functions</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#event-handlers">(Event) Handlers</a></li>
+      <ul>
+      
+          <li><a href="#handling-timed-events">Handling Timed Events</a></li>
+      
+          <li><a href="#handling-value-changes-via-event-sources">Handling Value Changes via Event Sources</a></li>
+      
+      </ul>
+  
+      <li><a href="#concurrency-threads">Concurrency (Threads)</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#built-in-functions">Built-in Functions</a></li>
+      <ul>
+      
+          <li><a href="#general-calculation-functions">General Calculation Functions</a></li>
+      
+          <li><a href="#functions-for-timed-triggering">Functions for Timed Triggering</a></li>
+      
+          <li><a href="#script-programming-functions">Script Programming Functions</a></li>
+      
+          <li><a href="#introspection-insight-into-variables-functions-handlers-threads">Introspection - insight into variables, functions, handlers, threads</a></li>
+      
+      </ul>
+  
+      <li><a href="#controlling-deviceproduct-specific-subsystems">Controlling Device/Product Specific Subsystems</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#p44-lc-functions-for-use-in-trigger-actions-or-global-scripts">P44-LC: Functions for Use in Trigger Actions or Global Scripts</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#p44-dsbp44-lc-access-to-devices-and-api">P44-DSB/P44-LC: Access to Devices and API</a></li>
+      <ul>
+      
+          <li><a href="#device-level">Device Level</a></li>
+      
+          <li><a href="#global-level">Global Level</a></li>
+      
+      </ul>
+  
+      <li><a href="#led-chains-p44-low-resolution-graphics-p44lrgraphics-access">LED Chains: p44 Low Resolution Graphics (p44lrgraphics) Access</a></li>
+      <ul>
+      
+          <li><a href="#functions-for-configuring-led-arrangement">Functions for configuring LED arrangement</a></li>
+      
+          <li><a href="#installing-views">Installing Views</a></li>
+      
+          <li><a href="#view-methods">View Methods</a></li>
+      
+      </ul>
+  
+      <li><a href="#animators">Animators</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#digital-io-signals-and-indicators">Digital I/O (Signals and Indicators)</a></li>
+      <ul>
+      
+          <li><a href="#functions-for-digital-inputsoutputs">Functions for Digital Inputs/Outputs</a></li>
+      
+          <li><a href="#functions-for-digital-bus">Functions for Digital Bus</a></li>
+      
+          <li><a href="#functions-for-indicators">Functions for Indicators</a></li>
+      
+      </ul>
+  
+      <li><a href="#analog-io">Analog I/O</a></li>
+      <ul>
+      
+          <li><a href="#functions-for-analog-inputsoutputs">Functions for Analog Inputs/Outputs</a></li>
+      
+      </ul>
+  
+      <li><a href="#low-level-i2c-access">Low-Level i2c Access</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#low-level-spi-access">Low-Level SPI Access</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#serial-interfaces">Serial interfaces</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#midi">MIDI</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#modbus">Modbus</a></li>
+      <ul>
+      
+          <li><a href="#creating-modbus-instances">Creating Modbus Instances</a></li>
+      
+          <li><a href="#functions-common-to-both-modbus-master-and-slave">Functions Common to Both Modbus Master and Slave</a></li>
+      
+          <li><a href="#functions-for-modbus-master">Functions for Modbus Master</a></li>
+      
+          <li><a href="#functions-for-modbus-slave">Functions for Modbus Slave</a></li>
+      
+      </ul>
+  
+      <li><a href="#dc-motors">DC Motors</a></li>
+      <ul>
+      
+      </ul>
+  
+      <li><a href="#p44features-specific-functionalityhardware-support">P44features - Specific Functionality/Hardware Support</a></li>
+      <ul>
+      
+      </ul>
+  
+  </ul>
+
+  <hr/>
+
+  
+    <h2 id="about-p44script">About p44script</h2>
+<p>p44script is a specialized script language embedded entirely in your P44 device, including a <a href="ide.html" target="p44script-IDE">full-featured integrated development environment (p44script IDE)</a> and this short reference.
+It has zero external dependencies and runs completely self-contained without internet access.</p>
+<p>p44script has been designed to easily create reliable automations for lights, sensors, moving elements and much more in the context of a smart home installation, or as completely independent controllers.
+p44script automations can run for years unattended, but can be easily maintained whenever a change is needed - no external tools required except for a web browser. Scripts written are part of the P44 device's configuration, are backed up with it and can easily be restored to another device in case of a hardware replacememt.</p>
+<p>p44script in general has a syntax similar to Javascript or C, but comes with a set of features tailored for automation tasks which are unique and distinct from what Javascript offers. In particular, <em>concurrent</em> in-line execution and <em>on()</em>-handlers are powerful tools specific to p44script.</p>
+<p>This page is not a tutorial - please visit the <strong><a href="https://plan44.ch/p44-techdocs" target="p44-techdocs">on-line docs</a></strong> and the <strong><a href="https://forum.plan44.ch" target="p44-forum">plan44 user forum</a></strong> for additional material.</p>
+<hr />
+<h2 id="comments">Comments</h2>
+<p>Comments are useful to add notes to source code explaining the code or important context to a human reader of the script or expression. Comments are ignored by the script engine, like empty lines and whitespace.</p>
+<dl>
+<dt><code>/* comment */</code></dt>
+<dd>C-style comment, starts with <code>/*</code> and continues, possibly over multiple lines, until a <code>*/</code> is found</dd>
+<dt><code>// comment</code></dt>
+<dd>C++-style single line comment, starts with <code>//</code> and ends at the end of the same line</dd>
+</dl>
+<h2 id="literals"><a id="literals"></a>Literals</h2>
+<p>There are different ways to type numbers, text strings and some special values:</p>
+<dl>
+<dt><code>1234</code></dt>
+<dd>integer number, in decimal</dd>
+<dt><code>0x89ab</code></dt>
+<dd>integer number in hexadecimal.</dd>
+<dt><code>1234.567</code></dt>
+<dd>floating point number.</dd>
+<dt><code>true</code> <em>or</em> <code>yes</code></dt>
+<dd>boolean true, numeric value is 1.</dd>
+<dt><code>false</code> <em>or</em> <code>no</code></dt>
+<dd>boolan false, numeric value is 0.</dd>
+<dt><code>null</code> <em>or</em> <code>undefined</code></dt>
+<dd>no value. Note that p44script has <em>annotated null values</em>, which means that in many cases, null/undefined also carries a short text describing its origin. This useful to debug as it helps understanding <em>why</em> a value is null/undefined. You can create annotated null values using the <code>null()</code> function.</dd>
+<dt><code>12:30</code></dt>
+<dd>time specification in hours and minutes. Numeric value is number of seconds since midnight.</dd>
+<dt><code>13:30:22</code></dt>
+<dd>time specification in hours, minutes and seconds. Numeric value is number of seconds since midnight.</dd>
+<dt><code>2.9.</code></dt>
+<dd>date specification in <em>day.month.</em> (period at end is important!) format. Example means 2nd of September. Numeric value is number of days from beginning of current year.</dd>
+<dt><code>2.Sep</code></dt>
+<dd>date specification in <em>day.monthname</em> (no period at end!). Monthnames are <em>jan</em>, <em>feb</em>, <em>mar</em>, <em>apr</em>, <em>may</em>, <em>jun</em>, <em>jul</em>, <em>aug</em>, <em>sep</em>, <em>oct</em>, <em>nov</em>, <em>dec</em>. Numeric value is number of days from the beginning of the current year.</dd>
+<dt><code>wed</code></dt>
+<dd>weekday specification. Weekday names are <em>sun</em>, <em>mon</em>, <em>tue</em>, <em>wed</em>, <em>thu</em>, <em>fri</em>, <em>sat</em>. Numeric value is 0 for sunday, 1..6 for monday..saturday.</dd>
+<dt><code>'text'</code></dt>
+<dd>String literal, use two single quotes in succession to include single quote.</dd>
+<dt><code>"text"</code></dt>
+<dd>String literal with C-like escapes (<code>\n</code>, <code>\r</code>, <code>\t</code>, <code>\xHH</code> and <code>\\</code> can be used).</dd>
+<dt><code>{ 'field1':42, 'field2':'hello' } // strict JSON</code></dt>
+<dt><code>{ field1:42, field2:'hello' } // JavaScript style, field names do not need quotes</code></dt>
+<dd>objects with named fields.</dd>
+<dt><code>[ 42, 43, 'hello' ]</code></dt>
+<dd>array.</dd>
+</dl>
+<h2 id="named-values"><a id="namedvals"></a>Named Values</h2>
+<p>In expressions, named values (for example sensor values in evaluator conditions, or variables in scripts, see <a href="#variables">below</a>) can be used. Simple values just consist of a name, but there are also structured values that can be accessed using dot and subscript notation, for example JSON data or objects/arrays.</p>
+<dl>
+<dt><code>sensor1</code></dt>
+<dd>the value of a sensor named <em>sensor1</em>.</dd>
+<dt><code>sensor1.age</code></dt>
+<dd>the time in seconds since the sensor named <em>sensor1</em> has been updated from hardware.</dd>
+<dt><code>sensor1.valid</code></dt>
+<dd>true if the sensor named <em>sensor1</em> has an actual valid value (a sensor that went into timeout or has never received data from hardware since the last restart does not have a value).</dd>
+<dt><code>sensor1.oplevel</code></dt>
+<dd>a value between 0 and 100 indicating the "operation level" of the sensor. 0 means out of order, 100 means optimal conditions, values between indicate non-optimal conditions such as poor radio reception or low battery level. If no information is available, a null value is returned.</dd>
+<dt><code>object.fieldA</code></dt>
+<dd>the subfield named <em>fieldA</em> in an <em>object</em>. So with <em>object={ 'fieldA':42, 'fieldB':'hello' }</em>, the result would be 42.</dd>
+<dt><code>array[1]</code></dt>
+<dd>the array element at the numeric index <em>1</em> in an array <em>array</em>. The index is zero-based, so if array=[ 42, 'world' ], the result would be 'world'.</dd>
+<dt><code>object['fieldB']</code></dt>
+<dd>the subfield named <em>fieldB</em> in a object <em>object</em>. So with <em>object={ 'fieldA':42, 'fieldB':'hello' }</em>, the result would be 'hello'.</dd>
+<dt><code>object[0]</code></dt>
+<dd>the <strong>name</strong> of the first (index==0) subfield in a <em>object</em>. So with <em>object={ 'fieldA':42, 'fieldB':'hello' }</em>, the result would be 'fieldA'. This is how objects containing fields with unknown names (for example as returned by APIs) can be examined. The <em>elements()</em> function can be used to determine the number of fields in an object. Another way to go though all fields of an object is the <code>foreach</code> statement, see below.</dd>
+</dl>
+<h2 id="operators"><a id="operators"></a>Operators</h2>
+<p>Operators are used to build <em>expressions</em> (calculations) from literals and named values (variables):</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Precedence</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>!</code></td>
+<td>6 (highest)</td>
+<td>logical NOT</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>5</td>
+<td>multiplication</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>5</td>
+<td>division</td>
+</tr>
+<tr>
+<td><code>%</code></td>
+<td>5</td>
+<td>modulo (remainder)</td>
+</tr>
+<tr>
+<td><code>+</code></td>
+<td>4</td>
+<td>numeric addition, string concatenation if left hand expression is of type string, array concatenation if both expressions are arrays, object fields merging if both expressions are objects.</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>4</td>
+<td>subtraction</td>
+</tr>
+<tr>
+<td><code>==</code></td>
+<td>3</td>
+<td>test for equal</td>
+</tr>
+<tr>
+<td><code>=</code></td>
+<td>3</td>
+<td>test for equal (depending on context, = can also be an assignment, use == to avoid ambiguousness)</td>
+</tr>
+<tr>
+<td><code>!=</code> <em>or</em> <code>&lt;&gt;</code></td>
+<td>3</td>
+<td>test for not equal</td>
+</tr>
+<tr>
+<td><code>&lt;</code></td>
+<td>3</td>
+<td>test for less than</td>
+</tr>
+<tr>
+<td><code>&gt;</code></td>
+<td>3</td>
+<td>test for greater than</td>
+</tr>
+<tr>
+<td><code>&lt;=</code></td>
+<td>3</td>
+<td>test for less than or equal</td>
+</tr>
+<tr>
+<td><code>&gt;=</code></td>
+<td>3</td>
+<td>test for greater than or equal</td>
+</tr>
+<tr>
+<td><code>&amp;</code> <em>or</em> <code>&amp;&amp;</code></td>
+<td>2</td>
+<td>logical AND</td>
+</tr>
+<tr>
+<td><code>|</code> <em>or</em> <code>||</code></td>
+<td>1</td>
+<td>logical OR</td>
+</tr>
+<tr>
+<td><code>:=</code></td>
+<td>0 (lowest)</td>
+<td>assignment</td>
+</tr>
+<tr>
+<td><code>=</code></td>
+<td>0 (lowest)</td>
+<td>assignment (depending on context, = can also be a test for equal, use := to avoid ambiguousness)</td>
+</tr>
+<tr>
+<td><code>++</code></td>
+<td>0 (lowest)</td>
+<td>increments the variable on the left side (<code>a++</code> is equivalent to the assignment <code>a = a+1</code>)</td>
+</tr>
+<tr>
+<td><code>--</code></td>
+<td>0 (lowest)</td>
+<td>decrements the variable on the left side (<code>a--</code> is equivalent to the assignment <code>a = a-1</code>)</td>
+</tr>
+<tr>
+<td><code>+=</code></td>
+<td>0 (lowest)</td>
+<td>add to the variable on the left side (<code>a += 2</code> is equivalent to the assignment <code>a = a+2</code>)</td>
+</tr>
+<tr>
+<td><code>-=</code></td>
+<td>0 (lowest)</td>
+<td>subtract from the variable on the left side (<code>a -= 2</code> is equivalent to the assignment <code>a = a-2</code>)</td>
+</tr>
+<tr>
+<td><code>*=</code></td>
+<td>0 (lowest)</td>
+<td>multiply the variable on the left side (<code>a *= 2</code> is equivalent to the assignment <code>a = a*2</code>)</td>
+</tr>
+<tr>
+<td><code>/=</code></td>
+<td>0 (lowest)</td>
+<td>multiply the variable on the left side (<code>a /= 2</code> is equivalent to the assignment <code>a = a/2</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Note that p44script does not have bitwise and/or operators, but instead provides the <em>bit()</em>, <em>setbit()</em> and <em>flipbit()</em> <a href="#genfuncs">functions</a> which provide bit(field) manipulation in a more intuitive way.</p>
+<h2 id="variables">Variables</h2>
+<h3 id="local-variables"><a id="localvars"></a>Local Variables</h3>
+<p>Local variables represent values that are local and private to a <em>context</em> where the script runs in. For example, in a P44-DSB or LC device, all <em>scene scripts</em> of a fixture run in a <em>script context</em> of that fixture, i.e. the scene scripts among themselves see the same local variables, but other fixtures or other devices do not have access to them (and therefore can use their own variables with the same name without conflicts).
+Variables defined in a user function are private/local to that function. Variables defined with <em>threadvar</em> are even local to a single execution run (thread), even when the same code is run multiple times in parallel.</p>
+<dl>
+<dt><code>var a</code></dt>
+<dd>creates a <em>scriptcontext</em> local or function local (if used in a function) variable <em>a</em> (initially set to <em>undefined</em>. If <em>a</em> already exists, nothing happens.</dd>
+<dt><code>var a = 7</code></dt>
+<dd>Definition of a <em>scriptcontext</em> local or function local variable <em>a</em> and assignment of an initial value. If the variable already exists, this is like a normal assignment.</dd>
+<dt><code>threadvar t</code></dt>
+<dt><code>threadvar t = 7</code></dt>
+<dd>Definition of a <em>thread</em>-local variable <em>t</em> (and assignment of an initial value if necessary). Unlike <code>var</code>, this variable has a private value for each running <em>execution thread</em> (i.e. execution of an <code>on(...) {...}</code> or <code>catch {...}</code> handler, of which there might be more than one in parallel).</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Automatically created thread variables</p>
+<p>Thread variables are also created automatically by <code>on(...) as var {...}</code>, <code>concurrent passing var {...}</code> or  <code>catch as var {...}</code>, since the value may be different for each (possibly parallel) run of such code.
+(Whereas <code>concurrent as var</code> does <em>not</em> create a thread variable, but one in the context of the script that executes <code>concurrent</code>).</p>
+</div>
+<h3 id="global-variables"><a id="globalvars"></a>Global Variables</h3>
+<p>Global variables are values that can be written and read from <em>any</em> script in a P44 device under a common name.</p>
+<div class="admonition warning">
+<p class="admonition-title">Visibility of global variables</p>
+<p>As global variables are visible from all scripts, it is recommended to use unique names that do not happen to occur by accident elsewhere as well. In general, global variables should be used sparingly and only when <a href="#localvars"><em>local</em> variables</a> are not sufficient.</p>
+</div>
+<dl>
+<dt><code>glob g</code></dt>
+<dt><code>global g</code></dt>
+<dd>declaration of global variable <em>g</em>. <em>Declaration</em> means that the name <em>g</em> is made known to all scripts in the device. Values assigned to <em>g</em> by one script will get accessible by all scripts. A global variable's value remains intact as long as the device runs (unless it is explicitly removed via <em>unset</em>, see below).</dd>
+<dt><code>glob g default 78/9</code></dt>
+<dd>declaration of global variable <em>g</em> and initialisation with a default value, when the variable does not yet exist.</dd>
+<dd>Note that the initialisation expression can only consist of constants or other global variables that are already defined.</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Initialisation occurs once and before execution</p>
+<p>Initialisation of global variables occurs <strong>only once</strong>, usually <strong>long before the script actually runs</strong>, when the script is first parsed by the p44script engine (at device startup or when a script is changed).</p>
+<p>This can be confusing because when the script actually runs, all global variables are already initialized when the first script line executes, even if the initializer was written in the middle of the text. Furthermore, when multiple scripts try to initialize the same global variable with different values, only the first one encountered will actually set a default value.</p>
+<p>To avoid confusion, it is good practice to put global variable declarations at the top of scripts, and use <code>default</code> initializers only when really needed. Note that in earlier versions of p44script, it was possible to use <code>=</code> or <code>:=</code> for assigning a default, which even more looked like a regular assignment - that's why that syntax is no longer supported.</p>
+</div>
+<h3 id="assigning-values-to-variables">Assigning Values to Variables</h3>
+<dl>
+<dt><code>a := 3*4</code></dt>
+<dd>Assignment of an expression's result to <em>a</em>.</dd>
+<dt><code>a = 3*4</code></dt>
+<dd>single equal sign is also treated as assignment.</dd>
+<dt><code>let a = 3*4</code></dt>
+<dd><em>let</em> can be used to more clearly show this is an assignment (but is completely optional).</dd>
+<dt><code>obj = {}</code></dt>
+<dd>create an empty object</dd>
+<dt><code>obj.c = 7+8</code></dt>
+<dd>assign the expression's result to a field named <em>c</em> of the <em>object</em> variable <em>obj</em>. If the field <em>c</em> does not exist in <em>obj</em>, it will be created. Otherwise the former value of the field <em>c</em> will be replaced by the result of the expression.</dd>
+<dt><code>arr = []</code></dt>
+<dd>create an empty array</dd>
+<dt><code>arr[] = 6</code></dt>
+<dd>append the new element <em>6</em> to the array <em>arr</em></dd>
+<dt><code>arr[2] = 7</code></dt>
+<dd>assign <em>7</em> as the 3rd (not the 2nd, array indices are zero based!) element of the array <em>arr</em></dd>
+<dt><div class="highlight"><pre><span></span><code>obj = {
+  a: 42, b:&#39;a string&#39;, c:[ 1, 2, a*2], d: { n:1, sin:sin(a), [&quot;a_is_&quot;+a)]:13 }
+}
+</code></pre></div></dt>
+<dd>complex object/array structures can be created and multiple fields assigned expressions in a single statement. Even field names can be created from expressions by enclosing them in square brackets (see last field in the example).</dd>
+</dl>
+<h3 id="deleting-variables">Deleting Variables</h3>
+<dl>
+<dt><code>unset b</code></dt>
+<dd>removal of a (local or global) variable named <em>b</em>.</dd>
+<dt><code>unset a.b</code></dt>
+<dt><code>unset a['b']</code></dt>
+<dd>removal of field <em>b</em> from object variable named <em>a</em>.</dd>
+<dt><code>unset c[2]</code></dt>
+<dd>removal of element with index <em>2</em> (= third element) from an array named <em>c</em>.</dd>
+</dl>
+<h2 id="multiple-script-statements">Multiple Script Statements</h2>
+<dl>
+<dt><code>a = 7; b = 3; c = a*b;</code></dt>
+<dd>multiple statements can be written on a single line separated by semicolons.</dd>
+<dt><code>{ a = 42; b = 23; scene(_'bright'_); }</code></dt>
+<dd>block (group) of multiple statements</dd>
+</dl>
+<h2 id="control-flow">Control Flow</h2>
+<h3 id="conditionals">Conditionals</h3>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) b := 7
+</code></pre></div></dt>
+<dd>conditional execution of the assignment <em>b:=7</em> when <em>a</em> is greater than zero.</dd>
+<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) b := 7 else b := 19
+</code></pre></div></dt>
+<dd>conditional execution of the assignment <em>b:=7</em> with <em>else</em> statement which is executed when condition is not true.</dd>
+<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) { b := 7; c := 44 } else { b := 0; c := &quot;a string&quot; }
+</code></pre></div></dt>
+<dd>conditional with statement blocks.</dd>
+</dl>
+<h3 id="loops">Loops</h3>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>while (i&gt;0) { i := i-1; log(5, &quot;i is now: &quot; + i); }
+</code></pre></div></dt>
+<dd>repeat (loop) statement block as long as <em>i</em> is greater than zero.</dd>
+<dt><div class="highlight"><pre><span></span><code>for (var j:=0; j&lt;5; j++) { log(5, &quot;j is now: &quot; + j); }
+</code></pre></div></dt>
+<dd>first initializes the loop with creating <em>j</em> and setting it to <em>0</em> then repeats the (loop) statement block as long as <em>j</em> is less than 5, and increments <em>j</em> at the end of every iteration (<em>j++</em>).</dd>
+<dt><div class="highlight"><pre><span></span><code>break
+</code></pre></div></dt>
+<dd>exits a <em>while</em>, <em>for</em> or <em>foreach</em> loop.</dd>
+<dt><div class="highlight"><pre><span></span><code>continue
+</code></pre></div></dt>
+<dd>starts the next iteration in a <em>while</em>, <em>for</em> or <em>foreach</em> loop.</dd>
+<dt><div class="highlight"><pre><span></span><code>foreach objectOrArray as value { do_something_with_value }
+foreach objectOrArray as key,value { do_something_with_key_and_value }
+</code></pre></div></dt>
+<dd>iterates through each field (when <em>objectOrArray</em> is an object) or each array element (when <em>objectOrArray</em> is an array) and assigns <em>value</em> and optionally <em>key</em> accordingly.</dd>
+</dl>
+<h3 id="return">Return</h3>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>return
+</code></pre></div></dt>
+<dd>ends the current script or user defined function with <em>null/undefined</em> return value.</dd>
+<dt><div class="highlight"><pre><span></span><code>return value
+</code></pre></div></dt>
+<dd>ends the current script returning <em>value</em>.</dd>
+</dl>
+<h3 id="catching-errors">Catching Errors</h3>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>try { statements; } catch { handling_statements }
+</code></pre></div></dt>
+<dd>if any of <em>statements</em> generate a run time error, the <em>handling_statements</em> will be executed.</dd>
+<dt><div class="highlight"><pre><span></span><code>try { statements; } catch as error_var { handling_statements }
+</code></pre></div></dt>
+<dd>if any of <em>statements</em> generate a run time error, the <em>handling_statements</em> will be executed and can use <em>error_var</em> to examine the error.</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title"><em>return</em> is considered successful even if it returns an error</p>
+<p>A <em>return</em> statement does not itself generate an error, even if it returns an error. I.e.
+<code>try { return error('error') } catch as e { ... }</code> will not catch the 'error' with <code>catch</code>, but return it to the calling function.</p>
+</div>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>throw(anything)
+</code></pre></div></dt>
+<dd>generate a run time error with <em>anything</em> as error message. If <em>anything</em> is already an error value, the error value is re-thrown as-is.</dd>
+</dl>
+<h2 id="user-defined-functions"><a id="userfuncs"></a>User Defined Functions</h2>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>function hello()
+{
+  log(&#39;Hello World&#39;);
+}
+</code></pre></div></dt>
+<dd>Defines a globally available function named <em>hello</em> which logs the text 'hello world'.</dd>
+<dt><div class="highlight"><pre><span></span><code>global function sum(a,b)
+{
+  var c = a+b
+  return c
+}
+</code></pre></div></dt>
+<dd>Defines a globally available function named <em>sum</em> with two arguments, which calculates and returns the sum in a local variable <em>c</em> (which exists privately for the function only during its execution). The <em>global</em> prefix is optional, but helps for clarity when <em>local</em> functions are in use as well (see below)</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Visibility of variables in functions</p>
+<p>In functions, the variables defined locally with <code>var</code>, the variables of the context from which the function is called (see <a href="#localvars">local variables</a>) and finally the global variables are visible. If a variable defined in the function has the same name as one of the calling context or a global variable, then the most local variable is used in expressions and assignments.</p>
+</div>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>local function diff(a,b)
+{
+  var c = a-b
+  return c
+}
+</code></pre></div></dt>
+<dd>Declares a function that is only visible/callable in the current context (such as: mainscript, device, trigger). This can be useful to avoid a function with no general use (e.g. one that is specific to a certain scripted device implementation) to be globally visible from other context, where calling it makes no sense or even would cause harm.</dd>
+</dl>
+<h2 id="event-handlers"><a id="handlers"></a>(Event) Handlers</h2>
+<p>A <em>handler</em> is a special construct provided by p44Script to easily react to asynchronous events of all kinds, such as the change of a sensor value, a keystroke, a web access, the termination of a <em>thread</em>, the reaching of a certain time of day or the expiration of an interval, and many more.</p>
+<p>Basically, <em>handlers</em> are like functions that are automatically called when a certain condition is met (rather than getting called from other script code).</p>
+<p><em>Handlers</em> make implementing asychronous tasks - which are very common in automation, but are not so easy to implement in many standard scripting languages - quite straightforward and easy to understand.</p>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>var s = udpsocket(&quot;127.0.0.1&quot;, 4242, true, true);
+on (s.message()) as msg
+{
+  log(&#39;Message on UDP port 4242: &#39;+string(msg))
+}
+</code></pre></div></dt>
+<dd>This first creates and opens a network <em>socket</em> listening for UDP packets on port 4242, and then defines a handler which triggers whenever a UDP packet arrives. (To send a UDP test packet on a unix command line, for example type: <code>echo -n "Test" | socat stdin "udp-sendto:127.0.0.1:4242"</code>)</dd>
+</dl>
+<h3 id="handling-timed-events">Handling Timed Events</h3>
+<p>Combined with <a href="#timedtriggers">functions for timed triggering</a>, <em>handlers</em> can perform tasks based on time:</p>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>on (after_time(12:00))
+{
+  log(&#39;noon has passed &#39; + string(timeofday()-12:00) + &#39; seconds ago&#39;)
+}
+</code></pre></div></dt>
+<dd>Defines a <em>event handler</em> (piece of code that is executed when a specified condition is met).</dd>
+<dd>This handler is triggered by local time passing noon (12:00) and logs the number of seconds actually passed since noon - because when this handler is installed any time after 12:00, it will be run once immediately.</dd>
+<dd>By default, handlers are run when the trigger condition changes from false to true (but not when it changes from true to false).</dd>
+<dt><div class="highlight"><pre><span></span><code>on (every(0:15, 0))
+{
+  log(&#39;another quarter of an hour has passed&#39;);
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that is run every whole quarter of an hour.</dd>
+</dl>
+<h3 id="handling-value-changes-via-event-sources"><a id="eventsource_handlers"></a>Handling Value Changes via <em>Event Sources</em></h3>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>on (sensor1&gt;20) toggling
+{
+  log(&#39;sensor1 is &#39; + sensor1);
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers whenever the condition <em>toggles from false to true or vice versa</em>.
+  Note that <em>sensor1</em> must be a <em>event source</em> for this to work. Contexts that have hardware inputs such as sensors
+usually make these available as event sources (e.g. in P44-DSB Evaluators). For example, <em>valuesource()</em> or <em>device.sensor()</em> are event sources.</dd>
+<dt><div class="highlight"><pre><span></span><code>on (sensor2) changing
+{
+  log(&#39;sensor2 is &#39; + sensor2)
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers whenever condition expressions <em>re-evaluates to a different result as in the last evaluation</em>.</dd>
+<dt><div class="highlight"><pre><span></span><code>on (sensor2) evaluating
+{
+  log(&#39;sensor2 is &#39; + sensor2)
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers whenever the condition expression <em>is evaluated, even if the result does not change</em>.
+  Note: use this with care, depending on the <em>event sources</em> involved this can cause the handler to be run very often, which might cause performance problems.</dd>
+<dt><div class="highlight"><pre><span></span><code>on (sensor1+sensor2) changing as sensorsum
+{
+  log(&#39;sensor1+sensor2 is &#39; + sensorsum)
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers whenever the sum of <em>sensor1+sensor2</em> changes.
+  The <em>as sensorsum</em> part stores the result of the trigger expression into the variable <em>sensorsum</em>.</dd>
+<dt><div class="highlight"><pre><span></span><code>on (sensor1&gt;22) stable 0:05 as sens
+{
+  log(&#39;sensor1: stable for 5 minutes at &gt; 22, currently: &#39; + sens)
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers when <em>sensor1</em> remains over 22 for at least 5 minutes.</dd>
+<dt><div class="highlight"><pre><span></span><code>on (featureevent()) as event
+{
+  log(&#39;received event &#39; + event)
+}
+</code></pre></div></dt>
+<dd>Defines a event handler that triggers whenever <em>featureevent()</em> triggers and stores the event in the variable <em>event</em>.</dd>
+<dd>Note that for event sources that deliver one-time events like <em>featureevent()</em> does, storing the actual trigger value in a variable using <em>as</em> is important.</dd>
+<dt><div class="highlight"><pre><span></span><code>var midi = midibus(&#39;/dev/midi1&#39;)
+on (midi.control(0,42)) stable 0.1 as knob42 {
+  log(&#39;Control #42: %d&#39;, knob42.value)
+}
+</code></pre></div></dt>
+<dd>Defines an event handler that responds to changes to <a href="#midi">MIDI</a> controller #42 on channel 0.</dd>
+<dd>For handlers that are triggered by event sources (like <code>control()</code> is one), <em>stable</em> has a slightly different meaning: In contrast to states - such as "a sensor value is greater than x" - events are unique and by definition not "stable", so <em>stable</em> defines the minimum time interval between two activations of the handler. If the events occur more quickly, they are discarded, except for the last one occurring. In the MIDI example shown, <code>stable 0.1</code> means that the control changes do not trigger the handler more than once every tenth of a second.</dd>
+</dl>
+<div class="admonition danger">
+<p class="admonition-title">Warning</p>
+<p>As powerful as the <em>handlers</em> are, it is also possible to construct trigger conditions that lead to very frequent execution of the handler and thus potentially blocking or degrading the device's normal operation.</p>
+</div>
+<h2 id="concurrency-threads">Concurrency (Threads)</h2>
+<p>p44script has a very convenient construct for creating concurrently running sequences of operations,
+something that is often needed in automation. A concurrently running sequence of script statements is also called a <em>thread</em>
+Note that event handlers as shown above also evaluate and run concurrently with other script activity.</p>
+<dl>
+<dt><div class="highlight"><pre><span></span><code>concurrent {
+  while(true) { log(&#39;blink1&#39;); delay(3) }
+}
+concurrent {
+  while(true) { log(&#39;blink2&#39;); delay(2.7) }
+}
+delay(0:02); abort();
+</code></pre></div></dt>
+<dd>run two asynchronously blinking sequences in parallel. After 2 minutes, both concurrent threads are stopped using the <em>abort()</em> function.</dd>
+<dt><div class="highlight"><pre><span></span><code>concurrent as blinker {
+  while(true) { log(&#39;blink&#39;); delay(2) }
+}
+delay(0:02); abort(blinker)
+</code></pre></div></dt>
+<dd>start a concurrent blinking sequence and save a reference to it as a variable named <em>blinker</em>.</dd>
+<dd>After two minutes, the variable can be used as argument to <em>abort()</em> to specifically stop a thread.</dd>
+<dt><div class="highlight"><pre><span></span><code>concurrent as task1 { delay(random(2,5)); log(&#39;task1 done&#39;) };
+concurrent as task2 { delay(random(2,5)); log(&#39;task2 done&#39;) };
+await(task1,task2)
+log(&#39;one of both tasks done&#39;)
+await(task1)
+await(task2)
+log(&#39;both tasks are done now&#39;)
+</code></pre></div></dt>
+<dd>start two concurrent task with a random duration between 2 and 5 seconds.</dd>
+<dd>The <em>await()</em> function can be used to wait for completion of one of its arguments.
+  Using a separate <em>await()</em> call for each thread will complete when all tasks are done.
+  For complicated concurrency situations, also see <em>lock()</em> and and <em>signal()</em> for synchronizing threads.</dd>
+<dt><div class="highlight"><pre><span></span><code>concurrent passing x, y=2\*a { log(&quot;x=%s, y=%s&quot;, x, y) }
+</code></pre></div></dt>
+<dd>the <em>passing</em> keyword creates <em>threadvars</em> (variables with values private to the thread being started) and passes values (<em>x</em> from a outside variable named <em>x</em>, <em>y</em> by assigning the expression <em>2*a</em>) into the thread. This allows for using <em>concurrent</em> multiple times in quick succession while ensuring each started thread gets its own set of parameters.</dd>
+</dl>
+<h2 id="built-in-functions"><a id="builtins"></a>Built-in Functions</h2>
+<p>p44Script has many built-in functions and methods (functions that are part of a object like a device, or a view etc.). Not all of them are available in any context. Therefore, this section has subsections, and some built-in functions/methods are listed further down along with the descriptions of their context (device, hardware etc.)</p>
+<h3 id="general-calculation-functions"><a id="genfuncs"></a>General Calculation Functions</h3>
+<p>These functions are available in every expression/calculation, and are real functions in the mathematical sense (no side effects, just providing the calculation results).</p>
+<dl>
+<dt><code>abs(a)</code></dt>
+<dd>absolute value of <em>a</em>.</dd>
+<dt><code>annotation(something)</code></dt>
+<dd>Returns the <em>annotation</em> of <em>something</em> as a string. The annotation may describe the type or origin of a value more precisely, e.g. for <em>null</em>\ values the annotation can often give information <em>why</em> a value is <em>null</em>.</dd>
+<dt><code>binary(hexstring [, spacesallowed])</code></dt>
+<dd>converts <em>hexstring</em> into a string (which can contain non-printable binary characters, including NUL) by exepcting 2 hex digits in <em>hexstring</em> for each output byte. Hex bytes might be separated by colons or dashes. If <em>spacesallowed</em> is set, bytes can also be separated by spaces, and bytes will also be considered complete if consisting of one hex digit only when preceeded and followed by a colon, dash or space. Also see <em>hex()</em>.</dd>
+<dt><code>bit(bitno, value)</code></dt>
+<dt><code>bit(frombitno, tobitno, value, [, signed])</code></dt>
+<dd>the first form extracts a single bit as indicated by <em>bitno</em> (least significant bit has bitno==0) from <em>value</em>.</dd>
+<dd>The second form extracts a range of bits (between <em>frombitno</em> and <em>tobitno</em>) as a integer number. If <em>signed</em> is set, the bit range is treated as a signed integer (2's complement). Also see <em>flipbit()</em> and <em>setbit()</em> functions.</dd>
+<dt><code>boolean(something)</code></dt>
+<dd>Interprets <em>something</em> as a boolean. If <em>something</em> is an empty string, <em>undefined</em>, <em>null</em> or the number 0, the result is <em>false</em> or 0, otherwise <em>true</em> or 1.</dd>
+<dt><code>chr(byte)</code></dt>
+<dd>returns a string consisting of a single <em>byte</em> (value between 0 and 255). Note that not all values for <em>byte</em> create a valid (UTF8) string. However, this function is primarily indended to create binary byte strings - p44script strings <em>can</em> contain 0 bytes. Also see <em>ord()</em>.</dd>
+<dt><code>cos(angle)</code></dt>
+<dd>returns the cosine of <em>angle</em> (in degrees)</dd>
+<dt><code>cyclic(x, a, b)</code></dt>
+<dd>return <em>x</em> with wraparound into range <em>a</em>..<em>b</em> (not including <em>b</em>, because it means the same thing as <em>a</em>).</dd>
+<dt><code>dawn([epochtime])</code></dt>
+<dd>returns approximate time of dawn on the current day, or on the date specified by <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>describe(something)</code></dt>
+<dd>Describes <em>something</em> as a string containing information on data type, internal name, annotation, etc. This function is useful for debugging purposes.</dd>
+<dt><code>day([epochtime])</code></dt>
+<dd>returns current day of month, or the day-of-month component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>dusk([epochtime])</code></dt>
+<dd>returns approximate time of dusk on the current day, or on the date specified by <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>elements(_array_or_object_)</code>.</dt>
+<dd>If <em>array_or_object</em> is an array, <em>elements</em> returns the number of array elements. If <em>array_or_object</em> is an object, returns the number of fields (whose names can be obtained with <em>array_or_object[numeric_index]</em>). If <em>array_or_object</em> by type <strong>cannot</strong> have any elements accessible by index, <em>undefined</em> will be returned (but the number 0 if the object or array is currently empty).</dd>
+<dt><code>epochtime()</code></dt>
+<dt><code>epochtime(dayseconds [, yeardays, [, year]])</code></dt>
+<dt><code>epochtime(hour, minute, second [, day [, month [, year]]])</code></dt>
+<dd>without arguments, the function returns unix epoch time (<strong>seconds</strong> since 1.1.1970 midnight UTC), but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dd>With <em>dayseconds</em> argument only, the function returns epoch time of today with the time-of-day as represented by <em>dayseconds</em>.</dd>
+<dd>With <em>yeardays</em>, the function returns the epoch time represented by <em>dayseconds</em>/<em>yeardays</em> in the current year.</dd>
+<dd>With <em>year</em> the function returns the epoch time for the point in time corresponding to <em>dayseconds</em>/<em>yeardays</em>/<em>year</em>. Caution: Daylight saving time is not taken into account in this variant.</dd>
+<dd>With <em>hour</em>, <em>minute</em>, <em>second</em> and optionally <em>day</em>, <em>month</em> and <em>year</em>, the function returns the epoch time for the corresponding point in time, using current date/month/year if not specified.</dd>
+<dt><code>epochdays()</code></dt>
+<dd>returns unix epoch time (<strong>days</strong> since 1.1.1970), with time-of-day as fractional part, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>error(anything)</code></dt>
+<dd>creates a error value with <em>anything</em> as error message.</dd>
+<dt><code>errorcode(errvalue)</code></dt>
+<dd>returns the numeric error code from <em>errvalue</em>.</dd>
+<dt><code>errordomain(errvalue)</code></dt>
+<dd>returns the error domain string from <em>errvalue</em>.</dd>
+<dt><code>errormessage(errvalue)</code></dt>
+<dd>returns the error message string from <em>errvalue</em>.</dd>
+<dt><code>eval(string [, arg...])</code></dt>
+<dd>evaluate <em>string</em> as p44script script. The optional <em>arg</em> are available as variables named <em>arg1</em>, <em>arg2</em> ... <em>argN</em> within the evaluation. The evaluation takes place in the current script's <em>main context</em>, and can access its variables, including global variables. However variables defined in the evaluation are local to the evaluation.</dd>
+<dt><code>exp(n)</code></dt>
+<dd>raises <em>e</em> to the power of <em>n</em> (<em>e</em> being the Euler number 2.718281828459045). <em>exp()</em> is the inverse function of <em>ln()</em>.</dd>
+<dt><code>find(haystack, needle [, from [, caseinsensitive]])</code></dt>
+<dd>returns position of <em>needle</em> in <em>haystack</em> or <em>null</em> if not found. if <em>from</em> is specified, search starts at that position in <em>haystack</em>. if <em>caseinsensitive</em> is true, search is done case insensitively (simple ASCII-only case insensitivity).</dd>
+<dt><code>flipbit(bitno, value)</code></dt>
+<dt><code>flipbit(frombitno, tobitno, value)</code></dt>
+<dd>the first form returns <em>value</em> modified by flipping (inverting) a single bit as indicated by <em>bitno</em> (least significant bit has bitno==0).</dd>
+<dd>The second form returns <em>value</em> modified by flipping a range of bits (between <em>frombitno</em> and <em>tobitno</em>). Also see <em>bit()</em> and <em>setbit()</em> functions.</dd>
+<dt><code>format(formatstring, value [, value...])</code></dt>
+<dd>formats <em>value</em>(s) as string according to <a href="https://man7.org/linux/man-pages/man3/printf.3.html" target="_blank">printf-like</a> <em>formatstring</em> (but note that <em>formatstring</em> only supports a subset of printf. In particular, no 'h', 'l' or 'll' length specifiers are allowed (nor needed). Recognized formatting chars are <em>d,u,x,X</em> for integer formatting, <em>e,E,g,G,f</em> for floating point, and <em>s</em> for strings.</dd>
+<dt><code>formattime()</code></dt>
+<dt><code>formattime(time)</code></dt>
+<dt><code>formattime(formatstring)</code></dt>
+<dt><code>formattime(time, formatstring)</code></dt>
+<dd>returns formatted time. Without arguments, <em>formattime</em> returns the current date and time like <em>2020-08-19 11:04:42</em>.</dd>
+<dd>With only a numeric <em>time</em> argument, the specified time is formatted. When <em>time</em> is a time-of-day (between 0 and 24*60*60 seconds), only time is shown like <em>11:04:42</em> , otherwise <em>time</em> is treated as absolute unix epoch timestamp (see <em>epochtime()</em> function) and formatted as date+time by default.</dd>
+<dd><em>formatstring</em> can be used to set a specific date and time format, using the formatting capabilities of the <a href="https://man7.org/linux/man-pages/man3/strftime.3.html" target="_blank">strftime() C standard function</a>.</dd>
+<dt><code>frac(a)</code></dt>
+<dd>fractional value of <em>a</em> (with same sign as <em>a</em>).</dd>
+<dt><code>hex(string [, separator])</code></dt>
+<dd>returns the bytes contained in <em>string</em> (which might be a binary string containing non-printables and NUL characters) as a string of hexadecimal characters. If <em>separator</em> is specified, it will be used as separator between two-digit hex bytes (only first character of <em>separator</em> is used). Also see <em>binary()</em>.</dd>
+<dt><code>hour([epochtime])</code></dt>
+<dd>returns current hour, or the hour component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>if(c, a, b)</code></dt>
+<dd>returns <em>a</em> if <em>c</em> evaluates to true, <em>b</em> otherwise.</dd>
+<dt><code>ifvalid(a, b)</code></dt>
+<dd>returns <em>a</em> if <em>a</em> is a valid value (not null, error or non-data), otherwise return <em>b</em>.</dd>
+<dt><code>ifok(a, b)</code></dt>
+<dd>returns <em>a</em> if accessing <em>a</em> does not return an error, otherwise return <em>b</em>.</dd>
+<dt><code>int(a)</code></dt>
+<dd>integer value of <em>a</em>.</dd>
+<dt><code>isvalid(a)</code></dt>
+<dd>returns true if <em>a</em> is a valid value (not null, error or non-data), false otherwise.</dd>
+<dt><code>isok(a)</code></dt>
+<dd>returns true if accessing <em>a</em> does not return an error, false otherwise.</dd>
+<dt><code>json(anything [, comments_allowed])</code>.</dt>
+<dd>tries to interpret <em>something</em> as JSON. If <em>something</em> is a string, the string is treated as JSON text and parsed (rather than converted to a single JSON string). If a JSON syntax error occurs during parsing, <em>json</em> returns an appropriate error. If <em>comments_allowed</em> is set to <em>true</em>, <code>/* ... */</code> comments are allowed in the JSON text (which does not conform to the JSON specification, but is convenient).
+This function is useful, for example, to make a JSON string returned by an API accessible as a structure.</dd>
+<dt><code>jsonresource(jsonfile)</code></dt>
+<dd>Loads JSON from <em>jsonfile</em>. Without absolute path specification or special prefix, <em>jsonfile</em> is taken to be relative to the application's resource directory (which is usually /usr/share/<em>application name</em>). In JSON resource files, <code>/* ... */</code> comments are allowed (although this is not in accordance with the JSON specification).</dd>
+<dd>
+<p>The following special prefixes can be used:</p>
+<ul>
+<li><code>_/tempfile</code> : means that <code>tempfile</code> is to be used relative to the (volatile) temporary directory (usually /tmp).</li>
+<li><code>+/resource</code> : is equivalent to <code>resource</code> alone, so relative to the resource directory.</li>
+<li><code>=/datafile</code> : means that <code>datafile</code> is to be used relative to the (permanent) application data directory (usually /flash).</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use paths or prefixes other than <code>_/</code> for <em>filename</em>, the <em>userlevel</em> must be &gt;=1 (default <em>userlevel</em> for production devices is 0).</p>
+</div>
+</dd>
+<dt><code>lastarg(a1, a2, ... , aN)</code></dt>
+<dd>returns <em>aN</em>. This can be useful to execute side effects of other arguments first, before returning <em>aN</em>.</dd>
+<dt><code>limited(x, a, b)</code></dt>
+<dd>returns min(max(<em>x</em>, <em>a</em>), <em>b</em>), i.e. <em>x</em> limited to values between and including <em>a</em> and <em>b</em>.</dd>
+<dt><code>ln(n)</code></dt>
+<dd>returns the natural logarithm of <em>n</em> (logarithm to the base e = 2.718281828459045). <em>ln()</em> is the inverse function of <em>exp()</em>.</dd>
+<dt><code>lowercase(s)</code></dt>
+<dd>returns (simple ASCII) lowercase version of string <em>s</em>.</dd>
+<dt><code>macaddress()</code></dt>
+<dd>returns the MAC address of the wired network interface as a string of 12 hex digits (no separators between bytes).</dd>
+<dt><code>maprange(x, a1, b1, a2, b2)</code></dt>
+<dd>maps <em>x</em> in the range of values <em>a1..b1</em> linearly to the range of values <em>a2..b2</em>. For all values of <em>x</em> coming before <em>a1</em> the result is <em>a2</em>, for all values of <em>x</em> following <em>b1</em> the result is <em>b2</em>.</dd>
+<dt><code>max(a, b)</code></dt>
+<dd>return the bigger value of <em>a</em> and <em>b</em>.</dd>
+<dt><code>min(a, b)</code></dt>
+<dd>return the smaller value of <em>a</em> and <em>b</em>.</dd>
+<dt><code>minute([epochtime])</code></dt>
+<dd>returns current minute, or the minute component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>month([epochtime])</code></dt>
+<dd>returns current month (1..12), or the month component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>nextversion()</code></dt>
+<dd>returns the next installable firmware version, when known (from automatic checking or a recent manual check for firmware upgrade). Otherwise an empty string is returned.</dd>
+<dt><code>null(annotation)</code></dt>
+<dd>creates an <em>annotated null value</em>, that is a <em>null</em> value carrying some text that is shown in logs and when debugging - this annotation text has no function except for documentation. p44script itself often explains why something is <em>null</em> using annotations, the <em>null()</em> function allows script writers to do so as well.</dd>
+<dt><code>number(anything)</code></dt>
+<dd>try to convert <em>anything</em> into a number, returns 0 if conversion fails.</dd>
+<dt><code>ord(string)</code></dt>
+<dd>returns the byte (value between 0 and 255) stored in the beginning of <em>string</em>. Note that this first byte might not be a complete UTF8 character, but possibly only a part of it. However, this function is primarily indended to decode binary byte strings - p44script strings <em>can</em> contain 0 bytes. Also see <em>chr()</em>.</dd>
+<dt><code>productversion()</code></dt>
+<dd>returns the product's firmware version.</dd>
+<dt><code>random(a, b)</code></dt>
+<dt><code>random(a, b, step)</code></dt>
+<dd>returns a (floating point) pseudo-random value from <em>a</em> up to and including <em>b</em>.  If <em>step</em> is specified, the result is equal to <em>a</em> plus an integer multiple of <em>step</em>. I.e. to get an integer between 1 and 7, <code>random(1,7,1)</code> can be used. In this case, the randomness is evenly distributed among the possible outcomes (unlike, say, <code>int(random(1,7))</code>, which would have a vanishingly small probability for outcome 7 compared to 1..6). <em>step</em> does not have to be an integer; e.g. if quarters are required, <code>random(1,7,0.25)</code> can be used.</dd>
+<dt><code>replace(haystack, needle, replacement [, occurrences]])</code></dt>
+<dd>returns <em>haystack</em> with occurrences of <em>needle</em> replaced by <em>replacement</em>, at most <em>occurrences</em> times (all occurrences will be replaced if <em>occurrences</em> is not specified or set to 0).</dd>
+<dt><code>round(a [, p])</code></dt>
+<dd>round <em>a</em> to optionally specified precision <em>p</em> (1=integer=default, 0.5=halves, 100=hundreds, etc...).</dd>
+<dt><code>second([epochtime])</code></dt>
+<dd>returns current second, or the second component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>setbit(bitno, newbit, value)</code></dt>
+<dt><code>setbit(frombitno, tobitno, newvalue, value)</code></dt>
+<dd>the first form returns <em>value</em> modified by setting a single bit as indicated by <em>bitno</em> (least significant bit has bitno==0) to the boolean value of <em>newbit</em>.</dd>
+<dd>The second form returns <em>value</em> modified by setting a range of bits (between <em>frombitno</em> and <em>tobitno</em>) to the integer number <em>newvalue</em> (using as many least significant bits from <em>newvalue</em> as is needed to fill the range). Also see <em>flipbit()</em> and <em>bit()</em> functions.</dd>
+<dt><code>sin(angle)</code></dt>
+<dd>returns the sine of <em>angle</em> (in degrees)</dd>
+<dt><code>string(anything)</code></dt>
+<dd>returns a string representation of <em>anything</em>. Always returns a descriptive string, even for null/undefined and error values.</dd>
+<dt><code>strlen(string)</code></dt>
+<dd>returns length of <em>string</em>.</dd>
+<dt><code>strrep(string, count)</code></dt>
+<dd>returns a string consisting of <em>count</em> times the <em>string</em>, concatenated.</dd>
+<dt><code>substr(string, from [, count])</code></dt>
+<dd>returns string starting at <em>from</em> in <em>string</em>, limited to <em>count</em> characters if specified. If <em>from</em> is negative, start position is relative to the end of <em>string</em>.</dd>
+<dt><code>sunrise([epochtime])</code></dt>
+<dd>returns approximate time of sunrise on the current day, or on the date specified by <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>sunset([epochtime])</code></dt>
+<dd>returns approximate time of sunset on the current day, or on the date specified by <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>timeofday([epochtime])</code></dt>
+<dd>returns current time-of-day in seconds since midnight, or seconds since midnight of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>uppercase(s)</code></dt>
+<dd>returns (simple ASCII) uppercase version of string <em>s</em>.</dd>
+<dt><code>weekday([epochtime])</code></dt>
+<dd>returns current weekday (0..6), or the weekday of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>year([epochtime])</code></dt>
+<dd>returns current year, or the year component of <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+<dt><code>yearday([epochtime])</code></dt>
+<dd>returns current date, or the date represented by <em>epochtime</em>, as day number in the year, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
+</dl>
+<h3 id="functions-for-timed-triggering"><a id="timedtriggers"></a>Functions for Timed Triggering</h3>
+<p>This is a special class of functions unique to p44script. These can be used in expressions that are meant to trigger an action at a specific point in time.
+Please note that you <strong>must</strong> use <strong>these</strong> functions to test for time/date in evaluator or handler trigger conditions. Just writing something like <code>timeofday()==12:30</code> will <strong>not work</strong>!</p>
+<p>General functions returning time values such as <em>sunrise()</em> or <em>dusk()</em> are meant to be used as <em>arguments</em> to <em>is_time()</em> or <em>after_time()</em>, or to implement <em>additional</em> checks at the time when the expression is triggered by one of the following functions.</p>
+<dl>
+<dt><code>is_time(time)</code></dt>
+<dd>returns true when time of day is <em>time</em> (with 5 seconds tolerance) and triggers evaluation once per day when <em>time</em> is reached.</dd>
+<dt><code>is_weekday(weekday1 [, weekday2, ...])</code></dt>
+<dd>returns true if today is any of the specified <em>weekdayN</em> arguments and triggers evaluation at the beginning of the specified days.</dd>
+<dt><code>after_time(time)</code></dt>
+<dd>return true when time of day is <em>time</em> or later and triggers evaluation once per day when <em>time</em> is reached.</dd>
+<dt><code>between_dates(date1, date2)</code></dt>
+<dd>true when current date is between <em>date1</em> and <em>date2</em> (inclusive) and triggers evaluation at beginning of <em>date1</em> and at the end of <em>date2</em>.</dd>
+<dt><code>initial()</code></dt>
+<dd>returns true if this is a <q>initial</q> run of a trigger expression, meaning after startup or expression changes.</dd>
+<dt><code>every(interval [, syncoffset])</code></dt>
+<dd>returns true once every <em>interval</em> (specified in seconds) and triggers evaluation.</dd>
+<dd>Note: true is returned at first evaluation, or, if <em>syncoffset</em> is set, at next integer number of intervals calculated from beginning of the day +  <em>syncoffset</em>.</dd>
+<dd>
+<p>So <em>every(0:30,0:22)</em> will trigger once every half hour, starting at 0:22, then 0:52, 1:22, ...</p>
+<div class="admonition danger">
+<p class="admonition-title">Attention - be careful with short intervals</p>
+<p>Be careful with <code>every()</code> and short intervals, because running scripts very often can affect the performance of the device!</p>
+</div>
+</dd>
+<dt><code>testlater(seconds, timedtest [, retrigger])</code></dt>
+<dd>returns <em>undefined/null</em> when called first, but schedules a re-evaluation after given <em>seconds</em> and return value of <em>timedtest</em> then. If <em>retrigger</em> is true then, the re-evaluation will repeat in <em>seconds</em> interval (use with care!). Note that <em>testlater()</em> is available mostly for backwards compatibility with older setups, before the more general <em>every()</em> function existed in p44script.</dd>
+</dl>
+<h3 id="script-programming-functions"><a id="scriptfuncs"></a>Script Programming Functions</h3>
+<p>Most of these functions are not functions in the mathematical sense, as they have <em>side effects</em>, which means they make something happen in the system such as accessing the network or device hardware, or general changes to the system's current state (such as changing the log level).</p>
+<dl>
+<dt><code>abort()</code></dt>
+<dd>cancels all concurrently running <em>threads</em> in the current <em>Script context</em>, except the thread from which <em>abort()</em> is called. The aborted <em>threads</em> receive an error as the final result. This form of <em>abort()</em> is primarily intended for debugging purposes in the IDE/REPL.</dd>
+<dt><code>abort(a [, abortresult [, self]])</code></dt>
+<dd>specifically aborts the <em>thread</em> named <em>a</em>, i.e. the thread that was started with <code>concurrent as a {...}</code>. If <em>abortresult</em> is not set to <em>null</em>, it is used as the final result of the <em>thread</em> (which is returned by <em>await()</em>, for example). If <em>self</em> is not set, and <em>a</em> is the own <em>thread</em> (i.e. the one from which <em>abort()</em> was called), then it is not cancelled, because this is usually not intended and difficult to debug - if it is, <em>self</em> can be set.</dd>
+<dt><code>autorestart()</code></dt>
+<dt><code>autorestart(enable)</code></dt>
+<dd>when called without arguments, this returns the autorestart status of the script (false by default)</dd>
+<dd>when called with <em>enable</em> set to true, the script will automatically be restarted when the calling script itself or one of its include files are changed. <em>autorestart</em> can only be used from the body of a script.<div class="admonition warning">
+<p class="admonition-title">Power user feature</p>
+<em>autorestart</em> is a feature that should be used with care, as it might be confusing to have scripts restart automatically.
+It is indended in particular for advanced scenarios where for example severeal devices share a common implementation in an include file, so it might be useful to have all these devices restart automatically when the include file is modified.</div>
+</dd>
+<dt><code>await(a [,b,...] [, timeout])</code></dt>
+<dd>waits for one or multiple events to happen, for example a signal arriving (see <em>signal()</em>) or threads terminating, and returns the event's value.
+if <em>timeout</em> is used, await will quit waiting after the specified time and return <em>undefined</em>.</dd>
+<dt><code>breakpoint()</code></dt>
+<dd>When a script is being debugged in the <em>p44script IDE</em>, the debugger will stop when encountering the <em>breakpoint()</em> function. Without debugging enabled, <em>breakpoint()</em> does nothing. Note that usually it is easier to set breakpoints in the <em>p44script IDE</em> by clicking into the line number bar of the editor, so this functions is rarely needed.</dd>
+<dt><code>delay(seconds)</code></dt>
+<dd>delays the script execution by <em>seconds</em> (floating point number; fractions of seconds are possible).</dd>
+<dt><code>delayutil(dayseconds|epochtime)</code></dt>
+<dd>delay script execution until the time <em>dayseconds</em> (number of seconds since midnight, see <em>timeofday()</em> function) or <em>epochtime</em> (number of seconds since 1/1/1970 midnight UTC, see <em>epochtime()</em> function) is reached.</dd>
+<dd>Note that time literals also return seconds since midnight, so <code>delayutil(16:00)</code> will wait until four o'clock.</dd>
+<dt><code>dnssdbrowse(type [, hostname])</code></dt>
+<dd>
+<p>Searches for devices in the local network that make their services discoverable via the DNS-SD protocol (e.g. printers, but also many other devices, especially in the home automation area, including the P44-xx devices). With <em>type</em> a DNS-SD service type must be specified. For example, to find web interfaces, <code>_http._tcp</code> can be specified (see <a href="http://www.dns-sd.org/ServiceTypes.html" target="_blank">here</a> for a complete list of service types). By specifying <em>hostname</em>, a specific device can be searched for by its hostname (in the form <code>devicehostname.local</code>).
+As a result, <em>dnssdbrowse</em> returns an array which may be empty if no service of the specified <em>type</em> (and <em>hostname</em>, if applicable) was found. Otherwise, the array contains objects describing the service with the following fields:</p>
+<ul>
+<li><em>name</em>: name of the service as a text description.</li>
+<li><em>hostname</em> : hostname ending in <code>.local</code>.</li>
+<li><em>hostaddress</em> : the IP address on the LAN where the service can be reached.</li>
+<li><em>ipv6</em> : 1/true if <em>hostaddress</em> is an IPv6 address, 0/false otherwise.</li>
+<li><em>port</em> : port number of the service</li>
+<li><em>interface</em> : interface index of the network interface over which the service is reachable (only relevant for IPv6 if necessary).</li>
+<li><em>txts</em> : object with the TXT records of the service as fields (can be empty if the service has no TXT records).</li>
+<li><em>url</em> : This field a URL that can be used directly in a browser depending on the service type (composed of the above fields). For unknown service names <em>http</em> is assumed, which sometimes works for services with type other than <em>http</em>, but not always.</li>
+</ul>
+</dd>
+<dt><code>geturl(url [,timeout])</code></dt>
+<dd>returns response from GET request to (http or https) <em>url</em>, times out after <em>timeout</em> seconds if specified.</dd>
+<dd>If the <em>url</em> is prefixed with <code>!</code>, SSL/certificate errors are ignored. For http(s) access with more options see <em>httprequest()</em>.</dd>
+<dt><code>editfile(filename)</code></dt>
+<dt><code>editfile(filename, type)</code></dt>
+<dt><code>editfile(filename, type, title)</code></dt>
+<dd>Makes the file specified with <em>filename</em> available in the <a href="ide.html" target="p44script-IDE">p44script IDE</a>. The context type for the IDE can be specified with the specification of <em>type</em> so that the syntax highlighting works (<em>script</em>, <em>include</em>, <em>webpage</em>, <em>inifile</em> and <em>shell</em> are currently supported). The optional <em>title</em> is displayed in the IDE instead of the file name.</dd>
+<dd>
+<p>Without an absolute path or special prefix, <em>filename</em> is assumed to be relative to the p44script data directory (a directory in the permanent flash memory). The following special prefixes can be used:</p>
+<ul>
+<li><code>_/tempfile</code> : means that <em>tempfile</em> is relative to the (volatile) p44script temporary directory.</li>
+<li><code>+/resource</code> : means that <em>resource</em> is relative to the application's resource directory.</li>
+<li>
+<dl>
+<dt><code>=/file</code> : is equivalent to <em>file</em> alone, i.e. relative to the p44script data directory.</dt>
+<dd>&nbsp;</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Enabling a file for using in the IDE with <code>editfile()</code> is only valid until the next restart of the device or the app (see also <code>restartapp()</code>). If certain files should always be available in the IDE, the corresponding <em>editfile</em> call can simply be written to the <em>mainscript</em>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Resource files can be activated (with a <code>+/</code> prefix) in the IDE, but are not writable because they should not be changed without further ado. Only with <em>userlevel</em> &gt;=2 all files are writable.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use absolute paths for <em>filename</em>, the <em>userlevel</em> must be &gt;=2 to be able to write files, and &gt;=1 to be able to read them. (The default <em>userlevel</em> for production devices is 0).</p>
+</div>
+</dd>
+<dt><code>hsv(hue [, saturation [, brightness [, alpha]]])</code></dt>
+<dt><code>hsv(object)</code></dt>
+<dt><code>hsv(webcolor_string)</code></dt>
+<dd>the first form converts the specified <em>hue</em> (0..359), <em>saturation</em> (0..1), <em>brightness</em> (0..1) and <em>alpha</em> (0..1) values to the hexadecimal 6 digit (or 8 digit, if <em>alpha</em> is specified and not equal to 1.0) web color format (<code>#rrggbb</code> or <code>#aarrggbb</code>), which can be used for setting <em>bgcolor</em> or <em>color</em> in p44lrg views, or wherever else web colors are needed. <em>saturation</em>, <em>brightness</em> and <em>alpha</em> default to 1 when not specified.</dd>
+<dd>the second form converts an <em>object</em> of the form <code>{ hue:60, saturation:0.85, brightness:0.5, a:1.0 }</code> to a web color in the same way as the first form.</dd>
+<dd>the third form converts the <em>webcolor_string</em> into an object of the same form as described above.</dd>
+<dt><code>httprequest(request [, data])</code></dt>
+<dd>
+<p>This is a generalized function that can be used instead of <em>geturl()</em>, <em>puturl(), _posturl()</em> when http requests with special headers, certificate checking, client certificate etc. are needed. All parameters are to be passed a <em>request</em> object:</p>
+<ul>
+<li><em>url</em>: the complete URL. May contain a <code>!</code> as the first character to prevent certificate checking for https connections.</li>
+<li><em>method</em> : Optional, without specification <code>GET</code> will be used.</li>
+<li><em>data</em> : Data to send for PUT and POST, can also be passed directly as the second parameter of the function (especially necessary if it is a binary string). If <em>data</em> is a object value, the data is converted to JSON and sent with <code>Content_type: application/json</code> on PUT and POST, otherwise with <code>Content_type: text/html</code> unless content type is explicitly specified in <em>headers</em>.</li>
+<li><em>formdata</em> : optional boolean value. If this option is set to true and <em>data</em> is a object, the fields of the object will be sent as form fields with <code>Content_type: application/x-www-form-urlencoded</code>.</li>
+<li><em>timeout</em> : optional timeout in seconds.</li>
+<li><em>user</em> : optional username for http auth (can also be passed as part of the URL).</li>
+<li><em>password</em> : optional password for http auth (can also be passed as part of the URL).</li>
+<li><em>basicauth</em> : optional mode for using http <em>basic</em> auth. By default, basic auth is only possible on https connections, and only if the server asks for it. With <em>basicauth=onrequest</em> basic auth is also allowed in non-SSL connections if the server asks for it. With <em>basicauth=immediate</em>, basic auth is sent with the first request (which may be necessary for simple IoT web servers, but offers very poor security without SSL). With <em>basicauth=never</em>, basic auth is not allowed at all, not even for SSL connections.</li>
+<li><em>headers</em> : optional JSON object containing http headers to send as name/value pairs. If no <code>content-type</code> is included, this header will be determined automatically from the supplied data (html or json).</li>
+<li><em>withmeta</em> : optional boolean. If set to true, <em>httprequest</em> will return an object containing a <em>status</em> field with the http status code (success or error), a <em>data</em> field with the actual response (if any) and a <em>headers</em> field with all received headers as name/value pairs. Note that in this mode any request that leads to a http response will not be considered an error, regardless of the http status (whereas otherwise, only status 200..203 will be considered ok).</li>
+<li><em>clientcert</em> : optional path to a client certificate to use.</li>
+<li><em>servercert</em> : optional path to a root certificate or certificate directory to be used for checking the server certificate. If an empty string is specified, the server certificate will not be checked (which can also be archieved with a <code>!</code> before the url, see above). By default, the server certificate is checked against the system's root certificates.</li>
+</ul>
+</dd>
+<dt><code>listfiles(filepath)</code></dt>
+<dd>Returns an array with the names of the files in the given <em>filepath</em>.</dd>
+<dd>
+<p>Without an absolute path or special prefix, <em>filename</em> is assumed to be relative to the p44script data directory (a directory in the permanent flash memory). The following special prefixes can be used:</p>
+<ul>
+<li><code>_/tempfile</code> : means that <em>tempfile</em> is relative to the (volatile) p44script temporary directory.</li>
+<li><code>+/resource</code> : means that <em>resource</em> is relative to the application's resource directory.</li>
+<li>
+<dl>
+<dt><code>=/file</code> : is equivalent to <em>file</em> alone, i.e. relative to the p44script data directory.</dt>
+<dd>&nbsp;</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use absolute paths for <em>filepath</em>, the <em>userlevel</em> must be &gt;=1. (The default <em>userlevel</em> for production devices is 0).</p>
+</div>
+</dd>
+<dt><code>lock([entered])</code></dt>
+<dd>
+<p>Creates a <em>Lock</em> object, which can be used with its two methods <em>.enter()</em> and <em>.leave()</em> for synchronization of parallel running <em>threads</em>. If <em>entered</em>==true is specified, then the lock is already reserved for the calling thread when it is created. Normally one assigns a created <em>lock</em> to a variable: <code>var l = lock()</code>. The value of the lock is 0 if it is free, otherwise it specifies the nesting depth of the <em>enter()</em> calls of the thread that currently has reserved the lock.
+Usually <em>enter()</em> is used in a conditional:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">lk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lock</span><span class="p">()</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">lk</span><span class="p">.</span><span class="nx">enter</span><span class="p">(</span><span class="mf">0</span><span class="o">:</span><span class="mo">03</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Sequentially executing code</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="nx">lk</span><span class="p">.</span><span class="nx">leave</span><span class="p">()</span>
+<span class="p">}</span>
+<span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;3min timeout&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</dd>
+<dt><code>lk.enter([timeout])</code></dt>
+<dd>Waits until the lock <em>lk</em> is free. Without specifying <em>timeout</em>, the wait is indefinite. <em>timeout</em> can be 0 to only test the lock. The function returns <em>true</em> if the lock could be reserved for the calling thread. It returns <em>false</em> if the lock could not be reserved within the given <em>timeout</em>, or if the lock itself is deleted (for example with <em>unset</em>).</dd>
+<dt><code>lk.leave()</code></dt>
+<dd>
+<p>Releases the lock <em>lk</em>. If other threads are waiting for the release, the thread that had called <em>lk.enter()</em> first gets access. <em>leave()</em> returns true if a release has actually been made with it. <em>leave()</em> from a thread that has not called <em>enter()</em> before returns false and does nothing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning - beware of deadlocks</p>
+<p>If locks are not used properly, it is easy to get into a situation where two threads have reserved one lock each, and are waiting for each other to release the other thread's lock, which may never happen. This is called <em>deadlock</em> and must be avoided. It is therefore recommended to use <em>enter</em> with timeout, so that a script application cannot block itself completely.</p>
+</div>
+</dd>
+<dt><code>log([loglevel, ] logmessage [, value...])</code></dt>
+<dd>writes a message to the application log file. If <em>loglevel</em> is omitted, 5 (<em>LOG_NOTICE</em>) is used. If <em>logmessage</em> is followed by further arguments, <em>logmessage</em> is treated as a format string, as in the <em>format()</em> function (see there).</dd>
+<dt><code>loglevel()</code></dt>
+<dd>returns the current log level.</dd>
+<dt><code>loglevel(level [, deltatime [, symbols [, coloring]]])</code></dt>
+<dd>change the application's log level to <em>level</em>. If <em>deltatime</em> is set, timestamps will also show time difference to previous log entry in mS. If <em>symbols</em> is set, UTF-8 symbols will be used to differentiate log levels and separate context prefix from actual log message. If <em>coloring</em> is set, ANSI colors are used in the log output (suitable for terminal output, not browser). Each of the arguments can also be <em>null</em> in order not to change the corresponding value.</dd>
+<dt><code>logleveloffset(offset)</code></dt>
+<dd>change the log level offset of the <em>scriptcontext</em> the script runs in to <em>offset</em>. This allows making part of an application more or less verbose in the log, selectively.</dd>
+<dt><code>maxblocktime([time, [currentonly]])</code></dt>
+<dd>
+<p>return, or (with <em>time</em> argument, set) the maximum uninterrupted execution time for scripts (in seconds). The default is 0.05 seconds. When set with <em>currentonly</em> true, the setting only affects the current thread, otherwise this also sets the default for all future threads started from now on (but not already running threads, except for the calling thread).</p>
+<div class="admonition danger">
+<p class="admonition-title">High maxblocktime can severely affect device performance</p>
+<p>setting <em>maxblocktime</em> too high will allow scripts to run uninterrupted for the specified time, without any other device function getting time to run, which might causing sluggish or blocked response including web interface. Recommended <em>maxblocktime</em> is under one second.</p>
+</div>
+</dd>
+<dt><code>maxruntime([time|undefined])</code></dt>
+<dd>return, or (with <em>time</em> argument, set) the overall run time limit for the current thread (in seconds). The default is infinite (represented by <em>undefined</em>).</dd>
+<dt><code>posturl(url [,timeout][,data])</code></dt>
+<dd>sends <em>data</em> (must be string or object/array) with POST to <em>url</em>, returns response, times out after <em>timeout</em> seconds if specified. If <em>data</em> is an object/array value, the data is converted to JSON and sent with <code>Content_type: application/json</code>, otherwise with <code>Content_type: application/x-www-form-urlencoded</code>.</dd>
+<dd>If the <em>url</em> is prefixed with <code>!</code>, SSL/certificate errors are ignored. For http(s) access with more options see <em>httprequest()</em>.</dd>
+<dt><code>puturl(url [,timeout][,data])</code></dt>
+<dd>sends <em>data</em> (must be string or object/array) with PUT to <em>url</em>, returns response, times out after <em>timeout</em> seconds if specified. If <em>data</em> is an object/array value, the data is sent with <code>Content_type: application/json</code>, otherwise with <code>Content_type: application/x-www-form-urlencoded</code>.</dd>
+<dd>If the <em>url</em> is prefixed with <code>!</code>, SSL/certificate errors are ignored. For http(s) access with more options see <em>httprequest()</em>.</dd>
+<dt><code>readfile(filename)</code></dt>
+<dd>reads the file <em>filename</em> as string.</dd>
+<dd>
+<p>Without absolute path specification or special prefix, <em>filename</em> is taken to be relative to the p44script data directory (a directory in permanent flash memory). The following special prefixes can be used:</p>
+<ul>
+<li><code>_/tempfile</code> : means that <em>tempfile</em> is to be used relative to the (volatile) p44script temporary directory.</li>
+<li><code>+/resource</code> : means that <em>resource</em> is to be used relative to the resource directory of the application</li>
+<li><code>=/file</code> : is equivalent to <em>file</em> alone, so relative to the p44script data directory</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use paths or prefixes other than <code>_/</code> for <em>filename</em>, the <em>userlevel</em> must be &gt;=1 (default <em>userlevel</em> for production devices is 0).</p>
+</div>
+</dd>
+<dt><code>restartapp(["reboot"|"shutdown"|"upgrade"])</code></dt>
+<dd>restarts the application (on P44-xx devices this is the <em>vdcd</em>). Without arguments <em>only</em> the application is restarted, <em>not</em> the whole device (this usually takes only a few seconds, but may take longer if there are many DALI devices connected). This "small" restart is especially useful when developing/testing more complex scripts.</dd>
+<dd>
+<p>With "reboot" as parameter the device is completely restarted, with "shutdown" it is shut down and stopped, so that it only starts again when it is disconnected from the power supply and reconnected (<strong>be careful with this if you are not on site!</strong>). With "upgrade" an upgrade to the latest available firmware is triggered (which triggers a reboot in any case, even if no new firmware is available).</p>
+<div class="admonition danger">
+<p class="admonition-title">Caution</p>
+<p>Using <em>restartapp()</em> in scripts that are executed automatically (e.g. the <em>mainscript</em>) may cause the device to enter a reboot loop that can only be interrupted by a factory reset. So please consider carefully whether the conditions that lead to the execution of <em>restartapp()</em> are correct and do not trigger again immediately after each restart!</p>
+</div>
+</dd>
+<dt><code>rgb(red [, green [, blue [, alpha]]])</code></dt>
+<dt><code>rgb(object)</code></dt>
+<dt><code>rgb(webcolor_string)</code></dt>
+<dd>the first form converts the specified <em>red</em> (0..1), <em>green</em> (0..1), <em>blue</em> (0..1) and <em>alpha</em> (0..1) values to the hexadecimal 6 digit (or 8 digit, if <em>alpha</em> is specified and not equal to 1.0) web color format (<code>#rrggbb</code> or <code>#aarrggbb</code>), which can be used for setting <em>bgcolor</em> or <em>color</em> in p44lrg views, or wherever else web colors are needed. <em>green</em>, <em>blue</em> and <em>alpha</em> default to 1 when not specified.</dd>
+<dd>the second form converts an <em>object</em> of the form <code>{ r:0.8, g:0.4, b:0, a:1.0 }</code> to a web color in the same way as the first form.</dd>
+<dd>the third form converts the <em>webcolor_string</em> into an object of the same form as described above.</dd>
+<dt><code>shellquote(argument)</code></dt>
+<dd>returns <em>argument</em> interpreted as string and single quote enclosed such that it safely works as a single shell argument (even if <em>argument</em> contains single quotes itself) and no shell variable expansion occurs.</dd>
+<dt><code>sign(a)</code></dt>
+<dd>returns the sign of <em>a</em>, that is, 0 if <em>a</em> is 0, -1 if <em>a</em>\&lt;0 and 1 if <em>a</em>&gt;0.</dd>
+<dt><code>signal()</code></dt>
+<dd>creates a "signal" object which can be assigned to a (possibly global) variable (<em>signal_var</em> below). <em>Threads</em> can wait for the arrival of the signal with <em>await()</em>, or the signal variable can be used as a trigger condition in <em>on()</em>\ handlers. The signal object has a <em>send()</em> method that can be used to trigger (send) a signal, see below.</dd>
+<dt><code>signal_var.send()</code></dt>
+<dd>sends a signal with the signal value = true (numeric 1)</dd>
+<dt><code>signal_var.send(signalvalue)</code></dt>
+<dd>sends a signal with <em>signalvalue</em>. <em>signalvalue</em> can be any value, but remember that simple <code>on(condition) {}</code> handlers only trigger when <em>condition</em> evaluates to a "trueish" value. To catch <em>all</em> values, including <em>null</em>, <em>undefined</em>, <em>0</em>, <em>false</em>, <code>on(condition) evaluating {}</code> can be used. Waiting for a signal with <em>await()</em> returns on any signal value, including all "falsish" ones.</dd>
+<dt><code>system(commandline)</code></dt>
+<dd>
+<p>executes <em>commandline</em> using the platform's shell and returns the output as string.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code>system()</code> function is only available when <em>userlevel</em> is &gt;=2 (default <em>userlevel</em> for production devices is 0)</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Warning</p>
+<p>As the <code>system()</code> function can call any OS-level command, it can seriously damage the firmware up to <em>bricking</em> the device.
+That's why it is not enabled by default. If you have a DIY P44-DSB-X, you can set the <em>userlevel</em> to &gt;=2 yourself to use it,
+but be careful!</p>
+</div>
+</dd>
+<dt><code>udpsocket(host, port, receive, nonlocal, broadcast)</code></dt>
+<dd>returns a UDP socket configured to send packets to <em>host</em>:<em>port</em>. Use .send(string) method to send data</dd>
+<dd>If <em>receive</em> is true, the socket can also receive UDP packets (via its .message() method, which can be used in <em>on()</em> statements as trigger.</dd>
+<dd>If <em>nonlocal</em> is true, the socket can also receive UDP packets originating from other hosts than just localhost (which is the default).</dd>
+<dd>If <em>broadcast</em> is true, the socket can send and receive broadcast packets</dd>
+<dd>Usually the return value of this function is assigned to a variable: <code>var udpsocket_var = udpsocket(...)</code> to be able to call the methods described below.</dd>
+<dt><code>udpsocket_var.message()</code></dt>
+<dd>is a event source which returns UDP messages received on the socket. It can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>udpsocket_var.send(string)</code></dt>
+<dd>sends <em>string</em> as UDP packet.</dd>
+<dt><code>undeclare()</code></dt>
+<dd>deletes all function and handler definitions that are not part of a stored script, but were made in an ad-hoc way,
+  for example from a interactive script command line (a REPL = Read-Execute-Print-Loop).
+</br>Note that functions and handlers defined in a <em>script text stored in the application</em> (such as trigger actions, scene scripts, etc.) remain tied to these script texts,
+i.e. are updated (or removed) according to edits in the script text, and <em>will not be removed</em> by <em>undeclare()</em>.</dd>
+<dt><code>urlencode(text [, x-www-form-urlencoded])</code></dt>
+<dd>Encodes the <em>text</em> for use in a URL or, if <em>x-www-form-urlencoded</em> is true, for sending form fields in POST data.</dd>
+<dt><code>websocket(url [, protocol [,pinginterval]])</code></dt>
+<dd>Creates a websocket connection to the given <em>url</em> with the protocol ("Sec-WebSocket-Protocol" header) <em>protocol</em> and the given <em>pinginterval</em>.</dd>
+<dd>Usually one assigns the return value of this function to a variable: <code>var websocket_var = websocket(...)</code> to be able to call the methods described further below.</dd>
+<dt><code>websocket(configobj)</code></dt>
+<dd>
+<p>In this variant all parameters are passed in <em>configobj</em>. This allows for more advanced options. The following fields are supported:</p>
+<ul>
+<li><em>url</em>: the websocket URL (ws: or wss:)</li>
+<li><em>protocol</em>: the subprotocol ("Sec-WebSocket-Protocol"-header)</li>
+<li><em>pinginterval</em>: the ping interval</li>
+<li><em>headers</em> : optional JSON object containing http headers to send as name/value pairs.</li>
+</ul>
+</dd>
+<dd>
+<p>Usually the return value of this function is assigned to a variable: <code>var websocket_var = websocket(...)</code> to call the methods described below.</p>
+</dd>
+<dt><code>websocket_var.message()</code></dt>
+<dd>is a event source which returns websocket messages received on the socket. It can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>websocket_var.send(message [, opcode])</code></dt>
+<dd>sends <em>message</em> as a websocket message. If <em>opcode</em> is not specified, the message will be sent as "text" (opcode 1).</dd>
+<dt><code>websocket_var.close([closecode [, reason]])</code></dt>
+<dd>closes the websocket with the close-code "Normal" (1000), or the given <em>closecode</em>. If specified, <em>reason</em> is included in the close-message.</dd>
+<dt><code>writefile(filename, something [, append])</code></dt>
+<dd>converts <em>something</em> to a string, and writes the result as file <em>filename</em>. If <em>something</em> == <em>null</em>, <em>filename</em> is deleted. If <em>append</em> is set to true, <em>something</em> is appended to the end of the file if it already exists, otherwise an already existing file is overwritten.</dd>
+<dd>
+<p>Without absolute path specification or special prefix, <em>filename</em> is taken to be relative to the p44script data directory (a directory in permanent flash memory). The following special prefixes can be used:</p>
+<ul>
+<li><code>_/tempfile</code> : means that <em>tempfile</em> is to be used relative to the (volatile) p44script temporary directory.</li>
+<li><code>+/resource</code> : means that <em>resource</em> is to be used relative to the resource directory of the application</li>
+<li><code>=/file</code> : is equivalent to <em>file</em> alone, so relative to the p44script data directory</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use paths or prefixes other than <code>_/</code> for <em>filename</em>, the <em>userlevel</em> must be &gt;=2 (default <em>userlevel</em> for production devices is 0).</p>
+</div>
+</dd>
+</dl>
+<h3 id="introspection-insight-into-variables-functions-handlers-threads"><a id="introspection"></a>Introspection - insight into variables, functions, handlers, threads</h3>
+<p>These functions are designed less for use in scripts, but are primarily useful for debugging in the console/REPL of the <a href="ide.html" target="p44script-IDE">IDE</a>.</p>
+<dl>
+<dt><code>globalvars()</code></dt>
+<dd>returns an object with all global variables as fields.</dd>
+<dt><code>contextvars()</code></dt>
+<dd>returns an object with variables of the current <em>scriptcontext</em>.</dd>
+<dt><code>localvars()</code></dt>
+<dd>returns an object with the current local variables of the currently executed function. If no function is executed, the result is the same as for <em>contextvars()</em>.</dd>
+<dt><code>threadvars()</code></dt>
+<dd>returns an object with the current <em>thread</em> local variables. These are the variables defined with <em>threadvar</em> or implicitly created with <code>on (...) as v {...}</code> or <code>catch as {...}</code>.</dd>
+<dt><code>threads()</code></dt>
+<dd>returns an array with information about the execution <em>threads</em> of the current <em>scriptcontext</em>. For each <em>thread</em>, the list contains an object with the fields <code>id</code>, <code>source</code>, <code>status</code>, and <code>thread</code>. The latter is the thread object itself (appears as <code>null</code> or contains the <em>thread</em> result if the thread has already ended).</dd>
+<dt><code>globalhandlers()</code></dt>
+<dd>returns an array with information about the global event handlers (<code>global on (...) {...}</code>).</dd>
+<dt><code>contexthandlers()</code></dt>
+<dd>returns an array with information about the event handlers in the current * scriptcontext*.</dd>
+<dt><code>globalbuiltins()</code></dt>
+<dd>returns an object whose fields contain information on the globally available built-in functions and global objects.</dd>
+<dt><code>contextbuiltins()</code></dt>
+<dd>returns an object whose fields contain information on the built-in functions and variables available in the current <em>scriptcontext</em> (in addition to those available globally).</dd>
+<dt><code>builtins(object)</code></dt>
+<dd>returns an object whose fields contain information on the built-in methods and fields available in the passed <em>object</em>.</dd>
+</dl>
+<h2 id="controlling-deviceproduct-specific-subsystems">Controlling Device/Product Specific Subsystems</h2>
+<div class="admonition note">
+<p class="admonition-title">Note - Product specific features</p>
+<p>The features described in the following sections depend on the device type, especially the control of external hardware via GPIO connectors, which needs specially equipped device variants (e.g. the LED controller P44-LC-LED, or the automation controller P44-AC-DCM), or then DIY setups like the P44-DSB-X image on Raspberry Pi.</p>
+</div>
+<h2 id="p44-lc-functions-for-use-in-trigger-actions-or-global-scripts">P44-LC: Functions for Use in Trigger Actions or Global Scripts</h2>
+<dl>
+<dt><code>scene(name [, transition_time])</code></dt>
+<dd>invoke scene by <em>name</em>, with optional <em>transition_time</em> in seconds.</dd>
+<dt><code>scene(id, zone_or_device [, transition_time])</code></dt>
+<dd>invoke light scene by <em>id</em> (numeric Digital Strom scene or generic name like "preset 1") in <em>zone</em> (room/zone by name), with optional <em>transition_time</em> in seconds.</dd>
+<dt><code>scene(id, zone_or_device, transition_time, group)</code></dt>
+<dd>invoke scene in <em>group</em> (<em>'light'</em>, <em>'shadow'</em>, <em>'heating'</em>...) by <em>id</em> (numeric Digital Strom scene or generic name like <em>'preset 1'</em>) in <em>zone_or_device</em> (in room/zone by name or in a single device by name or dSUID), with optional <em>transition_time</em> in seconds.</dd>
+<dt><code>sceneid(name)</code></dt>
+<dd>returns the <em>id</em> of the scene (as a generic action description such as <em>'preset 1'</em>) named <em>name</em> , or <em>null</em> if no such scene exists.</dd>
+<dt><code>sceneno(name)</code></dt>
+<dd>returns the (internal, dS) <em>scene number</em> of the user named scene <em>name</em> or having the id  (generic action description) <em>name</em>, or <em>null</em> if no such scene exists.</dd>
+<dt><code>set(zone_or_device, value [, transition_time])</code></dt>
+<dd>set brightness level of a room/zone or a single device (by name or dSUID) to <em>value</em> (0..100), with optional <em>transition_time</em> in seconds.</dd>
+<dt><code>set(zone_or_device, value, transitiontime, channelid)</code></dt>
+<dd>set channel specified by <em>channelid</em> (<em>'brightness'</em>, <em>'hue'</em>, <em>'saturation'</em>, <em>'colortemp'</em>, <em>x</em>, <em>y</em>,  <em>'hPos'</em>, <em>'vPos'</em>, etc... - note: channelIDs are <em>case sensitive</em>! You can also specify <em>0</em> for accessing default channel of the respective device(s)) to <em>value</em> in the room/zone or ingle device (by name or dSUID), with <em>transition_time</em> in seconds.</dd>
+<dt><code>trigger(triggername)</code></dt>
+<dd>execute the action of the trigger named <em>triggername</em>.</dd>
+<dt><code>savescene(name)</code></dt>
+<dt><code>savescene(id, zone [, group])</code></dt>
+<dd>save scene by <em>name</em> or by <em>id</em>, <em>zone</em> and <em>group</em> (default group is <em>'light'</em>).</dd>
+</dl>
+<h2 id="p44-dsbp44-lc-access-to-devices-and-api">P44-DSB/P44-LC: Access to Devices and API</h2>
+<h3 id="device-level"><a id="device_level"></a>Device Level</h3>
+<p>Note: the following functions are available in device level scripts (such as <strong><a href="https://plan44.ch/p44-techdocs/en/tutorials/sceneediting" target="_blank">scene scripts</a></strong>).
+But basically, these functions are members of the <em>device object</em> or of one of its members. The device object can also be obtained from global scripts using the <em>device</em> function, see below. This allows statements like: <em>device('mydevicename').output.channel('brightness',75)</em></p>
+<dl>
+<dt><code>message()</code></dt>
+<dt><code>message(msg)</code></dt>
+<dd>Only in implementation of <em>Scripted Devices</em>, see <strong><a href="https://plan44.ch/p44-techdocs/en/customdevices/" target="_blank">detailed description there</a></strong>: Communication with the <em>external device API</em> of the P44 devices, which can be used to construct your own devices. Use <code>on (message()) as m { ... }</code> to receive API messages and send them with <code>message({ message:... ,index:x, value: y})</code>.</dd>
+<dt><code>output</code></dt>
+<dd>Represents the output of a device (for devices without output, this is undefined).</dd>
+<dt><code>output.applychannels([force [, transitionTimeOverride]])</code></dt>
+<dd>apply changes to channels made with <em>dimchannel</em> and <em>channel</em>. If <em>force</em> is true, even unchanged channels will be re-applied to the hardware. If <em>transitionTimeOverride</em> is set, transition times of all changing channels will be overridden with the specified value. Otherwise, the transition times as loaded from a scene with <em>loadscene</em> or individually set with <em>channel</em> apply.</dd>
+<dt><code>output.syncchannels()</code></dt>
+<dd>force reading back actual channel values from hardware.</dd>
+<dt><code>output.channel(channelid)</code></dt>
+<dd>returns the current value of <em>channelid</em> (<em>'brightness'</em>, <em>'hue'</em>, <em>'saturation'</em>, <em>'colortemp'</em>, <em>x</em>, <em>y</em>,  <em>'hPos'</em>, <em>'vPos'</em>, etc... - note: channelIDs are <em>case sensitive</em>! You can also specify <em>0</em> for accessing default channel of the respective device)</dd>
+<dd>Note that channels have subfields named <em>.valid</em> (true if the channel is know in sync with the hardware), <em>.age</em> (seconds since last change), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the device the channel belongs to, which includes radio reception, battery level etc.). A channel is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>output.channel(channelid, value[, transition_time])</code></dt>
+<dd>set the value of <em>channelid</em> to <em>value</em>, with optional <em>transition_time</em> in seconds.</dd>
+<dd>Note that the channel value change is not automatically applied to the hardware; you need to call applychannels() for that. Also note that channelids are <em>case sensitive</em>! You can  specify <em>0</em> for accessing default channel of the respective device. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.dimchannel(channelid, valuechange, transition_time)</code></dt>
+<dd>change the value of <em>channelid</em> by <em>valuechange</em>, with optional <em>transition_time</em> in seconds. Note that channelids are <em>case sensitive</em>!  You can also specify <em>0</em> for accessing default channel of the respective device. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.movechannel(channelid, direction [, time_per_unit])</code></dt>
+<dd>starts moving the value of <em>channelid</em> in the direction indicated by the sign of <em>direction</em> or stops movement when <em>direction</em> is 0. When optional <em>time_per_unit</em> in seconds is set, it determines speed by setting the time spent per change of 1 unit of the channel value. If <em>time_per_unit</em> is not specified or set to 0, the channel's default dimming speed is used instead. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dd>Note that the channel movement is not automatically started; you need to call applychannels() for that. Also note that channelids are <em>case sensitive</em>! You can specify <em>0</em> for accessing default channel of the respective device.</dd>
+<dt><code>output.loadscene(sceneIdOrNo [, transitionTimeOverride])</code></dt>
+<dd>loads the channels of the output with the values stored in the scene <em>sceneIdOrNo</em>. The scene is determined by its number or preset name (e.g. <em>'bell 1'</em> or <em>'preset 2'</em>). If <em>transitionTimeOverride</em> is specified, the transition times of all channels are set to this value, even if the scene defines other values.
+Please note that the loaded new channel values are <em>not</em> automatically applied to the hardware; <em>applychannels()</em> must be called for this. <em>loadscene()</em> can be used e.g. to load a scene but still adjust it with <em>channel()</em> before applying it to the outputs. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.runactions(sceneIdOrNo)</code></dt>
+<dd>runs the scene actions (e.g. blinking, or starting a <em>scene script</em>) of scene <em>sceneIdOrNo</em>. The scene is determined by its number or preset name (e.g. <em>'bell 1'</em> or <em>'preset 2'</em>).</dd>
+<dt><code>output.stopactions()</code></dt>
+<dd>stops all running scene actions (scene scripts, blinking, etc.) and all running channel transitions. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>sensor('id_or_index')</code></dt>
+<dd>returns the current value of a sensor input. <em>id_or_index</em> can be either the index of the sensor (starting at 0), or the text id (a string like 'temperature' or 'humidity', depending on what the device actually provides)</dd>
+<dd>Note that sensors have subfields named <em>.valid</em> (true if the sensor has an actual value), <em>.age</em> (seconds since last update), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the sensor, which includes radio reception, battery level etc.).  A sensor is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>input('id_or_index')</code></dt>
+<dd>returns the current value of a binary input. <em>id_or_index</em> can be either the index of the binary input (starting at 0), or the text id (a string like 'rain' or 'window_handle', depending on what the device actually provides). Input values are usually 0 or 1, but special inputs like window handles might have more states (2,3...).</dd>
+<dd>Note that inputs have subfields named <em>.valid</em> (true if the input state is known), <em>.age</em> (seconds since last update), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the input, which includes radio reception, battery level etc.). A input is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>button('id_or_index')</code></dt>
+<dd>returns the current value from a button input. <em>id_or_index</em> can be either the index of the button (starting at 0), or the text id (a string like 'up' or 'down', depending on the type of button). The value represents the number of clicks detected (1..4) or &gt;4 when the button is held down.</dd>
+<dd>Note that buttons have subfields named <em>.valid</em> (true if the button state is known), <em>.age</em> (seconds since button was last operated), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the button, which includes radio reception, battery level etc.). A button is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>name</code></dt>
+<dd>Name of the device</dd>
+<dt><code>uid</code></dt>
+<dd>UID (dSUID) of the device, unique identification of the device. The (dS)UID can be used for stable access to the device regardless of any name changes, e.g. with the <code>device()</code> function.</dd>
+<dt><code>view</code></dt>
+<dd>P44-DSB-X, P44-LC-E+L, P44-LC-LED with WS281x ledchains only: access the root view of a ledchain device. The object returned is a P44lgrView, which is a structured object itself with many fields and functions of its own to change properties, (re-)configure and find views in the view hierarchy. Also see <a href="#ledchains">ledchains</a>.</dd>
+</dl>
+<h3 id="global-level"><a id="global_level"></a>Global Level</h3>
+<div class="admonition warning">
+<p class="admonition-title">Note</p>
+<p>these global functions allow accessing specific devices in the P44-DSB/P44-LC directly, or indirectly by using the vDC API. These might be needed for advanced custom applications, such as complex effect setups requiring coordinated control of multiple devices, usually from a global main script. For scripting related to a single device, using device-level scripts such as the scene script is preferable.
+Please be careful accessing devices and API directly.</p>
+</div>
+<dl>
+<dt><code>device('devicename')</code></dt>
+<dt><code>device('UID')</code></dt>
+<dd>access a device by <em>devicename</em> or <em>UID (dSUID)</em>. Note that while using names is more convenient, scripts might break when users rename devices. So using dSUID is recommended for scripts that are meant to remain installed and working for a long time.  At device level, the <em>UID</em> can be read out via the variable <code>uid</code>.</dd>
+<dt><code>valuesource('valuesource_id')</code></dt>
+<dd>find a value source (source of values that can trigger <em>on(xxx)</em> expressions or evaluator conditions) by its internal id. Note that ususally, it is better to access these values using <em>device(x).sensor(y)</em>.</dd>
+<dt><code>vdcapi(json_request)</code></dt>
+<dd>issues a vDC API method call or a notification. Returns the method's response or just an empty result for a notification.</dd>
+<dt><code>webrequest()</code></dt>
+<dt><code>webrequest(sub_endpoint)</code></dt>
+<dt><code>webrequest(sub_endpoint, peer)</code></dt>
+<dd>Is an event source which returns JSON requests sent to the <em>scriptapi</em> endpoint of the JSON API (<code>/api/json/scriptapi</code>). <em>webrequest</em> can be used, for example, with <code>on(webrequest()) as request { ... }</code> to implement API commands in scripts. The return value of <em>webrequest()</em> has the method <em>answer()</em> to answer the request. This mechanism can be used when implementing custom special web pages besides the standard web interface, or to provide custom API to external systems.</dd>
+<dd>The first form without argument catches all requests sent to the <em>scriptapi</em> endpoint</dd>
+<dd>The second form specifies a <em>sub_endpoint</em>, such as "myendpoint" in <code>/api/json/scriptapi/myendpoint</code> and will only receive requests sent to that very endpoint. This allows implement multiple script API endpoints completely independently from each other by just having multiple <code>on(webrequest(…))</code> handlers with different <em>sub_endpoint</em> arguments to <em>webrequest</em>.</dd>
+<dd>The third form additionally specifies <em>peer</em>, which represents the IP address of the request sender. It is also possible to specify <em>undefined</em> for <em>sub_endpoint</em> to filter only by peer.</dd>
+<dt><code>request.answer(json_or_error)</code></dt>
+<dd>
+<p>Replies to a web request (the <em>request</em> variable in the example above) with a JSON response or error. Typically, a response is sent as part of an <em>on()</em> handler, with a construct such as:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">on</span><span class="w"> </span><span class="p">(</span><span class="nx">webrequest</span><span class="p">())</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">request</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// execute request</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="nx">request</span><span class="p">.</span><span class="nx">answer</span><span class="p">({</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;all ok&quot;</span><span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">webrequest must be answered!</p>
+<p>If an <code>on(webrequest()) as request { ... }</code> is installed, it must be ensured that the handler code really answers the request with <em>answer()</em> in every case. Otherwise, the requesting web client will hang until it times out.</p>
+</div>
+</dd>
+</dl>
+<h2 id="led-chains-p44-low-resolution-graphics-p44lrgraphics-access"><a id="ledchains"></a>LED Chains: p44 Low Resolution Graphics (p44lrgraphics) Access</h2>
+<p>p44lrgraphics is a graphics subsystem especially for smart LEDs. Only the p44script interface is described here. <strong>More information can be found in the technical documentation <a href="https://plan44.ch/p44-techdocs/en/lrgraphics/#viewconfig" target="p44-techdocs">online</a></strong>.</p>
+<dl>
+<dt><code>lrg</code></dt>
+<dd>returns the root view of the entire <em>led chain arrangement</em> currently configured, i.e. the view that contains the entire area covered by all mapped ledchain segments.</dd>
+<dt><code>lrgviews()</code></dt>
+<dd>returns a list of available view types.</dd>
+<dt><code>lrgfonts()</code></dt>
+<dd>returns a list of available fonts in the text view.</dd>
+</dl>
+<h3 id="functions-for-configuring-led-arrangement">Functions for configuring LED arrangement</h3>
+<dl>
+<dt><code>addledchain(ledchainconfigstring)</code></dt>
+<dd>adds a LED chain to the LED chain arrangement. <em>ledchainconfigstring</em> has the same format as the --ledchain command line parameter:</dd>
+<dd><code>[LED-type:[leddevicename:]]numberOfLeds:[x:dx:y:dy:firstoffs:betweenoffs][XYSA][W#whitecolor]</code></dd>
+<dt><code>removeledchains()</code></dt>
+<dd>removes all ledchains from the LED chain arrangement.</dd>
+<dt><code>ledchaincover()</code></dt>
+<dd>returns the rectangular area (x,y,dx,dy) currently (possibly partially) covered by the installed ledchains.</dd>
+<dt><code>neededledpower()</code></dt>
+<dd>returns the (approximate) electrical power im milliwatts needed for the currently displayed pixels on the LED chain arrangement. Note that this returns the power that would be needed to display all pixels without limiting (even if currently limited, see <em>setmaxledpower()</em>).</dd>
+<dt><code>currentledpower()</code></dt>
+<dd>returns the (approximate) electrical power im milliwatts actually used for the currently actually displayed pixels. This should not significantly exceed the value set by <em>setmaxledpower()</em>.</dd>
+<dt><code>setmaxledpower(maxpower)</code></dt>
+<dd>sets the (approximate) maximal electrical power in milliwatts the entire LED chain arrangement may consume. If the currently requested pixel colors would exceed the limit, all pixels are dimmed as needed to stay withing the power limit.</dd>
+<dt><code>setledrefresh(refreshinterval [, priorityinterval])</code></dt>
+<dd>Sets the minimum refresh interval for the connected LED chains, i.e. the maximum number of times a new state is output to the LEDs. With increasing number of LEDs per chain this interval may have to be set higher, so that all LEDs can be controlled (default is 15mS). The optional <em>priorityinterval</em> specifies how long priority timing (e.g. scrolling) has priority over secondary timing (e.g. animated parts of a scrolled area). This can be important for smooth tickers etc. (default is 50mS).</dd>
+</dl>
+<h3 id="installing-views">Installing Views</h3>
+<dl>
+<dt><code>setrootview(newrootview)</code></dt>
+<dd>Set <em>newrootview</em> as new root view.</dd>
+<dt><code>makeview(json)</code></dt>
+<dt><code>makeview(resource_file)</code></dt>
+<dd>creates a view according to the configuration from the directly specified <em>json</em> or from a <em>resource_file</em> read JSON text. `lrgviews() returns a list of available view types - Details about view configuration <a href="https://plan44.ch/p44-techdocs/en/lrgraphics/#viewconfig" target="_blank">are available online</a>.</dd>
+</dl>
+<h3 id="view-methods">View Methods</h3>
+<p>The following are methods, i.e. they belong to a <em>view</em> and must be invoked via it. <code>lrg</code> is the root view and is always available, other views can be found with <code>findview()</code> and saved in variables if necessary. For the following, let <code>v</code> be a variable to which a view has been assigned (for example: <code>var v = lrg.findview('LIGHT')</code>):</p>
+<dl>
+<dt><code>v.findview(viewlabel)</code></dt>
+<dd>searches for a subview with the specified <em>viewlabel</em>, returns the view or <em>undefined</em>.</dd>
+<dt><code>v.addview(view)</code></dt>
+<dd>adds <em>view</em> as a subview (if this view supports subviews, e.g. <em>stack</em>).</dd>
+<dt><code>v.parent()</code></dt>
+<dd>returns the parent view (or null if none exists).</dd>
+<dt><code>v.remove()</code></dt>
+<dd>removes the view from its parent view (if there is a parent view), returns <em>true</em> if the view could be removed.</dd>
+<dt><code>v.configure(json)</code></dt>
+<dt><code>v.configure(resource_file)</code></dt>
+<dd>(re)configures the view with the directly specified <em>json</em> or with a <em>resource_file</em> read JSON text.</dd>
+<dt><code>v.set('propertyname', new_value)</code></dt>
+<dd>Sets a single property of the view. This is simply a more convenient way than using <em>configure</em> with a json object containing a single field, but technically does the same thing.</dd>
+<dt><code>v.animator('propertyname')</code></dt>
+<dd>Creates an animator for the specified property of the view. Animatable p44lrg properties are: <em>alpha, x, y, dx, dy, content_x, content_y, rel_content_x, rel_content_y, rel_center_x, rel_center_y, content_dx, content_dy, rotation, scroll_x, scroll_y, zoom_x, zoom_y, colour, bgcolor</em>. Colours have the animatable subcomponents <em>r,g,b,a,hue,saturation,brightness</em>.</dd>
+<dd>If a valid animatable property name is passed, an animator object is returned. See <a href="#animators">animator description</a> for details.</dd>
+<dt><code>v.stopanimations()</code></dt>
+<dd>Stops all animations running in the view.</dd>
+<dt><code>v.reset()</code></dt>
+<dd>Resets all transformations (zoom=1, scroll=0, rotation=0)</dd>
+<dt><code>v.clear()</code></dt>
+<dd>Deletes the content - depending on the view type, this means removing all subviews or deleting the text, etc.</dd>
+</dl>
+<p>These are the basic methods, views have further methods and properties that are described in detail in the <strong>technical documentation <a href="https://plan44.ch/p44-techdocs/en/lrgraphics/#viewconfig" target="_blank">online</a></strong>.</p>
+<h2 id="animators"><a id="animators"></a> Animators</h2>
+<p>Animators generate a series of changes of a numeric value over time, with a number of parameters such as total duration, curve (function) to follow, repetition, delay etc. Animators are returned from <em>animator(...)</em> functions of objects that support animation, such as p44lrg views, or PWM/analog outputs.</p>
+<p>The animator methods which just set a paramater, return the animator itself, such that calls can be chained like <code>animator('dx').delay(2).function('easein',4).runto(50,0:01:02)</code>
+Animations run concurrently with the script that starts them, but <em>await()</em> or <em>on() {}</em> handlers can be used to wait for the end of an animation.</p>
+<p>For the following, let <code>a</code> be a variable to which an animator has been assigned, such as <code>var a = lrg.animator('rotation')</code>.</p>
+<dl>
+<dt><code>a.delay(seconds)</code></dt>
+<dd>delays the start of the animation by the specified time.</dd>
+<dt><code>a.runafter(animation)</code></dt>
+<dd>schedules the animation to start only after the specified <em>animation</em> has completed.</dd>
+<dt><code>a.repeat(cycles [, autoreverse])</code></dt>
+<dd>Causes the animation to repeat <em>cycles</em> times total. If <em>cycles</em> is set to 0, the animation will repeat forever (until explicitly stopped with <em>stop()</em>). if <em>autoreverse</em> is true, the animation is run backwards every second cycle.</dd>
+<dt><code>a.function('animationfunction')</code></dt>
+<dd>Sets the animation function, which can be on of: <em>linear,easein,easeout,easeinout</em>.</dd>
+<dt><code>a.from(startvalue)</code></dt>
+<dd>Sets the start value for the animation. By default, the start value is the current value of the property being animated, but in some cases this is not available for reading (e.g. hue or saturation of a switched off RGB light is undefined), so <em>from</em> allows to set a start value explicitly.</dd>
+<dt><code>a.step(minsteptime [, stepsize])</code>.</dt>
+<dd>This can be used to influence the resolution of the animation. Here <em>minsteptime</em> specifies the minimum time in seconds between two changes of the animated value (0 = use default for the respective hardware) and <em>stepsize</em> the size of the steps on the animated value (0 = automatically according to <em>minsteptime</em>).</dd>
+<dt><code>a.runto(endvalue, duration)</code></dt>
+<dd>Only this method actually starts the animation to reach <em>endvalue</em> within the given <em>duration</em>.</dd>
+<dd>Normally a statement to set up an animation looks like this: <em>animator('color.hue').delay(2).from(0).runto(360,20)</em>, where <em>runto</em> is the last method in the chain.</dd>
+<dd><em>runto</em> can also be called several times without having to specify the other animation parameters again (except <em>runafter</em> and <em>delay</em>, and <em>from</em>).</dd>
+<dt><code>a.reset()</code></dt>
+<dd>Resets the animation to its default values (and stops it beforehand, if it was still running).</dd>
+<dt><code>a.stop()</code></dt>
+<dd>Stops an animation.</dd>
+<dt><code>a.current</code></dt>
+<dd>returns the current value of the animator.</dd>
+<dt><code>a.running</code></dt>
+<dd>returns the time (in seconds) the animator is already running, or null if it is not running.</dd>
+</dl>
+<h2 id="digital-io-signals-and-indicators">Digital I/O (Signals and Indicators)</h2>
+<p>p44script can use various hardware as digital inputs or outputs.
+<a id="d_pinspec"></a>The hardware is defined by a <em>pinspec</em> string as follows:</p>
+<dl>
+<dt><code>gpio.11</code></dt>
+<dd>GPIO number 11.</dd>
+<dt><code>led.ledname</code></dt>
+<dd>system LED with the name <em>ledname</em>.</dd>
+<dt><code>i2c0.MCP23017@22.7</code></dt>
+<dd>pin #7 of an i2c I/O expander chip MCP23017, at i2c address 0x22, on i2c bus number 0. Supported chips are TCA9555, PCF8574, MCP23017.</dd>
+<dt><code>spi12.MCP23S17@0.6</code></dt>
+<dd>Pin #5 of a SPI I/O expander chip MCP23S17, at SPI bus 1.2 (Bus 1, Chip Select 2).</dd>
+</dl>
+<p>The <em>pinspec</em> for digital inputs can be prefixed with a <code>/</code> to invert the signal polarity, and a <code>+</code> or a <code>-</code> to enable a pullup or pulldown on an input (if supported by the hardware):</p>
+<dl>
+<dt><code>+/gpio.22</code></dt>
+<dd>GPIO number 22 with activated pullup, and inverted signal polarity (e.g. for a limit switch connecting the input to GND when active).</dd>
+</dl>
+<div class="admonition danger">
+<p class="admonition-title">Please be careful - hardware access</p>
+<p>These functions provide access to the hardware and can therefore cause malfunctions and, depending on the connected devices, damage if used improperly. The use of these functions therefore requires at least <em>userlevel</em> 1.</p>
+</div>
+<h3 id="functions-for-digital-inputsoutputs">Functions for Digital Inputs/Outputs</h3>
+<dl>
+<dt><code>var d = digitalio(pinspec, output [, initial state])</code></dt>
+<dd>Creates an object to control a digital input (<em>output</em>=false) or output signal (<em>output</em>=true) according to <em>pinspec</em>. With <em>Initial state</em> the initial state is defined. For inputs, <em>initial state</em> plays a role as the expected idle state if changes to the state are to trigger an event (but not setting up the input).</dd>
+</dl>
+<p>The object returned by <em>digitalio()</em> has the following methods (<em>d</em> = object created with <em>digitalio</em>):</p>
+<dl>
+<dt><code>d.toggle()</code></dt>
+<dd>For outputs: changes the output state to the opposite of the current state.</dd>
+<dt><code>d.state()</code></dt>
+<dd>Returns the current state of the signal. If an input signal is set to signal change monitoring with <em>detectchanges()</em>, <em>state()</em> is an <em>event source</em> and can be used as a trigger in <code>on(...) {...}</code> handlers.</dd>
+<dt><code>d.state(newstate)</code></dt>
+<dd>Sets an output signal to the value <em>newstate</em>.</dd>
+<dt><code>d.detectchanges([debounce time [, pollinterval]])</code></dt>
+<dt><code>d.detectchanges(null)</code></dt>
+<dd>Switches signal change monitoring on or off. On power-up, the <em>debounce time</em> and (for inputs whose hardware does not detect signal changes by itself) the <em>pollinterval</em> can be optionally set. With signal monitoring on, <em>state()</em> can be used in <code>on(...) {...}</code> handlers in the trigger condition.</dd>
+</dl>
+<h3 id="functions-for-digital-bus">Functions for Digital Bus</h3>
+<p>A digital bus can be formed from two up to 32 digital lines, which can then be used to input or output a value consisting of several bits.</p>
+<dl>
+<dt><code>var bus = digitalbus(pinspec-list, output [, initial-pin-state])</code></dt>
+<dd>Creates an object for a digital input (<em>output</em>=false) or output bus (<em>output</em>=true), formed by the pins as specified in <em>pinspec-list</em>.</dd>
+<dd><em>pinspec-list</em> is a comma separated list of <a href="#d_pinspec">digital pin specs</a>, listing the digital inputs that form the bus starting with the most significant bit (MSB). To simplify listing multiple pins of the same type, a common prefix can be specified in paranthesis in front of the first pin.</dd>
+<dd>For example, a 3-bit bus consisting of GPIO22..24 could be specified as <code>gpio.22,gpio.23,gpio.24</code> or using the common prefix notation: <code>(gpio.)22,23,24</code>.</dd>
+<dd><em>initial-pin-state</em> determines the initial state of all pins after creating the bus (all 0 or all 1)</dd>
+</dl>
+<p>The object returned by <em>digitalbus()</em> has the following methods (<em>bus</em> = object created with <em>digitalbus</em>):</p>
+<dl>
+<dt><code>bus.value()</code></dt>
+<dd>Reads the current value from an input bus (or the current set value for outputs).</dd>
+<dt><code>bus.value(val)</code></dt>
+<dd>
+<p>for outputs only: sets the output value to <em>val</em>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Glitches during value transitions!</p>
+<p>As output lines do not change synchronously, but one after another in short succession, the bus will show transitional values other than previous value or <em>val</em> for a short time (a "Glitch"). This must be taken into consideration in the design of the circuitry that gets connected to the bus.</p>
+</div>
+</dd>
+<dt><code>bus.buswidth()</code></dt>
+<dd>Returns the number of bits the bus consists of.</dd>
+<dt><code>bus.maxvalue()</code></dt>
+<dd>Returns the highest number the bus can represent.</dd>
+</dl>
+<h3 id="functions-for-indicators">Functions for Indicators</h3>
+<p>An indicator is an output that is usually used for visual signaling to the user (i.e. usually an LED), and also provides some convenience functions for common use cases such as short flashing or blinking.</p>
+<dl>
+<dt><code>var i = indicator(pinspec [, initialValue])</code></dt>
+<dd>Creates an object to control a digital output according to <em>pinspec</em>, which is to be used as an indicator.</dd>
+</dl>
+<p>The object returned by <em>indicator()</em> has the following methods (<em>i</em> = object created with <em>indicator</em>):</p>
+<dl>
+<dt><code>i.on()</code></dt>
+<dt><code>i.on(on_duration)</code></dt>
+<dd>turns on the indicator. If a <em>on_duration</em> is specified, the indicator will automatically turn off after the specified time. However, the <em>on()</em>\ method does not wait for the <em>on_duration</em>; the indicator runs in parallel in the background.</dd>
+<dt><code>i.off()</code></dt>
+<dd>turns the indicator off (and stops any blinking).</dd>
+<dt><code>i.blink([period [, percentOn [, duration]])</code></dt>
+<dd>makes the indicator blink with the <em>period</em>, where <em>percentOn</em> is the duty cycle of the blinking (e.g. 20 = 20% on and 80% off). When the <em>period</em> is specified, the blinking stops automatically. The blinking runs in parallel in the background.</dd>
+<dt><code>i.stop()</code></dt>
+<dd>stops the blinking in the currently active state.</dd>
+</dl>
+<h2 id="analog-io">Analog I/O</h2>
+<p>p44script can use various hardware as analog inputs or outputs.
+<a id="a_pinspec"></a>The hardware is defined by a <em>pinspec</em> string as follows:</p>
+<dl>
+<dt><code>pwmchip0.1</code></dt>
+<dd>PWM signal output number 1 to PWMChip number 0, with default PWM period.</dd>
+<dt><code>pwmchip0.2.100000</code></dt>
+<dd>
+<p>PWM signal output number 2 at PWMChip number 0, with PWM period of 100000nS (= 0.1mS, = 10kHz).</p>
+<div class="admonition note">
+<p class="admonition-title">Please note: Hardware limitations</p>
+<p>Depending on the PWM hardware the possible values for the PWM period are different, and may not be adjustable for each output individually.</p>
+</div>
+</dd>
+<dt><code>i2c0.MAX1161x@33.2</code></dt>
+<dd>Input #2 of a MAX1161x i2c A/D converter, at i2c address 0x33, on i2c bus number 0. Currently supported chips are MAX11612..617, MCP3021 as well as the LM75 temperature sensor.</dd>
+<dt><code>spi12.MCP3008@0.6</code></dt>
+<dd>Input #6 of a SPI-A/D converter type MCP3008 at SPI bus 1.2 (bus 1, chip select 2). Currently supported chips are MCP3008 and MCP3002.</dd>
+</dl>
+<div class="admonition danger">
+<p class="admonition-title">Please be careful - hardware access</p>
+<p>These functions provide access to the hardware and can therefore cause malfunctions and, depending on the connected devices, damage if used improperly. The use of these functions therefore requires at least <em>userlevel</em> 1.</p>
+</div>
+<h3 id="functions-for-analog-inputsoutputs">Functions for Analog Inputs/Outputs</h3>
+<dl>
+<dt><code>var a = analogio(pinspec, output [, initial value])</code></dt>
+<dd>Creates an object to control an analog input (<em>output</em>=false) or output signal (<em>output</em>=true) according to <em>pinspec</em>. With <em>initial</em> the initial value is set.</dd>
+</dl>
+<p>The object returned by <em>analogio()</em> has the following methods (<em>a</em> = object created with <em>analogio</em>):</p>
+<dl>
+<dt><code>a.value()</code></dt>
+<dd>Reads the current Aanlog value of the input (or the current set value for outputs). If an analog input is set to poll regularly with <em>poll</em>()<em>, _value()</em> is an <em>event source</em> and can be used as a trigger in <code>on(...) {...}</code> handlers.</dd>
+<dt><code>a.value(val)</code></dt>
+<dd>for outputs only: sets the output value to <em>val</em>. The possible range of values can be read with <em>range</em>.</dd>
+<dt><code>a.range()</code></dt>
+<dd>returns the value range for the analog signal, and if known, the resolution as an object with the fields <em>min</em>, <em>max</em> and if necessary <em>resolution</em>.</dd>
+<dt><code>a.poll(interval [, tolerance])</code></dt>
+<dt><code>a.poll()</code></dt>
+<dd>sets up a regular poll of an analog input with specified <em>interval</em> (and <em>tolerance</em> if necessary). With regular polling enabled, <em>value()</em> can be used in <code>on(...) {...}</code> handlers in the trigger condition.
+_poll() without parameter turns off regular polling.</dd>
+<dt><code>a.filter(type, [interval [, collection_time]])</code></dt>
+<dd>installs a filter <em>type</em> ("average", "simpleaverage", "min", "max") that filters the read values over the specified <em>interval</em> with a sliding window. The <em>collection_time</em> specifies the time window per data point. The filter function "average" also considers irregular time intervals between data points, "simpleaverage" does not.</dd>
+<dt><code>a.animator()</code></dt>
+<dd>returns an <a href="#animators">animator</a> which can be used to animate the value of an analog output over time.</dd>
+</dl>
+<h2 id="low-level-i2c-access">Low-Level i2c Access</h2>
+<p>To directly access i2c devices which are not directly supported as analog or digital I/O pins, p44script supports low level access to i2c devices.</p>
+<dl>
+<dt><code>var i = i2cdevice(busno,devicespec)</code></dt>
+<dd>Creates a i2c device on bus <em>busno</em> using <em>devicespec</em> to specify the driver and the device address. For low-level access, the driver being used is almost always the "generic" driver, so <em>devicespec</em> usually is something like <code>generic@20</code> (generic i2c device at address hex 20).</dd>
+</dl>
+<p>The object returned by <em>i2cdevice()</em> has the following methods (<em>i</em> = object created with <em>i2cdevice</em>):</p>
+<dl>
+<dt><code>i.smbusread(reg [,type])</code></dt>
+<dd>Returns value of register <em>reg</em> using SMBus protocol. Without setting <em>type</em>, the register is read as a single byte and returned as a number. Setting <em>type</em> to <em>"word"</em> reads a 16-bit word as a number, and <em>"block"</em> reads a block of variable length, which will be returned as a (binary) string.</dd>
+<dt><code>i.smbuswrite(reg, value [,type])</code></dt>
+<dd>Writes <em>value</em> to register <em>reg</em>. Without setting <em>type</em>, the numeric <em>value</em> is is written as a single byte. Setting <em>type</em> to <em>"word"</em> writes numeric <em>value</em> as 16-bit word, and <em>"block"</em> interprets <em>value</em> as a (binary) string and writes it as a block of variable length.</dd>
+<dt><code>i.rawread([count])</code></dt>
+<dd>Without <em>count</em> specified, reads a single byte without any register addressing (no SMBus) and returns it as a number. With <em>count</em> specified (even if set to 1) <em>count</em> bytes will be read and returned as a (binary) string.</dd>
+<dt><code>i.rawwrite(byte)</code></dt>
+<dd>Writes the <em>byte</em> to the device without any register addressing (no SMBus).</dd>
+</dl>
+<div class="admonition danger">
+<p class="admonition-title">Please be careful - hardware access</p>
+<p>I2C related functions provide access to the hardware and can therefore cause malfunctions and, depending on the connected devices, damage if used improperly. The use of these functions therefore requires at least <em>userlevel</em> 1.</p>
+</div>
+<h2 id="low-level-spi-access">Low-Level SPI Access</h2>
+<p>To directly access SPI devices which are not directly supported as analog or digital I/O pins, p44script supports low level access to SPI devices.</p>
+<dl>
+<dt><code>var s = spidevice(busno_and_cs, devicespec)</code></dt>
+<dd>
+<p>Creates a SPI device on bus number (<em>busno_and_cs</em> DIV 10) using CS (chip select) pin number (<em>busno_and_cs</em> MOD 10) using <em>devicespec</em> to specify the driver and the device address, and optionally SPI mode options. For low-level access, the driver being used is almost always the "generic" driver, so <em>devicespec</em> usually is something like <code>generic@15</code> (generic SPI device at address hex 15). If your device does not use any addressing/register semantics, the address part still needs to be specified but the actual number is irrelevant.
+SPI mode options are characters appended to the driver number after a dash, like <code>generic-NP@0</code> for not using a CS line and inverted polarity. The following options are available:</p>
+<ul>
+<li><code>H</code> : inverted phase (compared to original microwire SPI)</li>
+<li><code>P</code> : inverted polarity (compared to original microwire SPI)</li>
+<li><code>C</code> : chip select active high (instead of active low)</li>
+<li><code>N</code> : no chip select</li>
+<li><code>3</code> : 3 wire mode</li>
+<li><code>R</code> : SPI ready indication: slave pulls low to pause</li>
+<li><code>S</code> : slow speed - 1/10 of normal for the bus</li>
+<li><code>s</code> : very slow speed - 1/100 of normal for the bus</li>
+</ul>
+</dd>
+</dl>
+<p>The object returned by <em>spidevice()</em> has the following methods (<em>s</em> = object created with <em>spidevice</em>):</p>
+<dl>
+<dt><code>s.regread(reg [,type, [, count])</code></dt>
+<dd>Returns value of register <em>reg</em> using device/register addressing similar to i2c SMBus (2-byte request header consisting of (device address&lt;&lt;1) and Bit0=read flag in first byte and <em>reg</em> in second byte). Without setting <em>type</em>, the register is read as a single byte and returned as a number. Setting <em>type</em> to <em>"word"</em> reads a 16-bit word as a number, and <em>"bytes"</em> reads as many bytes as specified by <em>count</em>, which will be returned as a (binary) string.</dd>
+<dt><code>s.regwrite(reg, value [,type])</code></dt>
+<dd>Writes to register <em>reg</em> using device/register addressing (see <em>regread()</em>). Without setting <em>type</em>, the register is written with <em>value</em> as a single byte and returned as a number. Setting <em>type</em> to <em>"word"</em> writes numeric <em>value</em> as a 16-bit word, and <em>"bytes"</em> interprets <em>value</em> as a (binary) string and sends all of its bytes.</dd>
+<dt><code>s.writeread(bytes_to_write [, num_bytes_to_read [, fullduplex]])</code></dt>
+<dd>This method represents the basic SPI transaction consisting of writing and reading some bytes either simultaneously (full duplex) or sequentially (half duplex).</dd>
+<dd>The bytes to be sent must be passed as a (binary) string in <em>bytes_to_write</em>; if no bytes should be sent, specify an empty string. <em>num_bytes_to_read</em> specifies the number of bytes to read and returned as a (binary) string. If <em>fullduplex</em> is specified and set to true, reading is simultaneous with writing. Otherwise, reading starts after bytes contained in <em>bytes_to_write</em> are written.</dd>
+</dl>
+<div class="admonition danger">
+<p class="admonition-title">Please be careful - hardware access</p>
+<p>SPI related functions provide access to the hardware and can therefore cause malfunctions and, depending on the connected devices, damage if used improperly. The use of these functions therefore requires at least <em>userlevel</em> 1.</p>
+</div>
+<h2 id="serial-interfaces">Serial interfaces</h2>
+<div class="admonition note">
+<p class="admonition-title">Note: requires userlevel &gt;= 1</p>
+<p>Access to serial interfaces requires <em>userlevel</em> &gt;=1, as access to the hardware is required to create a <code>serial</code> object, which can interfere with normal device operation if the connectionspec is not set correctly.</p>
+</div>
+<dl>
+<dt><code>var s = serial(connectionspec [,delimiter])</code></dt>
+<dd>Creates an object that can operate a serial interface.</dd>
+<dd><em>connectionspec</em> has the form <code>/xxx/serialdevice:commparams</code> or <code>host:port</code>. <em>serialdevice</em> must be a serial device (e.g. <code>/dev/ttyS1</code>) or another serial channel. The form with <em>host</em> and <em>port</em> is used to address a serial interface via the network, e.g. one that is controlled with <a href="https://github.com/plan44/serialfwd" target="_blank">serialfwd</a>.</dd>
+<dd>With <em>commparams</em> the interface parameters can be set in the form: <code>[baud rate][,[bits][,[parity][,[stop bits][,[H]]]]]</code>, where the parity can be <code>O</code>, <code>E</code> or <code>N</code> and <code>H</code> means that hardware handshake should be activated.</dd>
+<dd><em>delimiter</em> can be a string with a character that separates the received data into messages. If <em>delimiter</em> has the value <code>"\n"</code> (linefeed, 0x0A), then preceding <code>"\r"</code> characters are also removed. <em>delimiter</em> = <code>true</code> has the same effect as <em>delimiter</em> = <code>"\n"</code>.</dd>
+</dl>
+<p>Note: In the following, it is assumed that <em>s</em> is a variable that contains a <em>serial</em> instance.</p>
+<dl>
+<dt><code>s.send(something)</code></dt>
+<dd>Sends <em>something</em> converted to a string on the serial interface.</dd>
+<dt><code>s.received()</code></dt>
+<dd>This is an event source. If it is used in a handler such as <code>on(s.received()) as data { ... }</code>, then the handler is executed each time something is received on the serial port, or - if <em>delimiter</em> was set when <em>serial()</em> was called - each time a complete message terminated with <em>delimiter</em> has arrived.</dd>
+<dt><code>s.dtr(active)</code></dt>
+<dd>Activates or deactivates the DTR signal (if supported on the interface) according to <em>active</em>.</dd>
+<dt><code>s.rts(active)</code></dt>
+<dd>Activates or deactivates the RTS signal (if supported on the interface) according to <em>active</em>.</dd>
+<dt><code>s.sendbreak()</code></dt>
+<dd>Sends a <em>break</em> (long signal), if supported by the interface.</dd>
+</dl>
+<h2 id="midi"><a id="midi"></a>MIDI</h2>
+<p>With simple MIDI support, MIDI input devices, in particular <em>controllers</em> with analogue knobs and sliders, some of which can be bought very cheaply, can be connected to parameters of a lighting or other automation system and thus be conveniently controlled. Conversely, MIDI commands can also be sent to control other MIDI devices, for example to create sound effects for an installation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note: requires user level &gt;= 1</p>
+<p>MIDI access requires <em>userlevel</em> &gt;=1, as access to the hardware (serial interfaces <code>/dev/ttySx</code> or ALSA USB-MIDI devices such as <code>/dev/midix</code>) is required to create a <code>midibus</code> object, which can interfere with normal device operation if the connection is not selected correctly.</p>
+</div>
+<dl>
+<dt><code>var midi = midibus(connectionspec)</code></dt>
+<dd>Creates a midibus instance that can operate a MIDI interface.</dd>
+<dd><em>connectionspec</em> has the form <code>/xxx/mididevice</code> or <code>host:port</code>. <em>mididevice</em> must be a serial device (e.g. <code>/dev/midi1</code>) or another serial channel that transmits MIDI data. The form with <em>host</em> and <em>port</em> is used to address a MIDI interface via the network, e.g. one that is controlled with <a href="https://github.com/plan44/serialfwd" target="_blank">serialfwd</a>.</dd>
+</dl>
+<p>Note: In the following, it is assumed that <em>midi</em> is a variable that contains a <em>midibus</em> instance. Basic MIDI knowledge is assumed, details can be found in the <a href="https://midi.org/specifications" target="_blank">MIDI standard</a>.</p>
+<dl>
+<dt><code>midi.send(command, value)</code></dt>
+<dt><code>midi.send(command, key, value)</code></dt>
+<dt><code>midi.send(sysex_string)</code></dt>
+<dd>Sends a MIDI message. <em>command</em> is the status byte of the MIDI message (e.g. <code>0x90</code> for <em>note on</em> on channel 0, or <code>0xB2</code> for <em>control change</em> on channel 2). The first form with two parameters is for MIDI commands that only have one parameter value (e.g. <em>pitch bend</em> or <em>program change</em>). The second form is for commands with two parameters. For note commands, <em>key</em> is the <em>note number</em> and <em>value</em> is the <em>velocity</em>. For <em>control change</em>, <em>key</em> is the <em>control number</em> and <em>value</em> is the setting value. In the third form, the (binary) string <em>sysex</em> is sent as a <em>system_exclusive</em> message. The <em>EOX</em> is automatically inserted at the end and should not be contained in <em>sysex</em>.</dd>
+<dd>For 14-bit controls (numbers 0..31), 2 commands may be sent to transmit the entire 14 bits (depending on how the value has changed). For 14-bit values that fit into one command (such as <em>pitch bend</em>), <em>value</em> is automatically split correctly into the two MIDI data bytes.</dd>
+<dt><code>midi.message()</code></dt>
+<dt><code>midi.message(commandfilter, channelfilter, keyfilter)</code></dt>
+<dd>
+<p>This is an event source. If it is used in a handler such as <code>on(midi.message()) as m { ... }</code>, then the handler is executed every time a midi message arrives and returns an object with the following fields:</p>
+<ul>
+<li>"command" : the MIDI command (<em>status</em>), whereby the channel bits are always 0 for <em>channel voice messages</em> (as they are available separately in <em>channel</em>)</li>
+<li>"channel" : is only available for <em>channel voice messages</em> and specifies the channel.</li>
+<li>"key" : <em>note number</em> or <em>control number</em>, is 0 for commands without this selector value.</li>
+<li>"value" : the data value such as <em>velocity</em> or <em>control value</em>, can be 14-bit depending on the command (e.g. for control numbers 0..63).</li>
+</ul>
+</dd>
+<dd>
+<p>The <em>filter</em> values can be used to determine which commands, channels and keys (notes, controls) are to be returned. For example, <code>message(0x90,2,60)</code> will only return <em>note on</em> from channel 2 with the note 60 ("middle C"). Each of the <em>filter</em> values can be set to <em>undefined</em> if the corresponding filter is not required.</p>
+</dd>
+<dt><code>midi.note()</code></dt>
+<dt><code>midi.note(channelfilter, notefilter, on_only)</code></dt>
+<dd>Like <code>message</code>, but only returns <em>note</em> messages (<em>on</em> and <em>off</em> if <em>on_only</em> is not set to true or false).</dd>
+<dt><code>midi.control()</code></dt>
+<dt><code>midi.control(channelfilter, controlnumberfilter)</code></dt>
+<dd>Like <code>message</code>, but only returns <em>control change</em> messages.</dd>
+<dt><code>midi.pitchbend()</code></dt>
+<dt><code>midi.pitchbend(channelfilter)</code></dt>
+<dd>Like <code>message</code>, but only returns <em>pitch bend</em> messages.</dd>
+<dt><code>midi.program()</code></dt>
+<dt><code>midi.program(channelfilter)</code></dt>
+<dd>Like <code>message</code>, but only returns <em>program change</em> messages.</dd>
+</dl>
+<h2 id="modbus">Modbus</h2>
+<p>Modbus support is based on the <em>libmodbus</em> library, and allows instantiating modbus RTU and TCP slaves and masters.</p>
+<div class="admonition note">
+<p class="admonition-title">Note: needs <em>userlevel</em> &gt;= 1</p>
+<p>Modbus access requires <em>userlevel</em> &gt;=1 because RTU mode needs access to the hardware (serial interface, transmitter/receiver enable lines), which can interfere with normal device operation if not properly chosen.</p>
+</div>
+<h3 id="creating-modbus-instances">Creating Modbus Instances</h3>
+<dl>
+<dt><code>var mbm = modbusmaster()</code></dt>
+<dd>Creates a modbus master instance. It has methods common to both master and slave and some functions specific to modbus master operation, see below.</dd>
+<dt><code>var mbs = modbusslave()</code></dt>
+<dd>Creates a modbus slave instance. It has methods common to both master and slave and some functions specific to modbus slave operation, see below.</dd>
+</dl>
+<p>The objects returned are referenced below as <em>mbm</em> and <em>mbs</em> for master and slave, resp; and as <em>mb</em> in the description of common functions.</p>
+<h3 id="functions-common-to-both-modbus-master-and-slave">Functions Common to Both Modbus Master and Slave</h3>
+<p>Note: In the following, <em>mb</em> is assumed to be a variable containing a modbus master or slave instance.</p>
+<dl>
+<dt><code>mb.connection(connectionspec [, txenablepin|RS232|RTS [, rxenablepin, [, txdisabledelay]])</code></dt>
+<dd>
+<p>Configures the connection method for the modbus instance.</p>
+<ul>
+<li>For modbus RTU, <em>connectionspec</em> consists of a serial device specification of the form <code>/dev[:commParams]</code>, where <em>dev</em> is a serial device and <em>commparams</em> can be <code>[baud rate][,[bits][,[parity][,[stopbits][,[H]]]]]</code>, where parity can be <code>O</code>, <code>E</code> or <code>N</code> and <code>H</code> means hardware handshake enabled. The second argument can specify either an I/O pin that is used to enable the transmitter, <em>RTS</em> to use the RTS line of the UART for enabling the transmitter, and <em>RS232</em> to not manage transmitter drivers at all (e.g. point-to-point serial connection). <em>rxenablepin</em> can specify a second line to enable the receiver separately. <em>txdisabledelay</em> specifies the delay to insert between end of transmission and disabling of transmitter drivers.</li>
+<li>For modbus TCP, <em>connectionspec</em> specifies hostname and port as <code>host[:port]</code>. For slave instances, <em>host</em> is the local IP address to bind the TCP server to - usually 0.0.0.0 (all addresses). For master instances, <em>host</em> is the remote slave's hostname or address to connect to.</li>
+</ul>
+</dd>
+<dt><code>mb.bytetime(byte_time_in_seconds)</code></dt>
+<dd>Configures the time needed to transmit one byte. This is relevant for RTU only, and only needed when the UART has an imprecise baud rate such that actual byte times differ significantly from the theoretical precise values derived from the baud rate.</dd>
+<dt><code>mb.recoverymode(link, protocol)</code></dt>
+<dd>Enables/disables recovery at the link and/or protocol level by setting <em>link</em> and <em>protocol</em> to true or false.</dd>
+<dt><code>mb.debug(enable)</code></dt>
+<dd>Enables libmodbus debug output (directly to stderr, bypassing the normal p44 log system) by setting <em>enable</em> to true.</dd>
+<dt><code>mb.connect([autoflush])</code></dt>
+<dd>Opens the modbus connection. Depending on RTU or TCP, and master or slave role, this opens the serial connection, or initiates a TCP connection to a slave, or starts a listening TCP socket. If <em>autoflush</em> is set to true, data possibly already present in a serial input buffer is flushed (discarded) before starting to listen for modbus protocol data (PDUs).</dd>
+<dd>Note that explicit opening is not required when acting as master - only if the connection is to be kept open over more than a single modbus transaction. Otherwise, calling any of the master functions (see below) will open the connection, perform the operation and close the connection automatically.</dd>
+<dt><code>mb.close()</code></dt>
+<dd>Closes the modbus connection.</dd>
+</dl>
+<h3 id="functions-for-modbus-master">Functions for Modbus Master</h3>
+<p>Note: In the following, <em>mbm</em> is assumed to be a variable containing a modbus master instance.</p>
+<dl>
+<dt><code>mbm.slave(slaveaddress)</code></dt>
+<dd>Sets the <em>slaveaddress</em> for modbus RTU. The function returns the modbus master object, such that it can be used to chain with an actuall access like <code>mbm.slave(1).readreg(100)</code></dd>
+<dt><code>mbm.readinfo()</code></dt>
+<dd>Reads and returns the info (slave id) string from the currently addressed slave.</dd>
+<dt><code>mbm.findslaves(idmatch, from, to)</code></dt>
+<dd>Tries to read the info (slave id) for every slave address starting at <em>from</em> up to and including <em>to</em>, and returns an array for slave addresses. If <em>idmatch</em> is not an empty string, only slaves with slave id strings containing <em>idmatch</em> are returned.</dd>
+<dt><code>mbm.readreg(regaddr [, input])</code></dt>
+<dd>reads the register <em>regaddr</em> (set <em>input</em> to true to access a read-only register) and returns it as an unsigned number.</dd>
+<dt><code>mbm.readsreg(regaddr [, input])</code></dt>
+<dd>reads the register <em>regaddr</em> (set <em>input</em> to true to access a read-only register) and returns it as an signed number.</dd>
+<dt><code>mbm.readbit(bitaddr [, input])</code></dt>
+<dd>reads the bit(coil) <em>bitaddr</em> (set <em>input</em> to true to access an input-only bit) and returns its state as boolean value.</dd>
+<dt><code>mbm.writereg(regaddr, value)</code></dt>
+<dd>writes numeric <em>value</em> to the register <em>regaddr</em>.</dd>
+<dt><code>mbm.writebit(bitaddr, value)</code></dt>
+<dd>writes boolean state of <em>value</em> to the bit (coil) <em>bitaddr</em>.</dd>
+</dl>
+<h3 id="functions-for-modbus-slave">Functions for Modbus Slave</h3>
+<p>Note: In the following, <em>mbs</em> is assumed to be a variable containing a modbus slave instance.</p>
+<dl>
+<dt><code>mbs.slaveaddress([slave_address])</code></dt>
+<dd>returns the currently configured slave address of this slave, or with <em>slave_address</em> specified, sets the slave address. The slave address is only relevant for modbus RTU.</dd>
+<dt><code>mbs.slaveid(slave_id_string)</code></dt>
+<dd>sets the slave id (the info string) to <em>slave_id_string</em>. This is the string that can by a master using <em>readinfo()</em>.</dd>
+<dt><code>mbs.setmodel(registermodel_json)</code></dt>
+<dd>
+<p>Defines the register model of the slave (coils, bits, registers and inputs). <em>registermodel_json</em> must be a JSON object of the following form:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;coils&quot;</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">10</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;bits&quot;</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">10</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;registers&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">20</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">20</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</dd>
+<dd>
+<p>Of "coils", "bits", "registers", "inputs" those not actually needed can be omitted.</p>
+</dd>
+<dt><code>mbs.setreg(regaddr, value [, input])</code></dt>
+<dd>Write numeric <em>value</em> to the register <em>regaddr</em> (or to the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.setbit(bitaddr, state [, input])</code></dt>
+<dd>Write boolean <em>state</em> to the bit (coil) <em>bitaddr</em> (or to the input bit <em>bitaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.getreg(regaddr [, input])</code></dt>
+<dd>Get the unsigned numeric value of the register <em>regaddr</em> (or the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.getsreg(regaddr [, input])</code></dt>
+<dd>Get the signed numeric value of the register <em>regaddr</em> (or the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.getbit(bitaddr [, input])</code></dt>
+<dd>Get the boolean state of the bit (coil) <em>bitaddr</em> (or the input bit <em>bitaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.access()</code></dt>
+<dd>
+<p>This is an event source. If used in a handler like <code>on(mbs.access()) as acc { ... }</code>, every time a master accesses the slave, the handler will be executed with <em>acc</em> returning a json object with the following fields:</p>
+<ul>
+<li>"reg" : the register address accessed or <em>null</em></li>
+<li>"bit" : the bit address accessed or <em>null</em></li>
+<li>"addr" : the bit or register address accessed</li>
+<li>"input" : true if a input bit or input register was accessed</li>
+<li>"write" : true if a bit or register was accessed for write</li>
+</ul>
+</dd>
+</dl>
+<h2 id="dc-motors">DC Motors</h2>
+<p>The DC motor object can combine an analog output for the motor power (usually PWM), one or two digital outputs for controlling the direction of rotation and, with suitable hardware, also switching between driving/braking, an analog input for monitoring the motor current for switching off in case of overload, and finally 2 digital inputs for limit switches to create a convenient motor controller.</p>
+<dl>
+<dt><code>var m = dcmotor(output [, direction1 [, direction2 ]])</code></dt>
+<dd>Creates a dcmotor object. The parameters can be either previously created I/O objects, or <em>pinspec</em> strings to create the corresponding signals directly. <em>output</em> must be an analog output, usually a PWM, which controls the motor power. For a motor with only one running direction, no other signals need to be specified. If the motor can run in both directions (via an H-bridge), then either <em>direction1</em> alone specifies the direction of rotation, or - if <em>direction2</em> is also specified - <em>direction1</em> controls one side and <em>direction2</em> the other side of the H-bridge. In this configuration, active braking and holding of the motor is then also possible (both sides of the H-bridge connected in the same way).</dd>
+</dl>
+<p>The object returned by <em>dcmotor()</em> has the following methods (<em>m</em> = object created with <em>dcmotor</em>):</p>
+<dl>
+<dt><code>m.outputparams(scaling [, offset])</code></dt>
+<dd>If the output for the motor power does not have the value range 0..100 (which is normally the case only for PWMs), the conversion of the 0..100 power specification to the effective output value can be adjusted. By default <em>scaling</em> = 1 and <em>offset</em> = 0.</dd>
+<dt><code>m.power(Power [, Direction [, RampTime [, RampExponent]])</code></dt>
+<dd>Changes the motor power to <em>Power</em> (value range 0..100%). <em>Direction</em> can be 1 (default, forward), -1 (reverse) or 0 (brake). A positive <em>RampTime</em> specifies the time period during which the change should occur. A negative <em>RampTime</em> specifies the time duration for a 0..100 ramp, the effective time is determined proportionally to the change (small power change gives shorter ramp). By default, the <em>RampTime</em> -1 (i.e. 1 second for a 0..100 change) is used.</dd>
+<dt><code>m.stop()</code></dt>
+<dd>Switches the power to 0 without delay. The motor stops and coasts down. To brake, <code>m.power(50,0)</code> can be used instead, for example (braking with 50% power).</dd>
+<dt><code>m.status()</code></dt>
+<dd>Returns the status of the motor as an object with the fields <em>power</em>, <em>direction</em> and if a current sensor is configured, <em>current</em>. If the motor has been stopped by a limit switch or current limiter, an additional <em>stoppedby</em> field indicates that (contains either "overcurrent" or "endswitch"). <em>status()</em> is an <em>event source</em> and can be used as a trigger in <code>on(...) {...}</code> handlers. The status is triggered as an event when a ramp started with <em>power()</em> has reached its final value, or when the motor is stopped by limit switches or current limiting.</dd>
+<dt><code>m.endswitches(positiveEnd, negativeEnd [, debouncetime [, pollinterval]])</code></dt>
+<dd>Defines two digital inputs (<em>positiveEnd</em>, <em>negativeEnd</em>, either as digitalIO object or as <em>pinspec</em>) as limit switches for the end stops of the drive. Optionally, the <em>debouncetime</em> and (for inputs whose hardware does not detect signal changes by itself) the <em>pollinterval</em> can be set.</dd>
+<dd>If a limit switch responds, the motor is stopped in any case, even if it actually runs in the direction of the other limit switch (secures the mechanics if the motor is connected the wrong way round). But to allow the motor to move away from the limit switch, <em>power()</em> is blocked only in the direction towards the active limit switch, but it is possible to start the motor in the other direction.</dd>
+<dt><code>m.currentsensor(sensor [, pollinterval])</code></dt>
+<dt><code>m.currentsensor(null)</code></dt>
+<dd>Defines (or removes if <em>sensor</em> is null) an analog input <em>sensor</em> as a motor current sensor, with the specified <em>pollinterval</em>. If no polling interval is specified, polling occurs 3 times per second.</dd>
+<dt><code>m.currentlimit(Limit [, startup_time [, max_startup_current]])</code></dt>
+<dd>Sets the current limit to <em>Limit</em>. The value is not in A or mA, but simply the value as returned by the analog input (usually a raw A/D value, e.g. 0..4095 for a MAX11615). If this value is exceeded, the motor stops. Since a higher current may be required during startup than during travel, <em>startup_time</em> can be used to specify a duration after execution of a <em>power()</em> command in which allowed current may go up to <em>max_startup_current</em>.</dd>
+</dl>
+<h2 id="p44features-specific-functionalityhardware-support">P44features - Specific Functionality/Hardware Support</h2>
+<p>The following functions are global functions allowing access to "features" (see <a href="https://github.com/plan44/p44features" target="_blank">here</a> for details) and their API from scripts. P44features are a library of specific functionalities usually developed for a particular exhibition/art use case by plan44 (examples see <a href="https://plan44.ch/custom" target="_blank">here</a>). As some of these might be useful for other applications, some P44-XX products include them for use from p44script.</p>
+<div class="admonition note">
+<p class="admonition-title">Note: requires activation on the commandline</p>
+<p>Because the <em>features</em> require special hardware, which is only available in special devices, <em>features</em> to be used must be activated on the commandline at the start of the <em>vdcd</em>-daemon with appropriate options. If no <em>feature</em> is activated at all, then the whole <em>feature</em> system is not activated (also to save RAM) and the following functions do not exist.</p>
+</div>
+<dl>
+<dt><code>feature(name)</code></dt>
+<dd>access a feature by <em>name</em>. Each feature supports some generic methods shown below, and a set of commands and properties that are <a href="https://github.com/plan44/p44features" target="_blank">specific to the feature</a>.</dd>
+<dt><code>featurecall(json_request)</code></dt>
+<dd>issues <em>json_request</em> as a feature API request and returns its response (or null if call has no response). This means <em>json_request</em> is processed the same way as when sent by a feature API client via TCP. A feature API client is an external instance accessing the feature API via a TCP socket connection, usually a system coordinating <a href="https://plan44.ch/custom/#leth" target="_blank">large installations consisting of many P44-xx modules</a>.</dd>
+<dt><code>featurecall()</code></dt>
+<dd>Is an event source that delivers requests to the feature API that could not otherwise be processed. <em>featurecall</em> can be used, for example, with <code>on(featurecall()) as call { ... }</code> to implement additional feature API commands in scripts. The return value of <em>featurecall()</em> has the method <em>answer()</em> to answer the request.</dd>
+<dt><code>call.answer(json_or_error)</code></dt>
+<dd>
+<p>Answers a Feature API request (the <em>call</em> variable in the example above) with a JSON response or error. Typically, a response is sent as part of an <em>on()</em> handler, with a construct such as:</p>
+<div class="highlight"><pre><span></span><code>on (featurecall()) as call {
+  // execute request
+  // ...
+  call.answer({ &quot;status&quot;: &quot;all ok&quot;});
+}
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">featurecall must be answered!</p>
+<p>If an <code>on(featurecall()) as call { ... }</code> is installed, it must be ensured that the handler code really answers the request with <em>answer()</em> in every case. Otherwise, the requesting client may hang.</p>
+</div>
+</dd>
+<dt><code>featureevent(json_event)</code></dt>
+<dd>sends an event message to the current feature API client (if any). Using <em>featureevent()</em>, a device can notify the API client (the coordinating system) of local events such as activated sensors etc.</dd>
+<dt><code>featureevent()</code></dt>
+<dd>returns events (in JSON) issued from active features, such as detected RFID, input changes etc. <em>featureevent()</em> can be passed to <em>await()</em> or used in <code>on (featureevent()) as event { do something with event }</code> handlers. Note that the events are also sent to a connected API client, if any.</dd>
+</dl>
+<p>The following are methods of the feature object (see feature(...) above). We assume the feature assigned to a variable <em>f</em> in the examples below.</p>
+<dl>
+<dt><code>f.status()</code></dt>
+<dd>returns the status of the feature. Is false when the feature is not initialized, or when initialized, a feature-specific JSON value or object.</dd>
+<dt><code>f.init(init_json)</code></dt>
+<dd>initializes the feature, with feature-specific <em>init_json</em> parameters. Some simple features may have no parameters, for those you can pass <em>true</em> as <em>init_json</em>.</dd>
+<dt><code>f.cmd(command [, json_param_object])</code></dt>
+<dd>send <em>command</em> to the feature, with optional <em>json_param_object</em> containing command parameters.</dd>
+<dt><code>f.set(property, value)</code></dt>
+<dt><code>f.set(properties)</code></dt>
+<dd>sets a single <em>property</em> in the feature to a new value <em>value</em>, or multiple properties together according to the fields in <em>properties</em>.</dd>
+</dl>
+  
+
+  <hr/>
+
+  Built with <a href="https://www.mkdocs.org">MkDocs</a>.
+  <!-- MkDocs version      : 1.6.0 -->
+
+</body>
+</html>

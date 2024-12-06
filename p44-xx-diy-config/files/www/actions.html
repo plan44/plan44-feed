@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+
+    <script src="/js/utils.js"></script>
+    <script src="/js/dialog.js"></script>
+    <script src="/js/p44api.js"></script>
+
+    <title>Custom Actions</title>
+
+    <style type="text/css">
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      #actions { background-color: #444; }
+      #actions label { font-weight: bold; }
+    </style>
+
+    <script language="javascript1.2" type="text/javascript"><!--
+
+      function createButtons()
+      {
+        // query triggers
+        apiCall({
+          "method":"getProperty",
+          "dSUID":"root",
+          "query":{
+            "x-p44-localController":{ "triggers":null }
+          }
+        }, 15000).done(function(result) {
+          // table header
+          var uiHTML = '';
+          var triggers = result["x-p44-localController"].triggers;
+          var triggersArray = Object.keys(triggers).map(function (key) {
+            var tr = triggers[key];
+            // parse uiparams field as JSON and replace original text with JSON
+            var uiparams = {};
+            try {
+              uiparams = JSON.parse(tr.uiparams);
+            }
+            catch {}
+            tr.uiparams = uiparams;
+            return { key: key, trigger:tr };
+          });
+          // sort
+          triggersArray = triggersArray.sort(function (a,b) {
+            var ao = a.trigger.uiparams.order;
+            var bo = b.trigger.uiparams.order;
+            if (ao) ao = parseInt(ao); else ao = 9999999;
+            if (bo) bo = parseInt(bo); else bo = 9999999;
+            if (ao==bo)
+              return a.trigger.name.localeCompare(b.trigger.name);
+            return ao<bo ? -1 : 1;
+          });
+          // render
+          for (var i=0; i<triggersArray.length; i++) {
+            var trigger = triggersArray[i].trigger;
+            var triggerKey = triggersArray[i].key;
+            //if (trigger.name.substr(0,10)=="WEBACTION_") {
+            if (trigger.uiparams.show) {
+              // check for section title
+              if (trigger.uiparams.sectiontitle) {
+                // show section title before entry
+                uiHTML += '<h3>' + trigger.uiparams.sectiontitle + '</h3>';
+              }
+              var buttonname = trigger.uiparams.text;
+              if (!buttonname) buttonname = trigger.name;
+              if (trigger.uiparams.type=='slider') {
+                // Slider
+                uiHTML += '<div class="ui-field-contain">' +
+                  '<label for="trigger_value_' + triggerKey.toString() + '"' +
+                  (trigger.uiparams.color ? ' style="color:' + trigger.uiparams.color + '"' : '') +
+                  '>' + buttonname + '</label>' +
+                  '<input type="range" data-highlight="true" onchange="executeTrigger(event, ' + triggerKey.toString() + ');" name="trigger_value_' + triggerKey.toString() + '" id="trigger_value_' + triggerKey.toString() + '"' +
+                  ' min="0" max="100" step="1" />' +
+                  '</div>' + "\n";
+              }
+              else if (trigger.uiparams.type=='input') {
+                // text input
+                uiHTML += '<div class="ui-field-contain">' +
+                  '<label for="trigger_text_' + triggerKey.toString() + '"' +
+                  (trigger.uiparams.color ? ' style="color:' + trigger.uiparams.color + '"' : '') +
+                  '>' + buttonname + '</label>' +
+                  '<input type="text" autocomplete="off" onchange="executeTrigger(event, ' + triggerKey.toString() + ');" name="trigger_text_' + triggerKey.toString() + '" id="trigger_text_' + triggerKey.toString() + '" value="" /></div>' + "\n";
+              }
+              else {
+                // button
+                uiHTML +=
+                  '<button type="button" onclick="executeTrigger(event, ' + triggerKey.toString() + ');" data-theme="c"' +
+                  (trigger.uiparams.color ? ' style="background-color:' + trigger.uiparams.color + '"' : '') +
+                  '>' + buttonname + '</button>';
+              }
+            }
+          }
+          $("#triggerButtons").html(uiHTML).trigger('create');
+        }).fail(function(domain, code, message) {
+          // NOP
+        });
+      }
+
+
+      function executeTrigger(event, triggerId)
+      {
+        // execute
+        var target = getTarget(event)
+        var triggerParam = undefined
+        if (target) {
+          if (target.type=='number') {
+            triggerParam = $('#'+target.id).val();
+          }
+          else if (event.target.getAttribute('type')=='text') {
+            triggerParam = $('#'+target.id).val();
+          }
+        }
+        apiCall({
+          "method": "x-p44-testTriggerAction",
+          "dSUID":"root",
+          "triggerID":triggerId,
+          "triggerParam":triggerParam
+        }).done(function() {
+          // provide visible feedback
+          buttonFeedback(target,'orange')
+        });
+      }
+
+
+      $(function()
+      {
+        createButtons();
+      });
+
+
+    --></script>
+
+
+  </head>
+
+  <body>
+
+    <div id="actions" data-role="page">
+      <div data-role="content">
+        <abbr title="Trigger actions can be configured to appear as buttons or input controls on this page"><h2>Custom Actions</h2></abbr>
+        <div id="triggerButtons" style="margin-bottom: 20px;">
+        </div>
+      </div>
+
+          </div>
+
+  </body>
+
+</html>

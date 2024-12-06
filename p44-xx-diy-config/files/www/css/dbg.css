@@ -1,0 +1,249 @@
+
+/* best reset, see: https://css-tricks.com/box-sizing/ */
+html {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  -webkit-box-sizing: inherit;
+  -moz-box-sizing: inherit;
+  box-sizing: inherit;
+}
+
+::-webkit-scrollbar {
+  background: #555;
+  padding: 2px;
+}
+::-webkit-scrollbar-thumb {
+  background: #999;
+  border-radius: 20px;
+  padding: 2px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+button, select {
+  height: 24px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: bold;
+  background-color: #FFF6;
+  border-radius: 12px;
+  border-width: 0;
+}
+button:not(:last-child), select:not(:last-child) {
+  margin-right: 8px;
+}
+
+button.danger {
+  background-color: #F006;
+}
+
+button:hover, select:hover {
+  background-color: #FFFA;
+}
+button:active {
+  background-color: #333A;
+}
+
+/* icon only */
+button.icon {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
+  width: 40px;
+}
+/* icon + text, left aligned */
+button.icontxt {
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: left 12px;
+  background-size: 20px 20px;
+  padding-left: 35px;
+}
+select.icontxt {
+  background-repeat: no-repeat;
+  background-position-y: center;
+  /* background-position-x: right 12px; // does work in chrome only since 2023 */
+  background-position-x: right;
+  background-size: 32px 20px; /* instead of offset in background-position, increase x size) */
+  padding-right: 35px;
+}
+
+input, textarea {
+  border-radius: 4px;
+  border: 0px;
+  padding: 3px;
+  background-color: #FFFD;
+}
+
+.i-abbr { background-image: url(/assets/abbr.svg); }
+.i-abort { background-image: url(/assets/abort.svg); }
+.i-check { background-image: url(/assets/check.svg); }
+.i-clear { background-image: url(/assets/clear.svg); }
+.i-continue { background-image: url(/assets/continue.svg); }
+.i-debug { background-image: url(/assets/debug.svg); }
+.i-docs { background-image: url(/assets/docs.svg); }
+.i-dropdown { background-image: url(/assets/dropdown.svg); }
+.i-eval { background-image: url(/assets/eval.svg); }
+.i-execute { background-image: url(/assets/execute.svg); }
+.i-ledsim { background-image: url(/assets/ledsim.svg); }
+.i-levels { background-image: url(/assets/levels.svg); }
+.i-panel_b { background-image: url(/assets/panel_b.svg); }
+.i-pause { background-image: url(/assets/pause.svg); }
+.i-play { background-image: url(/assets/play.svg); }
+.i-playpause { background-image: url(/assets/playpause.svg); }
+.i-reload { background-image: url(/assets/reload.svg); }
+.i-resize { background-image: url(/assets/resize.svg); }
+.i-restart { background-image: url(/assets/restart.svg); }
+.i-save { background-image: url(/assets/save.svg); }
+.i-step_into { background-image: url(/assets/step_into.svg); }
+.i-step_out { background-image: url(/assets/step_out.svg); }
+.i-step_over { background-image: url(/assets/step_over.svg); }
+.i-step { background-image: url(/assets/step.svg); }
+
+select {
+  appearance: button;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+dialog {
+  border-radius: 10px;
+  background-color: teal;
+  font-family: sans-serif;
+}
+
+/* standard layout components */
+
+.main {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  scrollbar-color: #999 #555;
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  font-family: sans-serif;
+  justify-content: space-between;
+}
+
+.hidden {
+  display: none !important;
+  visibility: hidden !important;
+}
+.collapse {
+  display: none !important;
+  visibility: collapse !important;
+}
+
+.section {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.controls, .background {
+  background-color: teal;
+}
+.bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100vw;
+}
+.baritem {
+  padding: 8px;
+  /* margin: 0 8px; */
+  flex-direction: row;
+  display: flex;
+  align-items: center;
+}
+.nowrap {
+  flex-wrap: nowrap !important;
+}
+.expand { /* to make the bar item expand to available space */
+  flex: 5 0 auto !important;
+}
+.spacer { /* space between bar items */
+  flex: 0 0 25px;
+}
+.baritem label,.label {
+  margin-right: 8px;
+  flex: 1 0 auto;
+  text-align: right;
+}
+.baritem select,input {
+  margin-right: 12px;
+}
+.baritem input {
+  font-size: 14px;
+  width: 66px;
+  max-width: 50vw;
+}
+.baritem textarea {
+  flex: 5 0 auto;
+  font-size: 14px;
+  resize: vertical;
+  margin: 4px 8px;
+  min-height: 3em;
+}
+
+
+/* jquery-resizable */
+/* - horizontal panel*/
+.panel-container-horizontal {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  height: 100%;
+  /* avoid browser level touch actions */
+  xtouch-action: none;
+}
+.splitter-vertical {
+  flex: 0 0 auto;
+  width: 18px;
+  background: url(/assets/hhandle.png) center center no-repeat #757575;
+  height: 100%;
+  cursor: col-resize;
+  max-height: inherit;
+}
+.panel-right {
+  flex: 1 1 auto;
+  /* resizable */
+  padding: 0;
+  width: 70vw;
+  height: 100%;
+  max-height: inherit;
+}
+/* - vertical panel */
+.panel-container-vertical {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+/* .panel-container-vertical:not(.editoronly) .panel-top {
+  min-height: 30vh;
+  max-height: 80vh;
+  height: 60vh;
+} */
+.splitter-horizontal {
+  flex: 0 0 auto;
+  height: 18px;
+  background: url(/assets/vhandle.png) center center no-repeat #757575;
+  cursor: row-resize;
+}
+.panel-bottom {
+  flex: 1 1 auto;
+  /* resizable */
+  padding: 0;
+  background: #eee;
+}
+
+/* end jquery-resizable */
+
+

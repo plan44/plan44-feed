@@ -1,0 +1,337 @@
+*:not(input):not(textarea) {
+  // -webkit-user-select: none; /* disable selection/Copy of UIWebView */
+  -webkit-touch-callout: none; /* disable the IOS popup when long-press on a link */
+}
+h1 { font-family:Helvetica; font-size:42pt; }
+h2 { font-family:Helvetica; font-size:21pt; }
+.devinfo p { }
+.infovalue {
+  font-weight: bold;
+  -moz-user-select: all !important;
+  -webkit-user-select: all !important;
+  -ms-user-select: all !important;
+  user-select: all !important;
+}
+.infoalert { color: red; }
+.custdev_initmsg {
+  font: monospace;
+  overflow-x: scroll;
+  text-shadow: none;
+  padding: 5px;
+  -moz-user-select: all;
+  -webkit-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+#deviceTable td {
+  padding: 0 4px;
+  vertical-align:middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#deviceTable .hdrcell { }
+#deviceTable .vdccell { font-weight: bold; }
+#deviceTable .devcell { }
+
+#deviceTable .dsuidcell { font-weight: bold; }
+#deviceTable .iconcell { font-weight: normal; text-align: center; }
+
+#deviceTable .devcell.actioncell { text-align: right; min-width: 135px; max-width: 135px; }
+#deviceTable .vdccell.actioncell { text-align: right; }
+
+/* smallest case, larger cases will modify these via media queries */
+#deviceTable .namecell { max-width: 100px; }
+#deviceTable .zonecell { max-width: 80px; }
+#deviceTable .modelcell { max-width: 60px; }
+#deviceTable .idcell { max-width: 60px; }
+#deviceTable .infocell { max-width: 50px; }
+#deviceTable .statuscell { max-width: 50px; }
+#deviceTable .bridgecell { max-width: 30px; }
+
+#deviceTable .notpresent { color: #7F7F7F; }
+
+
+@media (max-width: 30em) {
+  * { font-size: small; }
+  #deviceTable .devcell.actioncell { text-align: right; min-width: 95px; max-width: 95px; }
+  #deviceTable .namecell { max-width: 50px; }
+  .dialogbox { max-width: 270px; }
+  .widedialog { max-width: 100%; }
+  .ui-btn-inline { margin-left: 2px; margin-right: 2px; }
+}
+
+/* system page block breakpoint */
+@media screen and (max-width: 600px) {
+  .ui-mini { margin-left: 2px; margin-right: 2px; }
+  #system_contents .ui-block-a,
+  #system_contents .ui-block-b { width: 100%; float: none; }
+  .renamebutton { display:none; }
+  #lightsTable .namecell { max-width: 50px; }
+  #lightsTable .slidercell input { display: none; }
+  #lightsTable .slidercell .ui-slider-track { margin-left: 15px; }
+}
+
+/* device list column toggle breakpoints */
+@media screen and (min-width: 480px) {
+  .dialogbox { max-width: 480px; }
+  .widedialog { max-width: 100%; }
+  #deviceTable th.ui-table-priority-1, #deviceTable td.ui-table-priority-1 { display: table-cell; }
+  #lightsTable th.ui-table-priority-1, #lightsTable td.ui-table-priority-1 { display: table-cell; }
+}
+@media screen and (min-width: 700px) {
+  .dialogbox { max-width: 600px; min-width: 480px; }
+  #deviceTable th.ui-table-priority-2, #deviceTable td.ui-table-priority-2 { display: table-cell; }
+  #lightsTable th.ui-table-priority-2, #lightsTable td.ui-table-priority-2 { display: table-cell; }
+}
+@media screen and (min-width: 900px) {
+  /* allow wider fields */
+  .dialogbox { max-width: 640px; min-width: 480px; }
+  .widedialog { max-width: 100%; min-width: 850px; }
+  #deviceTable .namecell { max-width: 180px; }
+  #deviceTable .modelcell { max-width: 180px; }
+  #deviceTable .idcell { max-width: 160px; }
+  #deviceTable .infocell { max-width: 100px; }
+  #deviceTable .statuscell { max-width: 150px; }
+  #deviceTable th.ui-table-priority-3, #deviceTable td.ui-table-priority-3 { display: table-cell; }
+  #lightsTable th.ui-table-priority-3, #lightsTable td.ui-table-priority-3 { display: table-cell; }
+  #lightsTable .namecell { max-width: 180px; }
+  #lightsTable .modelcell { max-width: 180px; }
+}
+@media screen and (min-width: 1100px) {
+  #deviceTable th.ui-table-priority-4, #deviceTable td.ui-table-priority-4 { display: table-cell; }
+  #lightsTable th.ui-table-priority-4, #lightsTable td.ui-table-priority-4 { display: table-cell; }
+}
+/* Manually hidden */
+#deviceTable th.ui-table-cell-hidden,
+#deviceTable td.ui-table-cell-hidden { display: none; }
+/* Manually shown */
+#deviceTable th.ui-table-cell-visible,
+#deviceTable td.ui-table-cell-visible { display: table-cell; }
+
+#deviceTable th.sorted { text-decoration: underline; }
+
+
+.centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+table.inputsInfoTable { border: 1px; border-color: transparent; width: 100%; }
+.inputsInfoTable th { padding:8px; vertical-align:middle; }
+.inputsInfoTable td { padding:8px; vertical-align:middle; }
+.inputsTableDesc { text-align: left; }
+.inputsTableAge { text-align: left; }
+th.inputsTableValue { text-align: left; }
+td.inputsTableValue { text-align: right; font-weight: bold; }
+td.inputsTableError { text-align: right; }
+
+
+.actioncell a { margin: 5px 2px; }
+
+.techDetails { margin: 2px; margin-bottom: 20px; }
+.techDetails pre { margin: 2px; padding: 5px; overflow-x: hidden; }
+.techDetails a { font-weight: normal; }
+.techDetails .expanded { font-size: smaller; }
+.techDetails .expanded a { margin-bottom: 2em; float: right; text-decoration: underline; }
+
+
+#roomSelect .ui-block-a { width: 60% !important; }
+#roomSelect .ui-block-b { width: 20% !important; }
+#roomSelect .ui-block-c { width: 20% !important; }
+
+#lightsTable .namecell { max-width: 80px; }
+#lightsTable .zonecell { max-width: 60px; }
+#lightsTable .modelcell { max-width: 60px; }
+#lightsTable .idcell { max-width: 60px; }
+#lightsTable .actioncell { text-align: right; min-width: 80px; max-width: 80px; }
+#lightsTable .fullrowinfocell { text-align: center; height: 42px;}
+
+#lightsTable td {
+  padding-top:0; padding-bottom:0;
+  vertical-align:middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#lightsTable td.slidercell { min-width: 120px; }
+
+#scenesTable { margin-top: 42px; }
+#scenesTable th { vertical-align: middle; }
+#scenesTable td {
+  padding-top:0; padding-bottom:0;
+  vertical-align:middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#scenesTable .namecell { max-width: 200px; }
+#scenesTable .desccell { max-width: 200px; }
+#scenesTable .actioncell { text-align: right; min-width: 200px; max-width: 200px; }
+
+#triggersTable th { vertical-align: middle; }
+#triggersTable td {
+  padding-top:0;
+  padding-bottom:0;
+  vertical-align:middle;
+  text-overflow: ellipsis;
+  overflow-wrap: break-word; white-space: nowrap; overflow: hidden;
+}
+#triggersTable .namecell { max-width: 100px; }
+#triggersTable .triggerconditioncell { max-width: 84px; }
+#triggersTable .triggeractioncell { max-width: 200px; }
+#triggersTable .triggeruicell { max-width: 42px; width: 35px; text-align: center; }
+#triggersTable .actioncell { max-width: 115; width: 115px; text-align: right; }
+
+#zonesTable .namecell { width: 100%; }
+#zonesTable .actioncell { text-align: right; min-width: 120px; max-width: 120px; }
+
+
+
+span.device   { background-color: #00cf6c; }
+span.conflict { background-color: #ffb700; }
+span.error    { background-color: #ff0000; }
+
+span.errortext { color: #e80000; }
+span.warningtext { color: #ff9e00; }
+
+
+#deviceInfoTable td { padding-bottom: 8px; }
+
+.dialogTitleIcon { display: inline; margin-right: 15px; }
+.dialogTitleText { display: inline-block; }
+
+#vdcInfoTable td { padding-bottom: 8px; }
+
+.varDefs th { padding: 4px 8px; text-align: left; }
+.varDefs td { padding: 4px 8px; }
+.varDefs input { font-size: 14px; }
+.varDefs a { text-decoration: none; text-shadow:none; margin-left: 10px; }
+.varDefs a:hover { font-weight: bold; }
+
+.evaluationCheckResult { font-size: smaller; color: #00D007; }
+.evaluationCheckError { color: #ff4500; }
+.evaluationCheckNull { color: #ff9000; }
+
+.channelDoCareCbx { display: inline-block; margin-right: 10px; }
+.channelDoCareCbx.hidden { display: none; }
+
+#logcontent h3 { font-weight: bold; font-size: 16px; }
+#logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+#diyWarning em { color:red; }
+
+.bridgedIndicator { color:rgb(45, 184, 1); }
+
+
+#restoreCompatWarnings { color:#e80000; }
+
+#vdcDangerousScanButtons { padding: 10px; }
+
+.ui-table-columntoggle-btn { display: none !important; }
+
+.p44-mini-input + div.ui-input-text { width: 100px !important; float: right; }
+.p44-mini-input-end { clear: right; }
+
+.referencelink { float: right; font-size: smaller;}
+
+.scriptLinks { float: right; font-size: smaller; text-align: right;}
+
+.fieldsTable td { padding: 4px 8px; }
+.fieldsTable input { font-size: 14px; }
+
+pre.logwrap { white-space: pre-wrap; word-wrap: break-word; }
+
+.slider_generic + .ui-slider-track {
+  background-image: linear-gradient(to right, #666 0%, #666 100%);
+  background-position: initial initial;
+  background-repeat: initial initial;
+}
+
+.slider_covering + .ui-slider-track {
+  background-image: linear-gradient(to right, #666 0%, #666 100%);
+  background-position: initial initial;
+  background-repeat: initial initial;
+}
+
+/* hue channel special coloring */
+.slider_hue + .ui-slider-track  {
+  background-image: linear-gradient(
+    to right,
+    rgb(255 ,0, 0) 0%,
+    rgb(255 ,255, 0) 16%,
+    rgb(0 ,255, 0) 33%,
+    rgb(0 ,255, 255) 50%,
+    rgb(0 ,0, 255) 66%,
+    rgb(255 ,0, 255) 83%,
+    rgb(255 ,0, 0) 100%
+  );
+  background-position: initial initial;
+  background-repeat: initial initial;
+}
+
+/* brightness channel */
+.slider_brightness + .ui-slider-track  {
+  background-image: linear-gradient(to right, #555 10%, #fff7a8 90%);
+  background-position: initial initial;
+  background-repeat: initial initial;
+}
+
+/* color temperature channel */
+.slider_colortemp + .ui-slider-track  {
+  background-image: linear-gradient(to right, #b3e5ff 0%, #fff3a1 32.79%, #ff9f79 100%);
+  background-position: initial initial;
+  background-repeat: initial initial;
+}
+
+
+/* simplistic p44 progress bar */
+
+div.p44_progressbar {
+  position: relative;
+  margin: 0;
+  margin-top: 20px;
+  width: 100%;
+  height: 21px;
+  padding: 0px;
+  background-color:#d0d0d0;
+  border-radius: 15px;
+  border: 1px solid black;
+}
+
+div.p44_progressbar_text {
+  position: absolute;
+  width: 100%;
+  padding: 2px;
+  text-align: center;
+  font-family: sans-serif;
+  font-weight: bold;
+  text-shadow: none;
+}
+
+div.p44_progressbar_gauge {
+  background-color: #4e98ff;
+  padding: 0px;
+  margin-left: 0px;
+  margin-right: -2px; /* needed to avoid gauge enlarging bar */
+  margin-top: 0px;
+  margin-bottom: 1px;
+  width: 22px;
+  border-radius: 15px;
+  height: 21px;
+}
+
+#onboarding_qrcode {
+  width: 200px;
+  background: white;
+  padding: 15px;
+  margin: 30px auto;
+}
+#manualpairingcode {
+  text-align: center;
+  margin: 30px auto;
+}
+
+.buttonblock {
+  margin-top: 1.2em;
+}
+
+

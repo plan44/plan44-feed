@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>p44script IDE</title>
+
+<link rel="stylesheet" href="/css/dbg.css" />
+
+<style type="text/css" media="screen">
+
+  #panels {
+    background-color: #828282;
+  }
+
+  /* tab bar */
+
+  #tabs {
+    display: flex;
+    flex-flow: row nowrap;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  #tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #scriptselector {
+    width: 130px;
+  }
+
+  .tab {
+    flex: 1 1 auto;
+    display: flex;
+    margin: 0;
+    height: 40px;
+    background-color: #0005;
+    border-right: 2px solid #FFF8;
+    max-width: 200px;
+  }
+  .tab:hover, .tab.selected {
+    background-color: #000A;
+  }
+  .tab.unsaved .text {
+    font-weight: bold;
+    color: white;
+  }
+  .tab .text {
+    flex: 1 1 auto;
+    padding: 6px 8px 12px 0px;
+    line-height: 30px;
+    color: lightgray;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* editor */
+
+  #editorpanel {
+    /* js-resizable */
+    flex: 0 0 auto; /* no flex, this is resized manually */
+    height: 60vh; /* default height when loaded */
+    min-height: 20vh; /* resizable to this minimum */
+    background-color: #525252;
+  }
+  #editor {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* debugpanel */
+
+  #debugpanel {
+    flex: 1 1 30vh;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* REPL/inspector */
+
+  #replpanel {
+    /* js-resizable */
+    flex: 0 0 auto; /* no flex, this is resized manually */
+    width: 40vw; /* default width when loaded */
+    min-width: 20vw; /* resizable to this minimum */
+    background-color: #525252;
+  }
+  #repl {
+    width: 100%;
+    height: 100%;
+    max-height: inherit;
+  }
+  .repl_prompt {
+    color: #00a551;
+  }
+
+  #logpanel {
+    overflow: auto;
+    padding: 0;
+    min-width: 20vw; /* resizable to this minimum */
+  }
+  #log_text {
+    margin: 0;
+    padding: 4px;
+    height: 100%;
+    max-height: inherit;
+    font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, "Source Code Pro", source-code-pro, monospace;
+    font-size: small;
+    text-wrap: nowrap;
+  }
+  #log_text p {
+    margin: 0.2em;
+  }
+  .logtxt {
+    display: inline;
+  }
+  .logts {
+    color: #000096;
+  }
+  .logctx {
+    color: gray;
+  }
+  #log_text.logabbr div.logabbr {
+    display: none;
+  }
+
+  /* bottom button bar */
+
+  #threadcontrols {
+    background-color: #00ff595b
+  }
+
+  /* general */
+
+  .error {
+    color: red;
+  }
+  .ok {
+    color: green;
+  }
+  .annotation, .comment {
+    color: gray;
+  }
+
+  /* ace line position markers */
+
+  .runpos, .threadpause {
+    background: #004919;
+    position: absolute;
+    width: 100% !important;
+    left: 0 !important;
+  }
+  .errorpos, .errorval {
+    background: #5c0000ff;
+    position: absolute;
+    width: 100% !important;
+    left: 0 !important;
+  }
+  .contextmarker {
+    background: #00ff5933;
+    position: absolute;
+    width: 100% !important;
+    left: 0 !important;
+  }
+
+  /* ace breakpoint */
+
+  .ace_gutter-cell.ace_breakpoint {
+    /* sample
+    border-radius: 20px 0px 0px 20px;
+    box-shadow: 0px 0px 1px 1px #ff0000 inset;
+    */
+    /* square */
+    box-shadow: 16px 0px 0px 0px #ff0000 inset;
+  }
+
+
+</style>
+</head>
+
+
+<body class="main background">
+
+<div class="section">
+  <div id="tabbar" class="bar nowrap controls">
+    <div class="baritem">
+      <select id="scriptselector" onchange="script_selected(event);" class="icontxt i-dropdown" title="Select a script to load for editing or debugging">
+      </select>
+    </div>
+    <div id="tabs"></div>
+  </div>
+</div>
+
+<div id="panels" class="panel-container-vertical section">
+
+  <div id="editorpanel" class="section resizable" style="transition: all;">
+    <div id="editor"></div>
+  </div>
+
+  <div id="h_splitter" class="splitter-horizontal" style="touch-action: none;"></div>
+
+  <div id="debugpanel" class="section panel-bottom panel-container-horizontal">
+    <div id="replpanel" class="resizable" style="transition: all;">
+      <div id="repl"></div>
+    </div>
+
+    <div id="v_splitter" class="splitter-vertical" style="touch-action: none;"></div>
+
+    <div id="logpanel" class="panel-right">
+      <div id="log_text"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="controls" class="section">
+  <div class="bar controls">
+    <div class="baritem">
+      <button id="toggledbg" onclick="toggleDebugViews()" title="[F4] Show or hide debug area" class="icon i-panel_b">&nbsp;</button>
+      <button id="togglefold" onclick="togglefold()" title="[Shift-F2] Collapse/Expand console text" class="icon i-levels">&nbsp;</button>
+      <button id="clearrepl" onclick="clear_repl()" title="[Cmd/Ctrl-K] Clear the console, keep current line or selected text" class="icon i-clear">&nbsp;</button>
+    </div>
+    <div id="threadcontrols" class="baritem">
+      <select id="threadselector" onchange="thread_selected(event);" class="icontxt i-dropdown" title="Select thread to inspect/debug"></select>
+      <div id="threadbuttons">
+        <button onclick="continue_current_thread('breakpoint')" title="Continue to next breakpoint" class="icon i-continue">&nbsp;</button>
+        <button onclick="continue_current_thread('step_over')" title="[F6] Step to next statement" class="icon i-step_over">&nbsp;</button>
+        <button onclick="continue_current_thread('step_into')" title="[F7] Step into functions" class="icon i-step_into">&nbsp;</button>
+        <button onclick="continue_current_thread('step_out')" title="[F8] Step out of current function" class="icon i-step_out">&nbsp;</button>
+        <button onclick="continue_current_thread('terminate')" title="Abort this thread" class="icon i-abort">&nbsp;</button>
+      </div>
+    </div>
+    <div class="baritem expand">&nbsp;</div>
+    <div id="sourcecontrols" class="baritem">
+      <button id="save" onclick="save_script(editor.session.scriptid)" title="[Cmd/Ctrl-S] Save the script (might stop running scripts)" class="icon i-save">&nbsp;</button>
+      <div id="scriptbuttons">
+        <button onclick="execcommand(editor.session.scriptid, 'check')" title="Save and check the script syntax. If source has changed, running script is stopped." class="icon i-check">&nbsp;</button>
+        <button onclick="execcommand(editor.session.scriptid, 'debug')" title="Start debugging the script, stop at first line" class="icon i-debug">&nbsp;</button>
+        <button onclick="execcommand(editor.session.scriptid, 'restart')" title="Save and (re)start the script" class="icon i-restart">&nbsp;</button>
+        <button onclick="execcommand(editor.session.scriptid, 'stop')" title="Stop the script (if it is still running)" class="icon i-abort">&nbsp;</button>
+        <button onclick="evalcommand(editor.session.scriptid, 'restart', true)" title="[F9] Evaluate the script or expression, display result" class="icon i-eval">&nbsp;</button>
+      </div>
+    </div>
+    <div class="baritem spacer">&nbsp;</div>
+    <div id="rightbuttons" class="baritem">
+      <button onclick="clear_log()" title="[Cmd/Ctrl-Shift-K] Clear the log output" class="icon i-clear">&nbsp;</button>
+      <button onclick="toggle_shortlog()" title="Toggle shortened/full log line display" class="icon i-abbr">&nbsp;</button>
+      <button onclick="log_pause(!gLogPaused)" title="[Cmd/Ctrl-Shift-P] Pause/Resume Log output" class="icon i-playpause">&nbsp;</button>
+      <select id="loglevel" onchange="loglevel_selected(event);" title="Change log level" class="icontxt i-dropdown">
+        <option title="Fatal Errors only - basically means no logging" value="2">‼️</option>
+        <option title="Error - only errors" value="3">🔴</option>
+        <option title="Warning - only warnings and errors" value="4">⚠️</option>
+        <option title="Notice - events to notice in normal operation" value="5">✅</option>
+        <option title="Info - details about how things work internally" value="6">ℹ️</option>
+        <option title="Debug - extremely detailed, may slow down device" value="7">🛠️</option>
+        <option title="Stats - dump statistics into log now (one time)" value="8">📉</option>
+      </select>
+      <button onclick="openLEDSim();" title="Open the SmartLED simulator/debugger" class="icon i-ledsim">&nbsp;</button>
+      <button onclick="openScriptRef();" title="[F1] Open the p44script short reference" class="icon i-docs">&nbsp;</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="/ace/ext-prompt.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/jquery-resizable.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/p44api.js"></script>
+<script src="/js/dbg.js"></script>
+<script src="/js/shortcuts.js"></script>
+
+<script>
+
+
+function setup_globalshortcuts()
+{
+  // - custom commands
+  shortcut.add("command+S", function(event) {
+    save_script(editor.session.scriptid)
+    return true
+  })
+  shortcut.add("command+K", function(event) {
+    clear_repl()
+    return true
+  })
+  shortcut.add("command+shift+K", function(event) {
+    clear_log()
+    return true
+  })
+  shortcut.add("command+shift+P", function(event) {
+    log_pause(!gLogPaused)
+    return true
+  })
+  shortcut.add("F1", function(event) {
+    openScriptRef()
+    return true
+  })
+  // F2 is folding in Ace
+  shortcut.add("shift+F2", function(event) {
+    togglefold()
+    return true
+  })
+  shortcut.add("F4", function(event) {
+    toggleDebugViews()
+    return true
+  })
+  shortcut.add("F6", function(event) {
+    continue_current_thread('step_over')
+    return true
+  })
+  shortcut.add("F7", function(event) {
+    continue_current_thread('step_into')
+    return true
+  })
+  shortcut.add("F8", function(event) {
+    continue_current_thread('step_out')
+    return true
+  })
+  shortcut.add("F9", function(event) {
+    if (editor.session) {
+      evalcommand(editor.session.scriptid, 'restart', true)
+    }
+    return true
+  })
+}
+
+
+// globals
+
+let cPollInterval = 2 // seconds
+
+var gEditSessions = {}
+
+var gPausedthreadtimer = null
+var gLatestpause = null
+
+var gRunPosMarker = null
+
+var gReplMarker = null
+
+
+function setup_panels()
+{
+  // jquery-resizable setup
+  $("#replpanel").resizable({
+    handleSelector: ".splitter-vertical",
+    resizeHeight: false
+  });
+
+  $("#editorpanel").resizable({
+    handleSelector: ".splitter-horizontal",
+    resizeWidth: false,
+  });
+}
+
+
+var repl
+
+function setup_repl()
+{
+  // ace setup
+  repl = ace.edit("repl")
+  repl.setTheme("ace/theme/tomorrow_night")
+  repl.setOptions({
+    showPrintMargin: false,
+    readOnly: false,
+    useSoftTabs: true,
+    enableBasicAutocompletion: false,
+    enableLiveAutocompletion: false,
+    enableSnippets: false,
+    showLineNumbers: true, // needs to be on despite disabling later, otherwise background will not render at load
+  })
+  var session = ace.createEditSession("// Welcome to p44script shell/REPL\n", "ace/mode/p44script")
+  session.setOptions({
+    tabSize: 2,
+    newLineMode: "unix",
+    useWorker: false, // no syntax checking
+  })
+  repl.setSession(session)
+  setTimeout(function() {
+    // needs to be delayed, otherwise background will not render at load
+    repl.renderer.setOptions({
+      showGutter: true,
+      scrollPastEnd: 0.25,
+      showPrintMargin: false,
+    })
+  }, 100)
+  repl.commands.bindKeys({
+    // "Shift-Return|Ctrl-Return|Alt-Return": function(cmdLine) { cmdLine.insert("\n"); },
+    // "Esc|Shift-Esc": function(cmdLine){ cmdLine.editor.focus(); },
+    "Return": function() {
+      repl_hasmarker() // will kill marker in manually deleted space
+      var inp = getinput(repl, gReplMarker, true, false)
+      if (inp) {
+        if (!inp.atend) {
+          // echo command at end first
+          repl_puttoprompt(inp.text)
+        }
+        if (inp.text) {
+          repl_exec(inp.text)
+        }
+      }
+      else {
+        // cannot execute here, just insert a CR
+        repl_clearmarker()
+        repl.insert("\n");
+      }
+    }
+  });
+}
+
+
+var editor
+var Range
+
+function setup_editor()
+{
+  // ace setup
+  editor = ace.edit("editor")
+  Range = ace.require("ace/range").Range;
+  //editor.setTheme("ace/theme/xcode")
+  editor.setTheme("ace/theme/one_dark")
+  editor.setOptions({
+    enableBasicAutocompletion: false,
+    enableLiveAutocompletion: true,
+    enableSnippets: true,
+  })
+  editor.renderer.setOptions({
+    scrollPastEnd: 0.25,
+    showPrintMargin: false,
+  })
+  // - initially empty
+  show_empty()
+  // handlers
+  editor.on("input", function() {
+    if (!editor.session.unstored) {
+      editor.session.tabelement.classList.toggle('unsaved', !editor.session.getUndoManager().isClean())
+    }
+  })
+  editor.on("guttermousedown", function(e) {
+    var target = e.domEvent.target;
+    if (target.className.indexOf("ace_gutter-cell") == -1) return;
+    if (!editor.isFocused()) return;
+    if (e.clientX > 25 + target.getBoundingClientRect().left) return;
+    var breakpoints = e.editor.session.getBreakpoints(row, 0);
+    var row = e.getDocumentPosition().row;
+    // If there's a breakpoint already defined, it should be removed, offering the toggle feature
+    if(typeof breakpoints[row] === typeof undefined) {
+      e.editor.session.setBreakpoint(row);
+    } else {
+      e.editor.session.clearBreakpoint(row);
+    }
+    e.stop();
+  });
+  // custom commands
+  // - Override built-in help
+  editor.commands.addCommand({
+    name: "Help",
+    bindKey: "F1",
+    exec: function(editor) {
+      openScriptRef()
+      return true
+    }
+  })
+}
+
+
+function setup_globalevents()
+{
+  // prevent accidentally closing IDE
+  window.addEventListener('beforeunload', function(event) {
+    if (gSelectedThreadId>0) {
+      event.preventDefault()
+      return event.returnValue = 'There are paused scripts - if you close the IDE these will be continued. Are you sure?'
+    }
+    if (unsaved_scripts()) {
+      event.preventDefault()
+      return event.returnValue = 'There are unsaved changes. Are you sure you want to close the IDE and loose the changes?'
+    }
+  })
+  // whenever the window gets focus, load the list (there could be new scripts added)
+  window.addEventListener("focus", function(event) {
+    check_script_open()
+    poll_debug_info()
+  })
+}
+
+
+$(document).ready(function() {
+  // setup
+  setup_panels()
+  setup_repl()
+  setup_editor()
+  setup_globalevents()
+  setup_globalshortcuts()
+  // initial actions
+  check_script_open()
+  poll_debug_info()
+  // for now, just enabled the debugger when the IDE is open
+  // Rationale: when it is open, we DO see when treads get paused, so it does not go
+  //   unnoticed
+  enable_debugger(true)
+  hide('#threadcontrols')
+});
+
+
+
+function refresh_script_list(event)
+{
+  var dfd = $.Deferred()
+  // query list
+  apiCall({
+    "method":"getProperty",
+    "dSUID":"root",
+    "query":{ "x-p44-scripts":{ "sources":{ "*":{ "title":null, "contexttype":null }}} }
+  }).done(function(result) {
+    var sel = $('#scriptselector')
+    sel.empty()
+    var opt = document.createElement("option")
+    opt.value = 'none'
+    opt.selected = true
+    opt.disabled = true
+    opt.hidden = true
+    opt.text = 'Open Script...'
+    sel.append(opt)
+    //var selectHtml = '<option selected disabled hidden>Open Script...</option>'
+    var scripts = result["x-p44-scripts"].sources
+    var opts = Object.keys(scripts).map(function (key) {
+      var ty = scripts[key].contexttype
+      switch (ty) {
+        case "vDChost" : ty = ' '; break; // first in list
+        case "vdSD" : ty = '1Devices'; break;
+        case "Trigger" : ty = '2Triggers'; break;
+        case "include" : ty = '3Includes'; break;
+        case "webpage" : ty = '4Webpages'; break;
+        case "config" : ty = '5Config Files'; break;
+        case "inifile" : ty = '5Config Files'; break;
+        case "shell" : ty = '6Shell Scripts'; break;
+        default : ty = '9'+ty; break; // add at end of menu
+      }
+      return { id: key, text: scripts[key].title, ty: ty }
+    });
+    opts = opts.sort(function(a,b) {
+      var res = a.ty.localeCompare(b.ty)
+      return res==0 ? a.text.localeCompare(b.text) : res
+    })
+    var lastty = false;
+    for (var i=0; i<opts.length; i++) {
+      if (lastty!==opts[i].ty) {
+        // insert separator
+        lastty = opts[i].ty
+        if (lastty!==' ') {
+          var opt = document.createElement("option")
+          opt.value = '-'
+          opt.disabled = true
+          opt.text = lastty.substring(1)
+          sel.append(opt)
+        }
+      }
+      var opt = document.createElement("option")
+      opt.value = opts[i].id
+      opt.text = opts[i].text
+      sel.append(opt)
+    }
+    dfd.resolve()
+  }).fail(function(domain, code, message) {
+    dfd.reject(domain, code, message);
+  })
+  return dfd.promise()
+}
+
+
+function update_pausedthread_list(pausedthreads)
+{
+  var sel = $('#threadselector')
+  var prevVal = sel.val()
+  sel.empty()
+  var opts = Object.keys(pausedthreads).map(function (key) {
+    return { no:key, id:pausedthreads[key].threadid, text: pausedthreads[key].title }
+  });
+  opts = opts.sort(function(a,b) { return parseInt(a.no)-parseInt(b.no) })
+  var opt = document.createElement("option")
+  opt.value = 0
+  opt.text = 'global'
+  sel.append(opt)
+  for (var i=0; i<opts.length; i++) {
+    var opt = document.createElement("option")
+    opt.value = opts[i].id
+    if (prevVal==opt.value) {
+      opt.selected = true
+    }
+    opt.text = opts[i].text
+    sel.append(opt)
+  }
+}
+
+
+function poll_debug_info()
+{
+  clearTimeout(gPausedthreadtimer)
+  // query list
+  apiCall({
+    "method":"getProperty",
+    "dSUID":"root",
+    "query":{ "x-p44-scripts":{ "pausedthreads":null, "logtext":null, "loglevel":null }}
+  }).done(function(result) {
+    // update log window
+    if (!gLogPaused) {
+      var newlogtext = result["x-p44-scripts"].logtext
+      if (newlogtext) {
+        log_append(newlogtext)
+      }
+    }
+    // update actual log level
+    update_loglevel_selector(result["x-p44-scripts"].loglevel);
+    // update paused threads list
+    var pausedthreads = result["x-p44-scripts"].pausedthreads
+    update_pausedthread_list(pausedthreads)
+    // check for new pause
+    var hasPausedThreads = false
+    if (pausedthreads) {
+      var thread = pausedthreads["0"]
+      if (thread) {
+        hasPausedThreads = true
+        if(thread.pausedAt>gLatestpause) {
+          // new pause detected
+          gLatestpause = thread.pausedAt
+          report_pause(thread)
+        }
+      }
+    }
+    if (!hasPausedThreads && gLatestpause) {
+      // revert to plain global REPL
+      gLatestpause = null
+      select_thread(0)
+      hide('#threadcontrols')
+      repl_prompt()
+    }
+    // auto-refresh
+    gPausedthreadtimer = setTimeout(function() {
+      poll_debug_info()
+    }, cPollInterval*1000)
+  })
+}
+
+
+function clear_log()
+{
+  toggleDebugViews(true)
+  $('#log_text').html("--- log cleared ---\n")
+}
+
+
+// var gShortLog = false
+
+function toggle_shortlog()
+{
+  toggleDebugViews(true)
+  $('#log_text').toggleClass('logabbr')
+}
+
+
+function log_append(text)
+{
+  const logDiv = $('#logpanel')[0]
+  const atBottom = logDiv.scrollHeight - logDiv.scrollTop === logDiv.clientHeight;
+  const lines = text.split('\n')
+  if (lines.at(-1)=="") lines.pop() // prevent trailing empty line
+  var htmllines = lines.map(function(line) {
+    var [, timestamp, icon, context, msg, onlymsg] = line.match(/^(.*[DINWEC!]\]) +([^ ]+) +(?:(?:(.*➡️)(.*))|(?:(.*)))$/) || []
+    if (!timestamp) return `<p><div class="logtxt">${line.length>0 ? escapehtml(line) : '&nbsp;'}</div></p>`
+    if (!context) msg = onlymsg
+    return `<p><div class="logtxt logts logabbr">${timestamp} </div><div title="${timestamp}\n\n${escapehtml(context)}" class="logtxt">${icon}</div> <div class="logtxt logctx logabbr">${escapehtml(context)}</div>${escapehtml(msg)}</p>`
+  })
+  htmllines = htmllines.join('')
+  $('#log_text').append(htmllines);
+  // autoscroll only at bottom
+  if (atBottom) {
+    $('#logpanel')[0].scrollTo(0,999999);
+  }
+}
+
+
+var gLogPaused = false
+
+function log_pause(pause)
+{
+  toggleDebugViews(true)
+  gLogPaused = pause
+  if (pause) {
+    log_append("\n--- 🔴 paused following log output ---\n")
+  }
+  else {
+    log_append("\n--- 🟢 resumed following log output ---\n")
+  }
+}
+
+
+var gLogLevelUpdating = false
+
+function update_loglevel_selector(loglevel)
+{
+  gLogLevelUpdating = true;
+  $('#loglevel').val(loglevel).change();
+  gLogLevelUpdating = false;
+}
+
+
+function loglevel_selected(event)
+{
+  // manually changed log level
+  if (!gLogLevelUpdating) {
+    var loglevel = $('#loglevel').val()
+    toggleDebugViews(true)
+    alertError(apiCall({
+      "method":"loglevel",
+      "dSUID":"root",
+      "value":loglevel
+    }).done(function(response) {
+      poll_debug_info()
+    }))
+  }
+}
+
+
+function hide_pos()
+{
+  if (gRunPosMarker) editor.getSession().removeMarker(gRunPosMarker)
+  gRunPosMarker = null
+  editor.getSession().setAnnotations([])
+}
+
+
+function show_pos(result, onlyerrors)
+{
+  // position cursor
+  var l = result.line
+  var c = result.char
+  hide_pos()
+  if (result.error || !onlyerrors) {
+    editor.gotoLine(l+1, c, true)
+    gRunPosMarker = editor.getSession().addMarker(new Range(l, 0, l, 2000), result.error ? "errorpos" : "runpos", "line")
+    editor.scrollToLine(l+1, true, true)
+    if (result.error) {
+      editor.getSession().setAnnotations([
+        { row: result.line, column: result.char, text:result.error, type:'error' }
+      ])
+    }
+  }
+  if (onlyerrors && !result.error) {
+    hide_pos()
+  }
+}
+
+
+function report_pause(thread)
+{
+  var dfd = $.Deferred()
+  // make sure the debug views are shown
+  toggleDebugViews(true)
+  show('#threadcontrols')
+  // show the thread in the repl
+  repl_print("\n")
+  repl_print('// Paused thread '+thread.title+' in script '+thread.sourceTitle+' at '+(thread.result.line+1)+','+(thread.result.char+1)+' with result:', 'threadpause')
+  repl_print(format_result(thread.result), thread.result.error ? 'errorval' : false)
+  // select the thread
+  select_thread(thread.threadid)
+  repl_prompt()
+  // show source where we have paused
+  open_script(thread.sourceHostId).done(function() {
+    show_pos(thread.result, false)
+    dfd.resolve()
+  }).fail(function(domain, code, message) {
+    dfd.reject(domain, code, message);
+  })
+  return dfd.promise()
+}
+
+
+function format_result(result)
+{
+  var v = ''
+  if (result) {
+    if (result.error) {
+      // just the error message
+      v = '/* Error: */ "'+result.error+'"'
+    }
+    else if (result.result===undefined) {
+      v = '/* none */'
+    }
+    else {
+      if (result.result===null) {
+        v = 'null // ' + result.annotation
+      }
+      else if (typeof result.result === "object" || typeof result.result === "array") {
+        // structured
+        v = '// - ' + result.annotation + "\n" + JSON.stringify(result.result, null, 2) // pretty print JSON results
+      }
+      else {
+        v = result.result.toString() + ' // ' + result.annotation
+      }
+    }
+  }
+  return v
+}
+
+
+function repl_exec(scriptcode)
+{
+  var threadid = $('#threadselector').val()
+  var session = editor.getSession()
+  var scriptid = session && session.isscript ? session.scriptid : false
+  var cmd = {
+    "method":"x-p44-scriptExec",
+    "dSUID":"root",
+    "scriptcode":scriptcode
+  }
+  if (threadid!=0) {
+    // in context of the thread
+    cmd.threadid=threadid
+  }
+  else if (scriptid) {
+    // in context of the open editor's script
+    cmd.scriptsourceuid=scriptid
+  }
+  console.log(cmd)
+  alertError(apiCall(cmd).done(function(result) {
+    // print result
+    repl_print("\n// - Result:")
+    repl_print(format_result(result))
+    repl_print("")
+    togglefold(gFolded) // also fold/unfold new content according to current setting
+    // next prompt
+    repl_prompt()
+  }))
+}
+
+
+function repl_hasmarker()
+{
+  if (!gReplMarker) return false
+  if (repl.getSession().getMarkers()[gReplMarker].range.start.row > repl.getSession().getLength()) {
+    // there is a marker, but session is shorter -> remove it
+    repl_clearmarker()
+    return false
+  }
+  return true
+}
+
+
+function repl_clearmarker()
+{
+  if (gReplMarker) repl.getSession().removeMarker(gReplMarker)
+  gReplMarker = null
+}
+
+
+function repl_puttoprompt(input)
+{
+  if (!repl_hasmarker()) {
+    // no active prompt, make a new one
+    repl_prompt()
+  }
+  repl_print(input)
+}
+
+
+function repl_prompt()
+{
+  repl_clearmarker()
+  var threadid = $('#threadselector').val()
+  var session = editor.getSession()
+  var scriptid = session && session.isscript ? session.scriptid : false
+  var title = '';
+  if (threadid!=0) {
+    title = $('#threadselector>option:selected').html();
+  }
+  else if (scriptid) {
+    title = session.title
+  } else {
+    title = 'global'
+  }
+  repl_print("// Context: " + title, 'contextmarker')
+  repl.gotoLine(repl.getSession().getLength())
+  repl.focus()
+}
+
+
+function refresh_repl_focus() {
+  if (!gSelectedThreadId) {
+    // no thread selected, re-focus on script
+    select_thread(0, true)
+    repl_prompt()
+  }
+}
+
+
+function repl_print(text, marker, nolf)
+{
+  var session = repl.getSession()
+  var row =  session.getLength()
+  var llen = session.getLine(row-1).length
+  if (llen!=0) {
+    session.insert({ row: row, column:llen }, "\n")
+    row++
+  }
+  session.insert({
+    row: row,
+    column: 0
+  }, text + (nolf ? "" : "\n"))
+  if (marker) {
+    // new marker
+    repl_clearmarker()
+    gReplMarker = session.addMarker(new Range(row-1, 0, row-1, 2000), marker, "line")
+  }
+  repl.scrollToLine(session.getLength(), true, true)
+}
+
+
+function clear_repl()
+{
+  // salvage started input or selected text or current line
+  var inp = getinput(repl, gReplMarker, true, true)
+  repl_clearmarker()
+  toggleDebugViews(true)
+  repl.setValue("")
+  repl_prompt()
+  if (inp && inp.text) repl_print(inp.text, false, true)
+}
+
+
+
+function thread_selected(event)
+{
+  // manually changed thread selection
+  var threadid = $('#threadselector').val()
+  toggleDebugViews(true)
+  select_thread(threadid, true)
+  repl_prompt()
+}
+
+var gSelectedThreadId = null
+
+function select_thread(threadid, manually)
+{
+  if (!manually) {
+    // update popup
+    $('#threadselector').val(threadid)
+  }
+  showIf(threadid!=0, '#threadbuttons')
+  gSelectedThreadId = threadid
+}
+
+
+
+function continue_current_thread(mode)
+{
+  var threadid = $('#threadselector').val()
+  if (threadid) {
+    hide_pos()
+    alertError(apiCall({
+      "method":"x-p44-scriptContinue",
+      "dSUID":"root",
+      "threadid":threadid,
+      "mode":mode
+    }).done(function(result) {
+      poll_debug_info()
+    }))
+  }
+}
+
+
+function enable_debugger(enable)
+{
+  if (!enable) hide_pos()
+  if (enable) {
+    // activate debugger with a timeout of 10-fold the paused threads poll interval
+    var dfd = alertError(apiCall({ "method":"x-p44-debuggerActivate", "dSUID":"root", "timeout":cPollInterval*10 }))
+  }
+  else {
+    var dfd = apiCall({ "method":"setProperty", "dSUID":"root", "properties": { "x-p44-scripts": { "debugging": false } } })
+  }
+  return dfd
+}
+
+
+// save script and run a command on it
+function runcommand(scriptid, command, evaluate)
+{
+  var dfd = $.Deferred()
+  hide_pos()
+  save_script(scriptid).done(function() {
+    enable_debugger(true).done(function () {
+      var call = {
+        "method":"x-p44-scriptCommand",
+        "dSUID":"root",
+        "scriptsourceuid":scriptid,
+        "command":command
+      }
+      if (evaluate) call.evalresult = true
+      alertError(apiCall(call).done(function(result) {
+        poll_debug_info()
+        // includes might have been recognized or freed
+        refresh_script_list().done(function() {
+          dfd.resolve(result)
+        })
+      }))
+    })
+  }).fail(function(domain, code, message) {
+    dfd.reject(domain, code, message)
+  })
+  return dfd.promise();
+}
+
+
+// save script and run command to evaluate it (displaying result)
+function evalcommand(scriptid, command)
+{
+  runcommand(scriptid, command, true).done(function(result) {
+    // make sure the debug views are shown
+    toggleDebugViews(true)
+    // show the thread in the repl
+    repl_print('// Result of script evaluation:')
+    repl_print(format_result(result), result.error ? 'errorval' : false)
+    repl_prompt()
+  })
+}
+
+
+// save script and run command to start executing it, leaving result to the original context
+function execcommand(scriptid, command)
+{
+  alertError(runcommand(scriptid, command).done(function(result) {
+    alertError(open_script(scriptid).done(function() {
+      // report errors, if any
+      if (result) {
+        toggleDebugViews(true)
+        repl_print('// Completed command '+command+' with result:')
+        repl_print(format_result(result), result.error ? 'errorval' : false)
+        if(result.error) {
+          editor.getSession().setAnnotations([
+            { row: result.line, column: result.char, text:result.error, type:'error' }
+          ])
+          show_pos(result, true)
+          repl_prompt()
+          setTimeout(function() {
+            editor.focus()
+          }, 10)
+        }
+        else {
+          hide_pos()
+          editor.getSession().setAnnotations([])
+          repl_prompt()
+        }
+      }
+    }))
+  }))
+}
+
+
+function check_script_open()
+{
+  refresh_script_list().done(function() {
+    const re = /scriptToOpen=([^;]*)/
+    var m = document.cookie.match(re)
+    if (m) {
+      var scriptid = m[1]
+      document.cookie = "scriptToOpen=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      if (scriptid) {
+        open_script(scriptid).done(function() {
+          // Nop for now
+        })
+      }
+    }
+  })
+}
+
+
+function script_selected(event)
+{
+  var scriptid = $('#scriptselector').val()
+  $('#scriptselector').val("none") // reset
+  open_script(scriptid)
+}
+
+
+function open_script(scriptid)
+{
+  var dfd = $.Deferred();
+  // check if session already exists
+  var session = gEditSessions[scriptid];
+  if (!session) {
+    // get script
+    apiCall({
+      "method":"getProperty",
+      "dSUID":"root",
+      "query":{ "x-p44-scripts":{ "sources":{ [scriptid]:null }} }
+    }).done(function(result) {
+      var script = result["x-p44-scripts"].sources[scriptid]
+      // create the session
+      var mode
+      if (script.script || script.contexttype=="script") mode = "ace/mode/p44script"
+      else if (script.contexttype=="include") mode = "ace/mode/p44script"
+      else if (script.contexttype=="webpage") mode = "ace/mode/html"
+      else if (script.contexttype=="inifile") mode = "ace/mode/ini"
+      else if (script.contexttype=="shell") mode = "ace/mode/sh"
+      else mode = "ace/mode/text"
+      var session = ace.createEditSession(script.sourcetext, mode)
+      session.setOptions({
+        tabSize: 2,
+        useSoftTabs: true,
+        newLineMode: "unix",
+        useWorker: false, // no syntax checking
+      })
+      // add existing breakpoints
+      session.scriptid = false // tell changeBreakpoint handler that we are loading, so no wrting back breakpoints!
+      session.clearBreakpoints()
+      if (script.breakpoints) {
+        for (const [line, enabled] of Object.entries(script.breakpoints)) {
+          session.setBreakpoint(line)
+        }
+      }
+      session.on("changeBreakpoint", function(info) {
+        if (session.scriptid) {
+          // update breakpoint (note: the info data in changeBreakpoint event is a p44 addition)
+          alertError(apiCall({
+            method:"setProperty",
+            dSUID:"root",
+            properties:{ "x-p44-scripts":{ sources:{ [scriptid]:{ breakpoints:{ [info.l]:info.set } } }} }
+          })).done(function() {
+            if (info.set) {
+              // setting a breakpoint: to make sure it will work: (re)enable the debugger
+              enable_debugger(true)
+            }
+          })
+        }
+      });
+      // create new tab (if not existing WHICH SHOULD NOT BE THE CASE)
+      // - to make sure, remove tab with this id
+      var tab = document.getElementById('TAB.' + scriptid)
+      if (!tab) {
+        // - new
+        var $tab = $('<div/>')
+          .attr('id', 'TAB.' + scriptid)
+          .attr('onclick', 'show_tab("' + scriptid + '");')
+          .addClass('tab')
+          .html(
+            '<img title="close tab" onclick="close_tab(\'' + scriptid + '\');" src="/assets/closebox.png"/>' +
+            '<div class="text"><abbr title="' +
+              escapehtml(script.title) + "\n\n" +
+              (script.contextType ? escapehtml(script.contextType + '&nbsp;' + script.contextId) + "\n\n" : "") +
+              escapehtml(scriptid) + "\n\n" +
+              escapehtml(script.logprefix) +
+              '">' +
+              escapehtml(script.title) +
+            '</abbr></div>'
+          )
+        $('#tabs').append($tab)
+        tab = $tab[0]
+      }
+      // internal info
+      session.tabelement = tab
+      session.scriptid = scriptid // now changeBreakpoint handler is enabled
+      session.title = script.title
+      session.unstored = script.unstored
+      session.isscript = script.script
+      session.readonly = script.readonly
+      // register in global var
+      gEditSessions[scriptid] = session
+      // show the tab
+      show_tab(scriptid)
+      dfd.resolve()
+    }).fail(function(domain, code, message) {
+      dfd.reject(domain, code, message);
+    })
+  }
+  else {
+    // just select the right tab right now
+    show_tab(scriptid)
+    dfd.resolve()
+  }
+  return dfd.promise()
+}
+
+
+function show_tab(scriptid)
+{
+  var session = gEditSessions[scriptid];
+  if (session) {
+    $('.tab').removeClass('selected')
+    document.getElementById('TAB.' + scriptid).classList.add('selected')
+    editor.setSession(session)
+    $('#editor').toggleClass('hidden', false)
+    $('#sourcecontrols').show()
+    showIf(session.isscript, '#scriptbuttons')
+    showIf(!session.unstored, '#save')
+    refresh_repl_focus()
+    editor.setReadOnly(session.readonly)
+    editor.focus()
+  }
+}
+
+
+
+function show_empty()
+{
+  $('#editor').toggleClass('hidden', true)
+  $('#sourcecontrols').hide()
+  refresh_repl_focus()
+}
+
+
+function modaldialog(text, buttons, callback)
+{
+  var $dialog = $('<dialog/>')
+    .attr('id', 'modaldialog')
+    .html('<p>' + escapehtml(text) + '</p>')
+  $('body').append($dialog)
+  var dialog = $dialog[0]
+  for (var i=0; i<buttons.length; i++) {
+    var b = buttons[i]
+    var $btn = $('<button/>')
+      .attr('value', b.value)
+      .attr('class', b.class || "")
+      .html(escapehtml(b.text))
+    if (b.default) $btn.attr('autofocus',true)
+    $btn.on('click', function(event) {
+      // alert("button event: " + event.currentTarget.value)
+      if (event.currentTarget.value!='cancel') {
+        callback(event.currentTarget.value)
+      }
+      dialog.close()
+      $('#modaldialog').remove()
+    })
+    $dialog.append($btn)
+  }
+  dialog.showModal()
+}
+
+
+function close_tab(scriptid)
+{
+  var session = gEditSessions[scriptid];
+  if (session) {
+    // check if saved
+    if (session.getUndoManager().isClean()) {
+      close_editor(scriptid)
+    }
+    else {
+      modaldialog(
+        "Save changes before closing?",
+        [
+          { text:"Don't Save", class:"danger", value:"closeUnsaved"},
+          { text:"Cancel", value:"cancel"},
+          { text:"Save", value:"saveAndClose", default:true }
+        ],
+        function(buttonValue) {
+          if (buttonValue=="saveAndClose") {
+            save_script(scriptid).done(function() {
+              close_editor(scriptid)
+            })
+          }
+          if (buttonValue=="closeUnsaved") {
+            close_editor(scriptid)
+          }
+        }
+      )
+    }
+  }
+}
+
+
+function unsaved_scripts()
+{
+  var scriptids = Object.keys(gEditSessions)
+  for (var i=0; i<scriptids.length; i++) {
+    var session = gEditSessions[scriptids[i]]
+    if (!session.unstored && !session.getUndoManager().isClean()) {
+      return true // at least one unsaved
+    }
+  }
+  return false // none unsaved
+}
+
+
+function close_editor(scriptid)
+{
+  // figure out next tab to activate when this editor is gone
+  var tab = document.getElementById('TAB.' + scriptid)
+  var nexttab = tab.nextElementSibling
+  if (!nexttab) {
+    nexttab = tab.previousElementSibling
+  }
+  var nextscriptid = false
+  if (nexttab) {
+    nextscriptid = nexttab.id.substring(4)
+  }
+  // remove the tab
+  tab.parentNode.removeChild(tab)
+  // close session
+  delete gEditSessions[scriptid]
+  editor.setSession(null)
+  // activate next script
+  if (nextscriptid) {
+    show_tab(nextscriptid)
+  }
+  else {
+    show_empty()
+  }
+}
+
+
+function save_script(scriptid)
+{
+  var dfd = $.Deferred();
+  var session = gEditSessions[scriptid];
+  if (session) {
+    if (session.getUndoManager().isClean()) {
+      // unchanged - already saved
+      dfd.resolve()
+    }
+    else {
+      // save script source
+      apiCall({
+        "method":"setProperty",
+        "dSUID":"root",
+        "properties":{ "x-p44-scripts":{ "sources":{ [scriptid]: { sourcetext: session.getValue() }}} }
+      }).done(function(result) {
+        // saved (note: this must happen for unstored scripts, too. We just don't persist them, but need to send them via API)
+        editor.session.getUndoManager().markClean()
+        editor.focus()
+        session.tabelement.classList.toggle('unsaved', false)
+        refresh_script_list() // includes might have been added or removed
+        dfd.resolve()
+      }).fail(function(domain, code, message) {
+        dfd.reject(domain, code, message);
+      })
+    }
+  }
+  return dfd.promise()
+}
+
+
+function debugViewsShown()
+{
+  return panelShown('#debugpanel')
+}
+
+
+function toggleDebugViews(show)
+{
+  if (togglePanel('#debugpanel', '#editorpanel', show)) {
+    if (panelShown('#debugpanel')) {
+      // always (re)enable debugger on show
+      enable_debugger(true)
+    }
+  }
+  // always reload the script list
+  refresh_script_list()
+}
+
+
+var gFolded = false
+
+function togglefold(fold)
+{
+  if (fold!==undefined) {
+    gFolded = fold
+  }
+  else {
+    gFolded = !gFolded
+  }
+  if (gFolded) {
+    repl.execCommand("foldall")
+  }
+  else {
+    repl.execCommand("unfoldall")
+  }
+}
+
+
+var scriptRefWindow = undefined;
+
+function openScriptRef()
+{
+  if (!scriptRefWindow || scriptRefWindow.closed) {
+    scriptRefWindow = window.open('/script_ref.html', 'p44script-reference');
+  }
+  else {
+    scriptRefWindow.focus();
+  }
+}
+
+
+var ledSimWindow = undefined;
+
+function openLEDSim()
+{
+  if (!ledSimWindow || ledSimWindow.closed) {
+    ledSimWindow = window.open('/ledsim.html', 'p44lrg-debugger');
+  }
+  else {
+    ledSimWindow.focus();
+  }
+}
+
+</script>
+
+</body>
+</html>

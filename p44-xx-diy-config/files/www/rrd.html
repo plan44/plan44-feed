@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+	  <script src="/js/jquery.min.js"></script>
+
+  	<link rel="stylesheet" href="/css/jquery.sapling.tree.css" />
+
+    <title id="title_model">Sensor data diagrams</title>
+
+    <style type="text/css">
+
+      h3 { font-family:Helvetica; font-size:18pt; }
+      body { padding: 10px; }
+
+    </style>
+
+  	<script type="text/javascript">
+
+    	var rqvaltok = "";
+      var rrdfile = "";
+      var rrdstart = -(3600*24);
+
+
+      function refreshdiagram()
+      {
+        var rrdurl = 'rrd.txt?file=' + rrdfile + '&start=' + rrdstart.toString();
+        $('#diagram').html('<img src="' + rrdurl + '" />');
+        $('#fetch_link').attr("href", 'rrd.txt?fetch&file=' + rrdfile + '&start=' + rrdstart.toString());
+      }
+
+
+      function periodSelected()
+      {
+        if ($('#periodSelect').val().length>0) {
+          // calculate number of seconds
+          var p = -Math.trunc(eval($('#periodSelect').val()));
+          if (p<=-300 && p!=rrdstart) {
+            rrdstart = p;
+            refreshdiagram();
+          }
+        }
+      }
+
+
+
+  		$(document).ready(function() {
+
+        rrdfile = location.hash.substr(1);
+
+        $.getJSON( '/tok/json' , {
+        }).done( function(response) {
+          rqvaltok = response;
+
+          $('#titletext').html(rrdfile);
+
+          refreshdiagram();
+
+        });
+
+        $('#rrdb_link').attr("href", 'rrd.txt?rrdb&file=' + rrdfile);
+
+  		});
+
+  	</script>
+
+  </head>
+
+  <body>
+    <div id="title"><div id="icon"></div><h3 id="titletext">Diagram</h3></div>
+
+    <div id="diagramframe">
+      <div id="diagram"></div>
+      <select onchange="javascript:periodSelected();" name="periodSelect" id="periodSelect">
+        <option value="0">- select period -</option>
+        <option value="300">5 minutes</option>
+        <option value="900">15 minutes</option>
+        <option value="3600">one hour</option>
+        <option value="3*3600">three hours</option>
+        <option value="6*3600">six hours</option>
+        <option value="12*3600">twelve hours</option>
+        <option value="24*3600">one day</option>
+        <option value="3*24*3600">three days</option>
+        <option value="7*24*3600">one week</option>
+        <option value="31*24*3600">one month</option>
+        <option value="2*31*24*3600">two months</option>
+        <option value="6*31*24*3600">six months</option>
+        <option value="365*24*3600">one year</option>
+        <option value="2*365*24*3600">two years</option>
+      </select>
+      <button type="button" onclick="refreshdiagram();" id="diagrefresh">Refresh diagram</button>
+      &nbsp;<a id="fetch_link" href="#" target="_blank">[Download data table]</a>
+      &nbsp;<a id="rrdb_link" href="#">[Download rrdtool database]</a>
+    </div>
+
+  </body>
+

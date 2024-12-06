@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xml:lang="de">
+
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="icon" type="image/png" href="/css/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/css/favicon-16x16.png" sizes="16x16" />
+  	<link rel="stylesheet" href="/css/themes/p44dark.min.css">
+  	<link rel="stylesheet" href="/css/themes/p44dark.cust.css">
+		<link rel="stylesheet" href="/css/themes/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="/css/jquery.mobile.structure-1.4.5.min.css" />
+	  <script src="/js/jquery.min.js"></script>
+	  <script src="/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/dialog.js"></script>
+    <script src="/js/p44api.js"></script>
+
+
+    <title>p44Script playground (REPL)</title>
+
+    <style type="text/css">
+      h1 { font-family:Helvetica; font-size:42pt; }
+      h2 { font-family:Helvetica; font-size:21pt; }
+      .devinfo p { }
+      .infovalue { font-weight: bold; }
+
+      .centered { margin-left:auto; margin-right:auto; max-width: 640px; text-align: center; }
+
+      .referencelink { float: right; font-size: smaller;}
+
+      #logcontent h3 { font-weight: bold; font-size: 16px; }
+      #logcontent pre { font-family: Menlo, monospace; font-size: 12px; }
+
+      pre.logwrap { white-space: pre-wrap; word-wrap: break-word; }
+
+    </style>
+
+    <script language="javascript1.2" type="text/javascript"><!--
+
+    	var maxHistoryLength = 30;
+    	var jsonhistory = [];
+
+
+      function addToHistory(txt)
+      {
+        var dup = jsonhistory.findIndex(function(e) { return e==txt; });
+        if (dup>=0) {
+          jsonhistory.splice(dup,1);
+          jsonhistory.unshift(txt);
+        }
+        else {
+          // new entry, put in front
+          jsonhistory.unshift(txt);
+          if (jsonhistory.length>maxHistoryLength) jsonhistory.pop();
+        }
+        refreshExamples();
+      }
+
+
+      function refreshExamples()
+      {
+        var selectHtml =
+          '<option value="0">- select example / from history -</option>';
+        if (jsonhistory.length>0) {
+          selectHtml +=
+            '<option disabled>history</option>';
+          for (var i=0; i<jsonhistory.length; i++) {
+            selectHtml +=
+              '<option value="' + (i+1).toString() + '">' + jsonhistory[i] + '</option>';
+          }
+        }
+        selectHtml +=
+          '<option disabled>templates</option>' +
+          '<option value="1000">log("hello world v%s", appversion())</option>' +
+          '<option value="1001">loglevel(7)</option>' +
+          '<option value="1002">loglevel(5)</option>' +
+          '<option value="1013">undeclare()</option>' +
+          '<option value="1014">restartapp()</option>' +
+          '<option value="1014">contextvars()</option>' +
+          '<option value="1014">localvars()</option>' +
+          '<option value="1014">globalvars()</option>' +
+          '<option value="1014">lrg.status()</option>' +
+          '<option value="1015">appversion()</option>';
+        $('#scriptExamples').html(selectHtml).trigger('create');
+        $('#scriptExamples').val(0).selectmenu('refresh');
+      }
+
+
+      function exampleSelected()
+      {
+        if ($('#scriptExamples').val()!=0) {
+          var text = $('#scriptExamples>option:selected').html();
+          $('#scriptSource').val(text);
+          $('#scriptExamples').val(0).selectmenu('refresh');
+          $('#scriptSource').focus();
+        }
+      }
+
+
+      function refresh_vdcd_log()
+      {
+        $.get("vdcd_tail_log.txt", function(data) {
+          $("#vdcd_tail_log").html(data);
+        });
+      }
+
+
+      function toggleLogWrap()
+      {
+        $("#vdcd_tail_log").toggleClass('logwrap')
+      }
+
+
+      $(function()
+      {
+        refreshExamples();
+
+        // handler for execScript button
+        $("#execScript").click(function(event) {
+          event.target.setAttribute('style', 'background-color: orange;');
+          $("#scriptResult").val("...running...");
+          var script = $("#scriptSource").val().toString();
+          // note: new API since introduction of debugging
+          var call = { "method":"x-p44-scriptExec", "dSUID":"root", "scriptcode":script, "scriptsourceuid":"mainscript" };
+          // needs a long timeout, large queries might be sloooow!
+          apiCall(call, 20000, false).done(function(response) {
+            if (response.result!==undefined) {
+              var v;
+              if (response.result===null) {
+                v = "null // " + response.annotation;
+              }
+              else if (typeof response.result === "object" || typeof response.result === "array") {
+                // json
+                v =
+                  "/* " + response.annotation + " */\n" +
+                  JSON.stringify(response.result, null, 2); // pretty print JSON results
+              }
+              else {
+                v = response.result.toString() + " // " + response.annotation;
+              }
+              $("#scriptResult").val(v);
+            }
+            else if (response.error!==undefined) {
+              $("#scriptResult").val("// *** Error: "+response.error.toString());
+              if (response.at!==undefined) selectText($('#scriptSource'), response.at, response.at+1);
+            }
+            else {
+              $("#scriptResult").val(JSON.stringify(response, null, 2));
+            }
+            addToHistory(script);
+            refresh_vdcd_log();
+          }).fail(function(domain, code, message) {
+            $("#scriptResult").val('// apiCall: [' + domain + '] Error ' + code.toString() + ': ' + message);
+          }).always(function(){
+            event.target.removeAttribute('style');
+          });
+        });
+
+      });
+
+
+    --></script>
+
+
+  </head>
+
+  <body>
+
+    <div id="repl" data-role="page">
+      <div data-role="content">
+        <div style="margin-bottom: 20px;">
+          <label for="scriptSource">Enter p44Script code:</label>
+          <select onchange="exampleSelected()" name="scriptExamples" data-mini="true" id="scriptExamples">
+          </select>
+          <textarea rows="10" data-autogrow="false" type="text" name="scriptSource" id="scriptSource" data-theme="d"></textarea>
+          <button type="button" id="execScript" data-inline="true" data-theme="c">Execute</button>
+          <a class="referencelink" href="/script_ref.html" target="_blank">p44script reference</a>
+          <textarea rows="10" id="scriptResult" data-theme="d"></textarea>
+        </div>
+        <div>
+          <h3>complete <a target="_blank" href="vdcd_current_log.txt">current</a> /
+          <a target="_blank" href="vdcd_previous_log.txt">previous</a> log -
+          last lines (<a href="javascript:refresh_vdcd_log()">refresh</a>, <a href="javascript:toggleLogWrap();">toggle wrap</a>)
+          </h3>
+          <div id="logtext">
+            <pre id="vdcd_tail_log">...</pre>
+          </div>
+        </div>
+      </div>
+
+          </div>
+
+  </body>
+
+</html>
