@@ -12,7 +12,7 @@ PKG_VERSION:=1.3.0.10
 PKG_RELEASE:=30
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=bdd8fcc6c009383aff3058bbc765a26690496bb4
+PKG_SOURCE_VERSION:=3bcc26c645d697c19b5d45b2fcecc91fec13dc63
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
