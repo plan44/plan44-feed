@@ -12,7 +12,7 @@ PKG_VERSION:=4.5.1
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=553e1aabdea478b497222fdc45e50aa0b95cbb5f
+PKG_SOURCE_VERSION:=530f722e1c9f5297054815aa6f91ab46427c3e5f
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44maintd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -32,7 +32,7 @@ define Package/$(PKG_NAME)
 	DEPENDS:=+libstdcpp  +libpthread +librt +boost +libjson-c $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
-	SUBMENU:=internal
+	SUBMENU:=Utilities
 	TITLE:=plan44 platform configuration utility
 	URL:=https://plan44.ch/automation
 	MAINTAINER:=luz@plan44.ch
