@@ -28,7 +28,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +i2c-tools \
+  DEPENDS:=+libstdcpp +libpthread +librt +libpng +boost +libjson-c +libopenssl +libsqlite3 +libi2c \
 	  +P44FEATURED_UBUS:libubus \
 	  +P44FEATURED_UBUS:libblobmsg-json \
 	  +P44FEATURED_PNG:libpng \

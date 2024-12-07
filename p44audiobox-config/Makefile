@@ -20,7 +20,6 @@ PKG_CONFIG_DEPENDS := \
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+p44-maint-keys
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=custom
