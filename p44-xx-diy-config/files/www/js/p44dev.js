@@ -1648,16 +1648,15 @@ function createEvaluatorDevice()
 function refresh_bridgetype_deps()
 {
   var shown = $('#bridge_type_select').val().startsWith('scene')
-  $('#bridge_onscene_select').empty()
-  var o = $('#bridge_offscene_select')
-  o.empty()
-  o.append(new Option("any other scene", "other"))
-  o.append(new Option("scene undo/reset", "undo"))
-  o.append(new Option("autoreset after timeout", "autoreset"))
+  var on = $('#bridge_onscene_select')
+  on.empty()
+  var off = $('#bridge_offscene_select')
+  off.empty()
+  off.append(new Option("- none -", 99999))
   if (shown) {
     sceneslist.forEach(function(o) {
-      $('#bridge_onscene_select').append(new Option(o.name, o.sceneNo));
-      $('#bridge_offscene_select').append(new Option(o.name, o.sceneNo));
+      on.append(new Option(o.name, o.sceneNo));
+      off.append(new Option(o.name, o.sceneNo));
     });
     show('#bridge_specificscene_controls')
   }
@@ -1673,7 +1672,7 @@ function createBridgeDevice(activated)
   // - get bridge type
   var bty = $("#bridge_type_select").val()
   if (bty.startsWith('scene')) {
-    bty += ':' + $('#bridge_onscene_select').val() + ':' + $('#bridge_offscene_select').val()
+    bty += ':' + $('#bridge_onscene_select').val() + ':' + $('#bridge_offscene_select').val() + ':' + $('#bridge_resetmode_select').val()
   }
   var bname = $("#bridgedevice_name_textfield").val()
   var group = $("#bridge_initialgroup_select").val()
@@ -4672,7 +4671,7 @@ function refresh_sysinfo()
     var versionText = devinfo.FIRMWARE_VERSION;
     if (devinfo.FIRMWARE_FEED!='prod') versionText += ' (' + devinfo.FIRMWARE_FEED + ')';
     var nextVers = '';
-    if (devinfo.STATUS_NEXT_FIRMWARE.length>0) nextVers = ', <span class="infoalert">available: <span class="infovalue">' + devinfo.STATUS_NEXT_FIRMWARE + '</span></span>';
+    if (devinfo.STATUS_NEXT_FIRMWARE && devinfo.STATUS_NEXT_FIRMWARE.length>0) nextVers = ', <span class="infoalert">available: <span class="infovalue">' + devinfo.STATUS_NEXT_FIRMWARE + '</span></span>';
     var uphours = devinfo.uptime/3600;
     var formattedUptime =
       String(Math.floor(uphours/24)) + ' days ' + String(Math.floor(uphours%24)) + ' hours';
@@ -4681,8 +4680,11 @@ function refresh_sysinfo()
       ' - <a target="_blank" href="' + devinfo.PRODUCT_INFORMATION_PAGE_LINK +'">product page</a></p>' +
       '<p>Firmware Version: <span class="infovalue">' + versionText + '</span>' +
       ' - <a target="_blank" href="' + devinfo.PRODUCT_RELEASENOTES_PAGE_LINK +'">release notes</a>' + nextVers + '</p>' +
-      '<p>Serial Number: <span class="infovalue"><abbr title="' + devinfo.PRODUCER.replace(/"/g,"&quot;") + '">' + devinfo.UNIT_SERIALNO + '</abbr></span></p>' +
-      '<p>GTIN: <span class="infovalue">' + devinfo.PRODUCT_GTIN + '</span></p>' +
+      '<p>Serial Number: <span class="infovalue"><abbr title="' + devinfo.PRODUCER.replace(/"/g,"&quot;") + '">' + devinfo.UNIT_SERIALNO + '</abbr></span></p>'
+    if (devinfo.PRODUCT_GTIN && devinfo.PRODUCT_GTIN!=="none" && devinfo.PRODUCT_GTIN.length>0) {
+      sysinfo += '<p>GTIN: <span class="infovalue">' + devinfo.PRODUCT_GTIN + '</span></p>'
+    }
+    sysinfo +=
       '<p>MAC: <span class="infovalue">' + devinfo.UNIT_MACADDRESS + '</span></p>' +
       '<p>System uptime: <span class="infovalue">' + formattedUptime + '</span></p>';
     $('#systemInfo').html(sysinfo);

@@ -941,8 +941,15 @@ $('#alertMessage').enhanceWithin().popup();
           <div id="bridge_specificscene_controls" style="display: none;">
             <label for="bridge_onscene">Scene for activation:</label>
             <select name="bridge_onscene" id="bridge_onscene_select" data-mini="true" class="p44-input-clear"></select>
-            <label for="bridge_offscene">Deactivation by:</label>
+            <label for="bridge_offscene">Scene for deactivation:</label>
             <select name="bridge_offscene" id="bridge_offscene_select" data-mini="true" class="p44-input-clear"></select>
+            <label for="bridge_resetmode">Other deactivation:</label>
+            <select name="bridge_resetmode" id="bridge_resetmode_select" data-mini="true" class="p44-input-clear">
+              <option value="none">no</option>
+              <option value="autoreset">automatically after short time</option>
+              <option value="other">other scene called</option>
+              <option value="undo">activation scene undone</option>
+            </select>
           </div>
           <label for="bridgedevice_name">Bridge name:</label>
           <input type="text" autocomplete="off" name="bridgedevice_name" id="bridgedevice_name_textfield" value="" placeholder="Name for bridge device"  class="p44-input-clear">
@@ -1441,9 +1448,14 @@ $('#alertMessage').enhanceWithin().popup();
       <div data-role="content">
         <div id="system_contents" data-role="content">
           <h2>System</h2>
-          <p id="diyWarning" style="display:none"><b>Please note:</b> This installation has been created from a do-it-yourself image or package provided from plan44.ch to the maker community.
-          <br/>It is <em>not a commercial product</em> and is <em>not <b>eligible</b> for support or firmware updates</em> (it <i>occasionally</i> might get a firmware update, though).
-          <br/>It is meant as a experimental platform - if you want a supported product instead, <em>please buy one from plan44.ch</em>
+          <p id="openBuildInfo"><b>This is an opensource build of the P44-xx lighting and automation platform firmware.</b>
+          <br/>It is identical to the commercial device's firmware or the free
+          <a target="_blank" href="https://plan44.ch/automation/p44-lc-x.php">downloadable P44-xx images</a>,
+          <b>except that it does not contain anything that is dependent on plan44.ch infrastructure</b>,
+          in particular no one-click firmware upgrades and no remote access via plan44 reverse proxy (you can setup your own if you want, tools are included).
+          <br/>The opensource release is meant to be used by makers who want to build and possibly modify their own firmware
+          and use it on hardware of their own choice.
+          <br/>If you are looking for a complete commercial product instead, <em>please buy one from <a target="_blank" href="https://plan44.ch/automation">plan44.ch</a></em>
           <br/>If you want to support the opensource development of this device, please consider becoming <a target="_blank" href="https://github.com/sponsors/plan44">plan44 github sponsor</a></p>
           <div class="ui-grid-a">
             <div class="ui-block-a" id="systemInfo"></div>
