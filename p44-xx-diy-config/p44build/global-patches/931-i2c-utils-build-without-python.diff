@@ -1,0 +1,67 @@
+--- a/feeds/packages/utils/i2c-tools/Makefile
++++ b/feeds/packages/utils/i2c-tools/Makefile
+@@ -23,7 +23,7 @@ PKG_BUILD_PARALLEL:=1
+ PYTHON3_PKG_BUILD:=0
+ 
+ include $(INCLUDE_DIR)/package.mk
+-include ../../lang/python/python3-package.mk
++# include ../../lang/python/python3-package.mk
+ 
+ define Package/i2c/Default
+   URL:=https://i2c.wiki.kernel.org/index.php/I2C_Tools
+@@ -45,14 +45,14 @@ define Package/i2c-tools
+   DEPENDS:=+libi2c
+ endef
+ 
+-define Package/python3-smbus
+-  $(call Package/i2c/Default)
+-  SUBMENU:=Python
+-  SECTION:=lang
+-  CATEGORY:=Languages
+-  TITLE:=Python bindings for the SMBUS
+-  DEPENDS:=+libi2c +python3-light
+-endef
++# define Package/python3-smbus
++#   $(call Package/i2c/Default)
++#   SUBMENU:=Python
++#   SECTION:=lang
++#   CATEGORY:=Languages
++#   TITLE:=Python bindings for the SMBUS
++#   DEPENDS:=+libi2c +python3-light
++# endef
+ 
+ define Package/libi2c/description
+  This package contains i2c functionality needed by i2c-tools.
+@@ -63,12 +63,12 @@ define Package/i2c-tools/description
+  were originally part of the lm-sensors package.
+ endef
+ 
+-define Package/python3-smbus/description
+- This package contain the Python3 bindings for Linux SMBus access through i2c-dev.
+-endef
++# define Package/python3-smbus/description
++#  This package contain the Python3 bindings for Linux SMBus access through i2c-dev.
++# endef
+ 
+-PYTHON3_PKG_SETUP_ARGS:=
+-PYTHON3_PKG_SETUP_DIR:=py-smbus
++# PYTHON3_PKG_SETUP_ARGS:=
++# PYTHON3_PKG_SETUP_DIR:=py-smbus
+ 
+ define Build/Compile
+ 	$(MAKE) -C $(PKG_BUILD_DIR) \
+@@ -77,7 +77,7 @@ define Build/Compile
+ 		STAGING_DIR="$(STAGING_DIR)" \
+ 		LDFLAGS="$(TARGET_LDFLAGS)" \
+ 		CFLAGS="$(TARGET_CFLAGS)"
+-	$(call Py3Build/Compile)
++	# $(call Py3Build/Compile)
+ endef
+ 
+ define Build/InstallDev
+@@ -103,4 +103,4 @@ endef
+ $(eval $(call BuildPackage,libi2c))
+ $(eval $(call BuildPackage,i2c-tools))
+ $(eval $(call Py3Package,python3-smbus))
+-$(eval $(call BuildPackage,python3-smbus))
++# $(eval $(call BuildPackage,python3-smbus))

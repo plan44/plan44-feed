@@ -32,3 +32,4 @@
 909-fix-use-after-free-in-libpage.diff
 258-prevent-trace-for-tty-custom-speed.diff
 930-obstack-function-type-fix.diff
+931-i2c-utils-build-without-python.diff
