@@ -7,6 +7,7 @@
 # - make sure feed is current
 ./scripts/feeds update onion
 # - softlink (=install) package dirs
+mkdir -p package/feeds/onion
 pushd package/feeds/onion
 ln -s ../../../feeds/onion/omega2-ctrl
 popd
@@ -16,6 +17,7 @@ popd
 # - make sure feed is current
 ./scripts/feeds update matter
 # - softlink (=install) package dirs
+mkdir -p package/feeds/matter
 pushd package/feeds/matter
 ln -s ../../../feeds/matter/devel/gn
 popd
@@ -25,6 +27,7 @@ popd
 # - make sure feed is current
 ./scripts/feeds update packages
 # - softlink (=install) package dirs
+mkdir -p package/feeds/packages
 pushd package/feeds/packages
 ln -s ../../../feeds/packages/net/acme
 ln -s ../../../feeds/packages/net/aircrack-ng
@@ -637,6 +640,7 @@ popd
 # - make sure feed is current
 ./scripts/feeds update plan44
 # - softlink (=install) package dirs
+mkdir -p package/feeds/plan44
 pushd package/feeds/plan44
 ln -s ../../../feeds/plan44/ace-p44script
 ln -s ../../../feeds/plan44/hxcmodplayer
