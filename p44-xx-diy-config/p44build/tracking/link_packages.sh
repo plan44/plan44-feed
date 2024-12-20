@@ -3,15 +3,33 @@
 #   This is fine when the saved set is consistent and has resolved dependencies already.
 #   Otherwise, use install_packages.sh insetad, which is slow but resolves dependencies.
 
-# install packages from feed 'onion':
+# install packages from feed 'plan44':
 # - make sure feed is current
-./scripts/feeds update onion
+./scripts/feeds update plan44
 # - softlink (=install) package dirs
-mkdir -p package/feeds/onion
-pushd package/feeds/onion
-ln -s ../../../feeds/onion/omega2-ctrl
+mkdir -p package/feeds/plan44
+pushd package/feeds/plan44
+ln -s ../../../feeds/plan44/ace-p44script
+ln -s ../../../feeds/plan44/hxcmodplayer
+ln -s ../../../feeds/plan44/libxm
+ln -s ../../../feeds/plan44/mg44
+ln -s ../../../feeds/plan44/p44-counter
+ln -s ../../../feeds/plan44/p44devd
+ln -s ../../../feeds/plan44/p44-ledchain
+ln -s ../../../feeds/plan44/p44ledchaintest
+ln -s ../../../feeds/plan44/p44maintd
+ln -s ../../../feeds/plan44/p44mbrd
+ln -s ../../../feeds/plan44/p44pagekite
+ln -s ../../../feeds/plan44/p44-stepper
+ln -s ../../../feeds/plan44/p44utils-lvgl-sample
+ln -s ../../../feeds/plan44/p44-xx-diy-config
+ln -s ../../../feeds/plan44/packet_forwarder
+ln -s ../../../feeds/plan44/rcswitch
+ln -s ../../../feeds/plan44/rtpmidid
+ln -s ../../../feeds/plan44/serialfwd
+ln -s ../../../feeds/plan44/vdcd
 popd
-# - end of feed 'onion'
+# - end of feed 'plan44'
 
 # install packages from feed 'matter':
 # - make sure feed is current
@@ -22,6 +40,16 @@ pushd package/feeds/matter
 ln -s ../../../feeds/matter/devel/gn
 popd
 # - end of feed 'matter'
+
+# install packages from feed 'onion':
+# - make sure feed is current
+./scripts/feeds update onion
+# - softlink (=install) package dirs
+mkdir -p package/feeds/onion
+pushd package/feeds/onion
+ln -s ../../../feeds/onion/omega2-ctrl
+popd
+# - end of feed 'onion'
 
 # install packages from feed 'packages':
 # - make sure feed is current
@@ -51,8 +79,8 @@ ln -s ../../../feeds/packages/utils/bluez
 ln -s ../../../feeds/packages/net/bonding
 ln -s ../../../feeds/packages/libs/boost
 ln -s ../../../feeds/packages/net/bridge-utils
-ln -s ../../../feeds/packages/libs/c-ares
 ln -s ../../../feeds/packages/utils/canutils
+ln -s ../../../feeds/packages/libs/c-ares
 ln -s ../../../feeds/packages/utils/ccrypt
 ln -s ../../../feeds/packages/net/cifs-utils
 ln -s ../../../feeds/packages/libs/cjson
@@ -61,8 +89,8 @@ ln -s ../../../feeds/packages/net/daemonlogger
 ln -s ../../../feeds/packages/libs/db47
 ln -s ../../../feeds/packages/utils/dbus
 ln -s ../../../feeds/packages/admin/debian-archive-keyring
-ln -s ../../../feeds/packages/net/dhcp-forwarder
 ln -s ../../../feeds/packages/net/dhcpcd
+ln -s ../../../feeds/packages/net/dhcp-forwarder
 ln -s ../../../feeds/packages/devel/diffutils
 ln -s ../../../feeds/packages/libs/dmx_usb_module
 ln -s ../../../feeds/packages/utils/ecdsautils
@@ -232,41 +260,41 @@ ln -s ../../../feeds/packages/libs/libyubikey
 ln -s ../../../feeds/packages/net/lora-gateway-hal
 ln -s ../../../feeds/packages/utils/lsof
 ln -s ../../../feeds/packages/lang/lua-bencode
+ln -s ../../../feeds/packages/lang/luabitop
 ln -s ../../../feeds/packages/lang/lua-cjson
 ln -s ../../../feeds/packages/lang/lua-copas
 ln -s ../../../feeds/packages/lang/lua-coxpcall
 ln -s ../../../feeds/packages/lang/lua-ev
+ln -s ../../../feeds/packages/lang/luaexpat
+ln -s ../../../feeds/packages/lang/luafilesystem
+ln -s ../../../feeds/packages/lang/luajit
+ln -s ../../../feeds/packages/lang/lualanes
 ln -s ../../../feeds/packages/lang/lua-libmodbus
 ln -s ../../../feeds/packages/lang/lua-lsqlite3
 ln -s ../../../feeds/packages/lang/lua-lzlib
 ln -s ../../../feeds/packages/lang/lua-md5
 ln -s ../../../feeds/packages/lang/lua-mobdebug
 ln -s ../../../feeds/packages/lang/lua-openssl
+ln -s ../../../feeds/packages/lang/luaossl
 ln -s ../../../feeds/packages/lang/lua-penlight
 ln -s ../../../feeds/packages/lang/lua-rings
 ln -s ../../../feeds/packages/lang/lua-rs232
-ln -s ../../../feeds/packages/lang/lua-sha2
-ln -s ../../../feeds/packages/lang/lua-wsapi
-ln -s ../../../feeds/packages/lang/lua-xavante
-ln -s ../../../feeds/packages/lang/luabitop
-ln -s ../../../feeds/packages/lang/luaexpat
-ln -s ../../../feeds/packages/lang/luafilesystem
-ln -s ../../../feeds/packages/lang/luajit
-ln -s ../../../feeds/packages/lang/lualanes
-ln -s ../../../feeds/packages/lang/luaossl
 ln -s ../../../feeds/packages/lang/luasec
+ln -s ../../../feeds/packages/lang/lua-sha2
 ln -s ../../../feeds/packages/lang/luasoap
 ln -s ../../../feeds/packages/lang/luasocket
 ln -s ../../../feeds/packages/lang/luasrcdiet
+ln -s ../../../feeds/packages/lang/lua-wsapi
+ln -s ../../../feeds/packages/lang/lua-xavante
 ln -s ../../../feeds/packages/lang/luv
 ln -s ../../../feeds/packages/net/lynx
 ln -s ../../../feeds/packages/lang/lzmq
 ln -s ../../../feeds/packages/libs/lzo
 ln -s ../../../feeds/packages/devel/m4
-ln -s ../../../feeds/packages/net/mac-telnet
 ln -s ../../../feeds/packages/net/maccalc
 ln -s ../../../feeds/packages/utils/macchanger
 ln -s ../../../feeds/packages/kernel/macremapper
+ln -s ../../../feeds/packages/net/mac-telnet
 ln -s ../../../feeds/packages/sound/madplay
 ln -s ../../../feeds/packages/mail/mailsend
 ln -s ../../../feeds/packages/devel/make
@@ -283,9 +311,9 @@ ln -s ../../../feeds/packages/utils/micrond
 ln -s ../../../feeds/packages/lang/python/micropython
 ln -s ../../../feeds/packages/lang/python/micropython-lib
 ln -s ../../../feeds/packages/net/mikrotik-btest
-ln -s ../../../feeds/packages/net/mini_snmpd
 ln -s ../../../feeds/packages/utils/minicom
 ln -s ../../../feeds/packages/multimedia/minisatip
+ln -s ../../../feeds/packages/net/mini_snmpd
 ln -s ../../../feeds/packages/net/miniupnpc
 ln -s ../../../feeds/packages/net/miniupnpd
 ln -s ../../../feeds/packages/libs/minizip
@@ -303,11 +331,11 @@ ln -s ../../../feeds/packages/sound/mpc
 ln -s ../../../feeds/packages/sound/mpg123
 ln -s ../../../feeds/packages/net/mrmctl
 ln -s ../../../feeds/packages/libs/msgpack-c
-ln -s ../../../feeds/packages/utils/mt-st
-ln -s ../../../feeds/packages/kernel/mtd-rw
 ln -s ../../../feeds/packages/libs/mtdev
+ln -s ../../../feeds/packages/kernel/mtd-rw
 ln -s ../../../feeds/packages/utils/mtools
 ln -s ../../../feeds/packages/net/mtr
+ln -s ../../../feeds/packages/utils/mt-st
 ln -s ../../../feeds/packages/admin/muninlite
 ln -s ../../../feeds/packages/utils/mv88e6xxx_dump
 ln -s ../../../feeds/packages/net/mwan3
@@ -319,15 +347,15 @@ ln -s ../../../feeds/packages/net/natmap
 ln -s ../../../feeds/packages/utils/ncdu
 ln -s ../../../feeds/packages/net/ncp
 ln -s ../../../feeds/packages/libs/neon
-ln -s ../../../feeds/packages/net/net-snmp
-ln -s ../../../feeds/packages/net/net-tools
 ln -s ../../../feeds/packages/admin/netatop
 ln -s ../../../feeds/packages/net/netcat
 ln -s ../../../feeds/packages/admin/netdata
 ln -s ../../../feeds/packages/net/netdiscover
 ln -s ../../../feeds/packages/net/netperf
 ln -s ../../../feeds/packages/net/netsniff-ng
+ln -s ../../../feeds/packages/net/net-snmp
 ln -s ../../../feeds/packages/net/netstinky
+ln -s ../../../feeds/packages/net/net-tools
 ln -s ../../../feeds/packages/net/nfdump
 ln -s ../../../feeds/packages/net/nft-qos
 ln -s ../../../feeds/packages/libs/nghttp2
@@ -350,15 +378,15 @@ ln -s ../../../feeds/packages/utils/oath-toolkit
 ln -s ../../../feeds/packages/multimedia/oggfwd
 ln -s ../../../feeds/packages/net/ola
 ln -s ../../../feeds/packages/libs/oniguruma
-ln -s ../../../feeds/packages/net/open-iscsi
-ln -s ../../../feeds/packages/net/open-isns
-ln -s ../../../feeds/packages/utils/open-plc-utils
 ln -s ../../../feeds/packages/utils/open2300
 ln -s ../../../feeds/packages/libs/openblas
 ln -s ../../../feeds/packages/mail/opendkim
 ln -s ../../../feeds/packages/utils/opendoas
 ln -s ../../../feeds/packages/net/openfortivpn
+ln -s ../../../feeds/packages/net/open-iscsi
+ln -s ../../../feeds/packages/net/open-isns
 ln -s ../../../feeds/packages/libs/openpgm
+ln -s ../../../feeds/packages/utils/open-plc-utils
 ln -s ../../../feeds/packages/utils/opensc
 ln -s ../../../feeds/packages/net/openssh
 ln -s ../../../feeds/packages/net/opentracker
@@ -366,8 +394,8 @@ ln -s ../../../feeds/packages/net/openvpn
 ln -s ../../../feeds/packages/net/openvpn-easy-rsa
 ln -s ../../../feeds/packages/utils/openzwave
 ln -s ../../../feeds/packages/libs/opus
-ln -s ../../../feeds/packages/sound/opus-tools
 ln -s ../../../feeds/packages/libs/opusfile
+ln -s ../../../feeds/packages/sound/opus-tools
 ln -s ../../../feeds/packages/net/ostiary
 ln -s ../../../feeds/packages/kernel/ovpn-dco
 ln -s ../../../feeds/packages/net/owipcalc
@@ -413,11 +441,11 @@ ln -s ../../../feeds/packages/lang/perl-io-html
 ln -s ../../../feeds/packages/lang/perl-lockfile-simple
 ln -s ../../../feeds/packages/lang/perl-lwp-mediatypes
 ln -s ../../../feeds/packages/lang/perl-mail-spamassassin
+ln -s ../../../feeds/packages/lang/perl-netaddr-ip
 ln -s ../../../feeds/packages/lang/perl-net-cidr-lite
 ln -s ../../../feeds/packages/lang/perl-net-dns
 ln -s ../../../feeds/packages/lang/perl-net-http
 ln -s ../../../feeds/packages/lang/perl-net-telnet
-ln -s ../../../feeds/packages/lang/perl-netaddr-ip
 ln -s ../../../feeds/packages/lang/perl-parse-recdescent
 ln -s ../../../feeds/packages/lang/perl-parse-yapp
 ln -s ../../../feeds/packages/lang/perl-sub-uplevel
@@ -439,8 +467,8 @@ ln -s ../../../feeds/packages/libs/pixman
 ln -s ../../../feeds/packages/devel/pkgconf
 ln -s ../../../feeds/packages/utils/poemgr
 ln -s ../../../feeds/packages/net/polipo
-ln -s ../../../feeds/packages/net/port-mirroring
 ln -s ../../../feeds/packages/sound/portaudio
+ln -s ../../../feeds/packages/net/port-mirroring
 ln -s ../../../feeds/packages/libs/postgresql
 ln -s ../../../feeds/packages/utils/powertop
 ln -s ../../../feeds/packages/net/pppossh
@@ -461,6 +489,7 @@ ln -s ../../../feeds/packages/net/ptunnel-ng
 ln -s ../../../feeds/packages/libs/pugixml
 ln -s ../../../feeds/packages/sound/pulseaudio
 ln -s ../../../feeds/packages/utils/pv
+ln -s ../../../feeds/packages/lang/python/python3
 ln -s ../../../feeds/packages/lang/python/python-pip-conf
 ln -s ../../../feeds/packages/libs/qrencode
 ln -s ../../../feeds/packages/utils/quota
@@ -474,14 +503,14 @@ ln -s ../../../feeds/packages/net/redsocks
 ln -s ../../../feeds/packages/net/remserial
 ln -s ../../../feeds/packages/utils/reptyr
 ln -s ../../../feeds/packages/utils/rng-tools
-ln -s ../../../feeds/packages/net/rp-pppoe
 ln -s ../../../feeds/packages/net/rpcbind
 ln -s ../../../feeds/packages/libs/rpcsvc-proto
+ln -s ../../../feeds/packages/net/rp-pppoe
 ln -s ../../../feeds/packages/utils/rrdtool1
 ln -s ../../../feeds/packages/utils/rtklib
+ln -s ../../../feeds/packages/utils/rtl_433
 ln -s ../../../feeds/packages/utils/rtl-ais
 ln -s ../../../feeds/packages/utils/rtl-sdr
-ln -s ../../../feeds/packages/utils/rtl_433
 ln -s ../../../feeds/packages/utils/rtty
 ln -s ../../../feeds/packages/lang/ruby
 ln -s ../../../feeds/packages/net/safe-search
@@ -521,8 +550,8 @@ ln -s ../../../feeds/packages/libs/spdlog
 ln -s ../../../feeds/packages/net/speedtest-netperf
 ln -s ../../../feeds/packages/libs/speex
 ln -s ../../../feeds/packages/libs/speexdsp
-ln -s ../../../feeds/packages/utils/spi-tools
 ln -s ../../../feeds/packages/libs/spice-protocol
+ln -s ../../../feeds/packages/utils/spi-tools
 ln -s ../../../feeds/packages/net/spoofer
 ln -s ../../../feeds/packages/libs/sqlite3
 ln -s ../../../feeds/packages/net/sqm-scripts
@@ -547,9 +576,9 @@ ln -s ../../../feeds/packages/utils/sysstat
 ln -s ../../../feeds/packages/net/tac_plus
 ln -s ../../../feeds/packages/libs/taglib
 ln -s ../../../feeds/packages/ipv6/tayga
-ln -s ../../../feeds/packages/libs/tcp_wrappers
 ln -s ../../../feeds/packages/net/tcpproxy
 ln -s ../../../feeds/packages/net/tcpreplay
+ln -s ../../../feeds/packages/libs/tcp_wrappers
 ln -s ../../../feeds/packages/utils/tcsh
 ln -s ../../../feeds/packages/net/telnet-bsd
 ln -s ../../../feeds/packages/utils/temperusb
@@ -635,32 +664,4 @@ ln -s ../../../feeds/packages/utils/zsh
 ln -s ../../../feeds/packages/utils/zstd
 popd
 # - end of feed 'packages'
-
-# install packages from feed 'plan44':
-# - make sure feed is current
-./scripts/feeds update plan44
-# - softlink (=install) package dirs
-mkdir -p package/feeds/plan44
-pushd package/feeds/plan44
-ln -s ../../../feeds/plan44/ace-p44script
-ln -s ../../../feeds/plan44/hxcmodplayer
-ln -s ../../../feeds/plan44/libxm
-ln -s ../../../feeds/plan44/mg44
-ln -s ../../../feeds/plan44/p44-counter
-ln -s ../../../feeds/plan44/p44-ledchain
-ln -s ../../../feeds/plan44/p44-stepper
-ln -s ../../../feeds/plan44/p44-xx-diy-config
-ln -s ../../../feeds/plan44/p44devd
-ln -s ../../../feeds/plan44/p44ledchaintest
-ln -s ../../../feeds/plan44/p44maintd
-ln -s ../../../feeds/plan44/p44mbrd
-ln -s ../../../feeds/plan44/p44pagekite
-ln -s ../../../feeds/plan44/p44utils-lvgl-sample
-ln -s ../../../feeds/plan44/packet_forwarder
-ln -s ../../../feeds/plan44/rcswitch
-ln -s ../../../feeds/plan44/rtpmidid
-ln -s ../../../feeds/plan44/serialfwd
-ln -s ../../../feeds/plan44/vdcd
-popd
-# - end of feed 'plan44'
 

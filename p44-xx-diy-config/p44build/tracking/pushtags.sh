@@ -5,5 +5,4 @@ echo "p44mbrd-1.3.0.10: cannot push to http URL https://github.com/plan44/p44mbr
 echo "p44maintd-4.5.1: cannot push to http URL https://github.com/plan44/p44maintd.git -> cannot tag package sources"
 echo "mg44-3.14: cannot push to http URL https://github.com/plan44/mg44.git -> cannot tag package sources"
 echo "serialfwd-1.3: cannot push to http URL https://github.com/plan44/serialfwd.git -> cannot tag package sources"
-echo "omega2-ctrl-0.3: cannot push to http URL https://github.com/OnionIoT/omega2-ctrl.git -> cannot tag package sources"
 popd >/dev/null
