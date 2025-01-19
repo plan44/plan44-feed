@@ -18,7 +18,7 @@ The following packages are of general usefulness right now:
 
 - **p44-ledchain**: this is a kernel module written by me for the MT7688/Omega2 which makes use of the hardware PWM in the chip to drive individually addressable WS281x-type LED chains. In contrast to the *ws2812_draiveris* driver (see below) which does the same for AR9331/Omega1, *p44-ledchain* does **not** block IRQs at all. At this time, *p44-ledchain* is extensively tested with up to 4 chains with ~900 WS2815 or WS2813 each. The driver also has modes for other chips like WS2811, WS2812, RGBW SK6812 and different LED color layouts like RGB, GRB etc.
 
-- **pagekitec**: a package containing the C implementation of pagekite, which is a reverse proxy that allows reaching embedded targets from the internet (e.g. for service, maintainance, monitoring). Have a look at pagekite.net for information (pagekite is available as a hosted service but also provides the server side as a oppen source python script you can use on your own server)
+- **pagekitec**: a package containing the C implementation of pagekite, which is a reverse proxy that allows reaching embedded targets from the internet (e.g. for service, maintainance, monitoring). Have a look at pagekite.net for information (pagekite is available as a hosted service but also provides the server side as a open source python script you can use on your own server)
 
 - **serialfwd**: a small utility I use in almost every project which allows to access a serial interface via TCP from a remote host, and also to send and receive a few hex bytes directly.
 

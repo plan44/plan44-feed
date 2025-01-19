@@ -43,6 +43,6 @@ Also, retaining GPIOs numbered after the actual Pin numbers on the SoC is someth
 
 ## Future
 
-I hope this package can become an easy way for occasionally building OnionOS firmware, possibly slightly modified, on your own OpneWrt working tree, side-by-side with other OpenWrt based firmware.
+I hope this package can become an easy way for occasionally building OnionOS firmware, possibly slightly modified, on your own OpenWrt working tree, side-by-side with other OpenWrt based firmware.
 
 With Onion having thankfully separated all the needed tree patches and configs into the [openwrt-buildsystem-wrapper](https://github.com/OnionIoT/openwrt-buildsystem-wrapper), I think this should become possible soon!
