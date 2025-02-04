@@ -39,6 +39,7 @@ Where
   - **0x0005 = P9823**: RGB LED in standard 3mm and 5mm LED case, similar timing as WS2812.
   - **0x0006 = SK6812**: RGBW four channel LED, similar timing to WS2812.
   - **0x0007 = WS2816**: 5V RGB LED with 16 bit resolution per channel, otherwise similar to WS2813B
+  - **0x0008 = WS2813N**: WS2813 as per NORMAND datasheet, which has significantly different timing specs, which are   incompatible with WorldSemi WS2813 specs (and proven not working on some chips). Note: This is the timing that was used for all WS2813 before p44-ledchain v10.
 
   Layouts:
 

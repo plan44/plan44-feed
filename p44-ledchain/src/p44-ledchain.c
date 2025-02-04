@@ -41,16 +41,19 @@ MODULE_DESCRIPTION("PWM driver for WS281x, SK68xx type addressable smart led cha
 #define DEVICE_NAME "ledchain"
 
 // Version history
-// v1 - unnumbered initial version
-// v2 - add LEDCHAIN_PARAM_MAXTPASSIVE to tweak max passive time, mostly for WS2812 where max allowed time varies a lot
-// v3 - allow up to 2048 LEDs (previously, only 1024), now shows min/max update duration timer
-// v4 - reduce TPassive_max_nS for WS2813/15 to 40uS, more causes occasional flicker for WS2815 at least
-// v5 - add ledtype_ws2815_rgb
-// v6 - completely reworked led type handling, separate chip/layout parameters, variable mode with led type header in data
-// v7 - reduce TPassive_max_nS for WS2813 (done for WS2813 in v6 already) to 35uS, more STILL caused occasional flicker
-// v8 - add more R,G,B(,W) ordering layout modes
-// v9 - add 16bit support for WS2816, dynamic output buffer (only allocate used leds)
-#define P44LEDCHAIN_VERSION 9
+// v1  - unnumbered initial version
+// v2  - add LEDCHAIN_PARAM_MAXTPASSIVE to tweak max passive time, mostly for WS2812 where max allowed time varies a lot
+// v3  - allow up to 2048 LEDs (previously, only 1024), now shows min/max update duration timer
+// v4  - reduce TPassive_max_nS for WS2813/15 to 40uS, more causes occasional flicker for WS2815 at least
+// v5  - add ledtype_ws2815_rgb
+// v6  - completely reworked led type handling, separate chip/layout parameters, variable mode with led type header in data
+// v7  - reduce TPassive_max_nS for WS2813 (done for WS2813 in v6 already) to 35uS, more STILL caused occasional flicker
+// v8  - add more R,G,B(,W) ordering layout modes
+// v9  - add 16bit support for WS2816, dynamic output buffer (only allocate used leds)
+// v10 - adjusted timing for WS2813 and WS2815 to match specs in now available real WorldSemi Datasheets.
+//       Before we were using NORMAND specs which turned out to be on the edge of faulty for some WorldSemi WS2813.
+//       The new WS2813N setting retains the timing used before v10 for all WS2813 and WS2815.
+#define P44LEDCHAIN_VERSION 10
 
 
 #define LEDCHAIN_MAX_LEDS 2048
@@ -227,6 +230,7 @@ typedef enum {
   ledchip_p9823,
   ledchip_sk6812,
   ledchip_ws2816,
+  ledchip_ws2813n,
   num_ledchips
 } LedChip_t;
 
@@ -236,10 +240,10 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
   {
     .name = "WS2811",
     // timing from datasheet:
-    // - T0H = 350ns..650nS
-    // - T0L = 1850ns..2150nS
-    // - T1H = 1050ns..1350nS
-    // - T1L = 1150ns..1450nS
+    // - T0H = 350nS..650nS
+    // - T0L = 1850nS..2150nS
+    // - T1H = 1050nS..1350nS
+    // - T1L = 1150nS..1450nS
     // - TReset = >50µS
     .T0Active_nS = 500, .TPassive_min_nS = 1200, .T0Passive_double = 1,
     .TPassive_max_nS = 10000, .TReset_nS = 50000,
@@ -248,10 +252,10 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
   {
     .name = "WS2812",
     // timing from datasheet:
-    // - T0H = 200ns..500nS
-    // - T0L = 750ns..1050nS (actual max is fortunately higher, ~10uS)
-    // - T1H = 750ns..1050nS
-    // - T1L = 200ns..500nS (actual max is fortunately higher, ~10uS)
+    // - T0H = 200nS..500nS
+    // - T0L = 750nS..1050nS (actual max is fortunately higher, ~10uS)
+    // - T1H = 750nS..1050nS
+    // - T1L = 200nS..500nS (actual max is fortunately higher, ~10uS)
     // - TReset = >50µS
     .T0Active_nS = 350, .TPassive_min_nS = 900, .T0Passive_double = 0,
     .TPassive_max_nS = 10000, .TReset_nS = 50000,
@@ -259,27 +263,28 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
   },
   {
     .name = "WS2813",
-    // timing from datasheet:
-    // - T0H = 300ns..450nS
-    // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
-    // - T1H = 750ns..1000nS
-    // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
-    // - TReset = >300µS
+    // NOTE: T0Active is WAY LESS than in NORMAND spec we used before 2025-02-04!
+    // timing from WS2813 and WS2813B WorldSemi datasheets
+    // - T0H = 220nS..380nS
+    // - T0L = 580nS..1.6µS - but in fact up to 35000nS is ok
+    // - T1H = 580nS..1.6µS
+    // - T1L = 220nS..420nS - but in fact up to 35000nS is ok
+    // - TReset = >280µS (but we keep 300µS as per older datasheets, loosing nothing)
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
-    .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
+    .T0Active_nS = 300, .TPassive_min_nS = 775, .T0Passive_double = 0,
     .TPassive_max_nS = 35000, .TReset_nS = 300000,
     .bitsperchannel = 8
   },
   {
     .name = "WS2815",
-    // timing from datasheet:
-    // - T0H = 300ns..450nS
-    // - T0L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
-    // - T1H = 750ns..1000nS
-    // - T1L = 300ns..100000nS - NOTE: 300nS is definitely not working, we're using min 650nS instead (proven ok with 200 WS2813)
-    // - TReset = >300µS
+    // timing from WS2815B WorldSemi datasheet:
+    // - T0H = 220nS..380nS
+    // - T0L = 580nS..1.6µS - but in fact up to 35000nS is ok
+    // - T1H = 580nS..1.6µS
+    // - T1L = 220nS..420nS - but in fact up to 35000nS is ok
+    // - TReset = >280µS in newer datasheet, >300µS in older, so we keep 300µS to be sure, loosing nothing
     // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
-    .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
+    .T0Active_nS = 300, .TPassive_min_nS = 775, .T0Passive_double = 0,
     .TPassive_max_nS = 35000, .TReset_nS = 300000,
     .bitsperchannel = 8
   },
@@ -317,9 +322,25 @@ static const LedChipDescriptor_t ledChipDescriptors[num_ledchips-1] = {
     // - T1L = 480ns..1000nS
     // - TReset = >280µS
     // - Note: Don't know if it applies to WS2816, but as safeguard: TxL>35µS causes loosing bits with some chips
-    .T0Active_nS = 300, .TPassive_min_nS = 600, .T0Passive_double = 0,
-    .TPassive_max_nS = 35000, .TReset_nS = 280000,
+    .T0Active_nS = 275, .TPassive_min_nS = 750, .T0Passive_double = 0,
+    .TPassive_max_nS = 35000, .TReset_nS = 300000,
     .bitsperchannel = 16
+  },
+  {
+    .name = "WS2813_N",
+    // NOTE: This setting was the standard WS2813 until 2025-02-04, when we found that
+    //       Some WS2813 need shorter T0H, as per more recent WorldSemi datasheets.
+    //       So we retain this in case we ever see WS28xx from NORMAND that actually need this
+    // timing from (probably faulty) NORMAND datasheet:
+    // - T0H = 300ns..450nS
+    // - T0L = 300ns..100µS - but we keep our experimental safe value of 35000nS
+    // - T1H = 750ns..1000nS
+    // - T1L = 300ns..100µS - NOTE: 300nS is definitely not working, we're using min 650nS instead
+    // - TReset = >300µS (we do 350µS to be on the safe side)
+    // - Note: T0L/T1L of more than 35µS can apparently cause single LEDs to reset and loose bits
+    .T0Active_nS = 375, .TPassive_min_nS = 650, .T0Passive_double = 0,
+    .TPassive_max_nS = 35000, .TReset_nS = 350000,
+    .bitsperchannel = 8
   },
 };
 
