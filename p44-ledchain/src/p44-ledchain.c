@@ -1381,7 +1381,7 @@ static int __init p44ledchain_init_module(void)
   #if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
   p44ledchain_class = class_create(DEVICE_NAME);
   #else
-  p44ledchain_class = class_create(THIS_MODULE, DEVICE_NAME);
+  p44ledchain_class = class_create(DEVICE_NAME);
   #endif
   if (IS_ERR(p44ledchain_class)) {
     err = PTR_ERR(p44ledchain_class);
