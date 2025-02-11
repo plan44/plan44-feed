@@ -116,7 +116,7 @@ struct p44counter_dev {
   // - hardware mode flags
   u32 mode;
   // - GPIOs A and B
-  int gpios[2];
+  struct gpio_desc *gpiod[2];
   // - [ns] debounce time
   u32 debounce_ns;
   // - counting mode flags
@@ -176,9 +176,9 @@ static irqreturn_t p44counter_edge_irq(int irq, void *dev_id, int gpioidx)
     // quadrature encoder signals:
     //   downcount = A ^ invertA ^ B ^ invertB ^ is_B_edge
     dev->counter += (
-      (((gpio_get_value(dev->gpios[0]) != // A
+      (((gpiod_get_value(dev->gpiod[0]) != // A
       (dev->countMode & countdown_A)) != // invertA
-      gpio_get_value(dev->gpios[1])) != // B
+      gpiod_get_value(dev->gpiod[1])) != // B
       (dev->countMode & countdown_B)) != // invertB
       (gpioidx==1) // is_B_edge
     ) ? -1 : 1;
@@ -377,35 +377,30 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
   // - debounce time (specified in uS, stored in nS)
   dev->debounce_ns = (u32)params[COUNTER_PARAM_DEBOUNCE_US]*1000;
   // - GPIOs
-  dev->gpios[0] = params[COUNTER_PARAM_GPIO_A];
-  dev->gpios[1] = -1; // default to none
+  dev->gpiod[0] = gpio_to_desc(params[COUNTER_PARAM_GPIO_A]);
+  dev->gpiod[1] = NULL; // default to none
   if (param_count>COUNTER_PARAM_GPIO_B) {
-    dev->gpios[1] = params[COUNTER_PARAM_GPIO_B];
+    dev->gpiod[1] = gpio_to_desc(params[COUNTER_PARAM_GPIO_B]);
   }
   // - request and init the GPIOs
   nm[1] = 0;
   for (i = 0; i<2; i++) {
     dev->lastEdge[i]=0;
     nm[0] = 'A'+i;
-    if (dev->gpios[i]<0) continue;
-    err = gpio_request(dev->gpios[i], nm);
-    if (err) {
-      printk(KERN_ERR LOGPREFIX "gpio_request failed for %s, gpio %d; err=%d\n", nm, dev->gpios[i], err);
+    if (dev->gpiod[i]==NULL) continue;
+    if (gpiod_cansleep(dev->gpiod[i])) {
+      printk(KERN_ERR LOGPREFIX "gpio for %s can sleep -> error, driver needs non-sleeping GPIOs\n", nm);
       goto err_free_gpios;
     }
-    if (gpio_cansleep(dev->gpios[i])) {
-      printk(KERN_ERR LOGPREFIX "gpio %d for %s can sleep -> error, driver needs non-sleeping GPIOs\n", dev->gpios[i], nm);
-      goto err_free_gpios;
-    }
-    err = gpio_direction_input(dev->gpios[i]);
+    err = gpiod_direction_input(dev->gpiod[i]);
     if (err) {
-      printk(KERN_ERR LOGPREFIX "gpio_direction_input failed for %s, gpio %d; err=%d\n", nm, dev->gpios[i], err);
+      printk(KERN_ERR LOGPREFIX "gpio_direction_input failed for %s; err=%d\n", nm, err);
       goto err_free_gpios;
     }
     // request IRQ for GPIO
-    irqno = gpio_to_irq(dev->gpios[i]);
+    irqno = gpiod_to_irq(dev->gpiod[i]);
     if (irqno<0) {
-      printk(KERN_ERR LOGPREFIX "gpio %d does not have an IRQ line assigned; err=%d\n", dev->gpios[i], irqno);
+      printk(KERN_ERR LOGPREFIX "gpio does not have an IRQ line assigned; err=%d\n", irqno);
       goto err_free_gpios;
     }
     // which edges?
@@ -421,7 +416,7 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
       dev
     );
     if (err!=IRQC_IS_HARDIRQ) {
-      printk(KERN_ERR LOGPREFIX "registering IRQ %d failed (or not hardIRQ) for gpio %d; err=%d\n", irqno, dev->gpios[i], err);
+      printk(KERN_ERR LOGPREFIX "registering IRQ %d failed (or not hardIRQ) for gpio; err=%d\n", irqno, err);
       goto err_free_gpios;
     }
   }
@@ -461,7 +456,10 @@ static int p44counter_add_device(struct class *class, int minor, devPtr_t *devP,
   printk(KERN_INFO LOGPREFIX "Device: /dev/%s\n", devname);
   printk(KERN_INFO LOGPREFIX "- Mode     : 0x%u\n", dev->mode);
   printk(KERN_INFO LOGPREFIX "- Debounce : %u uS\n", dev->debounce_ns/1000);
-  printk(KERN_INFO LOGPREFIX "- Inputs   : A=%d, B=%d\n", dev->gpios[0], dev->gpios[1]);
+  printk(KERN_INFO LOGPREFIX "- Inputs   : A=%s, B=%s\n",
+    dev->gpiod[0] ? "assigned" : "undefined",
+    dev->gpiod[1] ? "assigned" : "undefined"
+  );
   // done
   *devP = dev; // pass back new dev
   return 0;
@@ -471,11 +469,11 @@ err_free_device:
 err_free_cdev:
   cdev_del(&dev->cdev);
 err_free_gpios:
-  for (i = 0; i<2; i++) {
-    // is safe to call for numbers we haven't successfully claimed before
-    if (dev->gpios[i]<0) continue;
-    gpio_free(dev->gpios[i]);
-  }
+//   for (i = 0; i<2; i++) {
+//     // is safe to call for numbers we haven't successfully claimed before
+//     if (dev->gpios[i]<0) continue;
+//     gpio_free(dev->gpios[i]);
+//   }
 //err_free:
   kfree(dev);
 err:
@@ -497,11 +495,11 @@ static void p44counter_remove_device(struct class *class, int minor, devPtr_t *d
 	cdev_del(&dev->cdev);
   // free the GPIOs
   for (i = 0; i<2; i++) {
-    if (dev->gpios[i]<0) continue;
+    if (dev->gpiod[i]==NULL) continue;
     // free the irq
-    free_irq(gpio_to_irq(dev->gpios[i]), dev);
+    free_irq(gpiod_to_irq(dev->gpiod[i]), dev);
     // free the gpio itself
-    gpio_free(dev->gpios[i]);
+    //gpio_free(dev->gpios[i]); // does not exist, gpio descs found with gpio_to_desc() don't need to be freed
   }
   // delete dev
   kfree(dev);
@@ -537,7 +535,7 @@ static int __init p44counter_init_module(void)
 	}
 	p44counter_major = MAJOR(devno);
 	// Create device class
-	p44counter_class = class_create(THIS_MODULE, DEVICE_NAME);
+	p44counter_class = class_create(DEVICE_NAME);
 	if (IS_ERR(p44counter_class)) {
 		err = PTR_ERR(p44counter_class);
 		goto err_unregister_region;
