@@ -133,7 +133,7 @@ struct p44stepper_dev {
   // - stepper descriptor
   const StepperTypeDescriptor_t *stepperDesc;
   // - coil connection GPIOs
-  int coil_gpio_nos[MAX_COIL_GPIOS];
+  struct gpio_desc * coil_gpio_descs[MAX_COIL_GPIOS];
 
   // operating parameters
   // - current substep reached
@@ -189,10 +189,10 @@ static void apply_coilstate(devPtr_t dev, u8 coilstate)
   );
   #endif
   for (i=0; i<MAX_COIL_GPIOS; i++) {
-    int gn = dev->coil_gpio_nos[i];
-    if (gn>=0) {
+    struct gpio_desc * gdesc = dev->coil_gpio_descs[i];
+    if (gdesc!=NULL) {
       // apply to this output
-      gpio_set_value(gn, ((coilstate & (1<<(MAX_COIL_GPIOS-1)))!=0) != dev->activelow);
+      gpiod_set_value(gdesc, ((coilstate & (1<<(MAX_COIL_GPIOS-1)))!=0) != dev->activelow);
     }
     coilstate <<= 1;
   }
@@ -557,28 +557,24 @@ static int p44stepper_add_device(struct class *class, int minor, devPtr_t *devP,
   }
   dev->stepperDesc = &stepperTypeDescriptors[pval];
   // - coil GPIOs
-  dev->coil_gpio_nos[0] = params[STEPPER_PARAM_COIL_A_GPIO];
-  dev->coil_gpio_nos[1] = params[STEPPER_PARAM_COIL_B_GPIO];
-  dev->coil_gpio_nos[2] = params[STEPPER_PARAM_COIL_C_GPIO];
-  dev->coil_gpio_nos[3] = params[STEPPER_PARAM_COIL_D_GPIO];
+  dev->coil_gpio_descs[0] = gpio_to_desc(params[STEPPER_PARAM_COIL_A_GPIO]);
+  dev->coil_gpio_descs[1] = gpio_to_desc(params[STEPPER_PARAM_COIL_B_GPIO]);
+  dev->coil_gpio_descs[2] = gpio_to_desc(params[STEPPER_PARAM_COIL_C_GPIO]);
+  dev->coil_gpio_descs[3] = gpio_to_desc(params[STEPPER_PARAM_COIL_D_GPIO]);
   // - request and init the GPIOs
   strcpy(nm,"coil");
   nm[5] = 0;
   for (i = 0; i<MAX_COIL_GPIOS; i++) {
     nm[4] = 'A'+i;
-    err = gpio_request(dev->coil_gpio_nos[i], nm);
-    if (err) {
-      printk(KERN_ERR LOGPREFIX "gpio_request failed for %s, gpio %d; err=%d\n", nm, dev->coil_gpio_nos[i], err);
-      goto err_free_gpios;
-    }
-    if (gpio_cansleep(dev->coil_gpio_nos[i])) {
-      printk(KERN_ERR LOGPREFIX "gpio %d for %s can sleep -> error, driver needs non-sleeping GPIOs\n", dev->coil_gpio_nos[i], nm);
+    if (dev->coil_gpio_descs[i]==NULL) continue;
+    if (gpiod_cansleep(dev->coil_gpio_descs[i])) {
+      printk(KERN_ERR LOGPREFIX "gpio for %s can sleep -> error, driver needs non-sleeping GPIOs\n", nm);
       goto err_free_gpios;
     }
     // enable output with inactive level to begin with
-    err = gpio_direction_output(dev->coil_gpio_nos[i], dev->activelow);
+    err = gpiod_direction_output(dev->coil_gpio_descs[i], dev->activelow);
     if (err) {
-      printk(KERN_ERR LOGPREFIX "gpio_direction_output failed for %s, gpio %d; err=%d\n", nm, dev->coil_gpio_nos[i], err);
+      printk(KERN_ERR LOGPREFIX "gpio_direction_output failed for %s; err=%d\n", nm, err);
       goto err_free_gpios;
     }
   }
@@ -629,7 +625,13 @@ static int p44stepper_add_device(struct class *class, int minor, devPtr_t *devP,
   // Config summary
   printk(KERN_INFO LOGPREFIX "Device: /dev/%s\n", devname);
   printk(KERN_INFO LOGPREFIX "- Motor type     : %s\n", dev->stepperDesc->name);
-  printk(KERN_INFO LOGPREFIX "- Output GPIOs   : active %s: A=%d, B=%d, C=%d, D=%d\n", dev->activelow ? "LOW" : "HIGH", dev->coil_gpio_nos[0], dev->coil_gpio_nos[1], dev->coil_gpio_nos[2], dev->coil_gpio_nos[3]);
+  printk(KERN_INFO LOGPREFIX "- Output GPIOs   : active %s: A=%s, B=%s, C=%s, D=%s\n",
+    dev->activelow ? "LOW" : "HIGH",
+    dev->coil_gpio_descs[0] ? "assigned" : "undefined",
+    dev->coil_gpio_descs[1] ? "assigned" : "undefined",
+    dev->coil_gpio_descs[2] ? "assigned" : "undefined",
+    dev->coil_gpio_descs[3] ? "assigned" : "undefined"
+  );
   // done
   *devP = dev; // pass back new dev
   return 0;
@@ -641,7 +643,7 @@ err_free_cdev:
 err_free_gpios:
   for (i = 0; i<MAX_COIL_GPIOS; i++) {
     // is safe to call for numbers we haven't successfully claimed before
-    gpio_free(dev->coil_gpio_nos[i]);
+    //gpio_free(dev->coil_gpio_nos[i]); // does not exist, gpio descs found with gpio_to_desc() don't need to be freed
   }
 err_free:
   kfree(dev);
@@ -666,7 +668,7 @@ static void p44stepper_remove_device(struct class *class, int minor, devPtr_t *d
 	cdev_del(&dev->cdev);
   // free the GPIOs
   for (i = 0; i<MAX_COIL_GPIOS; i++) {
-    gpio_free(dev->coil_gpio_nos[i]);
+    //gpio_free(dev->coil_gpio_nos[i]); // does not exist, gpio descs found with gpio_to_desc() don't need to be freed
   }
   // delete dev
   kfree(dev);
@@ -702,7 +704,7 @@ static int __init p44stepper_init_module(void)
 	}
 	p44stepper_major = MAJOR(devno);
 	// Create device class
-	p44stepper_class = class_create(THIS_MODULE, DEVICE_NAME);
+	p44stepper_class = class_create(DEVICE_NAME);
 	if (IS_ERR(p44stepper_class)) {
 		err = PTR_ERR(p44stepper_class);
 		goto err_unregister_region;
