@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2019 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2018-2025 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -10,7 +10,7 @@ PKG_NAME:=p44-extdev-elsner
 PKG_VERSION:=2.0
 PKG_MIRROR_HASH:=skip
 # version of this makefile
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 PKG_CHECK_FORMAT_SECURITY:=0
@@ -38,7 +38,7 @@ endef
 
 P44UTILS_PROTO:=git
 P44UTILS_URL:=https://github.com/plan44/p44utils.git
-P44UTILS_VERSION:=aba34a553813b95ca669cba5f61aa3f8d8fac3f7
+P44UTILS_VERSION:=8268423c2ac76288c0c9078a5f79c27704299715
 P44UTILS_FILE:=p44utils-$(P44UTILS_VERSION).gz
 P44UTILS_SUBDIR:=p44utils-$(P44UTILS_VERSION)
 define Download/p44utils

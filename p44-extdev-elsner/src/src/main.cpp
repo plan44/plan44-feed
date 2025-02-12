@@ -61,9 +61,8 @@ class ExternalDeviceApp : public CmdLineApp
   int rainInputIndex;
 
   // log to API
-  static void logToApi(void *aContextPtr, int aLevel, const char *aLinePrefix, const char *aLogMessage)
+  void logToApi(int aLevel, const char *aLinePrefix, const char *aLogMessage)
   {
-    ExternalDeviceApp *app = static_cast<ExternalDeviceApp *>(aContextPtr);
     JsonObjectPtr msg = JsonObject::newObj();
     msg->add("message", JsonObject::newString("log"));
     // - index
@@ -71,8 +70,8 @@ class ExternalDeviceApp : public CmdLineApp
     // - value
     msg->add("text", JsonObject::newString(aLogMessage));
     // Send message
-    if (app->deviceConnection) {
-      app->deviceConnection->sendMessage(msg);
+    if (deviceConnection) {
+      deviceConnection->sendMessage(msg);
     }
   }
 
@@ -115,7 +114,7 @@ public:
     getIntOption("loglevel", loglevel);
     SETLOGLEVEL(loglevel);
     if (getOption("logtoapi")) {
-      SETLOGHANDLER(logToApi, this);
+      SETLOGHANDLER(boost::bind(&ExternalDeviceApp::logToApi, this, _1, _2, _3), false);
     }
     // create device connection
     deviceConnection = JsonCommPtr(new JsonComm(MainLoop::currentMainLoop()));

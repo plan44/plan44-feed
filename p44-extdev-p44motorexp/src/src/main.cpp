@@ -61,9 +61,8 @@ class P44MotorDeviceApp : public CmdLineApp
   JsonCommPtr deviceConnection;
 
   // log to API
-  static void logToApi(void *aContextPtr, int aLevel, const char *aLinePrefix, const char *aLogMessage)
+  void logToApi(int aLevel, const char *aLinePrefix, const char *aLogMessage)
   {
-    P44MotorDeviceApp *app = static_cast<P44MotorDeviceApp *>(aContextPtr);
     JsonObjectPtr msg = JsonObject::newObj();
     msg->add("message", JsonObject::newString("log"));
     // - index
@@ -71,8 +70,8 @@ class P44MotorDeviceApp : public CmdLineApp
     // - value
     msg->add("text", JsonObject::newString(aLogMessage));
     // Send message
-    if (app->deviceConnection) {
-      app->deviceConnection->sendMessage(msg);
+    if (deviceConnection) {
+      deviceConnection->sendMessage(msg);
     }
   }
 
@@ -143,7 +142,7 @@ public:
       getIntOption("loglevel", loglevel);
       SETLOGLEVEL(loglevel);
       if (getOption("logtoapi")) {
-        SETLOGHANDLER(logToApi, this);
+        SETLOGHANDLER(boost::bind(&P44MotorDeviceApp::logToApi, this, _1, _2, _3), false);
       }
       // create device connection
       deviceConnection = JsonCommPtr(new JsonComm(MainLoop::currentMainLoop()));
