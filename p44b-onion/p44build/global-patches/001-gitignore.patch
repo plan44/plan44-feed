@@ -1,0 +1,11 @@
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,3 +35,8 @@ git-src
+ .cproject
+ .ccache
+ .vscode*
++# p44build additions
++/patches
++/.pc
++/.p44build
++p44b

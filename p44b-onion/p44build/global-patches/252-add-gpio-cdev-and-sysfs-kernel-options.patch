@@ -1,6 +1,6 @@
 --- a/config/Config-kernel.in
 +++ b/config/Config-kernel.in
-@@ -449,6 +449,42 @@ config KERNEL_BPF_KPROBE_OVERRIDE
+@@ -591,6 +591,42 @@ config KERNEL_BPF_KPROBE_OVERRIDE
  	depends on KERNEL_KPROBES
  	default n
  

@@ -1,6 +1,6 @@
 --- a/config/Config-kernel.in
 +++ b/config/Config-kernel.in
-@@ -86,6 +86,23 @@ config KERNEL_RPI_AXIPERF
+@@ -99,6 +99,23 @@ config KERNEL_RPI_AXIPERF
  	default y
  	depends on KERNEL_PERF_EVENTS && TARGET_bcm27xx
  

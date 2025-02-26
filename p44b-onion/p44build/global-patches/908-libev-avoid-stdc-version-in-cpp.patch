@@ -1,0 +1,21 @@
+--- /dev/null
++++ b/feeds/packages/libs/libev/patches/002-avoid-stdc-version-in-cpp.patch
+@@ -0,0 +1,18 @@
++--- a/ev.h
+++++ b/ev.h
++@@ -195,11 +195,15 @@ struct ev_loop;
++ #endif
++ 
++ /* EV_INLINE is used for functions in header files */
+++#ifdef __cplusplus
+++# define EV_INLINE static inline
+++#else
++ #if __STDC_VERSION__ >= 199901L || __GNUC__ >= 3
++ # define EV_INLINE static inline
++ #else
++ # define EV_INLINE static
++ #endif
+++#endif
++ 
++ #ifdef EV_API_STATIC
++ # define EV_API_DECL static

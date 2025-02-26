@@ -1,8 +1,8 @@
 --- a/target/linux/ramips/dts/mt7628an.dtsi
 +++ b/target/linux/ramips/dts/mt7628an.dtsi
-@@ -221,9 +221,6 @@
- 			resets = <&rstctrl 31>;
- 			reset-names = "pwm";
+@@ -236,9 +236,6 @@
+ 			reg = <0x5000 0x1000>;
+ 			#pwm-cells = <2>;
  
 -			pinctrl-names = "default";
 -			pinctrl-0 = <&pwm0_pins>, <&pwm1_pins>;

@@ -1,19 +1,26 @@
-001-gitignore.diff
-002-download-save-gitrev.diff
-003-find-ncurses-on-apple-silicon.diff
-204-mt7628an-pwm-irq.diff
-204b-mt7628an-pwm-no-pin-claims.diff
-207-uboot-envtools-config-init-for-omega2.diff
-#210-omega2-sound-max98357a-NEEDS-GPIO42.diff # only enable this when GPIO42 is not in use!
-251-add-dt-overlay-kernel-option.diff
-252-add-gpio-cdev-and-sysfs-kernel-options.diff
-253-ramips-add-dt-overlay-configfs-support.diff
-256-prevent-trace-for-broken-flash-reset.diff
-257-mt7621-re-add-gpio-base-of-property.diff
-281-mt7628an-omega2-revert-to-old-gpio-numbering.diff
-900-ola-running-as-root.diff
-901-rrdtool1-add-standard-installdev-locations.diff
-903-avahi-ignore-invalid-service-types.diff
-905-libuwsc-correct-casts-in-buffer-h.diff
-906-libjson-c-fix-strict-prototype.diff
-907-libev-avoid-werror-parentheses.diff
+001-gitignore.patch
+003-find-ncurses-on-apple-silicon.patch
+004-make-package-mirror-hash-skip-work-again.patch
+010-download-save-gitrev.patch
+011-download-prevent-packaging-rm-race.patch
+204-mt7628an-pwm-irq.patch
+204b-mt7628an-pwm-no-pin-claims.patch
+207-uboot-envtools-config-init-for-omega2.patch
+#210-omega2-sound-max98357a-NEEDS-GPIO42.patch # WIP: needs adaption to current kernel!! NOTE: only enable this when GPIO42 is not in use!
+235-rtc-rv-rx8803-rx8010-kernel-driver-enable.patch
+236-snd-virmidi-kernel-driver-enable.patch
+251-add-dt-overlay-kernel-option.patch
+252-add-gpio-cdev-and-sysfs-kernel-options.patch
+253-ramips-add-dt-overlay-configfs-support.patch
+256-prevent-trace-for-broken-flash-reset.patch
+257-mt7621-re-add-gpio-base-of-property.patch
+258-prevent-trace-for-tty-custom-speed.patch
+280-p44-xxx-omega2.patch # extra device targets for P44-DSB and Omega2S-based-P44 boards
+281-mt7628an-omega2-revert-to-old-gpio-numbering.patch
+900-ola-running-as-root.patch
+901-rrdtool1-add-standard-installdev-locations.patch
+903-avahi-ignore-invalid-service-types.patch
+905-libuwsc-correct-casts-in-buffer-h.patch
+907-libev-avoid-werror-parentheses.patch
+908-libev-avoid-stdc-version-in-cpp.patch
+909-fix-use-after-free-in-libpagekite.patch

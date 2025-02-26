@@ -1,10 +1,10 @@
 --- /dev/null
-+++ b/target/linux/generic/hack-5.10/999-spi-nor-prevent-trace-for-broken-flash-reset-flag.patch
++++ b/target/linux/generic/hack-6.6/999-spi-nor-prevent-trace-for-broken-flash-reset-flag.patch
 @@ -0,0 +1,22 @@
 +From: Lukas Zeller, luz@plan44.ch
 +--- a/drivers/mtd/spi-nor/core.c
 ++++ b/drivers/mtd/spi-nor/core.c
-+@@ -2983,8 +2983,18 @@ static int spi_nor_init(struct spi_nor *
++@@ -3224,8 +3224,18 @@ static int spi_nor_init(struct spi_nor *
 + 		 * reboots (e.g., crashes). Warn the user (or hopefully, system
 + 		 * designer) that this is bad.
 + 		 */
@@ -20,6 +20,6 @@
 ++		if (nor->flags & SNOR_F_BROKEN_RESET) {
 ++  		dev_warn(nor->dev, "enabling broken reset hack; may not recover from unexpected reboots\n");
 ++		}
-+ 		nor->params->set_4byte_addr_mode(nor, true);
-+ 	}
++ 		err = spi_nor_set_4byte_addr_mode(nor, true);
++ 		if (err)
 + 

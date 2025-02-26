@@ -1,6 +1,6 @@
 --- a/scripts/config/mconf-cfg.sh
 +++ b/scripts/config/mconf-cfg.sh
-@@ -33,6 +33,14 @@ if [ -f /usr/include/ncurses/ncurses.h ]
+@@ -36,6 +36,14 @@ if [ -f /usr/include/ncurses/ncurses.h ]
  	exit 0
  fi
  

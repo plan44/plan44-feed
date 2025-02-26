@@ -1,0 +1,478 @@
+--- a/target/linux/ramips/image/mt76x8.mk
++++ b/target/linux/ramips/image/mt76x8.mk
+@@ -513,6 +513,24 @@ define Device/oraybox_x1
+ endef
+ TARGET_DEVICES += oraybox_x1
+ 
++define Device/plan44_p44dsbomega2
++  IMAGE_SIZE := 16064k
++  DEVICE_VENDOR := plan44.ch
++  DEVICE_MODEL := P44-DSB-OMEGA2
++  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
++  SUPPORTED_DEVICES += p44dsbomega2 omega2 omega2p
++endef
++TARGET_DEVICES += plan44_p44dsbomega2
++
++define Device/plan44_p44omega2s
++  IMAGE_SIZE := 16064k
++  DEVICE_VENDOR := plan44.ch
++  DEVICE_MODEL := P44-OMEGA2S
++  DEVICE_PACKAGES:= kmod-usb2 kmod-usb-ohci uboot-envtools
++  SUPPORTED_DEVICES += p44omega2s omega2 omega2p
++endef
++TARGET_DEVICES += plan44_p44omega2s
++
+ define Device/rakwireless_rak633
+   IMAGE_SIZE := 7872k
+   DEVICE_VENDOR := Rakwireless
+--- a/package/boot/uboot-envtools/files/ramips
++++ b/package/boot/uboot-envtools/files/ramips
+@@ -62,6 +62,8 @@ kroks,kndrt31r19|\
+ mediatek,linkit-smart-7688|\
+ onion,omega2|\
+ onion,omega2p|\
++plan44,p44dsbomega2|\
++plan44,p44omega2s|\
+ samknows,whitebox-v8|\
+ xiaomi,mi-router-4c|\
+ xiaomi,miwifi-nano|\
+--- a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
+@@ -21,6 +21,8 @@ ramips_setup_interfaces()
+ 	minew,g1-c|\
+ 	onion,omega2p|\
+ 	onion,omega2|\
++	plan44,p44omega2s| \
++	plan44,p44dsbomega2| \
+ 	ravpower,rp-wd009|\
+ 	tama,w06|\
+ 	tplink,re200-v2|\
+@@ -295,6 +297,8 @@ ramips_setup_macs()
+ 		;;
+ 	onion,omega2|\
+ 	onion,omega2p|\
++	plan44,p44omega2s| \
++	plan44,p44dsbomega2| \
+ 	vocore,vocore2|\
+ 	vocore,vocore2-lite|\
+ 	wavlink,wl-wn576a2)
+--- /dev/null
++++ b/target/linux/ramips/dts/mt7628an_plan44_p44dsbomega2.dts
+@@ -0,0 +1,207 @@
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	compatible = "plan44,p44dsbomega2", "onion,omega2p", "onion,omega2", "mediatek,mt7628an-soc";
++	model = "P44 DSB Omega2";
++
++	aliases {
++		led-boot = &led_system;
++		led-failsafe = &led_system;
++		led-running = &led_system;
++		led-upgrade = &led_system;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x4000000>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_system: system {
++			label = "amber:system";
++			/* GPIO 44 is system LED on Omega2, but unused. But it's on P44 expansion connector and we want to use it! */
++			/* gpios = <&gpio 44 GPIO_ACTIVE_LOW>; */
++			/* GPIO 35 is not exposed on Omega2 and Omega2S, we use it as a dummy output here */
++			gpios = <&gpio 35 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++		};
++
++		status1 {
++			label = "p44:green:status1";
++			gpios = <&gpio 19 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++		status2 {
++			label = "p44:red:status2";
++			gpios = <&gpio 18 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++	};
++
++};
++
++&state_default {
++	gpio {
++		groups = "gpio";
++		function = "gpio";
++	};
++
++	perst {
++		groups = "perst";
++		function = "gpio";
++	};
++
++	refclk {
++		groups = "refclk";
++		function = "gpio";
++	};
++
++	i2s {
++		groups = "i2s";
++		function = "gpio";
++	};
++
++	spis {
++		groups = "spis";
++		function = "gpio";
++	};
++
++	wled_kn {
++		groups = "wled_kn";
++		function = "gpio";
++	};
++
++	wled_an {
++		groups = "wled_an";
++		function = "gpio";
++	};
++
++	wdt {
++		groups = "wdt";
++		function = "gpio";
++	};
++
++	pwm0 {
++		groups = "pwm0";
++		function = "gpio";
++	};
++
++	pwm1 {
++		groups = "pwm1";
++		function = "gpio";
++	};
++};
++
++&spi0 {
++	status = "okay";
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi_pins>, <&spi_cs1_pins>;
++
++	flash0: flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <40000000>;
++		broken-flash-reset;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "u-boot";
++				reg = <0x0 0x30000>;
++				read-only;
++			};
++
++			partition@30000 {
++				label = "u-boot-env";
++				reg = <0x30000 0x10000>;
++				/* we need a linux writable uboot environment, so WE DONT WANT A read-only HERE! */
++			};
++
++			factory: partition@40000 {
++				label = "factory";
++				reg = <0x40000 0x10000>;
++				read-only;
++			};
++
++			firmware: partition@50000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x50000 0xfb0000>;
++			};
++		};
++	};
++
++	spidev@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "linux,spidev";
++		reg = <1>;
++		spi-max-frequency = <40000000>;
++	};
++};
++
++&i2c {
++	status = "okay";
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&ethernet {
++	nvmem-cells = <&macaddr_factory_28>;
++	nvmem-cell-names = "mac-address";
++};
++
++&sdhci {
++	status = "okay";
++	mediatek,cd-low;
++};
++
++&wmac {
++	status = "okay";
++
++	mediatek,mtd-eeprom = <&factory 0x0>;
++};
++
++&factory {
++	compatible = "nvmem-cells";
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	macaddr_factory_28: macaddr@28 {
++		reg = <0x28 0x6>;
++	};
++};
++
++&gdma {
++	status = "okay";
++};
++
++&i2s {
++	status = "okay";
++};
++
++&pwm {
++	status = "okay";
++};
+--- /dev/null
++++ b/target/linux/ramips/dts/mt7628an_plan44_p44omega2s.dts
+@@ -0,0 +1,207 @@
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/interrupt-controller/irq.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	compatible = "plan44,p44omega2s", "onion,omega2p", "onion,omega2", "mediatek,mt7628an-soc";
++	model = "P44 Omega2S";
++
++	aliases {
++		led-boot = &led_system;
++		led-failsafe = &led_system;
++		led-running = &led_system;
++		led-upgrade = &led_system;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x4000000>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_system: system {
++			label = "amber:system";
++			/* GPIO 44/WLAN_LED is official system LED on Omega2, and is connected to Ethernet Jack yellow LED on some P44-Omega2S Boards */
++			gpios = <&gpio 44 GPIO_ACTIVE_LOW>;
++			default-state = "on";
++		};
++
++		status1 {
++			label = "p44:green:status1";
++			/* on P44 boards with a green/red status LED, green is GPIO36 */
++      gpios = <&gpio 36 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++		status2 {
++			label = "p44:red:status2";
++			/* on P44 boards with a green/red status LED, red is GPIO37 */
++      gpios = <&gpio 37 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++		};
++
++	};
++
++};
++
++&state_default {
++	gpio {
++		groups = "gpio";
++		function = "gpio";
++	};
++
++	perst {
++		groups = "perst";
++		function = "gpio";
++	};
++
++	refclk {
++		groups = "refclk";
++		function = "gpio";
++	};
++
++	i2s {
++		groups = "i2s";
++		function = "gpio";
++	};
++
++	spis {
++		groups = "spis";
++		function = "gpio";
++	};
++
++	wled_kn {
++		groups = "wled_kn";
++		function = "gpio";
++	};
++
++	wled_an {
++		groups = "wled_an";
++		function = "gpio";
++	};
++
++	wdt {
++		groups = "wdt";
++		function = "gpio";
++	};
++
++	pwm0 {
++		groups = "pwm0";
++		function = "gpio";
++	};
++
++	pwm1 {
++		groups = "pwm1";
++		function = "gpio";
++	};
++};
++
++&spi0 {
++	status = "okay";
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi_pins>, <&spi_cs1_pins>;
++
++	flash0: flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <40000000>;
++		broken-flash-reset;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "u-boot";
++				reg = <0x0 0x30000>;
++				read-only;
++			};
++
++			partition@30000 {
++				label = "u-boot-env";
++				reg = <0x30000 0x10000>;
++				/* we need a linux writable uboot environment, so WE DONT WANT A read-only HERE! */
++			};
++
++			factory: partition@40000 {
++				label = "factory";
++				reg = <0x40000 0x10000>;
++				read-only;
++			};
++
++			firmware: partition@50000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x50000 0xfb0000>;
++			};
++		};
++	};
++
++	spidev@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "linux,spidev";
++		reg = <1>;
++		spi-max-frequency = <40000000>;
++	};
++};
++
++&i2c {
++	status = "okay";
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&ethernet {
++	nvmem-cells = <&macaddr_factory_28>;
++	nvmem-cell-names = "mac-address";
++};
++
++&sdhci {
++	status = "okay";
++	mediatek,cd-low;
++};
++
++&wmac {
++	status = "okay";
++
++	mediatek,mtd-eeprom = <&factory 0x0>;
++};
++
++&factory {
++	compatible = "nvmem-cells";
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	macaddr_factory_28: macaddr@28 {
++		reg = <0x28 0x6>;
++	};
++};
++
++&gdma {
++	status = "okay";
++};
++
++&i2s {
++	status = "okay";
++};
++
++&pwm {
++	status = "okay";
++};
