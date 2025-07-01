@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=ace-p44script
 # version of what we are downloading, last digit is p44 changes version
-PKG_VERSION:=1.35.4.1
+PKG_VERSION:=1.35.4.2
 # version of this makefile
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=main
