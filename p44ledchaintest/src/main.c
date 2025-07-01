@@ -14,8 +14,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <errno.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <sys/ioctl.h>
+#include <IOKit/serial/ioss.h> // for IOSSIOSPEED
+#endif
+
 
 #define DEFAULT_NUMLEDS 720
 #define DEFAULT_UPDATEINTERVAL_MS 30
@@ -32,6 +38,8 @@ static void usage(const char *name)
   fprintf(stderr, "    -n numleds : number of LEDs per chain (default: %d)\n", DEFAULT_NUMLEDS);
   fprintf(stderr, "    -2 : LED needs 2 bytes per channel (default=1)\n");
   fprintf(stderr, "    -4 : LED has 4 channles (default=3)\n");
+  fprintf(stderr, "    -U : led chain device is an UART, using 7-N-1 @ 3Mbaud, inverse WS28xx at TX\n");
+  fprintf(stderr, "    -o : (only with -U) old, slower led chip (WS2812) timing, 7-1-N @ 2.5Mbaud\n");
   fprintf(stderr, "    -g : use gamma correction for output\n");
   fprintf(stderr, "    -i interval[ms] : update interval (default: %d)\n", DEFAULT_UPDATEINTERVAL_MS);
   fprintf(stderr, "    -r repeats : how many repeated updates, 0=continuously, (default: %d)\n", DEFAULT_NUMREPEATS);
@@ -102,6 +110,8 @@ uint16_t colorstep[4] = { 0, 0, 0, 0 };
 int effectinc = DEFAULT_EFFECTINC;
 int repeats = DEFAULT_NUMREPEATS;
 int verbose = 0;
+int uart = 0;
+int oldchiptiming = 0;
 // - run time
 uint8_t *ledbuffer = NULL;
 
@@ -154,6 +164,112 @@ void scanhexcol(const char* arg, uint16_t* col)
 }
 
 
+// set to see data dumps on stdout
+#define UARTDEBUG 0
+
+static int setupUart(int aUartFd, int aSlowTiming)
+{
+  int ret = 0;
+
+  #ifdef __APPLE__
+  // macOS does not have non-standard baud rate codes, but separate speed setting API
+  int baudRateCode = B9600; // dummy but standard
+  speed_t speed = aSlowTiming ? 2500000 : 3000000; // actual speed we need
+  #else
+  int baudRateCode = aSlowTiming ? B2500000 : B3000000;
+  #endif
+  struct termios newtio;
+  memset(&newtio, 0, sizeof(newtio));
+  // - charsize, stopbits, parity, no modem control lines (local), reading enabled
+  newtio.c_cflag =
+    CS7 |
+    0 | // !CSTOPB : no second stop bit
+    0 | // !PARENB and !PARODD : no parity
+    CLOCAL | // ignore status lines
+    0; // !CREAD : do not enable receiver
+  // - ignore parity errors (just to make sure)
+  newtio.c_iflag = IGNPAR;
+  // - no output control
+  newtio.c_oflag = 0;
+  // - no input control (non-canonical)
+  newtio.c_lflag = 0;
+  // - no inter-char time
+  newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
+  // - receive every single char seperately
+  newtio.c_cc[VMIN]     = 1;   /* blocking read until 1 chars received */
+  // - set speed (as this ors into c_cflag, this must be after setting c_cflag initial value)
+  cfsetspeed(&newtio, baudRateCode);
+  tcflush(aUartFd, TCIFLUSH);
+  // now apply new settings
+  ret = tcsetattr(aUartFd, TCSANOW, &newtio);
+  #ifdef __APPLE__
+  // on macOS, we need to set the non-standard speed separately
+  if (ret>=0) {
+    ret = ioctl(aUartFd, IOSSIOSPEED, &speed);
+  }
+  #endif // __APPLE__
+  return ret;
+}
+
+
+
+void sendToUart(int aUartFd, uint8_t* aLedData, size_t aLedDataSize)
+{
+  // We can generate appropriate WS28xx timing using 7-N-1 @ 3Mhz
+  // - UART are LSBit first
+  // - WS28xx are MSBit first
+  // - we need 1 byte output for 3 bits LED data = 8 byte output for 3 byte LED data
+  // - UART idle is H, start bit is L, stop bit is H
+  // - as we need idle=L, start=H, stop=L for WS, we need to invert the UART data, and send inverted data
+  // UART   : | start | Bit0 | Bit1 | Bit2 | Bit3 | Bit4 | Bit5 | Bit6 | Stop |
+  // WS28xx : |   1   | LED7 |   0  |   1  | LED6 |   0  |   1  | LED5 |   0  |
+  // WS28xx : |   1   | LED4 |   0  |   1  | LED3 |   0  |   1  | LED2 |   0  |
+  // WS28xx : |   1   | LED1 |   0  |   1  | LED0 |   0  |   1  | next |   0  |
+  size_t uartDataSize = (aLedDataSize*8+2)/3;
+  uint8_t* uartData = malloc(uartDataSize);
+  uint8_t* outP = uartData;
+  int outBitMask = 0x01; // first LED data bit in UART output
+  uint8_t uartByte = 0;
+  #if UARTDEBUG
+  size_t i;
+  printf("leddata[%d]: ", aLedDataSize);
+  for (i = 0; i<aLedDataSize; i++) {
+     printf(" %02X", aLedData[i]);
+  }
+  printf("\n");
+  #endif
+  while(aLedDataSize-- > 0) {
+    uint8_t ledByte = *aLedData++;
+    uint8_t ledBitMask = 0x80;
+    while (ledBitMask) {
+      if (outBitMask>1) uartByte |= (outBitMask>>1); // 2nd or 3rd bit in this uart byte: enable the bit position (not idle) by setting the always 1 sync bit (T0H)
+      if (ledByte & ledBitMask) uartByte |= outBitMask; // actual data bit, extending T0H to become T1H in case bit is set
+      ledBitMask >>= 1; // next input bit
+      outBitMask <<= 3; // next output bit position
+      if ((outBitMask & 0x7F)==0) {
+        // uart byte complete
+        *(outP++) = ~uartByte; // send inverted
+        uartByte = 0;
+        outBitMask = 0x01;
+      }
+    }
+  }
+  // send
+  write(aUartFd, uartData, uartDataSize);
+  tcflush(aUartFd, TCIFLUSH);
+  #if UARTDEBUG
+  printf("uartdata[%d]: ", uartDataSize);
+  outP = uartData;
+  while(uartDataSize>0) {
+    printf(" %02X", *(outP++));
+    uartDataSize--;
+  }
+  printf("\n");
+  #endif
+  // done
+  free(uartData);
+}
+
 
 int main(int argc, char **argv)
 {
@@ -182,12 +298,18 @@ int main(int argc, char **argv)
   }
 
   int c;
-  while ((c = getopt(argc, argv, "hH:n:24gi:e:r:c:C:b:s:vFS")) != -1)
+  while ((c = getopt(argc, argv, "hUoH:n:24gi:e:r:c:C:b:s:vFS")) != -1)
   {
     switch (c) {
       case 'h':
         usage(argv[0]);
         exit(0);
+      case 'U':
+        uart = 1;
+        break;
+      case 'o':
+        oldchiptiming = 1;
+        break;
       case 'n':
         numleds = atoi(optarg);
         break;
@@ -240,10 +362,17 @@ int main(int argc, char **argv)
   // open chains
   numchains = 0;
   while (optind<argc) {
-    chainFds[numchains] = open(argv[optind], O_RDWR);
+    chainFds[numchains] = open(argv[optind], O_RDWR|O_NONBLOCK);
     if (chainFds[numchains]<0) {
       fprintf(stderr, "cannot open ledchain device '%s': %s\n", argv[optind], strerror(errno));
       exit(1);
+    }
+    else if (uart) {
+      // must also set uart params
+      if (setupUart(chainFds[numchains], oldchiptiming)<0) {
+        fprintf(stderr, "UART mode. Cannot set serial speed and options for '%s': %s\n", argv[optind], strerror(errno));
+        exit(1);
+      }
     }
     numchains++;
     optind++;
@@ -305,7 +434,14 @@ int main(int argc, char **argv)
     // update chains
     beforeUpdate = now();
     for (cidx = 0; cidx<numchains; cidx++) {
-      write(chainFds[cidx], rawbuffer, numleds*numchannels*chanbytes+hdrlen);
+      if (uart) {
+        // UART, need to
+        sendToUart(chainFds[cidx], rawbuffer, numleds*numchannels*chanbytes+hdrlen);
+      }
+      else {
+        // raw LED device, can send data directly
+        write(chainFds[cidx], rawbuffer, numleds*numchannels*chanbytes+hdrlen);
+      }
     }
     afterUpdate = now();
     // calculate remaining wait time

@@ -1,9 +1,10 @@
 p44ledchaintest
 ===============
 
-This is a small utility indended for testing the p44-ledchain smart LED chain kernel driver for MT7688 SoC (and possibly other smart LED chain drivers using the same interface).
+This is a small utility indended for testing the p44-ledchain smart LED chain kernel driver for MT7688 SoC (and possibly other smart LED chain drivers using the same interface), or (with the -U option) any UART that
+can do 7-N-1 @ 3Mbaud (2.5MBaud for WS2812).
 
-(c) 2017-2024 by luz@plan44.ch
+(c) 2017-2025 by luz@plan44.ch
 
 ## Usage
 
@@ -14,6 +15,15 @@ To get help, just type
 The simplest way to use the utility is just providing one (or multiple) led devices. In this mode, up to 720 LEDs will be set to bright red:
 
     p44ledchaintest /dev/ledchain0
+
+or, in UART mode
+
+    p44ledchaintest -U /dev/ledchain0
+
+or, in UART mode for older chips (WS2812)
+
+    p44ledchaintest -U -o /dev/ledchain0
+
 
 **Note**: if the p44-ledchain driver is in *variable led type mode*, the data stream always needs to contain a header specifying the led type parameters. See p44-ledchain README for details. This header can be sent with *p44ledchaintest* using the `-H` option:
 
