@@ -18,11 +18,11 @@ The simplest way to use the utility is just providing one (or multiple) led devi
 
 or, in UART mode
 
-    p44ledchaintest -U /dev/ledchain0
+    p44ledchaintest -U /dev/ttyS3
 
 or, in UART mode for older chips (WS2812)
 
-    p44ledchaintest -U -o /dev/ledchain0
+    p44ledchaintest -U -o /dev/ttyS3
 
 
 **Note**: if the p44-ledchain driver is in *variable led type mode*, the data stream always needs to contain a header specifying the led type parameters. See p44-ledchain README for details. This header can be sent with *p44ledchaintest* using the `-H` option:
