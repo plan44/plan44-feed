@@ -248,7 +248,7 @@ void sendToUart(int aUartFd, uint8_t* aLedData, size_t aLedDataSize)
       outBitMask <<= 3; // next output bit position
       if ((outBitMask & 0x7F)==0) {
         // uart byte complete
-        *(outP++) = ~uartByte; // send inverted
+        *(outP++) = uartByte^0x7F; // send inverted, but only 7 bits
         uartByte = 0;
         outBitMask = 0x01;
       }
