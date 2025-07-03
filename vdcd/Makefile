@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2024 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2025 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.8.2.0
+PKG_VERSION:=2.8.2.19
 # version of this makefile
-PKG_RELEASE:=232
+PKG_RELEASE:=250
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=c468767167f39993cd4316d9231f6c990845d70c
+PKG_SOURCE_VERSION:=3c88bfbc6e0a45e3c6c268a60e8942a8f73cd8b9
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
@@ -66,6 +66,7 @@ CONFIGURE_ARGS += \
 	--enable-p44buildow \
 	$(if $(CONFIG_DEBUG),--enable-debug) \
 	$(call autoconf_bool,CONFIG_VDCD_OLA,ola) \
+	$(call autoconf_bool,CONFIG_VDCD_PLATFORM_SHORTBREAK,platformshortbreak) \
 	$(call autoconf_bool,CONFIG_VDCD_UBUS,ubus) \
 	$(call autoconf_bool,CONFIG_VDCD_I2C,i2c) \
 	$(call autoconf_bool,CONFIG_VDCD_PNG,png) \
@@ -74,6 +75,8 @@ CONFIGURE_ARGS += \
 	$(call autoconf_bool,CONFIG_VDCD_P44FEATURES,p44features) \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
 	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc) \
+	$(call autoconf_bool,CONFIG_VDCD_LVGL,lvgl) \
+	$(call autoconf_bool,CONFIG_VDCD_DS485,ds485) \
 	$(call autoconf_bool,CONFIG_VDCD_MODBUS,modbus) \
 	$(call autoconf_bool,CONFIG_VDCD_EMBEDDED_LIBMODBUS,embeddedlibmodbus) \
 	APPLICATION_VERSION=$(PKG_VERSION)

@@ -36,6 +36,13 @@ config VDCD_UWSC
     Enabling this includes support for websocket clients in p44script
     If enabled, vdcd depends on package libuwsc
 
+config VDCD_LVGL
+	bool "Include lvgl (Light and Versatile Graphics Library) support"
+	default n
+  help
+    Enabling this includes support for creating lvgl based interactive UIs
+    in p44script. Works for linux /dev/fb0 and /dev/input/event0
+
 config VDCD_RRDB
 	bool "Include rrd(tool) support for logging sensor data"
 	default n
@@ -64,6 +71,22 @@ config VDCD_P44FEATURES
   help
     Enabling this includes support for p44features, a set of drivers for
     very specific peripheral hardware and use cases for exhibitions & art project.
+
+config VDCD_DS485
+	bool "Include dS485 support"
+	default n
+  help
+    Enabling this includes support for dS485 (dS classic direct control)
+
+config VDCD_PLATFORM_SHORTBREAK
+	bool "platform can do short (2mS) UART break"
+	default n
+  help
+    Enabling this makes DMX512 implementation rely on tcsendbreak(fd, milliseconds)
+    to actually work and produce a break not longer than 2ms when passed 2 as second arg.
+    This is not the case e.g. for MT7688 SoC, so if this option is not set there is
+    a fallback to ugly custom baudrate tricks to emulate a short break
+    (which pollute the kernel log with warnings and may fail in future kernels).
 
 config VDCD_MODBUS
 	bool "Include modbus support"
