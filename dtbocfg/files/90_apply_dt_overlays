@@ -1,0 +1,22 @@
+#!/bin/sh
+
+do_apply_dt_overlays() {
+	grep -q configfs /proc/filesystems || return 0
+	mount configfs -t configfs /sys/kernel/config
+	local overlays_dir="/sys/kernel/config/device-tree/overlays"
+	[ -d "$overlays_dir" ] || return 0
+	local dto dtoname
+	for dto in /lib/firmware/device-tree/overlays/*.dtbo ; do
+		[ -r "$dto" ] || continue
+		dtoname="$(basename "$dto" .dtbo)"
+		[ -e "$overlays_dir/$dtoname" ] && continue
+		echo " - applying device-tree overlay '$dtoname' - "
+		mkdir "$overlays_dir/$dtoname"
+		# passing filename to path always fails with "no memory"...
+		#echo "$dto" > "$overlays_dir/$dtoname/path"
+		# ...so pass data directly - this works
+		cat "$dto" > "$overlays_dir/$dtoname/dtbo"
+	done
+}
+
+boot_hook_add preinit_main do_apply_dt_overlays
