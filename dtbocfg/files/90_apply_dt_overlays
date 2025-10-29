@@ -10,12 +10,16 @@ do_apply_dt_overlays() {
 		[ -r "$dto" ] || continue
 		dtoname="$(basename "$dto" .dtbo)"
 		[ -e "$overlays_dir/$dtoname" ] && continue
-		echo " - applying device-tree overlay '$dtoname' - "
-		mkdir "$overlays_dir/$dtoname"
-		# passing filename to path always fails with "no memory"...
-		#echo "$dto" > "$overlays_dir/$dtoname/path"
-		# ...so pass data directly - this works
-		cat "$dto" > "$overlays_dir/$dtoname/dtbo"
+		if [ -e $overlays_dir/$dtoname ]; then
+			echo " - device-tree overlay '$dtoname' already exists, not applying"
+		else
+			echo " - applying device-tree overlay '$dtoname'"
+			mkdir "$overlays_dir/$dtoname"
+			cat "$dto" >"$overlays_dir/$dtoname/dtbo"
+		fi
+		# dbbocfg does not enable the overlay automatically, need to write 1 to status
+		echo " - enabling device-tree overlay '$dtoname' now"
+		echo 1 > "$overlays_dir/$dtoname/status"
 	done
 }
 
