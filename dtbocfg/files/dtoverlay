@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# check args
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 DT overlay file (.dtbo binary or .dts source)"
+  exit 1
+fi
+
+INFILE="$1"
+INNAME=$(basename ${INFILE})
+DTONAME="${INNAME%.*}"
+
+# compile DTS if needed
+case "${INNAME}" in
+  *.dts)
+    DTBOFILE="/tmp/${DTONAME}.dtbo"
+    if ! dtc -b 0 -@ -O dtb "${INFILE}" -o "${DTBOFILE}"; then
+      echo "error compiling DT source"
+      exit 1
+    fi
+    ;;
+  *.dtbo)
+    DTBOFILE="${INFILE}"
+    ;;
+  *)
+    echo "Unknown extension, must be .dts or .dtbo";
+    exit 1
+    ;;
+esac
+
+# apply
+overlays_dir="/sys/kernel/config/device-tree/overlays"
+if [ ! -d "${overlays_dir}" ]; then
+  echo "dtbocfg driver not loaded or configfs not mounted"
+  exit 1
+fi
+
+if [ -e "${overlays_dir}/${DTONAME}" ]; then
+  echo "Device-tree overlay '${DTONAME}' already exists, not applying"
+  exit 1
+else
+  echo "Applying device-tree overlay '${DTONAME}'"
+  mkdir "${overlays_dir}/${DTONAME}"
+  cat "${DTBOFILE}" >"${overlays_dir}/${DTONAME}/dtbo"
+fi
+# dtbocfg does not enable the overlay automatically, need to write 1 to status
+echo "Enabling device-tree overlay '${DTONAME}' now"
+echo 1 > "${overlays_dir}/${DTONAME}/status"
+echo "echo 0 >${overlays_dir}/${DTONAME}/status # disable overlay"
+echo "rmdir ${overlays_dir}/${DTONAME} # remove overlay"
+echo "echo 1 >${overlays_dir}/${DTONAME}/status # enable overlay"

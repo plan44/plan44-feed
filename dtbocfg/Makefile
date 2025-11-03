@@ -55,6 +55,8 @@ define KernelPackage/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/lib/preinit
 	# name/number controls order in preinit
 	$(INSTALL_BIN) ./files/90_apply_dt_overlays $(1)/lib/preinit/90_apply_dt_overlays
+	# dtoverlay utility for quickly testing overlays
+	$(INSTALL_BIN) ./files/dtoverlay $(1)/sbin
 endef
 
 $(eval $(call KernelPackage,$(PKG_NAME)))
