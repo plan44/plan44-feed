@@ -78,6 +78,12 @@ config VDCD_DS485
   help
     Enabling this includes support for dS485 (dS classic direct control)
 
+config VDCD_WBF
+	bool "Include Wiser-by-Feller support"
+	default n
+  help
+    Enabling this includes support for Wiser-by-Feller via uGateway
+
 config VDCD_PLATFORM_SHORTBREAK
 	bool "platform can do short (2mS) UART break"
 	default n
