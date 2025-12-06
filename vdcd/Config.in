@@ -41,7 +41,14 @@ config VDCD_LVGL
 	default n
   help
     Enabling this includes support for creating lvgl based interactive UIs
-    in p44script. Works for linux /dev/fb0 and /dev/input/event0
+    in p44script. Works for linux fb or drm and /dev/input/event0
+
+config VDCD_LVGLDRM
+  depends on VDCD_LVGL
+	bool "Use DRM (Direct Rendering Manager) on Linux"
+	default n
+  help
+    Enabling this builds lvgl with DRM hardware driver (rather than fbdev)
 
 config VDCD_RRDB
 	bool "Include rrd(tool) support for logging sensor data"

@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.8.2.33
+PKG_VERSION:=2.8.2.41
 # version of this makefile
-PKG_RELEASE:=261
+PKG_RELEASE:=267
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=af5a890b4178b9667ce5d91a82183239537052e0
+PKG_SOURCE_VERSION:=3a73a90b10f10a569d9149eee1436fb823114ac1
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
@@ -31,6 +31,8 @@ PKG_FIXUP:=autoreconf
 # MIPS16 support leads to strange "{standard input}: Assembler messages:", so we turn it off (not needed anyway)
 PKG_USE_MIPS16:=0
 
+PKG_BUILD_DEPENDS := protobuf-c/host
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
@@ -42,6 +44,7 @@ define Package/$(PKG_NAME)
 	  +VDCD_RRDB:librrd1 \
 	  +VDCD_EV:libev \
 	  +VDCD_UWSC:libuwsc \
+	  +VDCD_LVGLDRM:libdrm \
 	  $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
@@ -76,6 +79,7 @@ CONFIGURE_ARGS += \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
 	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc) \
 	$(call autoconf_bool,CONFIG_VDCD_LVGL,lvgl) \
+	$(call autoconf_bool,CONFIG_VDCD_LVGLDRM,lvgldrm) \
 	$(call autoconf_bool,CONFIG_VDCD_DS485,ds485) \
 	$(call autoconf_bool,CONFIG_VDCD_WBF,wbf) \
 	$(call autoconf_bool,CONFIG_VDCD_MODBUS,modbus) \
