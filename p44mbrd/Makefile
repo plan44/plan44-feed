@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2022-2025 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mbrd
 # version of what we are downloading
-PKG_VERSION:=1.3.0.10
+PKG_VERSION:=1.4.0.12
 # version of this makefile
-PKG_RELEASE:=30
+PKG_RELEASE:=46
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=3bcc26c645d697c19b5d45b2fcecc91fec13dc63
+PKG_SOURCE_VERSION:=a7ea696db5f9a44ec54a8da901a17b44d2b1c414
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mbrd.git
@@ -47,6 +47,12 @@ define Package/$(PKG_NAME)/description
  matter bridge daemon suitable for running as companion to vdcd smart home device controller
 endef
 
+
+define Package/$(PKG_NAME)/config
+	source "$(SOURCE)/Config.in"
+endef
+
+
 # https://github.com/project-chip/matter-openwrt/issues/2
 ifeq ($(DUMP)$(filter SUBMODULES:=,$(Download/Defaults)),)
 $(error PKG_SOURCE_SUBMODULES is not supported, ensure https://github.com/openwrt/openwrt/pull/13000 is included in your OpenWrt buildroot)
@@ -77,7 +83,8 @@ define Build/Configure
 			--enable-network-layer-ble=no \
 			--enable-tracing-support=no \
 			--p44-application-version="$(PKG_VERSION)" \
-			--p44-debug-attr-access=0
+			--p44-debug-attr-access=0 \
+			--p44-dynamic-endpoint-count=$(CONFIG_P44MBRD_DYNAMIC_ENDPOINT_COUNT)
 endef
 
 define Build/Compile

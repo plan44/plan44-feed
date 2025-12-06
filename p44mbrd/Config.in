@@ -1,0 +1,13 @@
+# p44mbrd configuration
+if PACKAGE_p44mbrd
+
+config P44MBRD_DYNAMIC_ENDPOINT_COUNT
+	int "Number of dynamic endpoints to support"
+	default 200
+  help
+    This defines the CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT
+    in the build, which causes fixed-size static arrays to get
+    allocated. So use higher values with care and only when required.
+
+endif
+
