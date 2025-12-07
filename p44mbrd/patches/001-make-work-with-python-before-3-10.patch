@@ -1,0 +1,48 @@
+From: Lukas Zeller <luz@plan44.ch>
+Date: Sun, 7 Dec 2025 11:49:49 +0100
+Subject: [PATCH] pw_build: make python_runner.py work with python<3.10
+
+- python_runner is required in non-standard build environments using connectedhomeip's
+  scripts/configure, such as openwrt. Those build environments sometimes do not have
+  python>=3.10 yet, and thus do not have the "type | type" declaration syntax
+---
+ src/third_party/connectedhomeip/third_party/pigweed/repo/pw_build/py/pw_build/python_runner.py | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/src/third_party/connectedhomeip/third_party/pigweed/repo/pw_build/py/pw_build/python_runner.py b/src/third_party/connectedhomeip/third_party/pigweed/repo/pw_build/py/pw_build/python_runner.py
+--- a/src/third_party/connectedhomeip/third_party/pigweed/repo/pw_build/py/pw_build/python_runner.py
++++ b/src/third_party/connectedhomeip/third_party/pigweed/repo/pw_build/py/pw_build/python_runner.py
+@@ -28,6 +28,7 @@ import shlex
+ import subprocess
+ import sys
+ import time
++from typing import Optional
+ 
+ try:
+     from pw_build import gn_resolver
+@@ -199,15 +200,15 @@ def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-local
+     original_cmd: list[str],
+     default_toolchain: str,
+     current_toolchain: str,
+-    module: str | None,
+-    env: list[str] | None,
++    module: Optional[str],
++    env: Optional[list[str]],
+     python_dep_list_files: list[Path],
+-    python_virtualenv_config: Path | None,
++    python_virtualenv_config: Optional[Path],
+     capture_output: bool,
+-    touch: Path | None,
+-    working_directory: Path | None,
+-    command_launcher: str | None,
+-    lockfile: Path | None,
++    touch: Optional[Path],
++    working_directory: Optional[Path],
++    command_launcher: Optional[str],
++    lockfile: Optional[Path],
+ ) -> int:
+     """Script entry point."""
+ 
+-- 
+2.50.1
+
