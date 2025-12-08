@@ -2,4 +2,4 @@
 matter https://github.com/project-chip/matter-openwrt.git:main
 onion https://github.com/OnionIoT/OpenWRT-Packages.git:openwrt-18.06
 packages https://git.openwrt.org/feed/packages.git:d057936acbefd76b033e7c365baa68b48ccb9166
-plan44 ssh://plan44@plan44.ch/home/plan44/sharedgit/plan44-public-feed.git:p44-xx-open
+plan44 https://github.com/plan44/plan44-feed.git:p44-xx-open
