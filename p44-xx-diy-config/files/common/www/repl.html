@@ -39,6 +39,16 @@
 
       pre.logwrap { white-space: pre-wrap; word-wrap: break-word; }
 
+      .ide_hint {
+        color: black;
+        background-color: #fe5d5d;
+        padding: 1em;
+        margin-bottom: 1em;
+      }
+      .ide_hint a, .ide_hint a:visited {
+        color: blue;
+      }
+
     </style>
 
     <script language="javascript1.2" type="text/javascript"><!--
@@ -174,6 +184,14 @@
 
     <div id="repl" data-role="page">
       <div data-role="content">
+        <div class="ide_hint">
+          <p><b>Note: This REPL is legacy functionality, please use the <a target="p44script-IDE" href="ide.html">p44script IDE instead!</a></b></p>
+          <p>The p44script IDE offers the same functionality in a much more convenient way, and has a lot more features like script editing, interactive debugging etc.
+          You can <a target="p44script-IDE" href="ide.html">directly go to the IDE with this link</a> or you can open it any time from the "System Tab" by pressing the "Show p44script IDE..." button.
+          Also, all dialogs for script editing such as scripted devices, action evaluators and scene scripts have a link at the bottom right to open the IDE.</p>
+          <p>You can also visit the <a target="'p44-techdocs" href="https://plan44.ch/p44-techdocs/en/p44scriptide/">IDE documentation online</a></p>
+          <p>This REPL page might be removed in a future firmware release.</a></p>
+        </div>
         <div style="margin-bottom: 20px;">
           <label for="scriptSource">Enter p44Script code:</label>
           <select onchange="exampleSelected()" name="scriptExamples" data-mini="true" id="scriptExamples">

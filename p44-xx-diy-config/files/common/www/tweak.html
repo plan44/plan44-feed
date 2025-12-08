@@ -76,7 +76,8 @@
           '<option value="1002">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "sensorSettings":{"sensIdYYYY":{"x-p44-rrdFilePath":"", "x-p44-rrdConfig":"auto"} } } }</option>' +
           '<option value="1003">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "scenes":{ "5": {"channels":{ "brightness":{ "value":50 } } } } } }</option>' +
           '<option value="1004">{ "method":"loglevel", "dSUID":"root", "value":6 }</option>' +
-          '<option value="1001">{ "method":"setProperty", "dSUID":"XXXX", "properties":{ "x-p44-logLevelOffset":2 } }</option>' +
+          '<option value="1006">{ "method":"logleveloffset", "x-p44-itemSpec":"vdc:Scripted_Device_Container:1", "value":1 }</option>' +
+          '<option value="1007">{ "method":"logleveloffset", "dSUID":"root", "topic":"bridgeapi", "value":1 }</option>' +
           '<option value="1100">{ "notification":"callScene", "zone_id":0, "group":1, "scene":5, "force":false }</option>' +
           '<option value="1101">{ "notification":"callScene", "dSUID":"xx", "scene":5, "force":false }</option>' +
           '<option value="1102">{ "notification":"ping", "dSUID":"xx" }</option>';
@@ -161,6 +162,7 @@
           <select onchange="exampleSelected()" name="jsonExamples" id="jsonExamples">
           </select>
           <button type="button" id="sendVDCAPI" data-inline="true" data-theme="c">Send JSON to vDC API</button>
+          <p>Also see <a href="/apidocs/index.html" target="apidocs">API docs browser/tryout</a>
           <textarea id="jsonResult"></textarea>
         </div>
       </div>

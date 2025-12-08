@@ -298,7 +298,7 @@ $('#alertMessage').enhanceWithin().popup();
           <div class="centered" data-role="content">
             <h1 id="about_title_model">P44-LC</h1>
             <h2 id="about_model_description">light controller</h2>
-            <p>© <span id="about_copyright_years">2017-2024</span> by <a id="about_copyright_link" href="http://plan44.ch/automation" target="_blank">_</a></p>
+            <p>© <span id="about_copyright_years">2017-2025</span> by <a id="about_copyright_link" href="http://plan44.ch/automation" target="_blank">_</a></p>
           </div>
 
 
@@ -307,7 +307,7 @@ $('#alertMessage').enhanceWithin().popup();
           data-iconpos="right">
 
             <div data-role="collapsible">
-              <h3>vdcd, p44mbrd, p44utils, p44vdc, p44lrgraphics - © 2013-2024 by plan44.ch, GPLv3 or commercial license</h3>
+              <h3>vdcd, p44mbrd, p44utils, p44vdc, p44lrgraphics - © 2013-2025 by plan44.ch, GPLv3 or commercial license</h3>
 
               <h4><a href="https://plan44.ch/opensource/vdcd" target="_blank">vdcd</a> - automation device controller daemon for Digital Strom and standalone operation</h4>
               <h4><a href="https://github.com/plan44/p44mbrd" target="_blank">p44mbrd</a> - matter bridge companion daemon for vdcd</h4>
@@ -355,6 +355,8 @@ $('#alertMessage').enhanceWithin().popup();
               along with connectedhomeip. If not, see <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache.org/licenses/LICENSE-2.0</a>.</p>
 
             </div>
+
+
 
 
             <div id="opensource_ola" style="display:none" data-role="collapsible">
@@ -423,6 +425,17 @@ $('#alertMessage').enhanceWithin().popup();
               THE SOFTWARE.</p>
             </div>
 
+            <div data-role="collapsible">
+              <h3>swagger-ui - © Copyright 2020-2021 SmartBear Software Inc., Apache v2</h3>
+
+              <h4><a href="https://github.com/swagger-api/swagger-ui" target="_blank">swagger-ui</a> -  Swagger UI</h4>
+
+              <p>The swagger-ui source code is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a> as published by the Apache Software Foundation.
+
+              <p>You should have received a copy of the Apache License, Version 2,
+              along with swagger-ui. If not, see <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">apache.org/licenses/LICENSE-2.0</a>.</p>
+
+            </div>
 
             <div data-role="collapsible">
               <h3>avahi - © 2004 avahi.org, LGPL v2.1 or later</h3>
@@ -704,7 +717,7 @@ $('#alertMessage').enhanceWithin().popup();
               <option value="none">-</option>
               <option value="button">pushbutton</option>
               <option value="input">automation input</option>
-              <option value="light">on-off light output</option>
+              <option value="light">on/off light output</option>
               <option value="relay">relay output</option>
             </select>
             <label for="digitalio_pinopt">Digital I/O Options:</label>
@@ -762,6 +775,7 @@ $('#alertMessage').enhanceWithin().popup();
               <option value="rocker">Simulated up/down rocker button (2 console keys)</option>
               <option value="input">Simulated binary input (console key)</option>
               <option value="sensor">Simulated 0..50 sensor value (tunable with 2 console keys)</option>
+              <option value="dial100">Simulated 0..100% dimmer control (tunable with 2 console keys)</option>
               <option value="dimmer">Simulated dimmer (value shown on console)</option>
               <option value="colordimmer">Simulated color dimmer (values shown on console)</option>
               <option value="valve">Simulated heating valve (value shown on console)</option>
@@ -906,7 +920,8 @@ $('#alertMessage').enhanceWithin().popup();
             <option value="0">-</option>
             <option value="16774909">on/off relay</option>
             <option value="16774908">on/off light</option>
-            <option value="16774910">jalousie controller</option>
+            <option title="jalousie with shade blade angle (tilt) support" value="16774910">jalousie controller</option>
+            <option title="window covering/roller blind without tilt support" value="16774907">blind controller</option>
             <option value="16732161">ExtremeLine Heat Tube</option>
           </select>
           <p style="padding-top:20px;"></p>
@@ -915,14 +930,20 @@ $('#alertMessage').enhanceWithin().popup();
         </div>
       </div>
 
+
+
+
+
       <div data-role="popup" data-overlay-theme="a" id="bridgeCreateDevice" class="ui-corner-all dialogbox">
         <div style="padding:10px 20px;">
           <h3>Create matter bridging device</h3>
-          <p>Bridging devices can map local scenes to virtual matter devices in different ways. This can be a useful workaround as long as matter side scene support in controlling home automation systems is not yet complete.</p>
+          <p>Bridging devices can map local scenes to virtual matter devices in different ways. This can be a useful
+            workaround as long as matter side scene support in controlling home automation systems is not yet complete.</p>
+
           <label for="bridge_type">Type of bridge:</label>
           <select name="bridge_type" id="bridge_type_select" data-mini="true" class="p44-input-clear" onchange="refresh_bridgetype_deps();">
             <option value="0">-</option>
-            <option title="On/Off device in matter, mapped to room on/off or global call/undo" value="onoff">on-off room state bridge</option>
+            <option title="On/Off device in matter, mapped to room on/off or global call/undo" value="onoff">on/off room state bridge</option>
             <option title="Dimmer device in matter, mapped to nearest room scene levels" value="fivelevel">five level (0,25,50,75,100%) room state bridge</option>
             <option title="Contact input in matter, gets set when specific scene is called in room or globally" value="sceneresponder">scene responder bridge</option>
             <option title="On/Off device in matter, when changes to on, gets specific scene call (and optionally undo when changes to off)" value="scenecaller">scene caller bridge</option>
@@ -1065,6 +1086,9 @@ $('#alertMessage').enhanceWithin().popup();
               <option value="29">Length in meters</option>
               <option value="30">mass in grams</option>
               <option value="31">time in seconds</option>
+              <option value="34">frequency in Hz</option>
+              <option value="32">percentage 0..100%</option>
+              <option value="33">speed of change in % of full range, per second</option>
             </select>
                         <label for="evaluator_sensorusage">Sensor usage:</label>
             <select name="evaluator_sensorusage" id="evaluator_sensorusage_select" data-mini="true" >
@@ -1147,6 +1171,9 @@ $('#alertMessage').enhanceWithin().popup();
           <p><span class="warning">Warning: advanced programming:</span> devices implemented in p44script are a very flexible method to integrate external hardware or data sources with little effort. However, creating scripted devices requires some programming skills and readup in the documentation.</p>
           <label for="scripteddevInitmsg">Custom device <i>init</i> message (JSON)</label>
           <textarea name="scripteddevInitmsg" id="scripteddevInitmsgTextfield" autocomplete="off" placeholder="{ 'message':'init', 'protocol':'simple', 'name':'demo light', 'output':'light' }"></textarea>
+          <div class="scriptLinks">
+            <a target="techdocs" href="https://plan44.ch/p44-techdocs/en/customdevices">Scripted device documentation (online)</a>
+          </div>
           <p style="padding-top:20px;"></p>
           <button type="button" onclick="createScriptedDevice();" id="scriptedDeviceCreateApply" data-theme="c" data-icon="check">Create custom device</button>
           <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
@@ -1159,12 +1186,15 @@ $('#alertMessage').enhanceWithin().popup();
           <div class="dialogTitleIcon" id="scriptedDeviceIcon"></div><h3 class="dialogTitleText" id="scriptedDeviceTitle">Custom Device with p44Script implementation</h3>
           <h3>Device init message:</h3>
           <pre id="scriptedDeviceInitMessage" class="custdev_initmsg constinfobg clickselect"></pre>
+          <div class="scriptLinks">
+            <a target="techdocs" href="https://plan44.ch/p44-techdocs/en/customdevices">Scripted device documentation (online)</a>
+          </div>
           <h3>Device implementation:</h3>
           <p class="evaluationCheckResult" id="scriptedDeviceCheckResult"></p><textarea name="scriptedDeviceImplementation" id="scriptedDeviceImplementationTextfield" autocomplete="off" placeholder="on (message()) as m { log('vdc->device message: %s', m) }"></textarea>
           <button type="button" id="scriptedDeviceRestartButton" data-mini="true" data-inline="true" data-icon="refresh">Save + restart implementation script</button>
           <button type="button" id="scriptedDeviceStopButton" data-mini="true" data-inline="true" data-icon="forbidden">Stop implementation script</button>
           <div class="scriptLinks">
-            <a href="javascript:openScriptRef();">Script+Expression reference</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="scriptedDeviceScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
+            <a href="javascript:openScriptRef();">Script+Expression reference (built-in)</a><br/><a onmousedown="return false;" onclick="closeDialog(); return true;" id="scriptedDeviceScriptEditorLink" href="" target="_blank">Edit script in p44script IDE</a>
           </div>
           <div id="scriptedDeviceLogOffset"></div>
           <p style="padding-top:6px;"></p>
@@ -1272,9 +1302,10 @@ $('#alertMessage').enhanceWithin().popup();
           </div>
           <label for="buttonMode">Button mode:</label>
           <select id="buttonModeSelect" data-mini="true" onchange="refresh_buttontype_deps();">
-            <option value="0">click+dim</option>
-            <option value="1">click only</option>
+            <option value="0">(multi)click+dim</option>
+            <option value="1">(multi)click only</option>
             <option value="2">dim only</option>
+            <option value="3">single click only</option>
           </select>
 
           <div id="actionButtonControls" style="display:none;">
@@ -1338,6 +1369,12 @@ $('#alertMessage').enhanceWithin().popup();
               <option value="12">airflow direction</option>
               <option value="14">airflow flap position</option>
               <option value="15">airflow louver position</option>
+            </select>
+            <label for="sensorSync">dimming value sync:</label>
+            <select id="sensorSyncSelect" data-mini="true" >
+              <option title="dial value is applied unconditionally, output value may jump" value="0">none (jump)</option>
+              <option title="output value is picked up when dial crosses current output value" value="1">pick up</option>
+              <option title="current dial value is mapped to current output value, scaling both ends of the range accordingly" value="2">scale</option>
             </select>
           </div>
 
@@ -1433,6 +1470,24 @@ $('#alertMessage').enhanceWithin().popup();
         </div>
       </div>
 
+
+      <div data-role="popup" data-overlay-theme="a" id="wbfGatewayOptions" class="ui-corner-all dialogbox">
+        <div style="padding:10px 20px;">
+          <h3>Set Wiser-by-Feller µGateway host name or IP address</h3>
+          <p>
+            Note: this sets a fixed hostname or IP address to communicate with a µGateway.
+            <span style="color:red">You still need to perform a learn-in to pair the gateway afterwards!</span>.
+            <br/>Leave the field empty to return to automatic discovery of µGateways in the LAN.
+          </p>
+          <label for="wbfGatewayHost">hostname or IP address:</label>
+          <input type="text" autocomplete="off" name="wbfGatewayHost" id="wbfGatewayHost" value="" >
+          <button type="button" id="saveWbfHostButton" data-theme="c">Save</button>
+          <button type="button" onclick="closeDialog();" data-icon="delete">Cancel</button>
+        </div>
+      </div>
+
+
+
     </div>
 
     <div data-role="page" id="system" data-theme="a">
@@ -1491,7 +1546,7 @@ $('#alertMessage').enhanceWithin().popup();
           </div>
           <div class="ui-grid-a">
             <div class="ui-block-b" id="bridge">
-              <h2>Matter Bridge (<span class="warningtext">beta!</span>)</h2>
+              <h2><span id="betaFeatures" style="display:none"><span class="warningtext">Beta</span> </span>Bridging Features:</h2>
             </div>
             <div class="ui-block-b">
               <div class="buttonblock">
@@ -2107,7 +2162,7 @@ $('#alertMessage').enhanceWithin().popup();
           <div id="matterBridgeButtons">
             <button type="button" title="Restart the matter bridge component in this device" onclick="restartMatterBridge(1);" data-icon="recycle">Restart Matter Bridge</button>
             <button type="button" title="Reset matter bridge - deletes all commissioning information" onclick="openDialog('#matterBridgeResetConfirm');" data-theme="d" data-icon="alert">Reset Matter Bridge...</button>
-            <button type="button" title="Disable matter bridge functionality in this device" onclick="openDialog('#matterBridgeDisableConfirm');" data-theme="d" data-icon="power">Disable Matter Bridge...</button>
+            <button style="display:none" id="disableBridgebutton" type="button" title="Disable matter bridge functionality in this device" onclick="openDialog('#matterBridgeDisableConfirm');" data-theme="d" data-icon="power">Disable Matter Bridge...</button>
           </div>
           <button type="button" onclick="closeDialog();" data-icon="delete">Close</button>
         </div>
@@ -2115,7 +2170,7 @@ $('#alertMessage').enhanceWithin().popup();
 
       <div data-role="popup" data-overlay-theme="a" id="matterBridgeEnable" class="ui-corner-all dialogbox">
         <div data-role="header" class="ui-corner-top">
-          <h1>Enable Matter Bridge</h1>
+          <h1>Enable Matter Bridge?</h1>
         </div>
         <div data-role="content" class="ui-corner-bottom ui-content">
           <h3 class="ui-title">Do you want to enable matter bridge functionality?</h3>
@@ -2157,6 +2212,9 @@ $('#alertMessage').enhanceWithin().popup();
           <button type="button" onclick="closeDialog();" data-icon="delete">No, cancel</button>
         </div>
       </div>
+
+
+
 
 
 

@@ -24,6 +24,12 @@ function alertError(theCall)
 }
 
 
+function apiRoot()
+{
+  return ''
+}
+
+
 // functions to abstract the actual API (ubus via uhttpd, json via mg44)
 
 
@@ -126,7 +132,7 @@ function mg44token()
   }
   else {
     // need to fetch token first
-    $.getJSON( '/tok/json' , {
+    $.getJSON(apiRoot() +'/tok/json' , {
     }).done(function(response) {
       rqvaltok = response;
       // we have the token now
@@ -150,13 +156,14 @@ function mg44token()
 
 function mg44Call(uri, jsonquery, timeout, retrycount)
 {
+  if (timeout==undefined) timeout=10000; // timeout relatively quickly by default
   if (retrycount==undefined) retrycount=0;
   var dfd = $.Deferred();
   var promise = dfd.promise();
   // mg44 based API
   mg44token().done(function () {
     promise.abort = function() { xhr.abort(); }
-    var url = constructUri('' + uri);
+    var url = constructUri(apiRoot() + uri);
     var jdata = JSON.stringify(jsonquery);
     var xhr = $.ajax({
       url: url,
@@ -166,7 +173,8 @@ function mg44Call(uri, jsonquery, timeout, retrycount)
       data: jdata,
       xhrFields: {
         withCredentials: true
-      }
+      },
+      cache: false
     }).done(function(response) {
       dfd.resolve(response)
     }).fail(function(jqXHR, textStatus, errorThrown) {

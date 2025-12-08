@@ -73,6 +73,13 @@ function opStateSpan(opState, msg, present)
 }
 
 
+function bstateSymbol(device)
+{
+  var br = bridgeinfo.bridgetype=='proxy' ? '🔶' : '🟢'
+  return (device['x-p44-bridged'] ? br : (device['x-p44-bridgeable'] ? '🟡' : '&nbsp;'))
+}
+
+
 // often used pattern: close dialog, hide loading, on success refresh devices, otherwise show error in alert
 function closeDialogAndRefreshDevices(theCall)
 {
@@ -182,7 +189,7 @@ function initializeApp()
 function checkalerts()
 {
   p44mCall({
-   "cmd":"alert"
+   cmd:"alert"
   }, 30000).done(function(result) {
     if (result) {
       // there is an alert
@@ -217,8 +224,8 @@ function checkExtraAlerts()
 function dismissalert(id, doneCB)
 {
   alertError(p44mCall({
-    "cmd":"alert",
-    "confirm":id
+    cmd:"alert",
+    confirm:id
   }, 30000)).done(function(result) {
     closeDialog(doneCB);
   });
@@ -295,10 +302,10 @@ function refresh_userSceneslist()
   var dfd = $.Deferred();
   // query scenes
   var listquery = {
-    "method":"x-p44-queryScenes",
-    "dSUID":"root",
-    "zoneID":currentZoneID,
-    "group":currentGroupNo
+    method:"x-p44-queryScenes",
+    dSUID:"root",
+    zoneID:currentZoneID,
+    group:currentGroupNo
   };
   if (extendedScenes) {
     listquery.required=0;
@@ -361,10 +368,10 @@ function extendedScenesToggle()
 function openRenameScene(sceneId)
 {
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{
-      "x-p44-localController":{ "scenes": { [sceneId]:{ "name":null } }}
+    method:"getProperty",
+    dSUID:"root",
+    query:{
+      "x-p44-localController":{ scenes: { [sceneId]:{ name:null } }}
     }
   }).done(function(result) {
     var scene = result["x-p44-localController"].scenes[sceneId];
@@ -383,9 +390,9 @@ function applySceneName(sceneId)
   var scenename = $("#newSceneName").val().toString();
   // set new name
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{ "x-p44-localController":{ "scenes": { [sceneId]:{ "name":scenename }}}}
+    method:"setProperty",
+    dSUID:"root",
+    properties:{ "x-p44-localController":{ scenes: { [sceneId]:{ name:scenename }}}}
   }).always(function() {
     closeDialog(function() {
       // reload modified scenes list
@@ -401,11 +408,11 @@ function callScene(sceneNo, zoneId, groupNo, event)
   var target = getTarget(event)
   // call scene
   apiCall({
-    "notification":"callScene",
-    "zone_id":zoneId,
-    "group":groupNo,
-    "scene":sceneNo,
-    "force":false
+    notification:"callScene",
+    zone_id:zoneId,
+    group:groupNo,
+    scene:sceneNo,
+    force:false
   }).always(function() {
     buttonFeedback(target, 'orange');
     setTimeout(function() { refresh_lightslist(); }, 800);
@@ -428,10 +435,10 @@ function saveSceneNow(sceneNo, zoneId, groupNo)
 {
   // save scene
   apiCall({
-    "notification":"saveScene",
-    "zone_id":zoneId,
-    "group":groupNo,
-    "scene":sceneNo
+    notification:"saveScene",
+    zone_id:zoneId,
+    group:groupNo,
+    scene:sceneNo
   }).always(function() {
     closeDialog();
   });
@@ -472,14 +479,14 @@ function refresh_lightslist()
   }
   // query list
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{
-      "x-p44-localController":{ "zones":{ [currentZoneID]: { "devices":{ "":
-      { "deviceIconName":null, "dSUID":null, "name":null, "model":null, "displayId":null, "x-p44-statusText":null,
-        "channelDescriptions":null, "channelStates":null,
-        "outputDescription":{"x-p44-behaviourType":null},
-        "outputSettings":{"groups":null}
+    method:"getProperty",
+    dSUID:"root",
+    query:{
+      "x-p44-localController":{ zones:{ [currentZoneID]: { devices:{ "":
+      { deviceIconName:null, dSUID:null, name:null, model:null, displayId:null, "x-p44-statusText":null,
+        channelDescriptions:null, channelStates:null,
+        outputDescription:{"x-p44-behaviourType":null},
+        outputSettings:{groups:null}
       }}}}}
     }
   }, 15000).done(function(result) {
@@ -637,10 +644,10 @@ function changedOutputSlider(event, dSUID, channelID)
     var value = $('#output_slider_' + channelID + '_' + dSUID).val();
     //console.log('channelID=' + channelID + ' value=' + value.toString());
     var changequery = {
-      "method":"setProperty",
-      "dSUID":dSUID,
-      "properties":{
-        "channelStates": { }
+      method:"setProperty",
+      dSUID:dSUID,
+      properties:{
+        channelStates: { }
       }
     };
     changequery.properties.channelStates[channelID.toString()] = { "value": value };
@@ -674,10 +681,10 @@ function refresh_triggerslist()
   var dfd = $.Deferred();
   // query triggers
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{
-      "x-p44-localController":{ "triggers":null }
+    method:"getProperty",
+    dSUID:"root",
+    query:{
+      "x-p44-localController":{ triggers:null }
     }
   }, 15000).done(function(result) {
     // table header
@@ -769,10 +776,10 @@ function doNewTrigger(event, hiddenFeatures)
 
 function newTrigger() {
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{
-      "x-p44-localController":{ "triggers": { "0":{ "name":"New Trigger" } } }
+    method:"setProperty",
+    dSUID:"root",
+    properties:{
+      "x-p44-localController":{ triggers: { "0":{ name:"New Trigger" } } }
     }
   }).done(function(result) {
     var triggerID = result[0].element;
@@ -784,10 +791,10 @@ function newTrigger() {
 function set_tr_logoffs(triggerId, offs)
 {
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{
-      "x-p44-localController":{ "triggers": { [triggerId]:{ "logLevelOffset":offs } } }
+    method:"setProperty",
+    dSUID:"root",
+    properties:{
+      "x-p44-localController":{ triggers: { [triggerId]:{ logLevelOffset:offs } } }
     }
   });
 }
@@ -807,10 +814,10 @@ function editTrigger(triggerId) {
     triggerId = triggerId.toString();
     // query trigger details
     apiCall({
-      "method":"getProperty",
-      "dSUID":"root",
-      "query":{
-        "x-p44-localController":{ "triggers": { [triggerId]:null } }
+      method:"getProperty",
+      dSUID:"root",
+      query:{
+        "x-p44-localController":{ triggers: { [triggerId]:null } }
       }
     }).done(function(result) {
       var trigger = result["x-p44-localController"].triggers[triggerId];
@@ -912,9 +919,9 @@ function saveTrigger(triggerId, checkCondition, checkAction, event)
     if (checkCondition || checkAction) {
       if (checkCondition) {
         apiCall({
-          "method": "x-p44-checkTriggerCondition",
-          "dSUID":"root",
-          "triggerID":triggerId
+          method: "x-p44-checkTriggerCondition",
+          dSUID:"root",
+          triggerID:triggerId
         }).done(function(result) {
           $('#triggerVarDefsCheck').html(varDefsHandler.varShowHtml(result.varDefs));
           var cond = result.condition;
@@ -933,9 +940,9 @@ function saveTrigger(triggerId, checkCondition, checkAction, event)
       }
       if (checkAction) {
         apiCall({
-          "method": "x-p44-testTriggerAction",
-          "dSUID":"root",
-          "triggerID":triggerId
+          method: "x-p44-testTriggerAction",
+          dSUID:"root",
+          triggerID:triggerId
         }).done(function(cond) {
           if (cond.error) {
             condhtml = '<span class="evaluationCheckError">' + escapehtml(cond.error) + '</span>'
@@ -973,10 +980,10 @@ function deleteTriggerNow(triggerId)
 {
   // remove now
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{
-      "x-p44-localController":{ "triggers": { [triggerId]:null }}
+    method:"setProperty",
+    dSUID:"root",
+    properties:{
+      "x-p44-localController":{ triggers: { [triggerId]:null }}
     }
   }).always(function() {
     // reload modified device list
@@ -992,9 +999,9 @@ function executeTrigger(triggerId, event)
   var target = getTarget(event)
   // execute
   apiCall({
-    "method": "x-p44-testTriggerAction",
-    "dSUID":"root",
-    "triggerID":triggerId
+    method: "x-p44-testTriggerAction",
+    dSUID:"root",
+    triggerID:triggerId
   }).done(function() {
     buttonFeedback(target, 'green')
   });
@@ -1005,9 +1012,9 @@ function stopTrigger(triggerId, event)
 {
   var target = getTarget(event)
   apiCall({
-    "method": "x-p44-stopTriggerAction",
-    "dSUID":"root",
-    "triggerID":triggerId
+    method: "x-p44-stopTriggerAction",
+    dSUID:"root",
+    triggerID:triggerId
   }).done(function() {
     buttonFeedback(target, 'red')
   });
@@ -1022,11 +1029,11 @@ function editScene(sceneNo, dSUID, title)
 {
   // query scene details
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "name":null,
-      "scenes":{ [sceneNo.toString()] : null }
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      name:null,
+      scenes:{ [sceneNo.toString()] : null }
     }
   }).done(function(result) {
     var scene = result.scenes[sceneNo.toString()]
@@ -1049,11 +1056,11 @@ function editScene(sceneNo, dSUID, title)
         else {
           // we need to get it because the script was not active when the dialog was loaded
           apiCall({
-            "method":"getProperty",
-            "dSUID":dSUID,
-            "query":{
-              "name":null,
-              "scenes":{ [sceneNo.toString()] : { 'x-p44-sceneScriptId': null } }
+            method:"getProperty",
+            dSUID:dSUID,
+            query:{
+              name:null,
+              scenes:{ [sceneNo.toString()] : { 'x-p44-sceneScriptId': null } }
             }
           }).done(function(result) {
             dfd.resolve(result.scenes[sceneNo.toString()]['x-p44-sceneScriptId'])
@@ -1097,14 +1104,14 @@ function saveSceneData(sceneNo, dSUID, emptyAsSTX)
   var src = $('#sceneScriptTextfield').val()
   if (src.length==0 && emptyAsSTX) src = "\x02";
   apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{
-      "scenes":{ [sceneNo.toString()] : {
-        "dontCare": $('#sceneDontcareSelect').val()>0 ? true : false,
-        "ignoreLocalPriority": $('#sceneIgnorePrioSelect').val()>0 ? true : false,
-        "effect": $('#sceneEffectSelect').val(),
-        "effectParam": $('#sceneEffectParamEdit').val(),
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{
+      scenes:{ [sceneNo.toString()] : {
+        dontCare: $('#sceneDontcareSelect').val()>0 ? true : false,
+        ignoreLocalPriority: $('#sceneIgnorePrioSelect').val()>0 ? true : false,
+        effect: $('#sceneEffectSelect').val(),
+        effectParam: $('#sceneEffectParamEdit').val(),
         "x-p44-sceneScript": src
       }}
     }
@@ -1125,10 +1132,10 @@ function saveSceneEdits(sceneNo, dSUID, checkCall, event)
     if (checkCall) {
       // call scene
       apiCall({
-        "notification":"callScene",
-        "dSUID":dSUID,
-        "scene":sceneNo,
-        "force":false
+        notification:"callScene",
+        dSUID:dSUID,
+        scene:sceneNo,
+        force:false
       }).done(function(cond) {
         // NOP
       });
@@ -1159,10 +1166,10 @@ function learn(noProximity)
   hide('#learnOK');
   var resultHtml = '';
   activeRequest = apiCall({
-    "method":"x-p44-learn",
-    "dSUID":"root",
-    "seconds":30,
-    "disableProximityCheck":noProximity
+    method:"x-p44-learn",
+    dSUID:"root",
+    seconds:30,
+    disableProximityCheck:noProximity
   }, 120000).done(function(learnResult) {
     if (learnResult==true)
       resultHtml = '<p style="color: green; font-weight: bold;">Learned in device successfully.</p>';
@@ -1198,9 +1205,9 @@ function stopLearn()
   activeRequest.abort();
   activeRequest = undefined;
   apiCall({
-    "method":"x-p44-learn",
-    "dSUID":"root",
-    "seconds":0
+    method:"x-p44-learn",
+    dSUID:"root",
+    seconds:0
   });
 }
 
@@ -1215,9 +1222,9 @@ function identify()
   var resultHtml = '';
   var focusDSUID = false;
   activeRequest = apiCall({
-    "method":"x-p44-identify",
-    "dSUID":"root",
-    "seconds":30
+    method:"x-p44-identify",
+    dSUID:"root",
+    seconds:30
   }, 120000).done(function(identifiedDsuid) {
     focusDSUID = identifiedDsuid;
     if (focusDSUID!=false) {
@@ -1252,9 +1259,9 @@ function stopIdentify()
   activeRequest.abort();
   activeRequest = undefined;
   apiCall({
-    "method":"x-p44-identify",
-    "dSUID":"root",
-    "seconds":0
+    method:"x-p44-identify",
+    dSUID:"root",
+    seconds:0
   });
 }
 
@@ -1269,12 +1276,30 @@ function hueBridgeOptions(dSUID)
     // set hue bridge API URL
     var apiLoc = $("#hueBridgeLoc").val().trim();
     closeDialogAndRefreshDevices(apiCall({
-      "method":"registerHueBridge",
-      "dSUID":dSUID,
-      "bridgeApiURL":apiLoc
+      method:"registerHueBridge",
+      dSUID:dSUID,
+      bridgeApiURL:apiLoc
     }));
   });
 }
+
+
+
+function wbfGatewayOptions(dSUID)
+{
+  openDialog("#wbfGatewayOptions");
+  $("#saveWbfHostButton").off('click.saveApi');
+  $("#saveWbfHostButton").on('click.saveApi', function() {
+    // set uGateway host name/IP
+    var hostName = $("#wbfGatewayHost").val().trim();
+    closeDialogAndRefreshDevices(apiCall({
+      method:"registerWbfGateway",
+      dSUID:dSUID,
+      gatewayHost:hostName
+    }));
+  });
+}
+
 
 
 
@@ -1420,11 +1445,11 @@ function createCustomIODevice()
   //alert("devtype = " + devtype + "\niospec = " + iospec);
   var deviceName = $("#customdev_name_textfield").val();
   closeDialogAndRefreshDevices(apiCall({
-    "method":"x-p44-addDevice",
-    "dSUID":"none", "x-p44-itemSpec":"vdc:Static_Device_Container:1",
-    "deviceType": devtype,
-    "deviceConfig": iospec,
-    "name" : deviceName
+    method:"x-p44-addDevice",
+    dSUID:"none", "x-p44-itemSpec":"vdc:Static_Device_Container:1",
+    deviceType: devtype,
+    deviceConfig: iospec,
+    name : deviceName
   }));
 }
 
@@ -1477,18 +1502,21 @@ function createRGBLedChainDevice()
   var deviceOptCfg = $("#rgbchaindev_cfg_textfield").val();
   if (deviceOptCfg.length>0) deviceconfig += ':' + deviceOptCfg;
   closeDialogAndRefreshDevices(apiCall({
-    "method":"x-p44-addDevice",
-    "dSUID":"none", "x-p44-itemSpec":"vdc:LedChain_Device_Container:1",
-    "x": x,
-    "dx": dx,
-    "y": y,
-    "dy": dy,
-    "z_order": z_order,
-    "uniqueId": uniqueId,
-    "deviceConfig": deviceconfig,
-    "name" : deviceName
+    method:"x-p44-addDevice",
+    dSUID:"none", "x-p44-itemSpec":"vdc:LedChain_Device_Container:1",
+    x: x,
+    dx: dx,
+    y: y,
+    dy: dy,
+    z_order: z_order,
+    uniqueId: uniqueId,
+    deviceConfig: deviceconfig,
+    name : deviceName
   }));
 }
+
+
+
 
 
 
@@ -1570,11 +1598,11 @@ function createDmxDevice()
   else {
     var deviceName = $("#dmxdev_name_textfield").val();
     closeDialogAndRefreshDevices(apiCall({
-      "method":"x-p44-addDevice",
-      "dSUID":"none", "x-p44-itemSpec":"vdc:OLA_Device_Container:1",
-      "deviceType": devicetype,
-      "deviceConfig": deviceconfig,
-      "name" : deviceName
+      method:"x-p44-addDevice",
+      dSUID:"none", "x-p44-itemSpec":"vdc:OLA_Device_Container:1",
+      deviceType: devicetype,
+      deviceConfig: deviceconfig,
+      name : deviceName
     }));
   }
 }
@@ -1587,10 +1615,10 @@ function createEldatDevice()
   var ety = $("#eldat_type_select").val();
   if (ety<99999) {
     closeDialogAndRefreshDevices(apiCall({
-      "method":"x-p44-addProfile",
-      "dSUID":"none", "x-p44-itemSpec":"vdc:Eldat_Bus_Container:1",
-      "type":ety,
-      "address":4294967295 // always automatically assign unused sending channel
+      method:"x-p44-addProfile",
+      dSUID:"none", "x-p44-itemSpec":"vdc:Eldat_Bus_Container:1",
+      type:ety,
+      address:4294967295 // always automatically assign unused sending channel
     }));
   }
 }
@@ -1620,10 +1648,10 @@ function createEvaluatorDevice()
       etype += ':' + $("#evaluator_sensortype_select").val().toString() + ':' + $("#evaluator_sensorusage_select").val().toString();
     }
     apiCall({
-      "method":"x-p44-addDevice",
-      "dSUID":"none", "x-p44-itemSpec":"vdc:Evaluator_Device_Container:1",
-      "evaluatorType":etype,
-      "name":ename
+      method:"x-p44-addDevice",
+      dSUID:"none", "x-p44-itemSpec":"vdc:Evaluator_Device_Container:1",
+      evaluatorType:etype,
+      name:ename
     }).done(function(result) {
       closeDialog(function() {
         // get dSUID of new device
@@ -1678,12 +1706,12 @@ function createBridgeDevice(activated)
   var group = $("#bridge_initialgroup_select").val()
   if (bty!="0") {
     closeDialogAndRefreshDevices(apiCall({
-      "method":"x-p44-addDevice",
-      "dSUID":"none", "x-p44-itemSpec":"vdc:Bridge_Device_Container:1",
-      "bridgeType":bty,
-      "allowBridging": activated,
-      "group": group,
-      "name":bname
+      method:"x-p44-addDevice",
+      dSUID:"none", "x-p44-itemSpec":"vdc:Bridge_Device_Container:1",
+      bridgeType:bty,
+      allowBridging: activated,
+      group: group,
+      name:bname
     }))
   }
 }
@@ -1707,9 +1735,9 @@ var varDefsHandler = {
     else {
       // query value sources
       apiCall({
-        "method":"getProperty",
-        "dSUID":"root",
-        "query":{
+        method:"getProperty",
+        dSUID:"root",
+        query:{
           "x-p44-valueSources":null,
         }
       }).done(function(result) {
@@ -1854,9 +1882,9 @@ function openEvaluatorEdit(event)
 function openEvaluatorEditFor(dSUID) {
   varDefsHandler.loadSources(true).done(function() {
     apiCall({
-      "method":"getProperty",
-      "dSUID":dSUID,
-      "query":{
+      method:"getProperty",
+      dSUID:dSUID,
+      query:{
         "deviceIconName":null, "name":null,
         "x-p44-evaluatorType":null,
         "x-p44-varDefs":null,
@@ -1940,9 +1968,9 @@ function saveEvaluatorData(dSUID, isSensor, emptyAsSTX)
   if (src.length==0 && emptyAsSTX) src = "\x02";
   if (isSensor) {
     var savequery = {
-      "method":"setProperty",
-      "dSUID":dSUID,
-      "properties":{
+      method:"setProperty",
+      dSUID:dSUID,
+      properties:{
         "x-p44-varDefs":varDefsHandler.vardefs,
         "x-p44-onCondition":$("#evaluatorSensorCalcTextfield").val()
       }
@@ -1950,9 +1978,9 @@ function saveEvaluatorData(dSUID, isSensor, emptyAsSTX)
   }
   else {
     var savequery = {
-      "method":"setProperty",
-      "dSUID":dSUID,
-      "properties":{
+      method:"setProperty",
+      dSUID:dSUID,
+      properties:{
         "x-p44-varDefs":varDefsHandler.vardefs,
         "x-p44-onCondition":$("#evaluatorOnConditionTextfield").val(),
         "x-p44-offCondition":$("#evaluatorOffConditionTextfield").val(),
@@ -1995,8 +2023,8 @@ function stopEvaluatorAction(dSUID, event)
 {
   var target = getTarget(event)
   apiCall({
-    "method":"x-p44-stopEvaluatorAction",
-    "dSUID":dSUID
+    method:"x-p44-stopEvaluatorAction",
+    dSUID:dSUID
   }).done(function(){
     buttonFeedback(target, 'red')
   });
@@ -2008,9 +2036,9 @@ function testEvaluatorAction(dSUID, testState, event)
   var target = getTarget(event)
   var actionhtml;
   apiCall({
-    "method":"x-p44-testEvaluatorAction",
-    "dSUID":dSUID,
-    "result":testState
+    method:"x-p44-testEvaluatorAction",
+    dSUID:dSUID,
+    result:testState
   }).done(function(response) {
     buttonFeedback(target, 'green')
     if (response.error) {
@@ -2034,8 +2062,8 @@ function checkEvaluatorDevice(dSUID, isSensor, event)
   var target = getTarget(event)
   // check evaluator syntax and results
   apiCall({
-    "method":"x-p44-checkEvaluator",
-    "dSUID":dSUID
+    method:"x-p44-checkEvaluator",
+    dSUID:dSUID
   }).done(function(result) {
     buttonFeedback(target, 'green');
     // variable definitions and current values
@@ -2094,9 +2122,9 @@ function createScriptedDevice()
   // create scripted custom device
   var init = $("#scripteddevInitmsgTextfield").val();
   apiCall({
-    "method":"x-p44-addDevice",
-    "dSUID":"none", "x-p44-itemSpec":"vdc:Scripted_Device_Container:1",
-    "init":init.toString()
+    method:"x-p44-addDevice",
+    dSUID:"none", "x-p44-itemSpec":"vdc:Scripted_Device_Container:1",
+    init:init.toString()
   }).done(function(result) {
     closeDialog(function() {
       // get dSUID of new device
@@ -2124,9 +2152,9 @@ function openScriptedDeviceEdit(event)
 
 function openScriptedDeviceEditFor(dSUID) {
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
       "deviceIconName":null, "name":null,
       "x-p44-implementation":null,
       "x-p44-implementationId":null,
@@ -2166,9 +2194,9 @@ function saveScriptedDeviceData(dSUID, emptyAsSTX)
   var src = $("#scriptedDeviceImplementationTextfield").val()
   if (src.length==0 && emptyAsSTX) src = "\x02";
   var savequery = {
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{
       "x-p44-implementation":src
     }
   };
@@ -2185,8 +2213,8 @@ function saveAndRestartScriptedDevice(dSUID, close, restart)
   saveScriptedDeviceData(dSUID).done(function() {
     // check syntax
     apiCall({
-      "method":"x-p44-checkImpl",
-      "dSUID":dSUID
+      method:"x-p44-checkImpl",
+      dSUID:dSUID
     }).done(function(response) {
       var msghtml = '';
       if (response.error) {
@@ -2205,8 +2233,8 @@ function saveAndRestartScriptedDevice(dSUID, close, restart)
         if (restart) {
           msghtml += " - Restarted";
           apiCall({
-            "method":"x-p44-restartImpl",
-            "dSUID":dSUID
+            method:"x-p44-restartImpl",
+            dSUID:dSUID
           });
         }
         if (close) {
@@ -2229,8 +2257,8 @@ function saveAndRestartScriptedDevice(dSUID, close, restart)
 function stopImplementation(dSUID)
 {
   apiCall({
-    "method":"x-p44-stopImpl",
-    "dSUID":dSUID
+    method:"x-p44-stopImpl",
+    dSUID:dSUID
   }).always(function() {
     $("#scriptedDeviceCheckResult").html('<span class="error">Stopped</span>');
   })
@@ -2254,8 +2282,8 @@ function removeDeviceNow(dSUID)
 {
   // remove now
   apiCall({
-    "method":"x-p44-removeDevice",
-    "dSUID":dSUID
+    method:"x-p44-removeDevice",
+    dSUID:dSUID
   }).always(function() {
     // reload modified device list
     closeDialog(function () {
@@ -2269,8 +2297,8 @@ function getAttention(dSUID)
 {
   // blink
   apiCall({
-    "notification":"identify",
-    "dSUID":dSUID
+    notification:"identify",
+    dSUID:dSUID
   }, 1000);
 }
 
@@ -2394,9 +2422,9 @@ function openVdcInfo(event, hiddenFeatures)
   });
   // query vdc details
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
       "deviceIconName":null, "dSUID":null, "name":null, "model":null, "modelVersion":null,
       "displayId":null, "vendorName":null, "modelUID":null,
       "x-p44-rescanModes":null, "x-p44-optimizerMode":null, "x-p44-extraInfo":null, "x-p44-description":null, "x-p44-hideWhenEmpty":null,
@@ -2493,9 +2521,9 @@ function optimizerChanged(dSUID)
 function setOptimizerMode(dSUID,mode)
 {
   apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{
       "x-p44-optimizerMode":mode
     }
   });
@@ -2572,12 +2600,12 @@ function rescanVdc(dSUID, incremental, exhaustive, clear, reenumerate)
   });
   // long timeout: 5min!
   closeDialogAndRefreshDevices(apiCall({
-    "method":"scanDevices",
-    "dSUID":dSUID,
-    "incremental":incremental,
-    "exhaustive":exhaustive,
-    "reenumerate":reenumerate,
-    "clearconfig":clear
+    method:"scanDevices",
+    dSUID:dSUID,
+    incremental:incremental,
+    exhaustive:exhaustive,
+    reenumerate:reenumerate,
+    clearconfig:clear
   }, 1200000));
 }
 
@@ -2596,9 +2624,9 @@ function logOffsetDials(dSUID)
 function set_logoffs(dSUID, offset)
 {
   apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{ "x-p44-logLevelOffset":offset }
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{ "x-p44-logLevelOffset":offset }
   });
 }
 
@@ -2608,49 +2636,69 @@ var deviceInfoIsOpen = false;
 
 
 
-function enableForBridging(event, enable)
+function bridgingFlagsChanged(event)
 {
   var dSUID = event.currentTarget.getAttribute('dSUID');
+  var id = event.currentTarget.getAttribute('id');
+  var flags = $('#'+id).val();
   apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{ "x-p44-allowBridging":enable }
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{ "x-p44-bridgingFlags":flags }
   }).done(function() {
     // update bridging info
     apiCall({
-      "method":"getProperty",
-      "dSUID":dSUID,
-      "query":{ "x-p44-allowBridging":null, "x-p44-bridged":null }
+      method:"getProperty",
+      dSUID:dSUID,
+      query:{ "x-p44-bridgingFlags":null, "x-p44-bridged":null }
     }).done(function(device) {
       $('#deviceBridgingControls').html(
-        bridgecontrols(dSUID, device['x-p44-allowBridging'], device['x-p44-bridged'])
+        bridgecontrols(dSUID, device['x-p44-bridgingFlags'], device['x-p44-bridged'])
       ).trigger('create')
     })
   })
 }
 
 
-function bridgecontrols(dSUID, allow, bridged)
+function bridgeflagval(val, title, text, currentflags)
+{
+  var html = '<option title="' + title + '" value="' + val + '"' + (val==currentflags ? ' selected' : '') + '>' + text + '</option>'
+  return html;
+}
+
+
+function bridgecontrols(dSUID, flags, bridged)
 {
   var html = '';
   if (bridgeinfo && bridgeinfo['connected']) {
+    var selector =
+      bridgeflagval(0, 'no bridging', 'disabled', flags) +
+      bridgeflagval(1, 'bridge output only (recommended choice for most cases)', 'output only', flags) +
+      bridgeflagval(15, 'bridge device output, sensors, binary inputs, buttons', 'entire device', flags) +
+      bridgeflagval(7, 'bridge output, sensors/binary inputs but no buttons', 'output and sensors/inputs', flags) +
+      bridgeflagval(6, 'bridge sensors and binary inputs only', 'sensors/inputs only', flags) +
+      bridgeflagval(2, 'bridge sensors only', 'sensors only', flags) +
+      bridgeflagval(4, 'bridge binary inputs only', 'inputs only', flags) +
+      bridgeflagval(8, 'bridge buttons only', 'buttons only', flags)
     if (bridgeinfo.bridgetype=='proxy') {
       html +=
         '<p style="padding-top:12px;"></p>' +
-        (allow
-        ? '<button dSUID="' + dSUID + '" onclick="enableForBridging(event, false);" type="button" id="deviceInfoEnableBridging" data-icon="home">Disable proxy for this device </button>'
-        : '<button dSUID="' + dSUID + '" onclick="enableForBridging(event, true);" type="button" id="deviceInfoEnableBridging" data-icon="home">Enable proxy for this device </button>') +
-        '<div id="bridgedDeviceInfo" style="display:' + (allow ? "block": "none") + '" data-mini="true">' +
+        '<label for="bridgingFlagsSelector">Proxy forwarding:</label>' +
+        '<select dSUID="' + dSUID + '" id="bridgingFlagsSelector" data-mini="true" onchange="bridgingFlagsChanged(event);">' +
+        selector +
+        '</select>' +
+        '<div id="bridgedDeviceInfo" style="display:' + (flags!=0 ? "block": "none") + '" data-mini="true">' +
         'Proxy status: <b>' + (bridged ? '<span class="bridgedIndicator">connected to proxy</span>' : 'ready for proxy to connect') + '</b></div>';
     }
     else {
       // assume matter, older p44mbrd do not set bridgetype
       html +=
         '<p style="padding-top:12px;"></p>' +
-        (allow
-        ? '<button dSUID="' + dSUID + '" onclick="enableForBridging(event, false);" type="button" id="deviceInfoEnableBridging" data-icon="home">Stop bridging to matter </button>'
-        : '<button dSUID="' + dSUID + '" onclick="enableForBridging(event, true);" type="button" id="deviceInfoEnableBridging" data-icon="home">Enable for bridging to matter </button>') +
-        '<div id="bridgedDeviceInfo" style="display:' + (allow ? "block": "none") + '" data-mini="true">' +
+        '<label for="bridgingFlagsSelector">Bridging to matter:</label>' +
+        '<select dSUID="' + dSUID + '" id="bridgingFlagsSelector" data-mini="true" onchange="bridgingFlagsChanged(event);">' +
+        selector +
+        '</select>' +
+        '<div id="bridgedDeviceInfo" style="display:' + (flags!=0 ? "block": "none") + '" data-mini="true">' +
         'Bridged device status: <b>' + (bridged ? '<span class="bridgedIndicator">connected to matter bridge</span>' : 'ready for bridge to connect') + '</b></div>';
     }
   }
@@ -2661,10 +2709,10 @@ function bridgecontrols(dSUID, allow, bridged)
 function restartMatterBridge(exitcode)
 {
   apiCall({
-    "method":"x-p44-notifyBridge",
-    "dSUID":"root",
-    "bridgenotification":"terminate",
-    "exitcode": exitcode
+    method:"x-p44-notifyBridge",
+    dSUID:"root",
+    bridgenotification:"terminate",
+    exitcode: exitcode
   }).done(function(device) {
     closeDialog()
   })
@@ -2675,16 +2723,14 @@ function restartMatterBridge(exitcode)
 function setBridgeLoglevel(app,chip)
 {
   req = {
-    "method":"x-p44-notifyBridge",
-    "dSUID":"root",
-    "bridgenotification":"loglevel",
+    method:"x-p44-notifyBridge",
+    dSUID:"root",
+    bridgenotification:"loglevel",
   }
   if (app!==undefined) req.app = app;
   if (chip!==undefined) req.chip = chip;
   apiCall(req).done(function(device) {
-    $('#deviceBridgingControls').html(
-      bridgecontrols(dSUID, device['x-p44-allowBridging'], device['x-p44-bridged'])
-    ).trigger('create')
+    // nop
   })
 }
 
@@ -2692,9 +2738,9 @@ function setBridgeLoglevel(app,chip)
 function requestCommissioning(enable)
 {
   req = {
-    "method":"x-p44-notifyBridge",
-    "dSUID":"root",
-    "bridgenotification":"commissioning",
+    method:"x-p44-notifyBridge",
+    dSUID:"root",
+    bridgenotification:"commissioning",
   }
   req.enable = enable;
   apiCall(req).done(function(device) {
@@ -2708,9 +2754,9 @@ function requestCommissioning(enable)
 function enableMatterBridge(enable)
 {
   p44mCall({
-    "cmd":"property",
-    "key":"p44mbrd",
-    "value":enable ? 1 : 0
+    cmd:"property",
+    key:"p44mbrd",
+    value:enable ? 1 : 0
   }).always(function() {
     system_restart()
   })
@@ -2722,9 +2768,9 @@ function refresh_bridgeinfo()
   var dfd = $.Deferred();
   // update global bridgeinfo
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{ "x-p44-bridge":null }
+    method:"getProperty",
+    dSUID:"root",
+    query:{ "x-p44-bridge":null }
   }).done(function(result) {
     bridgeinfo = result['x-p44-bridge'];
   }).fail(function() {
@@ -2742,9 +2788,11 @@ function openMatterBridgeConfig()
     if (bridgeinfo) {
       if (!bridgeinfo.connected) {
         // matter daemon not yet running (and no proxy connected)
-        // - the only regular cause for this is not having the enable flag set, so show first-time enable dialog
-        openDialog('#matterBridgeEnable')
-        return;
+        if (!devinfo.PRODUCT_MATTER_STANDARD=="1") {
+          // - the only regular cause for this is that bridging is not standard but optional beta, and not yet enabled, so show first-time enable dialog
+          openDialog('#matterBridgeEnable')
+          return;
+        }
       }
       openDialog('#matterBridgeConfig', function() {
         if (bridgeinfo.bridgetype=='proxy') {
@@ -2798,6 +2846,11 @@ function openMatterBridgeConfig()
 
 
 
+
+
+
+
+
 function openDeviceInfo(event, hiddenFeatures)
 {
   var dSUID = event.currentTarget.getAttribute('dSUID');
@@ -2820,18 +2873,18 @@ function openDeviceInfo(event, hiddenFeatures)
   });
   // query device details
   alertError(apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "deviceIconName":null, "dSUID":null, "name":null, "model":null, "modelVersion":null,
-      "displayId":null, "vendorName":null, "modelUID":null, "hardwareModelGuid":null,
-      "implementationId":null,
-      "x-p44-softwareRemovable":null, "x-p44-extraInfo":null, "configurationDescriptions":null, "configurationId":null, "x-p44-teachInSignals":null,
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      deviceIconName:null, dSUID:null, name:null, model:null, modelVersion:null,
+      displayId:null, vendorName:null, modelUID:null, hardwareModelGuid:null,
+      implementationId:null,
+      "x-p44-softwareRemovable":null, "x-p44-extraInfo":null, configurationDescriptions:null, configurationId:null, "x-p44-teachInSignals":null,
       "x-p44-opStateLevel":null, "x-p44-opStateText":null, "x-p44-description":null,
-      "x-p44-bridgeable":null, "x-p44-bridged":null, "x-p44-allowBridging":null,
-      "buttonInputDescriptions":{"#":null}, "buttonInputSettings":{ "#0":null }, "binaryInputDescriptions":{"#":null}, "channelDescriptions":{"#":null}, "sensorDescriptions":{"#":null},
-      "modelFeatures":{ "identification":null },
-      "zoneID":null
+      "x-p44-bridgeable":null, "x-p44-bridged":null, "x-p44-bridgingFlags":null,
+      buttonInputDescriptions:{"#":null}, buttonInputSettings:{ "#0":null }, binaryInputDescriptions:{"#":null}, channelDescriptions:{"#":null}, sensorDescriptions:{"#":null},
+      modelFeatures:{ identification:null },
+      zoneID:null
     }
   }, 3000)).done(function(device) {
     $('#deviceInfoIcon').html('<img src="/icons/icon16/' + device.deviceIconName + '.png" />');
@@ -2910,13 +2963,13 @@ function openDeviceInfo(event, hiddenFeatures)
     }
     // change zone
     extracontrols +=
-      '<p>Zone:</p>' +
+      '<label for="deviceZoneSelector">Zone:</label>' +
       zoneselector('deviceZoneSelector', device.zoneID, true);
     if (device['x-p44-softwareRemovable']==true) {
       // removable static device, add extra remove button
       extracontrols +=
         '<p>&nbsp;</p>' +
-        '<button onclick="removeDevice(\'' + device.dSUID + '\');" type="button" id="deviceInfoRemove" data-icon="delete">Remove device...</button>';
+        '<button onclick="removeDevice(\'' + device.dSUID + '\');" type="button" id="deviceInfoRemove" data-theme="d" data-icon="delete">Remove device...</button>';
     }
     if (device['x-p44-teachInSignals']>0) {
       // device has teach-in signals
@@ -2946,7 +2999,7 @@ function openDeviceInfo(event, hiddenFeatures)
     }
     $('#deviceInfoExtraControls').html(extracontrols).trigger('create');
     // update bridging info
-    $('#deviceBridgingControls').html(bridgecontrols(dSUID, device['x-p44-allowBridging'], device['x-p44-bridged'])).trigger('create');
+    $('#deviceBridgingControls').html(bridgecontrols(dSUID, device['x-p44-bridgingFlags'], device['x-p44-bridged'])).trigger('create');
     // bind handlers
     $('#deviceZoneSelector').on('change.devicezone', function(event) {
       // zone selected
@@ -2970,9 +3023,9 @@ function openDeviceInfo(event, hiddenFeatures)
 function updateDeviceInfo(dSUID)
 {
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
       "x-p44-opStateLevel":null, "x-p44-opStateText":null
     }
   }).done(function(device) {
@@ -2992,9 +3045,9 @@ function updateDeviceInfo(dSUID)
 function openRenameAddressable(dSUID)
 {
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
       "name":null
     }
   }).done(function(device) {
@@ -3012,9 +3065,9 @@ function applyAddressableName(dSUID)
   devname = $("#newAddressableName").val().toString();
   // set new name
   closeDialogAndRefreshDevices(apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{ "name":devname }
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{ name:devname }
   }));
 }
 
@@ -3037,9 +3090,9 @@ function applyNewZone(dSUID)
   newZN = $("#newZoneName").val().toString();
   // create new zone
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{ "x-p44-localController":{ "zones": { "auto": { "name":newZN }}}}
+    method:"setProperty",
+    dSUID:"root",
+    properties:{ "x-p44-localController":{ zones: { auto: { name:newZN }}}}
   }).done(function(result) {
     var newZoneID = result[0].element;
     closeDialog(function() {
@@ -3058,9 +3111,9 @@ function setDeviceZone(dSUID, zoneID)
 {
   // set new zone
   apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{ "zoneID":zoneID }
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{ zoneID:zoneID }
   }).done(function() {
     // reload modified device list
     refresh_devicelist();
@@ -3129,9 +3182,9 @@ function openRenameZone(zoneid)
     newZN = $("#renamedZoneName").val().toString();
     // set new name
     apiCall({
-      "method":"setProperty",
-      "dSUID":"root",
-      "properties":{ "x-p44-localController":{ "zones": { [zoneid]:{ "name":newZN }}}}
+      method:"setProperty",
+      dSUID:"root",
+      properties:{ "x-p44-localController":{ zones: { [zoneid]:{ name:newZN }}}}
     }).always(function() {
       closeDialog(function() { dfd.resolve(); });
     });
@@ -3158,10 +3211,10 @@ function deleteZoneNow(zoneid)
 {
   // remove now
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{
-      "x-p44-localController":{ "zones": { [zoneid]:null }}
+    method:"setProperty",
+    dSUID:"root",
+    properties:{
+      "x-p44-localController":{ zones: { [zoneid]:null }}
     }
   }).always(function() {
     closeDialog(function () {
@@ -3180,9 +3233,9 @@ function setDeviceConfiguration(dSUID)
   // set new configuration
   // { "method":"setConfiguration", "dSUID": "xxx", "configurationId":"yyy" }
   apiCall({
-    "method":"setConfiguration",
-    "dSUID":dSUID,
-    "configurationId": $("#configurationVariants_select").val()
+    method:"setConfiguration",
+    dSUID:dSUID,
+    configurationId: $("#configurationVariants_select").val()
   }).always(function() {
     closeDialog(function() {
       // reload modified device list
@@ -3352,13 +3405,13 @@ function openDeviceChannels(event, hiddenFeatures)
   });
   // query channel details
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "deviceIconName":null, "dSUID":null, "name":null, "model":null,
-      "outputSettings":null,
-      "channelDescriptions":null,
-      "channelStates":null
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      deviceIconName:null, dSUID:null, name:null, model:null,
+      outputSettings:null,
+      channelDescriptions:null,
+      channelStates:null
     }
   }).done(function(device) {
     // device info
@@ -3489,10 +3542,10 @@ function sceneSelected(dSUID)
     $('.channelDoCareCbx').removeClass('hidden');
     // update do(nt)care checkboxes from actual scene
     apiCall({
-      "method":"getProperty",
-      "dSUID":dSUID,
-      "query":{
-        "scenes": { [sceneNo]: { "channels": null } }
+      method:"getProperty",
+      dSUID:dSUID,
+      query:{
+        scenes: { [sceneNo]: { channels: null } }
       }
     }).done(function(res) {
       let sc = res.scenes[sceneNo].channels;
@@ -3515,10 +3568,10 @@ function sceneChannelFlagChange(dSUID, channelID)
 {
   var sceneNo = parseInt($('#sceneEditSelector').val());
   alertError(apiCall({
-    "method":"setProperty",
-    "dSUID":dSUID,
-    "properties":{
-      "scenes": { [sceneNo]: { "channels": { [channelID]: { "dontCare": !$('#channel_docare_'+channelID).is(':checked') } } } }
+    method:"setProperty",
+    dSUID:dSUID,
+    properties:{
+      scenes: { [sceneNo]: { channels: { [channelID]: { dontCare: !$('#channel_docare_'+channelID).is(':checked') } } } }
     }
   }))
 }
@@ -3536,10 +3589,10 @@ function channelSceneOp(dSUID, op, event)
     else if (op=='call') {
       // call scene
       apiCall({
-        "notification":"callScene",
-        "dSUID":dSUID,
-        "scene":sceneNo,
-        "force":true
+        notification:"callScene",
+        dSUID:dSUID,
+        scene:sceneNo,
+        force:true
       }).always(function() {
         buttonFeedback(target, 'orange');
         setTimeout(function() { updateChannelValues(dSUID); }, 800);
@@ -3548,9 +3601,9 @@ function channelSceneOp(dSUID, op, event)
     else if (op=='save') {
       // save scene
       apiCall({
-        "notification":"saveScene",
-        "dSUID":dSUID,
-        "scene":sceneNo
+        notification:"saveScene",
+        dSUID:dSUID,
+        scene:sceneNo
       }).done(function() {
         buttonFeedback(target, 'green');
       });
@@ -3574,8 +3627,10 @@ function stopSceneActions(dSUID, event)
 {
   var target = getTarget(event)
   apiCall({
-    "method": "x-p44-stopSceneActions",
-    "dSUID":dSUID
+    notification: "stopOutput",
+    transitions: true,
+    sceneactions: true,
+    dSUID:dSUID
   }).done(function() {
     buttonFeedback(target, 'red')
   });
@@ -3588,15 +3643,15 @@ function openSingleDevice(event)
   var dSUID = event.currentTarget.getAttribute('dSUID');
   // query single device details
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "deviceIconName":null, "dSUID":null, "name":null, "model":null,
-      "deviceActionDescriptions":null,
-      "standardActions":null,
-      "customActions":null,
-      "deviceStateDescriptions":null,
-      "devicePropertyDescriptions":null
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      deviceIconName:null, dSUID:null, name:null, model:null,
+      deviceActionDescriptions:null,
+      standardActions:null,
+      customActions:null,
+      deviceStateDescriptions:null,
+      devicePropertyDescriptions:null
     }
   }).done(function(device) {
     // device info
@@ -3645,10 +3700,10 @@ function invokeDeviceAction(dSUID)
     // invoke the action
     // { "method":"invokeDeviceAction", "dSUID": "xxx", "params":{ "id":"std.lattemacchiato" } }
     apiCall({
-      "method":"invokeDeviceAction",
-      "dSUID":dSUID,
-      "id":actionId,
-      "params": {
+      method:"invokeDeviceAction",
+      dSUID:dSUID,
+      id:actionId,
+      params: {
       }
     }).done(function() {
       alert("action '" + actionId + "'invoked");
@@ -3677,11 +3732,11 @@ function changedChannelValue(event, dSUID, channelID)
     else {
       //console.log('channelID=' + channelID.toString() + ' value=' + value.toString());
       var changequery = {
-        "method":"setProperty",
-        "dSUID":dSUID,
-        "properties":{
-          "channelStates": {
-            [channelID.toString()]: { "value": value }
+        method:"setProperty",
+        dSUID:dSUID,
+        properties:{
+          channelStates: {
+            [channelID.toString()]: { value: value }
           }
         }
       };
@@ -3704,10 +3759,10 @@ function updateChannelValues(dSUID, exceptChannelID)
   if (!channelValuesUpdating) {
     channelValuesUpdating = true;
     apiCall({
-      "method":"getProperty",
-      "dSUID":dSUID,
-      "query":{
-        "channelStates":null
+      method:"getProperty",
+      dSUID:dSUID,
+      query:{
+        channelStates:null
       }
     }).done(function(device) {
       //console.log('Updating channels');
@@ -3867,6 +3922,8 @@ function openSensorSettings(event)
     $('#sensorFuncSelect').val(settings.function).selectmenu("refresh");
     // - sensor channel
     $('#sensorChannelSelect').val(settings.channel).selectmenu("refresh");
+    // - dial sync mode
+    $('#sensorSyncSelect').val(settings.sync).selectmenu("refresh");
     // save handler
     $('#sensorSettingsApply').off("click.apply")
     $('#sensorSettingsApply').on("click.apply", function(event) {
@@ -3881,7 +3938,8 @@ function openSensorSettings(event)
           sensorSettings:{ [bk]: {
             group:group,
             function:$('#sensorFuncSelect').val(),
-            channel:$('#sensorChannelSelect').val()
+            channel:$('#sensorChannelSelect').val(),
+            sync:$('#sensorSyncSelect').val()
           }}
         }
       })).done(function() {
@@ -3909,14 +3967,14 @@ function openDeviceInputs(event)
   });
   // query input details
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "deviceIconName":null, "dSUID":null, "name":null, "model":null,
-      "sensorDescriptions":null,
-      "binaryInputDescriptions":null,
-      "deviceStateDescriptions":null,
-      "devicePropertyDescriptions":null,
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      deviceIconName:null, dSUID:null, name:null, model:null,
+      sensorDescriptions:null,
+      binaryInputDescriptions:null,
+      deviceStateDescriptions:null,
+      devicePropertyDescriptions:null,
     }
   }).done(function(device) {
     // device info
@@ -3970,15 +4028,15 @@ function updateDeviceInputs(dSUID)
 {
   // query input ages and values
   apiCall({
-    "method":"getProperty",
-    "dSUID":dSUID,
-    "query":{
-      "deviceIconName":null, "dSUID":null, "name":null, "model":null,
-      "sensorStates":null,
-      "sensorDescriptions":{ "": { "resolution":null, "aliveSignInterval":null }},
-      "binaryInputStates":null,
-      "deviceStates":null,
-      "deviceProperties":null,
+    method:"getProperty",
+    dSUID:dSUID,
+    query:{
+      deviceIconName:null, dSUID:null, name:null, model:null,
+      sensorStates:null,
+      sensorDescriptions:{ "": { resolution:null, aliveSignInterval:null }},
+      binaryInputStates:null,
+      deviceStates:null,
+      deviceProperties:null,
     }
   }).done(function(device) {
     for (var sensorId in device.sensorStates) {
@@ -4062,10 +4120,10 @@ function refresh_zonelist()
 {
   var dfd = $.Deferred();
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{
-      "x-p44-localController":{ "zones":null }
+    method:"getProperty",
+    dSUID:"root",
+    query:{
+      "x-p44-localController":{ zones:null }
     }
   }, 15000).done(function(result) {
     var localcontroller = result["x-p44-localController"];
@@ -4082,8 +4140,8 @@ function refresh_grouplist()
 {
   var dfd = $.Deferred();
   apiCall({
-    "method":"x-p44-queryGroups",
-    "dSUID":"root"
+    method:"x-p44-queryGroups",
+    dSUID:"root"
   }, 15000).done(function(result) {
     grouplist = result;
     dfd.resolve(grouplist);
@@ -4128,7 +4186,7 @@ function zoneselectoroptions(selectedZoneId, withEdit)
 function zoneselector(id, selectedZoneId, withEdit)
 {
   var selectorhtml =
-    '<select id="' + id + '">';
+    '<select id="' + id + '" data-mini="true">';
   selectorhtml += zoneselectoroptions(selectedZoneId, withEdit);
   selectorhtml += '</select>';
   return selectorhtml;
@@ -4225,11 +4283,12 @@ function refresh_devices_statusinfo()
 {
   var dfd = $.Deferred();
   apiCall({
-    "method": "getProperty",
-    "dSUID": "root",
-    "query": {
+    method: "getProperty",
+    dSUID: "root",
+    query: {
       "x-p44-vdcs": { "": { "x-p44-devices": { "": {
-        "dSUID": null, "active": null, "x-p44-opStateText": null, "x-p44-opStateLevel": null, "x-p44-statusText": null
+        dSUID: null, active: null, "x-p44-opStateText": null, "x-p44-opStateLevel": null, "x-p44-statusText": null
+        , "x-p44-bridged": null, "x-p44-bridgeable": null
       }}}}
     }
   }, 3000).done(function(result) {
@@ -4243,6 +4302,7 @@ function refresh_devices_statusinfo()
         // update cells
         $('#'+device.dSUID+'_status').html(opStateSpan(device['x-p44-opStateLevel'], device['x-p44-opStateText'], device.active));
         $('#'+device.dSUID+'_info').html(device['x-p44-statusText']);
+        if (bridgeinfo.started) $('#'+device.dSUID+'_bstatus').html(bstateSymbol(device));
       }
     }
     dfd.resolve()
@@ -4283,15 +4343,15 @@ function refresh_devicelist(focusDSUID)
   refresh_zones_and_groups().done(function() {
     // query list
     alertError(apiCall({
-      "method":"getProperty",
-      "dSUID":"root",
-      "query":{
-        "x-p44-vdcs":{ "":{ "model":null, "dSUID":null, "deviceIconName":null, "name":null, "displayId":null, "implementationId":null, "x-p44-instanceNo":null, "x-p44-statusText":null, "active":null, "x-p44-opStateText":null, "x-p44-opStateLevel":null, "configURL":null,
-        "x-p44-devices":{ "":{ "deviceIconName":null, "dSUID":null, "zoneID":null, "name":null, "model":null, "implementationId":null, "displayId":null, "subdevIdx":null, "x-p44-statusText":null, "active":null, "x-p44-opStateText":null, "x-p44-opStateLevel":null,
-        "buttonInputDescriptions":{"#":null}, "binaryInputDescriptions":{"#":null}, "channelDescriptions":{"#":null}, "sensorDescriptions":{"#":null},
-        "deviceActionDescriptions":{"#":null}, "deviceStateDescriptions":{"#":null}, "devicePropertyDescriptions":{"#":null}
-        , "x-p44-bridged":null, "x-p44-bridgeable":null, "x-p44-allowBridging":null
-        , "modelFeatures":{ "identification":null }
+      method:"getProperty",
+      dSUID:"root",
+      query:{
+        "x-p44-vdcs":{ "":{ model:null, dSUID:null, deviceIconName:null, name:null, displayId:null, implementationId:null, "x-p44-instanceNo":null, "x-p44-statusText":null, active:null, "x-p44-opStateText":null, "x-p44-opStateLevel":null, configURL:null,
+        "x-p44-devices":{ "":{ deviceIconName:null, dSUID:null, zoneID:null, name:null, model:null, implementationId:null, displayId:null, subdevIdx:null, "x-p44-statusText":null, active:null, "x-p44-opStateText":null, "x-p44-opStateLevel":null,
+        buttonInputDescriptions:{"#":null}, binaryInputDescriptions:{"#":null}, channelDescriptions:{"#":null}, sensorDescriptions:{"#":null},
+        deviceActionDescriptions:{"#":null}, deviceStateDescriptions:{"#":null}, devicePropertyDescriptions:{"#":null}
+        , "x-p44-bridged":null, "x-p44-bridgeable":null, "x-p44-bridgingFlags":null
+        , modelFeatures:{ identification:null }
       }}}}}
     }, 60000)).done(function(result) {
       // table header
@@ -4350,6 +4410,9 @@ function refresh_devicelist(focusDSUID)
         else if (vdc['implementationId']=='Proxy_Device_Container') {
           vdcActionButton = '<abbr title="Open WebUI of proxied P44 device"><a target="_blank" href="' + vdc.configURL + '" data-mini="true" data-role="button" data-icon="arrow-r" data-iconpos="left" data-inline="true">WebUI</a></abbr>';
         }
+        else if (vdc['implementationId']=='dS485_Device_Container') {
+          vdcActionButton = '<abbr title="Open dSS Configurator for these devices"><a target="_blank" href="' + vdc.configURL + '" data-mini="true" data-role="button" data-icon="arrow-r" data-iconpos="left" data-inline="true">WebUI</a></abbr>';
+        }
         else if (vdc['implementationId']=='OLA_Device_Container') {
           vdcActionButton = '<abbr title="Create DMX device..."><a onClick="openDialog(\'#dmxCreateDevice\');" data-mini="true" data-role="button" data-icon="plus" data-iconpos="left" data-inline="true">Device</a></abbr>';
         }
@@ -4406,8 +4469,7 @@ function refresh_devicelist(focusDSUID)
             '<td class="devcell statuscell" id="' + device.dSUID + '_status">' + opStateSpan(device['x-p44-opStateLevel'], device['x-p44-opStateText'], device.active) + '</td>' +
             '<td class="devcell infocell' + (device.active ? '' : ' notpresent') + '" id="' + device.dSUID + '_info">' + device['x-p44-statusText'] + '</td>'
             if (bridgeinfo.started) {
-              var br = bridgeinfo.bridgetype=='proxy' ? '🔶' : '🟢'
-              tableHtml += '<td class="devcell bridgecell">' + (device['x-p44-bridged'] ? br : (device['x-p44-bridgeable'] ? '🟡' : '&nbsp;')) + '</td>'
+              tableHtml += '<td class="devcell bridgecell" id="' + device.dSUID + '_bstatus">' + bstateSymbol(device) + '</td>'
             }
           tableHtml +=
             '<td class="devcell actioncell">';
@@ -4663,18 +4725,21 @@ function refresh_sysinfo()
     var d = new Date;
     tickDiff = devinfo.localtimetick*1000-d.getTime()+d.getTimezoneOffset()*60*1000;
     // update HTML
-    var isDIY = devinfo.PRODUCT_IS_DIY=="1";
-    var hasOLA = devinfo.PRODUCT_HAS_OLA=="1";
-    var hasLED = devinfo.PRODUCT_HAS_LEDCHAIN=="1";
-    var hasKite = devinfo.PRODUCT_KITE_FRONTEND!=undefined;
-    var isOpenWrt = devinfo.PLATFORM_OS_IDENTIFIER=="openwrt";
+    var isDIY = devinfo.PRODUCT_IS_DIY=="1"
+    var hasOLA = devinfo.PRODUCT_HAS_OLA=="1"
+    var hasLED = devinfo.PRODUCT_HAS_LEDCHAIN=="1"
+    var hasKite = devinfo.PRODUCT_KITE_FRONTEND!=undefined
+    var isOpenWrt = devinfo.PLATFORM_OS_IDENTIFIER=="openwrt"
+    var wbfBeta = devinfo.PRODUCT_WBF_STANDARD!="1" && devinfo.PRODUCT_HAS_WBF=="1"
+    var matterBeta = devinfo.PRODUCT_MATTER_STANDARD!="1"
+    var ds485Beta = devinfo.PRODUCT_DS485_STANDARD!="1"
     var versionText = devinfo.FIRMWARE_VERSION;
-    if (devinfo.FIRMWARE_FEED!='prod') versionText += ' (' + devinfo.FIRMWARE_FEED + ')';
+    if (devinfo.FIRMWARE_FEED!='prod') versionText += ' (' + devinfo.FIRMWARE_FEED + ')'
     var nextVers = '';
-    if (devinfo.STATUS_NEXT_FIRMWARE && devinfo.STATUS_NEXT_FIRMWARE.length>0) nextVers = ', <span class="infoalert">available: <span class="infovalue">' + devinfo.STATUS_NEXT_FIRMWARE + '</span></span>';
-    var uphours = devinfo.uptime/3600;
+    if (devinfo.STATUS_NEXT_FIRMWARE && devinfo.STATUS_NEXT_FIRMWARE.length>0) nextVers = ', <span class="infoalert">available: <span class="infovalue">' + devinfo.STATUS_NEXT_FIRMWARE + '</span></span>'
+    var uphours = devinfo.uptime/3600
     var formattedUptime =
-      String(Math.floor(uphours/24)) + ' days ' + String(Math.floor(uphours%24)) + ' hours';
+      String(Math.floor(uphours/24)) + ' days ' + String(Math.floor(uphours%24)) + ' hours'
     var sysinfo =
       '<p>Product: <abbr title="' + devinfo.PLATFORM_NAME.replace(/"/g,"&quot;") + '"><span class="infovalue" id="system_model">' + devinfo.PRODUCT_MODEL + '</span></abbr>' +
       ' - <a target="_blank" href="' + devinfo.PRODUCT_INFORMATION_PAGE_LINK +'">product page</a></p>' +
@@ -4686,21 +4751,26 @@ function refresh_sysinfo()
     }
     sysinfo +=
       '<p>MAC: <span class="infovalue">' + devinfo.UNIT_MACADDRESS + '</span></p>' +
-      '<p>System uptime: <span class="infovalue">' + formattedUptime + '</span></p>';
-    $('#systemInfo').html(sysinfo);
-    refresh_clock();
+      '<p>System uptime: <span class="infovalue">' + formattedUptime + '</span></p>'
+    $('#systemInfo').html(sysinfo)
+    refresh_clock()
     // update model names
-    update_device_titles();
+    update_device_titles()
     // enable some extra elements depending on product
-    showIf(isOpenWrt, '#opensource_openwrt');
-    showIf(hasOLA,'#opensource_ola');
-    showIf(hasLED,'#openLEDSimButton');
-    showIf(isDIY,'#diyWarning');
+    showIf(isOpenWrt, '#opensource_openwrt')
+    showIf(hasOLA,'#opensource_ola')
+    showIf(hasLED,'#openLEDSimButton')
+    showIf(isDIY,'#diyWarning')
+    // beta features or production?
+    showIf(matterBeta || ds485Beta || wbfBeta, '#betaFeatures')
+    showIf(matterBeta, '#disableBridgebutton') // can be switched off only in beta
+    showIf(ds485Beta, '#disableDS485button') // can be switched off only in beta
+    showIf(wbfBeta, '#openWBFInfo') // UI needed only in beta (not if no wbf, not if production)
     // query name and dSUID of vdc host
     apiCall({
-      "method":"getProperty",
-      "dSUID":"root",
-      "query":{ "dSUID":null, "name":null, "x-p44-bridge":null, "x-p44-scenesList":null }
+      method:"getProperty",
+      dSUID:"root",
+      query:{ dSUID:null, name:null, "x-p44-bridge":null, "x-p44-scenesList":null }
     }).done(function(result) {
       bridgename = result.name
       // Always use model from devinfo, not from vdcd
@@ -4708,7 +4778,7 @@ function refresh_sysinfo()
       // also save bridge status
       bridgeinfo = result['x-p44-bridge']
       if (bridgeinfo) {
-        showIf(bridgeinfo.bridgetype=='matter', '#p44mbrdlogs');
+        showIf(bridgeinfo.bridgetype=='matter', '#p44mbrdlogs')
       }
       // and sorted scenes list
       var scenes = result['x-p44-scenesList']
@@ -4720,14 +4790,14 @@ function refresh_sysinfo()
           kind:scenes[key].kind
         };
       });
-      sceneslist = sa.sort(function (a,b) { return a.index-b.index; });
+      sceneslist = sa.sort(function (a,b) { return a.index-b.index; })
       // and titles
       update_device_titles()
     }).always(function() {
-      dfd.resolve();
+      dfd.resolve()
     });
   });
-  return dfd.promise();
+  return dfd.promise()
 }
 
 function refresh_clock()
@@ -4873,18 +4943,18 @@ function refresh_wifimode_deps()
 function applyWifiSettings()
 {
   p44mCall({
-    "cmd":'wificonfig',
-    "cli" : {
-      "enabled": $("#wifi_cli").val()=="1" ? true : false,
-      "ssid": $("#cli_ssid").val(),
-      "encryption": $("#cli_sec").val(),
-      "key": $("#cli_key").val()
+    cmd:'wificonfig',
+    cli: {
+      enabled: $("#wifi_cli").val()=="1" ? true : false,
+      ssid: $("#cli_ssid").val(),
+      encryption: $("#cli_sec").val(),
+      key: $("#cli_key").val()
     },
-    "ap" : {
-      "enabled": $("#wifi_ap").val()=="1" ? true : false,
-      "ssid": $("#ap_ssid").val(),
-      "encryption": $("#ap_sec").val(),
-      "key": $("#ap_key").val()
+    ap: {
+      enabled: $("#wifi_ap").val()=="1" ? true : false,
+      ssid: $("#ap_ssid").val(),
+      encryption: $("#ap_sec").val(),
+      key: $("#ap_key").val()
     }
   }, 30000).done(function() {
     // has not broken connectivity, close whatever dialog is open now (still edit or netEditWait)
@@ -4916,14 +4986,14 @@ function applyIpSettings()
     check_ip_edit("#ipDNS2")
   ) {
     alertError(p44mCall({
-      "cmd":'ipconfig',
-      "dhcp":dhcp ? 1 : 0,
-      "ipv6":ipv6 ? 1 : 0,
-      "ipaddr": $("#ipAddr").val(),
-      "netmask": $("#ipMask").val(),
-      "gatewayip": $("#ipGW").val(),
-      "dnsip": $("#ipDNS1").val(),
-      "dnsip2": $("#ipDNS2").val()
+      cmd:'ipconfig',
+      dhcp:dhcp ? 1 : 0,
+      ipv6:ipv6 ? 1 : 0,
+      ipaddr: $("#ipAddr").val(),
+      netmask: $("#ipMask").val(),
+      gatewayip: $("#ipGW").val(),
+      dnsip: $("#ipDNS1").val(),
+      dnsip2: $("#ipDNS2").val()
     }, 30000).always(function() {
       // make sure the neteditWait does not appear (in case of very quick response)
       clearTimeout(netEditWaitTimer);
@@ -4968,8 +5038,8 @@ function setNewPassword()
   }
   else {
     alertError(p44mCall({
-      "cmd":'setpassword',
-      "password": newPassword
+      cmd:'setpassword',
+      password: newPassword
     }, 30000)).always(function() {
       closeDialog();
     });
@@ -4994,9 +5064,9 @@ function setBridgeName()
   bridgename = $("#newBridgeName").val().toString();
   // set name of vdc host
   apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{ "name":bridgename }
+    method:"setProperty",
+    dSUID:"root",
+    properties:{ "name":bridgename }
   }).always(function() {
     closeDialog();
     // update titles
@@ -5023,9 +5093,9 @@ function openTzLocationEdit(event, hiddenFeatures)
     return
   }
   alertError(apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{ "x-p44-latitude":null, "x-p44-longitude":null }
+    method:"getProperty",
+    dSUID:"root",
+    query:{ "x-p44-latitude":null, "x-p44-longitude":null }
   })).done(function(result) {
     $('#longitudeEdit').val(result['x-p44-longitude']);
     $('#latitudeEdit').val(result['x-p44-latitude']);
@@ -5040,9 +5110,9 @@ function openTzLocationEdit(event, hiddenFeatures)
 function setTzLocation()
 {
   alertError(apiCall({
-    "method":"setProperty",
-    "dSUID":"root",
-    "properties":{ "x-p44-latitude":$('#latitudeEdit').val(), "x-p44-longitude":$('#longitudeEdit').val() }
+    method:"setProperty",
+    dSUID:"root",
+    properties:{ "x-p44-latitude":$('#latitudeEdit').val(), "x-p44-longitude":$('#longitudeEdit').val() }
   })).always(function() {
     var tzn = $('#timeZoneSelect').val();
     alertError(p44mCall({ cmd:'tzconfig', timezonename:tzn })).always(function() {
@@ -5076,9 +5146,9 @@ function toggleLogWrap()
 function set_vdcd_loglevel(i)
 {
   apiCall({
-    "method":"loglevel",
-    "dSUID":"root",
-    "value":i
+    method:"loglevel",
+    dSUID:"root",
+    value:i
   }).done(function(response) {
     // refresh log
     refresh_vdcd_log();

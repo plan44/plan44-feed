@@ -305,6 +305,8 @@ p44script automations can run for years unattended, but can be easily maintained
 <dd>the subfield named <em>fieldB</em> in a object <em>object</em>. So with <em>object={ 'fieldA':42, 'fieldB':'hello' }</em>, the result would be 'hello'.</dd>
 <dt><code>object[0]</code></dt>
 <dd>the <strong>name</strong> of the first (index==0) subfield in a <em>object</em>. So with <em>object={ 'fieldA':42, 'fieldB':'hello' }</em>, the result would be 'fieldA'. This is how objects containing fields with unknown names (for example as returned by APIs) can be examined. The <em>elements()</em> function can be used to determine the number of fields in an object. Another way to go though all fields of an object is the <code>foreach</code> statement, see below.</dd>
+<dt><code>this</code></dt>
+<dd>a special name that means the context where a script executes, which can be for example a device. This is useful to pass the current context to a function, such as <code>logleveloffset(-1, this)</code> or a user defined function. You can also use <code>describe(this)</code> to get information about what the context is.</dd>
 </dl>
 <h2 id="operators"><a id="operators"></a>Operators</h2>
 <p>Operators are used to build <em>expressions</em> (calculations) from literals and named values (variables):</p>
@@ -491,10 +493,9 @@ Variables defined in a user function are private/local to that function. Variabl
 <dd>append the new element <em>6</em> to the array <em>arr</em></dd>
 <dt><code>arr[2] = 7</code></dt>
 <dd>assign <em>7</em> as the 3rd (not the 2nd, array indices are zero based!) element of the array <em>arr</em></dd>
-<dt><div class="highlight"><pre><span></span><code>obj = {
-  a: 42, b:&#39;a string&#39;, c:[ 1, 2, a*2], d: { n:1, sin:sin(a), [&quot;a_is_&quot;+a)]:13 }
-}
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>obj = {
+  a: 42, b:'a string', c:[ 1, 2, a*2], d: { n:1, sin:sin(a), ["a_is_"+a)]:13 }
+}</code></pre></dt>
 <dd>complex object/array structures can be created and multiple fields assigned expressions in a single statement. Even field names can be created from expressions by enclosing them in square brackets (see last field in the example).</dd>
 </dl>
 <h3 id="deleting-variables">Deleting Variables</h3>
@@ -511,57 +512,45 @@ Variables defined in a user function are private/local to that function. Variabl
 <dl>
 <dt><code>a = 7; b = 3; c = a*b;</code></dt>
 <dd>multiple statements can be written on a single line separated by semicolons.</dd>
-<dt><code>{ a = 42; b = 23; scene(_'bright'_); }</code></dt>
+<dt><code>{ a = 42; b = 23; scene('bright'); }</code></dt>
 <dd>block (group) of multiple statements</dd>
 </dl>
 <h2 id="control-flow">Control Flow</h2>
 <h3 id="conditionals">Conditionals</h3>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) b := 7
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>if (a&gt;0) b := 7</code></pre></dt>
 <dd>conditional execution of the assignment <em>b:=7</em> when <em>a</em> is greater than zero.</dd>
-<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) b := 7 else b := 19
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>if (a&gt;0) b := 7 else b := 19</code></pre></dt>
 <dd>conditional execution of the assignment <em>b:=7</em> with <em>else</em> statement which is executed when condition is not true.</dd>
-<dt><div class="highlight"><pre><span></span><code>if (a&gt;0) { b := 7; c := 44 } else { b := 0; c := &quot;a string&quot; }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>if (a&gt;0) { b := 7; c := 44 } else { b := 0; c := "a string" }</code></pre></dt>
 <dd>conditional with statement blocks.</dd>
 </dl>
 <h3 id="loops">Loops</h3>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>while (i&gt;0) { i := i-1; log(5, &quot;i is now: &quot; + i); }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>while (i&gt;0) { i := i-1; log(5, "i is now: " + i); }</code></pre></dt>
 <dd>repeat (loop) statement block as long as <em>i</em> is greater than zero.</dd>
-<dt><div class="highlight"><pre><span></span><code>for (var j:=0; j&lt;5; j++) { log(5, &quot;j is now: &quot; + j); }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>for (var j:=0; j&lt;5; j++) { log(5, "j is now: " + j); }</code></pre></dt>
 <dd>first initializes the loop with creating <em>j</em> and setting it to <em>0</em> then repeats the (loop) statement block as long as <em>j</em> is less than 5, and increments <em>j</em> at the end of every iteration (<em>j++</em>).</dd>
-<dt><div class="highlight"><pre><span></span><code>break
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>break</code></pre></dt>
 <dd>exits a <em>while</em>, <em>for</em> or <em>foreach</em> loop.</dd>
-<dt><div class="highlight"><pre><span></span><code>continue
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>continue</code></pre></dt>
 <dd>starts the next iteration in a <em>while</em>, <em>for</em> or <em>foreach</em> loop.</dd>
-<dt><div class="highlight"><pre><span></span><code>foreach objectOrArray as value { do_something_with_value }
-foreach objectOrArray as key,value { do_something_with_key_and_value }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>foreach objectOrArray as value { do_something_with_value }
+foreach objectOrArray as key,value { do_something_with_key_and_value }</code></pre></dt>
 <dd>iterates through each field (when <em>objectOrArray</em> is an object) or each array element (when <em>objectOrArray</em> is an array) and assigns <em>value</em> and optionally <em>key</em> accordingly.</dd>
 </dl>
 <h3 id="return">Return</h3>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>return
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>return</code></pre></dt>
 <dd>ends the current script or user defined function with <em>null/undefined</em> return value.</dd>
-<dt><div class="highlight"><pre><span></span><code>return value
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>return value</code></pre></dt>
 <dd>ends the current script returning <em>value</em>.</dd>
 </dl>
 <h3 id="catching-errors">Catching Errors</h3>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>try { statements; } catch { handling_statements }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>try { statements; } catch { handling_statements }</code></pre></dt>
 <dd>if any of <em>statements</em> generate a run time error, the <em>handling_statements</em> will be executed.</dd>
-<dt><div class="highlight"><pre><span></span><code>try { statements; } catch as error_var { handling_statements }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>try { statements; } catch as error_var { handling_statements }</code></pre></dt>
 <dd>if any of <em>statements</em> generate a run time error, the <em>handling_statements</em> will be executed and can use <em>error_var</em> to examine the error.</dd>
 </dl>
 <div class="admonition note">
@@ -570,24 +559,21 @@ foreach objectOrArray as key,value { do_something_with_key_and_value }
 <code>try { return error('error') } catch as e { ... }</code> will not catch the 'error' with <code>catch</code>, but return it to the calling function.</p>
 </div>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>throw(anything)
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>throw(anything)</code></pre></dt>
 <dd>generate a run time error with <em>anything</em> as error message. If <em>anything</em> is already an error value, the error value is re-thrown as-is.</dd>
 </dl>
 <h2 id="user-defined-functions"><a id="userfuncs"></a>User Defined Functions</h2>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>function hello()
+<dt><pre class="highlight"><code>function hello()
 {
-  log(&#39;Hello World&#39;);
-}
-</code></pre></div></dt>
+  log('Hello World');
+}</code></pre></dt>
 <dd>Defines a globally available function named <em>hello</em> which logs the text 'hello world'.</dd>
-<dt><div class="highlight"><pre><span></span><code>global function sum(a,b)
+<dt><pre class="highlight"><code>global function sum(a,b)
 {
   var c = a+b
   return c
-}
-</code></pre></div></dt>
+}</code></pre></dt>
 <dd>Defines a globally available function named <em>sum</em> with two arguments, which calculates and returns the sum in a local variable <em>c</em> (which exists privately for the function only during its execution). The <em>global</em> prefix is optional, but helps for clarity when <em>local</em> functions are in use as well (see below)</dd>
 </dl>
 <div class="admonition note">
@@ -595,12 +581,11 @@ foreach objectOrArray as key,value { do_something_with_key_and_value }
 <p>In functions, the variables defined locally with <code>var</code>, the variables of the context from which the function is called (see <a href="#localvars">local variables</a>) and finally the global variables are visible. If a variable defined in the function has the same name as one of the calling context or a global variable, then the most local variable is used in expressions and assignments.</p>
 </div>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>local function diff(a,b)
+<dt><pre class="highlight"><code>local function diff(a,b)
 {
   var c = a-b
   return c
-}
-</code></pre></div></dt>
+}</code></pre></dt>
 <dd>Declares a function that is only visible/callable in the current context (such as: mainscript, device, trigger). This can be useful to avoid a function with no general use (e.g. one that is specific to a certain scripted device implementation) to be globally visible from other context, where calling it makes no sense or even would cause harm.</dd>
 </dl>
 <h2 id="event-handlers"><a id="handlers"></a>(Event) Handlers</h2>
@@ -608,80 +593,70 @@ foreach objectOrArray as key,value { do_something_with_key_and_value }
 <p>Basically, <em>handlers</em> are like functions that are automatically called when a certain condition is met (rather than getting called from other script code).</p>
 <p><em>Handlers</em> make implementing asychronous tasks - which are very common in automation, but are not so easy to implement in many standard scripting languages - quite straightforward and easy to understand.</p>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>var s = udpsocket(&quot;127.0.0.1&quot;, 4242, true, true);
+<dt><pre class="highlight"><code>var s = udpsocket("127.0.0.1", 4242, true, true);
 on (s.message()) as msg
 {
-  log(&#39;Message on UDP port 4242: &#39;+string(msg))
-}
-</code></pre></div></dt>
+  log('Message on UDP port 4242: '+string(msg))
+}</code></pre></dt>
 <dd>This first creates and opens a network <em>socket</em> listening for UDP packets on port 4242, and then defines a handler which triggers whenever a UDP packet arrives. (To send a UDP test packet on a unix command line, for example type: <code>echo -n "Test" | socat stdin "udp-sendto:127.0.0.1:4242"</code>)</dd>
 </dl>
 <h3 id="handling-timed-events">Handling Timed Events</h3>
 <p>Combined with <a href="#timedtriggers">functions for timed triggering</a>, <em>handlers</em> can perform tasks based on time:</p>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>on (after_time(12:00))
+<dt><pre class="highlight"><code>on (after_time(12:00))
 {
-  log(&#39;noon has passed &#39; + string(timeofday()-12:00) + &#39; seconds ago&#39;)
-}
-</code></pre></div></dt>
+  log('noon has passed ' + string(timeofday()-12:00) + ' seconds ago')
+}</code></pre></dt>
 <dd>Defines a <em>event handler</em> (piece of code that is executed when a specified condition is met).</dd>
 <dd>This handler is triggered by local time passing noon (12:00) and logs the number of seconds actually passed since noon - because when this handler is installed any time after 12:00, it will be run once immediately.</dd>
 <dd>By default, handlers are run when the trigger condition changes from false to true (but not when it changes from true to false).</dd>
-<dt><div class="highlight"><pre><span></span><code>on (every(0:15, 0))
+<dt><pre class="highlight"><code>on (every(0:15, 0))
 {
-  log(&#39;another quarter of an hour has passed&#39;);
-}
-</code></pre></div></dt>
+  log('another quarter of an hour has passed');
+}</code></pre></dt>
 <dd>Defines a event handler that is run every whole quarter of an hour.</dd>
 </dl>
 <h3 id="handling-value-changes-via-event-sources"><a id="eventsource_handlers"></a>Handling Value Changes via <em>Event Sources</em></h3>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>on (sensor1&gt;20) toggling
+<dt><pre class="highlight"><code>on (sensor1&gt;20) toggling
 {
-  log(&#39;sensor1 is &#39; + sensor1);
-}
-</code></pre></div></dt>
+  log('sensor1 is ' + sensor1);
+}</code></pre></dt>
 <dd>Defines a event handler that triggers whenever the condition <em>toggles from false to true or vice versa</em>.
   Note that <em>sensor1</em> must be a <em>event source</em> for this to work. Contexts that have hardware inputs such as sensors
 usually make these available as event sources (e.g. in P44-DSB Evaluators). For example, <em>valuesource()</em> or <em>device.sensor()</em> are event sources.</dd>
-<dt><div class="highlight"><pre><span></span><code>on (sensor2) changing
+<dt><pre class="highlight"><code>on (sensor2) changing
 {
-  log(&#39;sensor2 is &#39; + sensor2)
-}
-</code></pre></div></dt>
+  log('sensor2 is ' + sensor2)
+}</code></pre></dt>
 <dd>Defines a event handler that triggers whenever condition expressions <em>re-evaluates to a different result as in the last evaluation</em>.</dd>
-<dt><div class="highlight"><pre><span></span><code>on (sensor2) evaluating
+<dt><pre class="highlight"><code>on (sensor2) evaluating
 {
-  log(&#39;sensor2 is &#39; + sensor2)
-}
-</code></pre></div></dt>
+  log('sensor2 is ' + sensor2)
+}</code></pre></dt>
 <dd>Defines a event handler that triggers whenever the condition expression <em>is evaluated, even if the result does not change</em>.
   Note: use this with care, depending on the <em>event sources</em> involved this can cause the handler to be run very often, which might cause performance problems.</dd>
-<dt><div class="highlight"><pre><span></span><code>on (sensor1+sensor2) changing as sensorsum
+<dt><pre class="highlight"><code>on (sensor1+sensor2) changing as sensorsum
 {
-  log(&#39;sensor1+sensor2 is &#39; + sensorsum)
-}
-</code></pre></div></dt>
+  log('sensor1+sensor2 is ' + sensorsum)
+}</code></pre></dt>
 <dd>Defines a event handler that triggers whenever the sum of <em>sensor1+sensor2</em> changes.
   The <em>as sensorsum</em> part stores the result of the trigger expression into the variable <em>sensorsum</em>.</dd>
-<dt><div class="highlight"><pre><span></span><code>on (sensor1&gt;22) stable 0:05 as sens
+<dt><pre class="highlight"><code>on (sensor1&gt;22) stable 0:05 as sens
 {
-  log(&#39;sensor1: stable for 5 minutes at &gt; 22, currently: &#39; + sens)
-}
-</code></pre></div></dt>
+  log('sensor1: stable for 5 minutes at &gt; 22, currently: ' + sens)
+}</code></pre></dt>
 <dd>Defines a event handler that triggers when <em>sensor1</em> remains over 22 for at least 5 minutes.</dd>
-<dt><div class="highlight"><pre><span></span><code>on (featureevent()) as event
+<dt><pre class="highlight"><code>on (featureevent()) as event
 {
-  log(&#39;received event &#39; + event)
-}
-</code></pre></div></dt>
+  log('received event ' + event)
+}</code></pre></dt>
 <dd>Defines a event handler that triggers whenever <em>featureevent()</em> triggers and stores the event in the variable <em>event</em>.</dd>
 <dd>Note that for event sources that deliver one-time events like <em>featureevent()</em> does, storing the actual trigger value in a variable using <em>as</em> is important.</dd>
-<dt><div class="highlight"><pre><span></span><code>var midi = midibus(&#39;/dev/midi1&#39;)
+<dt><pre class="highlight"><code>var midi = midibus('/dev/midi1')
 on (midi.control(0,42)) stable 0.1 as knob42 {
-  log(&#39;Control #42: %d&#39;, knob42.value)
-}
-</code></pre></div></dt>
+  log('Control #42: %d', knob42.value)
+}</code></pre></dt>
 <dd>Defines an event handler that responds to changes to <a href="#midi">MIDI</a> controller #42 on channel 0.</dd>
 <dd>For handlers that are triggered by event sources (like <code>control()</code> is one), <em>stable</em> has a slightly different meaning: In contrast to states - such as "a sensor value is greater than x" - events are unique and by definition not "stable", so <em>stable</em> defines the minimum time interval between two activations of the handler. If the events occur more quickly, they are discarded, except for the last one occurring. In the MIDI example shown, <code>stable 0.1</code> means that the control changes do not trigger the handler more than once every tenth of a second.</dd>
 </dl>
@@ -694,36 +669,32 @@ on (midi.control(0,42)) stable 0.1 as knob42 {
 something that is often needed in automation. A concurrently running sequence of script statements is also called a <em>thread</em>
 Note that event handlers as shown above also evaluate and run concurrently with other script activity.</p>
 <dl>
-<dt><div class="highlight"><pre><span></span><code>concurrent {
-  while(true) { log(&#39;blink1&#39;); delay(3) }
+<dt><pre class="highlight"><code>concurrent {
+  while(true) { log('blink1'); delay(3) }
 }
 concurrent {
-  while(true) { log(&#39;blink2&#39;); delay(2.7) }
+  while(true) { log('blink2'); delay(2.7) }
 }
-delay(0:02); abort();
-</code></pre></div></dt>
+delay(0:02); abort();</code></pre></dt>
 <dd>run two asynchronously blinking sequences in parallel. After 2 minutes, both concurrent threads are stopped using the <em>abort()</em> function.</dd>
-<dt><div class="highlight"><pre><span></span><code>concurrent as blinker {
-  while(true) { log(&#39;blink&#39;); delay(2) }
+<dt><pre class="highlight"><code>concurrent as blinker {
+  while(true) { log('blink'); delay(2) }
 }
-delay(0:02); abort(blinker)
-</code></pre></div></dt>
+delay(0:02); abort(blinker)</code></pre></dt>
 <dd>start a concurrent blinking sequence and save a reference to it as a variable named <em>blinker</em>.</dd>
 <dd>After two minutes, the variable can be used as argument to <em>abort()</em> to specifically stop a thread.</dd>
-<dt><div class="highlight"><pre><span></span><code>concurrent as task1 { delay(random(2,5)); log(&#39;task1 done&#39;) };
-concurrent as task2 { delay(random(2,5)); log(&#39;task2 done&#39;) };
+<dt><pre class="highlight"><code>concurrent as task1 { delay(random(2,5)); log('task1 done') };
+concurrent as task2 { delay(random(2,5)); log('task2 done') };
 await(task1,task2)
-log(&#39;one of both tasks done&#39;)
+log('one of both tasks done')
 await(task1)
 await(task2)
-log(&#39;both tasks are done now&#39;)
-</code></pre></div></dt>
+log('both tasks are done now')</code></pre></dt>
 <dd>start two concurrent task with a random duration between 2 and 5 seconds.</dd>
 <dd>The <em>await()</em> function can be used to wait for completion of one of its arguments.
   Using a separate <em>await()</em> call for each thread will complete when all tasks are done.
   For complicated concurrency situations, also see <em>lock()</em> and and <em>signal()</em> for synchronizing threads.</dd>
-<dt><div class="highlight"><pre><span></span><code>concurrent passing x, y=2\*a { log(&quot;x=%s, y=%s&quot;, x, y) }
-</code></pre></div></dt>
+<dt><pre class="highlight"><code>concurrent passing x, y=2\*a { log("x=%s, y=%s", x, y) }</code></pre></dt>
 <dd>the <em>passing</em> keyword creates <em>threadvars</em> (variables with values private to the thread being started) and passes values (<em>x</em> from a outside variable named <em>x</em>, <em>y</em> by assigning the expression <em>2*a</em>) into the thread. This allows for using <em>concurrent</em> multiple times in quick succession while ensuring each started thread gets its own set of parameters.</dd>
 </dl>
 <h2 id="built-in-functions"><a id="builtins"></a>Built-in Functions</h2>
@@ -859,6 +830,8 @@ This function is useful, for example, to make a JSON string returned by an API a
 <dd>try to convert <em>anything</em> into a number, returns 0 if conversion fails.</dd>
 <dt><code>ord(string)</code></dt>
 <dd>returns the byte (value between 0 and 255) stored in the beginning of <em>string</em>. Note that this first byte might not be a complete UTF8 character, but possibly only a part of it. However, this function is primarily indended to decode binary byte strings - p44script strings <em>can</em> contain 0 bytes. Also see <em>chr()</em>.</dd>
+<dt><code>producthardwareid()</code></dt>
+<dd>returns the product's hardware ID (usually, the serial number).</dd>
 <dt><code>productversion()</code></dt>
 <dd>returns the product's firmware version.</dd>
 <dt><code>random(a, b)</code></dt>
@@ -883,7 +856,7 @@ This function is useful, for example, to make a JSON string returned by an API a
 <dt><code>strrep(string, count)</code></dt>
 <dd>returns a string consisting of <em>count</em> times the <em>string</em>, concatenated.</dd>
 <dt><code>substr(string, from [, count])</code></dt>
-<dd>returns string starting at <em>from</em> in <em>string</em>, limited to <em>count</em> characters if specified. If <em>from</em> is negative, start position is relative to the end of <em>string</em>.</dd>
+<dd>returns string starting at <em>from</em> in <em>string</em>, limited to <em>count</em> characters if specified. If <em>from</em> is negative, start position is relative to the end of <em>string</em>. If <em>count</em> is negative, the returned string ends <em>count</em> characters before the end of the original string.</dd>
 <dt><code>sunrise([epochtime])</code></dt>
 <dd>returns approximate time of sunrise on the current day, or on the date specified by <em>epochtime</em>, but <a href="#timedtriggers">cannot directly trigger timed actions</a>.</dd>
 <dt><code>sunset([epochtime])</code></dt>
@@ -964,7 +937,7 @@ As a result, <em>dnssdbrowse</em> returns an array which may be empty if no serv
 <li><em>port</em> : port number of the service</li>
 <li><em>interface</em> : interface index of the network interface over which the service is reachable (only relevant for IPv6 if necessary).</li>
 <li><em>txts</em> : object with the TXT records of the service as fields (can be empty if the service has no TXT records).</li>
-<li><em>url</em> : This field a URL that can be used directly in a browser depending on the service type (composed of the above fields). For unknown service names <em>http</em> is assumed, which sometimes works for services with type other than <em>http</em>, but not always.</li>
+<li><em>url</em> : This field is a URL that can be used directly in a browser depending on the service type (composed of the above fields). For unknown service names <em>http</em> is assumed, which sometimes works for services with type other than <em>http</em>, but not always.</li>
 </ul>
 </dd>
 <dt><code>geturl(url [,timeout])</code></dt>
@@ -999,6 +972,14 @@ As a result, <em>dnssdbrowse</em> returns an array which may be empty if no serv
 <p>To use absolute paths for <em>filename</em>, the <em>userlevel</em> must be &gt;=2 to be able to write files, and &gt;=1 to be able to read them. (The default <em>userlevel</em> for production devices is 0).</p>
 </div>
 </dd>
+<dt><code>filter(type, [interval [, collection_time]])</code></dt>
+<dd>creates a filter <em>type</em> ("average", "simpleaverage", "min", "max") that filters values added with <em>f.add()</em> (see below) over the specified <em>interval</em> with a sliding window. The <em>collection_time</em> specifies the time window per data point. The filter function "average" also considers irregular time intervals between data points, "simpleaverage" does not. Normally one assigns a created <em>filter</em> to a variable: <code>var f = filter('average', 10)</code>.</dd>
+<dt><code>f.add(value [,timestamp])</code></dt>
+<dd>adds a new value to the filter. Without <em>timestamp</em> given, the current time (<em>epochtime()</em>) is used.</dd>
+<dt><code>f.result([perNow])</code></dt>
+<dd>returns the current filtered value. If <em>perNow</em> is false or not specified, the filter result is calculated for the point in time the last value was added (which can be read by <em>f.time()</em>). With <em>perNow</em> true, the filter is first updated with the last value added again right now (i.e. assuming input value has not changed). If there is no data in the filter, <em>f.result()</em> returns <em>null</em>.</dd>
+<dt><code>f.time()</code></dt>
+<dd>returns the time of when the last value was added to the filter (or <em>result(true)</em> was called), or <em>null</em> when no data was added to the filter.</dd>
 <dt><code>hsv(hue [, saturation [, brightness [, alpha]]])</code></dt>
 <dt><code>hsv(object)</code></dt>
 <dt><code>hsv(webcolor_string)</code></dt>
@@ -1046,19 +1027,18 @@ As a result, <em>dnssdbrowse</em> returns an array which may be empty if no serv
 <dd>
 <p>Creates a <em>Lock</em> object, which can be used with its two methods <em>.enter()</em> and <em>.leave()</em> for synchronization of parallel running <em>threads</em>. If <em>entered</em>==true is specified, then the lock is already reserved for the calling thread when it is created. Normally one assigns a created <em>lock</em> to a variable: <code>var l = lock()</code>. The value of the lock is 0 if it is free, otherwise it specifies the nesting depth of the <em>enter()</em> calls of the thread that currently has reserved the lock.
 Usually <em>enter()</em> is used in a conditional:</p>
-<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">lk</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">lock</span><span class="p">()</span>
+<pre class="highlight"><code class="language-javascript">var lk = lock()
 
-<span class="c1">// ...</span>
+// ...
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">lk</span><span class="p">.</span><span class="nx">enter</span><span class="p">(</span><span class="mf">0</span><span class="o">:</span><span class="mo">03</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// Sequentially executing code</span>
-<span class="w">  </span><span class="c1">// ...</span>
-<span class="w">  </span><span class="nx">lk</span><span class="p">.</span><span class="nx">leave</span><span class="p">()</span>
-<span class="p">}</span>
-<span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;3min timeout&quot;</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></div>
+if (lk.enter(0:03)) {
+  // Sequentially executing code
+  // ...
+  lk.leave()
+}
+else {
+  log("3min timeout")
+}</code></pre>
 </dd>
 <dt><code>lk.enter([timeout])</code></dt>
 <dd>Waits until the lock <em>lk</em> is free. Without specifying <em>timeout</em>, the wait is indefinite. <em>timeout</em> can be 0 to only test the lock. The function returns <em>true</em> if the lock could be reserved for the calling thread. It returns <em>false</em> if the lock could not be reserved within the given <em>timeout</em>, or if the lock itself is deleted (for example with <em>unset</em>).</dd>
@@ -1073,11 +1053,20 @@ Usually <em>enter()</em> is used in a conditional:</p>
 <dt><code>log([loglevel, ] logmessage [, value...])</code></dt>
 <dd>writes a message to the application log file. If <em>loglevel</em> is omitted, 5 (<em>LOG_NOTICE</em>) is used. If <em>logmessage</em> is followed by further arguments, <em>logmessage</em> is treated as a format string, as in the <em>format()</em> function (see there).</dd>
 <dt><code>loglevel()</code></dt>
-<dd>returns the current log level.</dd>
+<dd>returns the current (application global) log level.</dd>
 <dt><code>loglevel(level [, deltatime [, symbols [, coloring]]])</code></dt>
-<dd>change the application's log level to <em>level</em>. If <em>deltatime</em> is set, timestamps will also show time difference to previous log entry in mS. If <em>symbols</em> is set, UTF-8 symbols will be used to differentiate log levels and separate context prefix from actual log message. If <em>coloring</em> is set, ANSI colors are used in the log output (suitable for terminal output, not browser). Each of the arguments can also be <em>null</em> in order not to change the corresponding value.</dd>
+<dd>change the application's global log level to <em>level</em>. If <em>deltatime</em> is set, timestamps will also show time difference to previous log entry in mS. If <em>symbols</em> is set, UTF-8 symbols will be used to differentiate log levels and separate context prefix from actual log message. If <em>coloring</em> is set, ANSI colors are used in the log output (suitable for terminal output, not browser). Each of the arguments can also be <em>null</em> in order not to change the corresponding value.</dd>
+<dt><code>logleveloffset()</code></dt>
+<dd>returns the log level offset of the current thread's logging context.</dd>
 <dt><code>logleveloffset(offset)</code></dt>
-<dd>change the log level offset of the <em>scriptcontext</em> the script runs in to <em>offset</em>. This allows making part of an application more or less verbose in the log, selectively.</dd>
+<dd>set a new log level offset for current thread's logging context. This allows making part of an application more or less verbose in the log, selectively.</dd>
+<dd><em>offset</em> can be between -2..2 to adjust verbosity, -3 to totally silence, or 3 to unconditionally enable logging.</dd>
+<dt><code>logleveloffset(null, topic_or_object)</code></dt>
+<dd>returns the current log level offset of the specified log topic or specified object's logging context.</dd>
+<dt><code>logleveloffset(offset, topic_or_object)</code></dt>
+<dd>set a new log level offset for specified log <em>topic</em> or specified <em>object</em>'s logging context.</dd>
+<dd><em>offset</em> can be between -2..2 to adjust verbosity, -3 to totally silence, or 3 to unconditionally enable logging for specified log context.</dd>
+<dd>Log topics (and thus areas where logging can be silenced or amplified) are <em>app</em>, <em>vdsmapi</em>, <em>localcontroller</em>, <em>p44script</em>, <em>mainscript</em>, <em>cfgapi</em>, <em>bridgeapi</em>, <em>ubusapi</em>, <em>scriptmanager</em>, <em>lvgl</em>, <em>wbfcomm</em>, <em>ds485comm</em>, <em>dalicomm</em>, <em>eldatcomm</em>, <em>enoceancomm</em>, <em>huecomm</em>, <em>ledarrangement</em>, <em>zfcomm</em> (depending on device features, not all of these are available).</dd>
 <dt><code>maxblocktime([time, [currentonly]])</code></dt>
 <dd>
 <p>return, or (with <em>time</em> argument, set) the maximum uninterrupted execution time for scripts (in seconds). The default is 0.05 seconds. When set with <em>currentonly</em> true, the setting only affects the current thread, otherwise this also sets the default for all future threads started from now on (but not already running threads, except for the calling thread).</p>
@@ -1147,6 +1136,20 @@ That's why it is not enabled by default. If you have a DIY P44-DSB-X, you can se
 but be careful!</p>
 </div>
 </dd>
+<dt><code>tcpsocket(host, port, delimiter)</code></dt>
+<dd>returns a TCP client socket configured to connect to <em>host</em>:<em>port</em>. Use the socket object's methods as described below to connect, send, receive and end the connection.</dd>
+<dd>If optional <em>delimiter</em> is set to a single character (usually such as "\n" or "\r" for LF or CR), .message() will only deliver entire messages, as denoted by the delimiter char, re-assembled.</dd>
+<dd>Usually the return value of this function is assigned to a variable: <code>var tcpsocket_var = tcpsocket(...)</code> to be able to call the methods described below.</dd>
+<dt><code>tcpsocket_var.connect()</code></dt>
+<dd>connect the socket to the TCP host. Returns <em>true</em> on successful connection or an error message otherwise.</dd>
+<dt><code>tcpsocket_var.connected()</code></dt>
+<dd>Returns <em>true</em> if the socket has an open connection, otherwise <em>false</em> (e.g. also during connection establishment).</dd>
+<dt><code>tcpsocket_var.disconnect()</code></dt>
+<dd>disconnects the socket from the host.</dd>
+<dt><code>tcpsocket_var.message()</code></dt>
+<dd>is a event source which returns data received on the socket. If the socket was created with a <em>delimiter</em>, the event source will only trigger once per complete re-assembled message, otherwise it delivers data when arriving. It can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>tcpsocket_var.send(string)</code></dt>
+<dd>sends <em>string</em> to the TCP stream. Returns the number of bytes actually sent.</dd>
 <dt><code>udpsocket(host, port, receive, nonlocal, broadcast)</code></dt>
 <dd>returns a UDP socket configured to send packets to <em>host</em>:<em>port</em>. Use .send(string) method to send data</dd>
 <dd>If <em>receive</em> is true, the socket can also receive UDP packets (via its .message() method, which can be used in <em>on()</em> statements as trigger.</dd>
@@ -1156,7 +1159,7 @@ but be careful!</p>
 <dt><code>udpsocket_var.message()</code></dt>
 <dd>is a event source which returns UDP messages received on the socket. It can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
 <dt><code>udpsocket_var.send(string)</code></dt>
-<dd>sends <em>string</em> as UDP packet.</dd>
+<dd>sends <em>string</em> as UDP packet. Returns the number of bytes actually sent.</dd>
 <dt><code>undeclare()</code></dt>
 <dd>deletes all function and handler definitions that are not part of a stored script, but were made in an ad-hoc way,
   for example from a interactive script command line (a REPL = Read-Execute-Print-Loop).
@@ -1217,7 +1220,7 @@ i.e. are updated (or removed) according to edits in the script text, and <em>wil
 <dt><code>globalhandlers()</code></dt>
 <dd>returns an array with information about the global event handlers (<code>global on (...) {...}</code>).</dd>
 <dt><code>contexthandlers()</code></dt>
-<dd>returns an array with information about the event handlers in the current * scriptcontext*.</dd>
+<dd>returns an array with information about the event handlers in the current <em>scriptcontext</em>.</dd>
 <dt><code>globalbuiltins()</code></dt>
 <dd>returns an object whose fields contain information on the globally available built-in functions and global objects.</dd>
 <dt><code>contextbuiltins()</code></dt>
@@ -1269,21 +1272,31 @@ But basically, these functions are members of the <em>device object</em> or of o
 <dt><code>output.channel(channelid)</code></dt>
 <dd>returns the current value of <em>channelid</em> (<em>'brightness'</em>, <em>'hue'</em>, <em>'saturation'</em>, <em>'colortemp'</em>, <em>x</em>, <em>y</em>,  <em>'hPos'</em>, <em>'vPos'</em>, etc... - note: channelIDs are <em>case sensitive</em>! You can also specify <em>0</em> for accessing default channel of the respective device)</dd>
 <dd>Note that channels have subfields named <em>.valid</em> (true if the channel is know in sync with the hardware), <em>.age</em> (seconds since last change), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the device the channel belongs to, which includes radio reception, battery level etc.). A channel is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
-<dt><code>output.channel(channelid, value[, transition_time])</code></dt>
-<dd>set the value of <em>channelid</em> to <em>value</em>, with optional <em>transition_time</em> in seconds.</dd>
-<dd>Note that the channel value change is not automatically applied to the hardware; you need to call applychannels() for that. Also note that channelids are <em>case sensitive</em>! You can  specify <em>0</em> for accessing default channel of the respective device. Return value is the <em>output</em> object to allow chaining method calls.</dd>
-<dt><code>output.dimchannel(channelid, valuechange, transition_time)</code></dt>
-<dd>change the value of <em>channelid</em> by <em>valuechange</em>, with optional <em>transition_time</em> in seconds. Note that channelids are <em>case sensitive</em>!  You can also specify <em>0</em> for accessing default channel of the respective device. Return value is the <em>output</em> object to allow chaining method calls.</dd>
-<dt><code>output.movechannel(channelid, direction [, time_per_unit])</code></dt>
-<dd>starts moving the value of <em>channelid</em> in the direction indicated by the sign of <em>direction</em> or stops movement when <em>direction</em> is 0. When optional <em>time_per_unit</em> in seconds is set, it determines speed by setting the time spent per change of 1 unit of the channel value. If <em>time_per_unit</em> is not specified or set to 0, the channel's default dimming speed is used instead. Return value is the <em>output</em> object to allow chaining method calls.</dd>
-<dd>Note that the channel movement is not automatically started; you need to call applychannels() for that. Also note that channelids are <em>case sensitive</em>! You can specify <em>0</em> for accessing default channel of the respective device.</dd>
+<dt><code>output.channel(channelid, value [,transition_time [, coupling]])</code></dt>
+<dd>set the value of <em>channelid</em> to <em>value</em>, with optional <em>transition_time</em> in seconds. The <em>coupling</em> flag can be set to <em>false</em> to prevent any channel couplings that may be configured on this output from being executed (e.g., glow-dim).</dd>
+<dd>Note that the channel value change is not automatically applied to the hardware; you need to call <em>applychannels()</em> for that. Also note that channelids are <em>case sensitive</em>! You can  specify <em>0</em> for accessing default channel of the respective device.</dd>
+<dd>Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.dimchannel(channelid, valuechange [,transition_time [, coupling]])</code></dt>
+<dd>change the value of <em>channelid</em> by <em>valuechange</em>, with optional <em>transition_time</em> in seconds. The <em>coupling</em> flag can be set to <em>false</em> to prevent any channel couplings that may be configured on this output from being executed (e.g., glow-dim).</dd>
+<dd>Note that the channel movement is not automatically started; you need to call <em>applychannels()</em> for that. Also note that channelids are <em>case sensitive</em>!  You can also specify <em>0</em> for accessing default channel of the respective device.</dd>
+<dd>Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.movechannel(channelid, direction [, time_per_unit [, coupling]])</code></dt>
+<dd>starts moving the value of <em>channelid</em> in the direction indicated by the sign of <em>direction</em> or stops movement when <em>direction</em> is 0. When optional <em>time_per_unit</em> in seconds is set, it determines speed by setting the time spent per change of 1 unit of the channel value. If <em>time_per_unit</em> is not specified or set to 0, the channel's default dimming speed is used instead. The <em>coupling</em> flag can be set to <em>false</em> to prevent any channel couplings that may be configured on this output from being executed (e.g., glow-dim).</dd>
+<dd>Note that the channel movement is not automatically started; you need to call <em>applychannels()</em> for that. Also note that channelids are <em>case sensitive</em>! You can specify <em>0</em> for accessing default channel of the respective device.</dd>
+<dd>Return value is the <em>output</em> object to allow chaining method calls.</dd>
 <dt><code>output.loadscene(sceneIdOrNo [, transitionTimeOverride])</code></dt>
-<dd>loads the channels of the output with the values stored in the scene <em>sceneIdOrNo</em>. The scene is determined by its number or preset name (e.g. <em>'bell 1'</em> or <em>'preset 2'</em>). If <em>transitionTimeOverride</em> is specified, the transition times of all channels are set to this value, even if the scene defines other values.
-Please note that the loaded new channel values are <em>not</em> automatically applied to the hardware; <em>applychannels()</em> must be called for this. <em>loadscene()</em> can be used e.g. to load a scene but still adjust it with <em>channel()</em> before applying it to the outputs. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dd>
+<dl>
+<dt>loads the channels of the output with the values stored in the scene <em>sceneIdOrNo</em>. The scene is determined by its number or preset name (e.g. <em>'bell 1'</em> or <em>'preset 2'</em>). If <em>transitionTimeOverride</em> is specified, the transition times of all channels are set to this value, even if the scene defines other values.</dt>
+<dt>Please note that the loaded new channel values are <em>not</em> automatically applied to the hardware; <em>applychannels()</em> must be called for this. <em>loadscene()</em> can be used e.g. to load a scene but still adjust it with <em>channel()</em> before applying it to the outputs.</dt>
+<dd>Return value is the <em>output</em> object to allow chaining method calls.</dd>
+</dl>
+</dd>
 <dt><code>output.runactions(sceneIdOrNo)</code></dt>
 <dd>runs the scene actions (e.g. blinking, or starting a <em>scene script</em>) of scene <em>sceneIdOrNo</em>. The scene is determined by its number or preset name (e.g. <em>'bell 1'</em> or <em>'preset 2'</em>).</dd>
-<dt><code>output.stopactions()</code></dt>
-<dd>stops all running scene actions (scene scripts, blinking, etc.) and all running channel transitions. Return value is the <em>output</em> object to allow chaining method calls.</dd>
+<dt><code>output.stopactions([transitions [, actions]])</code></dt>
+<dd>stops running channel transitions if <em>transition</em> is not set to false, and all running scene actions (scene scripts, blinking, etc.) if <em>actions</em> is not set to false. This means that without any arguments, both transitions and actions are stopped.</dd>
+<dd>Return value is the <em>output</em> object to allow chaining method calls.</dd>
 <dt><code>sensor('id_or_index')</code></dt>
 <dd>returns the current value of a sensor input. <em>id_or_index</em> can be either the index of the sensor (starting at 0), or the text id (a string like 'temperature' or 'humidity', depending on what the device actually provides)</dd>
 <dd>Note that sensors have subfields named <em>.valid</em> (true if the sensor has an actual value), <em>.age</em> (seconds since last update), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the sensor, which includes radio reception, battery level etc.).  A sensor is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
@@ -1293,6 +1306,10 @@ Please note that the loaded new channel values are <em>not</em> automatically ap
 <dt><code>button('id_or_index')</code></dt>
 <dd>returns the current value from a button input. <em>id_or_index</em> can be either the index of the button (starting at 0), or the text id (a string like 'up' or 'down', depending on the type of button). The value represents the number of clicks detected (1..4) or &gt;4 when the button is held down.</dd>
 <dd>Note that buttons have subfields named <em>.valid</em> (true if the button state is known), <em>.age</em> (seconds since button was last operated), and <em>.oplevel</em> (a value between 0..100 indicating the overall "health" level of the button, which includes radio reception, battery level etc.). A button is an event source and can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed.</dd>
+<dt><code>lastscene</code></dt>
+<dd><em>sceneId</em> of the previously active scene, before the currently active (or being activated) one. Comparing <em>currentscene</em> to <em>lastscene</em> allows scene scripts to act differently on repeated call of the same scene, for example.</dd>
+<dt><code>currentscene</code></dt>
+<dd><em>sceneId</em> of the current scene (in context of scenescript, the scene currently being invoked). The <em>sceneId</em>  can be used for example in calls to <em>output.loadscene()</em>.</dd>
 <dt><code>name</code></dt>
 <dd>Name of the device</dd>
 <dt><code>uid</code></dt>
@@ -1310,10 +1327,13 @@ Please be careful accessing devices and API directly.</p>
 <dt><code>device('devicename')</code></dt>
 <dt><code>device('UID')</code></dt>
 <dd>access a device by <em>devicename</em> or <em>UID (dSUID)</em>. Note that while using names is more convenient, scripts might break when users rename devices. So using dSUID is recommended for scripts that are meant to remain installed and working for a long time.  At device level, the <em>UID</em> can be read out via the variable <code>uid</code>.</dd>
+<dt><code>globalevent()</code></dt>
+<dd>returns a event source that can be used in <em>on()</em> statements as trigger condition and can also be <em>await()</em>-ed. It delivers global events happening in the device as one of the following strings :
+  <code>identify</code>, <code>logstats</code>, <code>descriptionchanged</code>, <code>network_reconnected</code>, <code>network_lost</code>, <code>timeofday_changed</code>, <code>vdcapi_connected</code>, <code>vdcapi_disconnected</code>, <code>vdcs_initialized</code>, <code>devices_collected</code>, <code>devices_initialized</code>.</dd>
 <dt><code>valuesource('valuesource_id')</code></dt>
 <dd>find a value source (source of values that can trigger <em>on(xxx)</em> expressions or evaluator conditions) by its internal id. Note that ususally, it is better to access these values using <em>device(x).sensor(y)</em>.</dd>
 <dt><code>vdcapi(json_request)</code></dt>
-<dd>issues a vDC API method call or a notification. Returns the method's response or just an empty result for a notification.</dd>
+<dd>issues a vDC API method call or a notification. Returns the method's response or just an empty result for a notification. The vDC API is documented as an <strong>openapi spec <a href="apidocs/index.html" target="apidocs">integrated on the device</a></strong>.</dd>
 <dt><code>webrequest()</code></dt>
 <dt><code>webrequest(sub_endpoint)</code></dt>
 <dt><code>webrequest(sub_endpoint, peer)</code></dt>
@@ -1324,12 +1344,11 @@ Please be careful accessing devices and API directly.</p>
 <dt><code>request.answer(json_or_error)</code></dt>
 <dd>
 <p>Replies to a web request (the <em>request</em> variable in the example above) with a JSON response or error. Typically, a response is sent as part of an <em>on()</em> handler, with a construct such as:</p>
-<div class="highlight"><pre><span></span><code><span class="nx">on</span><span class="w"> </span><span class="p">(</span><span class="nx">webrequest</span><span class="p">())</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">request</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="c1">// execute request</span>
-<span class="w">  </span><span class="c1">// ...</span>
-<span class="w">  </span><span class="nx">request</span><span class="p">.</span><span class="nx">answer</span><span class="p">({</span><span class="w"> </span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;all ok&quot;</span><span class="p">});</span>
-<span class="p">}</span>
-</code></pre></div>
+<pre class="highlight"><code class="language-javascript">on (webrequest()) as request {
+  // execute request
+  // ...
+  request.answer({ "status": "all ok"});
+}</code></pre>
 <div class="admonition danger">
 <p class="admonition-title">webrequest must be answered!</p>
 <p>If an <code>on(webrequest()) as request { ... }</code> is installed, it must be ensured that the handler code really answers the request with <em>answer()</em> in every case. Otherwise, the requesting web client will hang until it times out.</p>
@@ -1337,6 +1356,10 @@ Please be careful accessing devices and API directly.</p>
 </dd>
 </dl>
 <h2 id="led-chains-p44-low-resolution-graphics-p44lrgraphics-access"><a id="ledchains"></a>LED Chains: p44 Low Resolution Graphics (p44lrgraphics) Access</h2>
+<div class="admonition note">
+<p class="admonition-title">LED chain outputs available on some devices only</p>
+<p>LED chains need to be connected to suitable hardware output(s) that are not available on all P44 devices. To use LED chain devices requires at least <em>userlevel</em> 1.</p>
+</div>
 <p>p44lrgraphics is a graphics subsystem especially for smart LEDs. Only the p44script interface is described here. <strong>More information can be found in the technical documentation <a href="https://plan44.ch/p44-techdocs/en/lrgraphics/#viewconfig" target="p44-techdocs">online</a></strong>.</p>
 <dl>
 <dt><code>lrg</code></dt>
@@ -1349,8 +1372,8 @@ Please be careful accessing devices and API directly.</p>
 <h3 id="functions-for-configuring-led-arrangement">Functions for configuring LED arrangement</h3>
 <dl>
 <dt><code>addledchain(ledchainconfigstring)</code></dt>
-<dd>adds a LED chain to the LED chain arrangement. <em>ledchainconfigstring</em> has the same format as the --ledchain command line parameter:</dd>
-<dd><code>[LED-type:[leddevicename:]]numberOfLeds:[x:dx:y:dy:firstoffs:betweenoffs][XYSA][W#whitecolor]</code></dd>
+<dd>adds a LED chain to the LED chain arrangement. <em>ledchainconfigstring</em> has the same format as the --ledchain command line parameter:
+<pre class="highlight"><code class="language-plain">[LED-type:[leddevicename:]]numberOfLeds:[x:dx:y:dy:firstoffs:betweenoffs][XYSA][W#whitecolor][:Cgammaparams]</code></pre></dd>
 <dt><code>removeledchains()</code></dt>
 <dd>removes all ledchains from the LED chain arrangement.</dd>
 <dt><code>ledchaincover()</code></dt>
@@ -1363,6 +1386,16 @@ Please be careful accessing devices and API directly.</p>
 <dd>sets the (approximate) maximal electrical power in milliwatts the entire LED chain arrangement may consume. If the currently requested pixel colors would exceed the limit, all pixels are dimmed as needed to stay withing the power limit.</dd>
 <dt><code>setledrefresh(refreshinterval [, priorityinterval])</code></dt>
 <dd>Sets the minimum refresh interval for the connected LED chains, i.e. the maximum number of times a new state is output to the LEDs. With increasing number of LEDs per chain this interval may have to be set higher, so that all LEDs can be controlled (default is 15mS). The optional <em>priorityinterval</em> specifies how long priority timing (e.g. scrolling) has priority over secondary timing (e.g. animated parts of a scrolled area). This can be important for smooth tickers etc. (default is 50mS).</dd>
+<dt><code>ledmaindim()</code></dt>
+<dd>Returns the current global LED dimmer setting for all LEDs. The default value is 100, but can be adjusted with <code>ledmaindim(newdim)</code>, see below.</dd>
+<dt><code>ledmaindim(newdim)</code></dt>
+<dd>
+<p>Sets a new global LED dimmer setting. Unlike with <code>lrg.alpha</code>, the brightness can not only be reduced, but also set to more than 100% to make the LEDs brighter globally. However, LEDs that already had maximum brightness at the 100% setting will not become any brighter and the colors may be distorted.</p>
+<div class="admonition note">
+<p class="admonition-title">Not effective in the simulator</p>
+<p>Unlike <code>lrg.alpha</code>, <code>ledmaindim</code> only affects the output brightness of the LEDs, not the calculation of the pixels in the <em>rootview</em> (see below). The LED simulator and the <code>leddata</code> API endpoint used in it are not affected by this dimmer value.</p>
+</div>
+</dd>
 </dl>
 <h3 id="installing-views">Installing Views</h3>
 <dl>
@@ -1621,7 +1654,7 @@ SPI mode options are characters appended to the driver number after a dash, like
 <dt><code>var s = serial(connectionspec [,delimiter])</code></dt>
 <dd>Creates an object that can operate a serial interface.</dd>
 <dd><em>connectionspec</em> has the form <code>/xxx/serialdevice:commparams</code> or <code>host:port</code>. <em>serialdevice</em> must be a serial device (e.g. <code>/dev/ttyS1</code>) or another serial channel. The form with <em>host</em> and <em>port</em> is used to address a serial interface via the network, e.g. one that is controlled with <a href="https://github.com/plan44/serialfwd" target="_blank">serialfwd</a>.</dd>
-<dd>With <em>commparams</em> the interface parameters can be set in the form: <code>[baud rate][,[bits][,[parity][,[stop bits][,[H]]]]]</code>, where the parity can be <code>O</code>, <code>E</code> or <code>N</code> and <code>H</code> means that hardware handshake should be activated.</dd>
+<dd>With <em>commparams</em> the interface parameters can be set in the form: <code>[baud rate][,[bits][,[parity][,[stop bits][,[H][T]]]]]</code>, where the parity can be <code>O</code>, <code>E</code> or <code>N</code>, <code>H</code> means that hardware handshake should be activated and 'T' means <em>transmit only</em> (receiver disabled).</dd>
 <dd><em>delimiter</em> can be a string with a character that separates the received data into messages. If <em>delimiter</em> has the value <code>"\n"</code> (linefeed, 0x0A), then preceding <code>"\r"</code> characters are also removed. <em>delimiter</em> = <code>true</code> has the same effect as <em>delimiter</em> = <code>"\n"</code>.</dd>
 </dl>
 <p>Note: In the following, it is assumed that <em>s</em> is a variable that contains a <em>serial</em> instance.</p>
@@ -1711,6 +1744,8 @@ SPI mode options are characters appended to the driver number after a dash, like
 <dd>Configures the time needed to transmit one byte. This is relevant for RTU only, and only needed when the UART has an imprecise baud rate such that actual byte times differ significantly from the theoretical precise values derived from the baud rate.</dd>
 <dt><code>mb.recoverymode(link, protocol)</code></dt>
 <dd>Enables/disables recovery at the link and/or protocol level by setting <em>link</em> and <em>protocol</em> to true or false.</dd>
+<dt><code>mb.floatmode(floatmode)</code></dt>
+<dd>Sets the float mode, which means the way 32bit float values are stored in register pairs. The available modes are <em>abcd</em>, <em>badc</em>, <em>cdab</em>, and <em>dcba</em> (the latter is the default). This affects how <em>readfreg()</em>, <em>writefreg()</em>, <em>getfreg()</em> and <em>setfreg()</em> work.</dd>
 <dt><code>mb.debug(enable)</code></dt>
 <dd>Enables libmodbus debug output (directly to stderr, bypassing the normal p44 log system) by setting <em>enable</em> to true.</dd>
 <dt><code>mb.connect([autoflush])</code></dt>
@@ -1727,15 +1762,19 @@ SPI mode options are characters appended to the driver number after a dash, like
 <dt><code>mbm.readinfo()</code></dt>
 <dd>Reads and returns the info (slave id) string from the currently addressed slave.</dd>
 <dt><code>mbm.findslaves(idmatch, from, to)</code></dt>
-<dd>Tries to read the info (slave id) for every slave address starting at <em>from</em> up to and including <em>to</em>, and returns an array for slave addresses. If <em>idmatch</em> is not an empty string, only slaves with slave id strings containing <em>idmatch</em> are returned.</dd>
+<dd>Tries to read the info (slave id) for every slave address starting at <em>from</em> up to and including <em>to</em>, and returns an array of slave addresses. If <em>idmatch</em> is not an empty string, only slaves with slave id strings containing <em>idmatch</em> are returned.</dd>
 <dt><code>mbm.readreg(regaddr [, input])</code></dt>
 <dd>reads the register <em>regaddr</em> (set <em>input</em> to true to access a read-only register) and returns it as an unsigned number.</dd>
 <dt><code>mbm.readsreg(regaddr [, input])</code></dt>
 <dd>reads the register <em>regaddr</em> (set <em>input</em> to true to access a read-only register) and returns it as an signed number.</dd>
+<dt><code>mbm.readfreg(regaddr [, input])</code></dt>
+<dd>reads the register pair at <em>regaddr</em> (set <em>input</em> to true to access read-only registers) and returns result as a float number, according to the mode set with <em>floatmode()</em>.</dd>
 <dt><code>mbm.readbit(bitaddr [, input])</code></dt>
 <dd>reads the bit(coil) <em>bitaddr</em> (set <em>input</em> to true to access an input-only bit) and returns its state as boolean value.</dd>
 <dt><code>mbm.writereg(regaddr, value)</code></dt>
-<dd>writes numeric <em>value</em> to the register <em>regaddr</em>.</dd>
+<dd>writes integer <em>value</em> to the register <em>regaddr</em>.</dd>
+<dt><code>mbm.writefreg(regaddr, value)</code></dt>
+<dd>writes a float <em>value</em> to the register pair at <em>regaddr</em>, according to the mode set with <em>floatmode()</em>.</dd>
 <dt><code>mbm.writebit(bitaddr, value)</code></dt>
 <dd>writes boolean state of <em>value</em> to the bit (coil) <em>bitaddr</em>.</dd>
 </dl>
@@ -1749,25 +1788,28 @@ SPI mode options are characters appended to the driver number after a dash, like
 <dt><code>mbs.setmodel(registermodel_json)</code></dt>
 <dd>
 <p>Defines the register model of the slave (coils, bits, registers and inputs). <em>registermodel_json</em> must be a JSON object of the following form:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;coils&quot;</span><span class="w">     </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">10</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;bits&quot;</span><span class="w">      </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">10</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;registers&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">20</span><span class="w"> </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="w">    </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;first&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;num&quot;</span><span class="p">:</span><span class="mi">20</span><span class="w"> </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
+<pre class="highlight"><code class="language-json">{
+  "coils"     : { "first":100, "num":10 },
+  "bits"      : { "first":100, "num":10 },
+  "registers" : { "first":100, "num":20 },
+  "inputs"    : { "first":100, "num":20 }
+}</code></pre>
 </dd>
 <dd>
 <p>Of "coils", "bits", "registers", "inputs" those not actually needed can be omitted.</p>
 </dd>
 <dt><code>mbs.setreg(regaddr, value [, input])</code></dt>
-<dd>Write numeric <em>value</em> to the register <em>regaddr</em> (or to the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dd>Write integer <em>value</em> to the register <em>regaddr</em> (or to the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.setfreg(regaddr, value [, input])</code></dt>
+<dd>Write float <em>value</em> to the register pair at <em>regaddr</em> (or to the input registers at <em>regaddr</em>, if <em>input</em> is set to true), according to the mode set with <em>floatmode()</em>.</dd>
 <dt><code>mbs.setbit(bitaddr, state [, input])</code></dt>
 <dd>Write boolean <em>state</em> to the bit (coil) <em>bitaddr</em> (or to the input bit <em>bitaddr</em>, if <em>input</em> is set to true).</dd>
 <dt><code>mbs.getreg(regaddr [, input])</code></dt>
 <dd>Get the unsigned numeric value of the register <em>regaddr</em> (or the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
 <dt><code>mbs.getsreg(regaddr [, input])</code></dt>
 <dd>Get the signed numeric value of the register <em>regaddr</em> (or the input register <em>regaddr</em>, if <em>input</em> is set to true).</dd>
+<dt><code>mbs.getfreg(regaddr [, input])</code></dt>
+<dd>Get the float value of the register pair at <em>regaddr</em> (or the input registers at <em>regaddr</em>, if <em>input</em> is set to true), according to the mode set with <em>floatmode()</em>.</dd>
 <dt><code>mbs.getbit(bitaddr [, input])</code></dt>
 <dd>Get the boolean state of the bit (coil) <em>bitaddr</em> (or the input bit <em>bitaddr</em>, if <em>input</em> is set to true).</dd>
 <dt><code>mbs.access()</code></dt>
@@ -1823,12 +1865,11 @@ SPI mode options are characters appended to the driver number after a dash, like
 <dt><code>call.answer(json_or_error)</code></dt>
 <dd>
 <p>Answers a Feature API request (the <em>call</em> variable in the example above) with a JSON response or error. Typically, a response is sent as part of an <em>on()</em> handler, with a construct such as:</p>
-<div class="highlight"><pre><span></span><code>on (featurecall()) as call {
+<pre class="highlight"><code>on (featurecall()) as call {
   // execute request
   // ...
-  call.answer({ &quot;status&quot;: &quot;all ok&quot;});
-}
-</code></pre></div>
+  call.answer({ "status": "all ok"});
+}</code></pre>
 <div class="admonition danger">
 <p class="admonition-title">featurecall must be answered!</p>
 <p>If an <code>on(featurecall()) as call { ... }</code> is installed, it must be ensured that the handler code really answers the request with <em>answer()</em> in every case. Otherwise, the requesting client may hang.</p>
@@ -1856,7 +1897,7 @@ SPI mode options are characters appended to the driver number after a dash, like
   <hr/>
 
   Built with <a href="https://www.mkdocs.org">MkDocs</a>.
-  <!-- MkDocs version      : 1.6.0 -->
+  <!-- MkDocs version      : 1.6.1 -->
 
 </body>
 </html>

@@ -318,7 +318,7 @@ function update(once)
   dynstyle.innerHTML = '.dpix { max-width:' + sz + 'px; max-height:' + sz + 'px; }';
 
   mg44token().done(function () {
-    var url = constructUri('' + '/api/json/leddata');
+    var url = constructUri(apiRoot()+'/api/json/leddata');
     var jsonquery = {
       x:x, y:y, dx:dx, dy:dy, view:viewid
     }

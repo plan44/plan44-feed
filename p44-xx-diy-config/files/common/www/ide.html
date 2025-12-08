@@ -267,7 +267,6 @@
 
 <script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
-<script src="/ace/ext-prompt.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/jquery.min.js"></script>
 <script src="/js/jquery-resizable.js"></script>
 <script src="/js/utils.js"></script>
@@ -333,7 +332,7 @@ function setup_globalshortcuts()
 
 // globals
 
-let cPollInterval = 2 // seconds
+let cPollInterval = 2.5 // seconds
 
 var gEditSessions = {}
 
@@ -486,8 +485,21 @@ function setup_globalevents()
   })
   // whenever the window gets focus, load the list (there could be new scripts added)
   window.addEventListener("focus", function(event) {
+    console.log('Window gained focus')
     check_script_open()
-    poll_debug_info()
+    if (debugViewsShown()) {
+      // re-activate debugger
+      enable_debugger(true)
+      poll_debug_info()
+    }
+  })
+  window.addEventListener("blur", function(event) {
+    console.log('Window lost focus')
+    if (debugViewsShown()) {
+      // keep debugger running, but with higher timeout
+      enable_debugger(true, 150)
+      poll_debug_info(5) // slower polling as well
+    }
   })
 }
 
@@ -502,9 +514,8 @@ $(document).ready(function() {
   // initial actions
   check_script_open()
   poll_debug_info()
-  // for now, just enabled the debugger when the IDE is open
-  // Rationale: when it is open, we DO see when treads get paused, so it does not go
-  //   unnoticed
+  // for now, just enable the debugger when the IDE is open
+  // Rationale: when it is open, we DO see when treads get paused, so that does not go unnoticed
   enable_debugger(true)
   hide('#threadcontrols')
 });
@@ -516,9 +527,9 @@ function refresh_script_list(event)
   var dfd = $.Deferred()
   // query list
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{ "x-p44-scripts":{ "sources":{ "*":{ "title":null, "contexttype":null }}} }
+    method:"getProperty",
+    dSUID:"root",
+    query:{ "x-p44-scripts":{ sources:{ "*":{ title:null, contexttype:null }}} }
   }).done(function(result) {
     var sel = $('#scriptselector')
     sel.empty()
@@ -534,7 +545,8 @@ function refresh_script_list(event)
     var opts = Object.keys(scripts).map(function (key) {
       var ty = scripts[key].contexttype
       switch (ty) {
-        case "vDChost" : ty = ' '; break; // first in list
+        case "vDChost" : ty = ' '; break; // top of list
+        case "mainscript" : ty = ' '; break; // top of list
         case "vdSD" : ty = '1Devices'; break;
         case "Trigger" : ty = '2Triggers'; break;
         case "include" : ty = '3Includes'; break;
@@ -601,51 +613,55 @@ function update_pausedthread_list(pausedthreads)
 }
 
 
-function poll_debug_info()
+function poll_debug_info(slowdownfactor)
 {
+  if (slowdownfactor==undefined) slowdownfactor = 1
   clearTimeout(gPausedthreadtimer)
-  // query list
+  // query debug info (silent in log)
   apiCall({
-    "method":"getProperty",
-    "dSUID":"root",
-    "query":{ "x-p44-scripts":{ "pausedthreads":null, "logtext":null, "loglevel":null }}
-  }).done(function(result) {
+    dummy: null // api always needs a non-empty body
+  }, cPollInterval*1000, undefined, 'debugpoll').done(function(debuginfo) {
     // update log window
     if (!gLogPaused) {
-      var newlogtext = result["x-p44-scripts"].logtext
-      if (newlogtext) {
-        log_append(newlogtext)
+      if (debuginfo.logtext) {
+        log_append(debuginfo.logtext)
       }
     }
     // update actual log level
-    update_loglevel_selector(result["x-p44-scripts"].loglevel);
-    // update paused threads list
-    var pausedthreads = result["x-p44-scripts"].pausedthreads
-    update_pausedthread_list(pausedthreads)
-    // check for new pause
-    var hasPausedThreads = false
-    if (pausedthreads) {
-      var thread = pausedthreads["0"]
-      if (thread) {
-        hasPausedThreads = true
-        if(thread.pausedAt>gLatestpause) {
+    update_loglevel_selector(debuginfo.loglevel);
+    // check if we have (new) paused threads
+    if (debuginfo.latestpaused) {
+      // there are paused threads, we need to fetch the list
+      apiCall({
+        method:"getProperty",
+        dSUID:"root",
+        query:{ "x-p44-scripts":{ pausedthreads:null }}
+      }, cPollInterval*1000).done(function(result) {
+        // update paused threads list
+        var pausedthreads = result["x-p44-scripts"].pausedthreads
+        update_pausedthread_list(pausedthreads)
+        if (debuginfo.latestpaused>gLatestpause) {
           // new pause detected
-          gLatestpause = thread.pausedAt
-          report_pause(thread)
+          gLatestpause = debuginfo.latestpaused
+          report_pause(pausedthreads["0"])
         }
+      })
+    }
+    else {
+      update_pausedthread_list({}) // none
+      // revert to plain global REPL
+      if (gLatestpause!=null) {
+        gLatestpause = null
+        select_thread(0)
+        hide('#threadcontrols')
+        repl_prompt()
       }
     }
-    if (!hasPausedThreads && gLatestpause) {
-      // revert to plain global REPL
-      gLatestpause = null
-      select_thread(0)
-      hide('#threadcontrols')
-      repl_prompt()
-    }
-    // auto-refresh
+  }).always(function() {
+    // always auto-refresh, as it fails often
     gPausedthreadtimer = setTimeout(function() {
-      poll_debug_info()
-    }, cPollInterval*1000)
+      poll_debug_info(slowdownfactor)
+    }, cPollInterval*1000*slowdownfactor)
   })
 }
 
@@ -719,9 +735,9 @@ function loglevel_selected(event)
     var loglevel = $('#loglevel').val()
     toggleDebugViews(true)
     alertError(apiCall({
-      "method":"loglevel",
-      "dSUID":"root",
-      "value":loglevel
+      method:"loglevel",
+      dSUID:"root",
+      value:loglevel
     }).done(function(response) {
       poll_debug_info()
     }))
@@ -817,9 +833,9 @@ function repl_exec(scriptcode)
   var session = editor.getSession()
   var scriptid = session && session.isscript ? session.scriptid : false
   var cmd = {
-    "method":"x-p44-scriptExec",
-    "dSUID":"root",
-    "scriptcode":scriptcode
+    method:"x-p44-scriptExec",
+    dSUID:"root",
+    scriptcode:scriptcode
   }
   if (threadid!=0) {
     // in context of the thread
@@ -965,10 +981,10 @@ function continue_current_thread(mode)
   if (threadid) {
     hide_pos()
     alertError(apiCall({
-      "method":"x-p44-scriptContinue",
-      "dSUID":"root",
-      "threadid":threadid,
-      "mode":mode
+      method:"x-p44-scriptContinue",
+      dSUID:"root",
+      threadid:threadid,
+      mode:mode
     }).done(function(result) {
       poll_debug_info()
     }))
@@ -976,15 +992,15 @@ function continue_current_thread(mode)
 }
 
 
-function enable_debugger(enable)
+function enable_debugger(enable, timeoutfactor = 10)
 {
   if (!enable) hide_pos()
   if (enable) {
     // activate debugger with a timeout of 10-fold the paused threads poll interval
-    var dfd = alertError(apiCall({ "method":"x-p44-debuggerActivate", "dSUID":"root", "timeout":cPollInterval*10 }))
+    var dfd = alertError(apiCall({ method:"x-p44-debuggerActivate", dSUID:"root", timeout:cPollInterval*timeoutfactor }))
   }
   else {
-    var dfd = apiCall({ "method":"setProperty", "dSUID":"root", "properties": { "x-p44-scripts": { "debugging": false } } })
+    var dfd = apiCall({ method:"setProperty", dSUID:"root", properties: { "x-p44-scripts": { debugging: false } } })
   }
   return dfd
 }
@@ -998,10 +1014,10 @@ function runcommand(scriptid, command, evaluate)
   save_script(scriptid).done(function() {
     enable_debugger(true).done(function () {
       var call = {
-        "method":"x-p44-scriptCommand",
-        "dSUID":"root",
-        "scriptsourceuid":scriptid,
-        "command":command
+        method:"x-p44-scriptCommand",
+        dSUID:"root",
+        scriptsourceuid:scriptid,
+        command:command
       }
       if (evaluate) call.evalresult = true
       alertError(apiCall(call).done(function(result) {
@@ -1098,9 +1114,9 @@ function open_script(scriptid)
   if (!session) {
     // get script
     apiCall({
-      "method":"getProperty",
-      "dSUID":"root",
-      "query":{ "x-p44-scripts":{ "sources":{ [scriptid]:null }} }
+      method:"getProperty",
+      dSUID:"root",
+      query:{ "x-p44-scripts":{ sources:{ [scriptid]:null }} }
     }).done(function(result) {
       var script = result["x-p44-scripts"].sources[scriptid]
       // create the session
@@ -1328,9 +1344,9 @@ function save_script(scriptid)
     else {
       // save script source
       apiCall({
-        "method":"setProperty",
-        "dSUID":"root",
-        "properties":{ "x-p44-scripts":{ "sources":{ [scriptid]: { sourcetext: session.getValue() }}} }
+        method:"setProperty",
+        dSUID:"root",
+        properties:{ "x-p44-scripts":{ sources:{ [scriptid]: { sourcetext: session.getValue() }}} }
       }).done(function(result) {
         // saved (note: this must happen for unstored scripts, too. We just don't persist them, but need to send them via API)
         editor.session.getUndoManager().markClean()
@@ -1356,7 +1372,7 @@ function debugViewsShown()
 function toggleDebugViews(show)
 {
   if (togglePanel('#debugpanel', '#editorpanel', show)) {
-    if (panelShown('#debugpanel')) {
+    if (debugViewsShown()) {
       // always (re)enable debugger on show
       enable_debugger(true)
     }

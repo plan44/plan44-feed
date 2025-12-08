@@ -1,0 +1,1521 @@
+openapi: 3.0.3
+info:
+  title: plan44.ch P44-xx devices http API
+  version: v3
+  description: |
+    P44-xx devices have a web interface which is built upon a http API as described here.
+    This API can also be used for integrations.
+
+    ## General Notes:
+
+    - Note that the HTTP version of this API is intended primarily for web interfaces.
+      For tight real-time integrations, one of the TCP socket APIs in the vdcd should be used,
+      such as the **bridge API**.
+    - The contents of the socket APIs are the same as this HTTP version, so this documentation
+      also serves as documentation for the TCP socket API.
+    - the `?method=xxxx` and `?notification=xxx` suffixes in the API path are not needed as
+      these are included in the request body. The suffix is included in the API spec redundantly
+      only to separate different API calls visually (as these are grouped by path).
+
+  contact:
+    name: plan44.ch user forum
+    url: https://forum.plan44.ch
+  license:
+    name: GPLv3
+
+externalDocs:
+  description: |
+    Please also consult plan44.ch technical documentation
+  url: https://plan44.ch/p44-techdocs/en
+
+
+paths:
+  /tok/json:
+    get:
+      summary: get CSRF token for API calls
+      description: |
+        Obtain the CSRF protection token to be used in calls to the API
+      tags: [CSRF token]
+      responses:
+        '200':
+          description: CSRF token to be used as `?rqvaltok=xxx` parameter in all other requests (hex number without the quotes)
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                named:
+                  value: "3718cce9179b187c74a64d8d20eaba05"
+
+
+  /api/json/vdc?method=getProperty:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: get property values from devices, vdcs, vdchost
+      description: |
+        Read properties (can be entire property subtrees) from addressable entities in
+        the system, such as devices, vdcs, vdchost.
+
+        Notes:
+        - use a wildcard query to see what properties a specific device has (see examples)
+        - the *query* can be understood as a template for what properties are to be
+          returned. In the response, the fields that are set *null* in the *query*
+          will be filled with the content of the properties.
+          Combined with wildcards, this allows complex queries for arbitrary subtrees
+          of the property tree.
+        - to avoid ultra-huge results, not all properties are recursively returned when
+          not explicitly addressed. For example
+          `"query": null` will not automatically drill down into `x-p44-vdcs` and `x-p44-devices`
+        - there **are no array properties**, only nested objects. Array-*like* properties are
+          represented by an objects, which contains a field with a numeric name ("0", "1", ...)
+          for each array element.
+      operationId: getProperty
+      tags: [Property Access]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID, query]
+              properties:
+                method:
+                  type: string
+                  default: getProperty
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                query:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    the query specifies the properties that should be returned, by specifying
+                    their names and names of subproperties as a structured template with
+                    property values set to null.
+                  example: '{ "name": null, "dSUID":null, "outputDescription": { "name":null } }'
+            examples:
+              named:
+                summary: |
+                  Simple query of two named properties
+                value:
+                  method: getProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  query: { "name": null, "model": null }
+              nameddeep:
+                summary: |
+                  Query of a single global property which has structure - scenes list
+                value:
+                  method: getProperty
+                  dSUID: root
+                  query: { "x-p44-scenesList": null }
+              allflat:
+                summary: |
+                  Wildcard query of all properties in the addressed entity, but not descending in sub-levels
+                value:
+                  method: getProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  query: { "*": null }
+              wildcardflat:
+                summary: |
+                  Wildcard query of all properties named "x-p44-..." on the addressed entity's root level, but not descending into sub-levels
+                value:
+                  method: getProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  query: { "x-p44-*": null }
+              wildcarddeep:
+                summary: |
+                  Wildcard query of the entire property hierarchy of the addressed entity (however some deep recursion is limited, see note above)
+                value:
+                  method: getProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  query: { "": null }
+              selected:
+                summary: |
+                  get the dSUID, model and name of each vdc, and dSUID and name of each device contained
+                value:
+                  method: getProperty
+                  dSUID: root
+                  query: { "x-p44-vdcs": { "": { "dSUID":null, "model":null, "name":null, "x-p44-devices": { "": { "dSUID":null, "name":null } } }}}
+      responses:
+        '200':
+          description: property reading result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    description: |
+                      the values of the requested properties, in the same hierarchy as
+                      defined in the *query* request. This means that the
+                      *result* has the same structure as *query*, with the *null*
+                      placeholders in the *query* replaced by actual property values
+                      (and wildcards expanded).
+                    additionalProperties: true
+              examples:
+                named:
+                  summary: |
+                    Two named properties at the top level of the queried entity (device)
+                  value:
+                    result: { "name": "some name", "model": "device model" }
+                selected:
+                  summary: |
+                    Hierarchical result over several nesting levels
+                  value:
+                    result:
+                      x-p44-vdcs:
+                        "0":
+                          dSUID: "026F1EB13A8B573E807A26371AF673C000"
+                          model: "P44-DSB-X GPIO,I2C,console"
+                          name: ""
+                          x-p44-devices:
+                            "0":
+                              dSUID: "5C1C676E3CC253BFC079C094177369CC00"
+                              name: "relay1"
+                            "1":
+                              dSUID: "EB218A82E0AA573A804DA4E7D102596A00"
+                              name: "relay2"
+                        "1":
+                          dSUID: "241FA1EB1B7F57A9C0345B57383984D400"
+                          model: "P44-DSB-X hue"
+                          name: ""
+                          x-p44-devices: {}
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+
+  /api/json/vdc?method=setProperty:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: set property values from devices, vdcs, vdchost (also add/delete)
+      description: |
+        Write new values to properties in addressable entities in
+        the system, such as devices, vdcs, vdchost. In case of dynamic containers,
+        also adding or removing elements works via *setProperty*
+      operationId: setProperty
+      tags: [Property Access]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID, properties]
+              properties:
+                method:
+                  type: string
+                  default: setProperty
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                properties:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    - specifies the properties and their values that should be set
+                      as a object list or tree of possibly nested properties.
+                    - Setting a sub property to `null` when it is part of a mutable container
+                      deletes that subproperty.
+                  example: '{ "channelStates": { "brightness": { "value": 42 } } }'
+            examples:
+              simple:
+                summary: >
+                  Setting a new property value
+                value:
+                  method: setProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  properties: { "name": "my new device name" }
+              nested:
+                summary: >
+                  Setting a nested subproperty
+                value:
+                  method: setProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  properties: { "channelStates": { "brightness": { "value": 42 } } }
+              multiple:
+                summary: >
+                  Setting multiple properties
+                value:
+                  method: setProperty
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  properties: { "zone": 22999, "outputSettings": { "groups": { "1": false, "8": true } } }
+      responses:
+        '200':
+          description: Successfully changed property
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    default: null
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=callScene:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: recall scene in device(s)
+      description: |
+        calls scene in specified device(s), or all devices in specified group or zone.
+        Calling a scene means re-applying channel values (such as brightness, color etc.)
+        that were saved with *saveScene* before. Also, invoking a scene optionally runs
+        the *scene action* which can be a simple effect like blinking, or a more complex
+        procedure specified by a *scene script*.
+      operationId: callScene
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, scene]
+              properties:
+                notification:
+                  type: string
+                  default: callScene
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                scene:
+                  $ref: '#/components/schemas/scene_no'
+                force:
+                  type: boolean
+                  description: |
+                    if set, the scene also affects devices that have localPriority set.
+                transitionTime:
+                  type: double
+                  description: |
+                    optional transition time to the new scene in seconds. If set, this overrides
+                    the scene's default transition time.
+                optimize:
+                  type: boolean
+                  description: |
+                    When optimizer is on for the device class, override automatic criteria
+                    for using or not using the optimizer for this scene call.
+            examples:
+              single:
+                summary: |
+                  invoke preset1 (scene #5) in single specified device
+                value:
+                  notification: callScene
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  scene: 5
+                  force: false
+              multiple:
+                summary: |
+                  invoke preset2 (scene #17) in multiple specified devices
+                value:
+                  notification: callScene
+                  dSUID: [ 657356B2BEE75F5B80A8F75CABD56D4700, 076199141EC858EA806FDDBE2125634E00 ]
+                  scene: 17
+                  force: false
+              room:
+                summary: |
+                  invoke off scene (scene #0) in all light devices in specified zone (room), unconditionally (forced)
+                value:
+                  notification: callScene
+                  zone_id: 22000
+                  group: 1
+                  scene: 0
+                  force: true
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=saveScene:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: save scene in device(s)
+      description: |
+        saves scene in specified device(s), or all devices in specified group or zone.
+        Saving a scene means storing the current channel values (such as brightness, color etc.)
+        into the specified scene number.
+      operationId: saveScene
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, scene]
+              properties:
+                notification:
+                  type: string
+                  default: saveScene
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                scene:
+                  $ref: '#/components/schemas/scene_no'
+            examples:
+              single:
+                summary: |
+                  save current channel values to preset1 (scene #5) in single specified device
+                value:
+                  notification: saveScene
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  scene: 5
+              room:
+                summary: |
+                  save current channels of all light devices in specified zone (room)
+                  to scene 17 (preset 2).
+                value:
+                  notification: saveScene
+                  zone_id: 22000
+                  group: 1
+                  scene: 17
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=undoScene:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: undo previously called scene in device(s)
+      description: |
+        restores the channel values in specified device(s), or all devices in specified group or zone
+        to the state it has been before last call to the specified scene.
+        Note: this only works when there was no other scene call since calling the to-be-undone
+        scene. This API is intended to revert attention event scenes such as doorbell, alarm, fire.
+      operationId: undoScene
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, scene]
+              properties:
+                notification:
+                  type: string
+                  default: undoScene
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                scene:
+                  $ref: '#/components/schemas/scene_no'
+            examples:
+              room:
+                summary: |
+                  undo alarm 1 scene
+                value:
+                  notification: undoScene
+                  zone_id: 22000
+                  group: 1
+                  scene: 74
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=setLocalPriority:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: set LocalPriority in device(s)
+      description: |
+        Sets specified device(s), or all devices in specified group or zone
+        into local priority mode (i.e. sets the localPriority property) if the passed scene
+        does not have the dontCare flag set. This is used for including devices into area operations.
+      operationId: setLocalPriority
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, scene]
+              properties:
+                notification:
+                  type: string
+                  default: setLocalPriority
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                scene:
+                  $ref: '#/components/schemas/scene_no'
+            examples:
+              room:
+                summary: |
+                  set localPriority for devices that are affected by "area1 on" scene
+                value:
+                  notification: setLocalPriority
+                  zone_id: 22000
+                  group: 1
+                  scene: 6
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=callSceneMin:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: prepare device(s) for dimming from off state
+      description: |
+        In specified device(s), or all devices in specified group or zone,
+        if output is off, set output to the minimal value needed to become logically
+        switched on and participate in dimming. Otherwise, no action is taken.
+      operationId: callSceneMin
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, scene]
+              properties:
+                notification:
+                  type: string
+                  default: callSceneMin
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                scene:
+                  $ref: '#/components/schemas/scene_no'
+            examples:
+              single:
+                summary: |
+                  enable device for dimming from off state
+                value:
+                  notification: callSceneMin
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+                  scene: 5
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=x-p44-syncChannels:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: sync back channel values from hardware
+      description: |
+        This method can be called to have the device to synchronize the
+        its channel values by reading them back from hardware (if device hardware allows).
+        Channel value sync occurs automatically before saving a scene to make
+        sure saved channel values are correct, and some hardware device's channel
+        values are always known by design. This method is for devices where obtaining
+        current values might be expensive in terms of time or processing.
+      operationId: x-p44-syncChannels
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: x-p44-syncChannels
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=setOutputChannelValue:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: set output channel in device(s)
+      description: |
+        In specified device(s), or all devices in specified group or zone,
+        set a new target output value of a channel or initiate transition
+        at a specified rate.
+      operationId: setOutputChannelValue
+      tags: [Output channels]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, channel]
+              properties:
+                notification:
+                  type: string
+                  default: setOutputChannelValue
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                channel:
+                  $ref: '#/components/schemas/channel'
+                channelId:
+                  $ref: '#/components/schemas/channelId'
+                value:
+                  type: double
+                  description: |
+                    new channel value.
+                transitionTime:
+                  type: double
+                  description: |
+                    the time in seconds for the output transition from current
+                    value to new value. If not specified, the output's standard
+                    transition time applies.
+                apply_now:
+                  type: boolean
+                  default: true
+                  description: |
+                    optional boolean, if set to false, channel value is not
+                    applied to hardware right now, but stored as pending change.
+                    Only when a subsequent `setOutputChannelValue` with `apply_now`
+                    set to true (or not specified) occurs, all pending channel
+                    values are applied to hardware synchonously. This is important
+                    for color changes which must change multiple channels
+                    in sync for smooth color transition.
+                onoff:
+                  type: boolean
+                  default: true
+                  description: |
+                    optional boolean, if set to false, outputs which have
+                    a on/off semantic (such as dimmable lights that are
+                    fully *off* only at brightness=0, and *on* at any other value)
+                    do not change their on/off state. So a light that is off will
+                    not switch on regardless of what value is set, and a light that
+                    is on cannot be turned off even when setting brightness to 0.
+                coupling:
+                  type: boolean
+                  default: true
+                  description: |
+                    optional boolean, if set to false, and output has channel
+                    coupling defined (such as glow-dim, or custom script defined
+                    coupling), the coupling will not be applied to this output
+                    value change.
+                move:
+                  type: integer
+                  description: |
+                    optional integer; if it is present, the channel is not set
+                    to a fixed target value but starts or stops transitioning:
+                    1=increase value, -1=decrease value, 0=stop.
+                    The optional `rate` field can specify the speed. If no
+                    rate is set, default dimming speed of the channel is used.
+                rate:
+                  type: double
+                  default: 0
+                  description: |
+                    Only with `move`, specifies the rate of channel value
+                    change in seconds per unit of the channel value. So
+                    for example rate=0.02 for a brightness output channel
+                    withe a range of 0..100% means one percent in 2/100th of
+                    a second, so a full transition in 2 seconds. If
+                    rate is set to zero, default dimming speed of the channel is used.
+                sync:
+                  type: integer
+                  default: 0
+                  description: |
+                    This specifies the sync mode which means how new channel values
+                    are "picked up" depending on previous values reported by the same
+                    source. This allows synchronisation of dimmer dials with current
+                    channel value. Sync modes are: 0=jump (just apply the new value),
+                    1=pickup (dial must traverse the current value to pick up control),
+                    2=scale (dial scale is bent proportionally to map to current value).
+                    Note: in order for sync to work, `previous` must also be included.
+                previous:
+                  type: double
+                  description: |
+                    For `sync` mode other than 0, this value must specify the previous
+                    value applied from the same source (dimmer dial) to this output.
+            examples:
+              room:
+                summary: |
+                  set all lights in zone/room to 50% brightness within 2.5 seconds
+                value:
+                  notification: setOutputChannelValue
+                  channel: 0
+                  value: 50
+                  transitionTime: 2.5
+                  zone_id: 22000
+                  group: 1
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=stopOutput:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: stop output transitions and other actions
+      description: |
+        This method can be called to stop all scene actions, that is extra effects
+        such as blinking, running a scene script and all ongoing channel transitions.
+        Note: this replaces former "x-p44-stopSceneActions" method.
+      operationId: stopOutput
+      tags: [Scenes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                notification:
+                  type: string
+                  default: stopOutput
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                transitions:
+                  type: bool
+                  default: true
+                  description: |
+                    set to false to prevent stopping ongoing channel transitions
+                sceneactions:
+                  type: bool
+                  default: true
+                  description: |
+                    set to false to prevent stopping scene actions (blinking, scene scripts, etc.)
+            examples:
+              room:
+                summary: |
+                  stop all channel transitions in the room
+                value:
+                  notification: stopOutput
+                  transitions: true
+                  sceneactions: true
+                  zone_id: 22000
+                  group: 1
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=dimChannel:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: start or stop dimming of output channel in device(s)
+      description: |
+        In specified device(s), or all devices in specified group or zone,
+        start or stop dimming.
+
+        Notes:
+        - for dimming operations exceeding
+          5 seconds, `dimChannel` must be repeated within 5 seconds, otherwise
+          dimming stops (unless `autoStop` is set to false.
+        - unlike setOutputChannelValue, dimChannel does not have
+          `channelID`, channel type to be dimmed *must* be specified
+          in `channel` as numeric channel type.
+      operationId: dimChannel
+      tags: [Output channels]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, channel, mode]
+              properties:
+                notification:
+                  type: string
+                  default: dimChannel
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                channel:
+                  $ref: '#/components/schemas/channel'
+                mode:
+                  type: integer
+                  description: |
+                    dimming mode: 1=dim up, -1=dim down, 0=stop dimming
+                area:
+                  type: integer
+                  default: 0
+                  description: |
+                    if set to non-zero, this specifies the area (1..4)
+                    to be dimmed, rather than the entire zone/room.
+                    This means that only devices will participate where the
+                    corresponding area scene does not have the dontCare flag set.
+                dimPerMS:
+                  type: double
+                  description: |
+                    if set, this specifies the dimming speed in units of the
+                    output channel per millisecond. Alternatively, and more intuitively
+                    `fullRangeTime` can be used to set dimming speed.
+                fullRangeTime:
+                  type: double
+                  default: 7
+                  description: |
+                    if set, this specifies the dimming speed in number of seconds
+                    to use for dimming over the full channel min..max range.
+                autoStop:
+                  type: boolean
+                  default: true
+                  description: |
+                    If set to false, dimming does not automatically stop after 5 seconds,
+                    but only when `dimChannel` is called with `mode=0`.
+                stopActions:
+                  type: boolean
+                  default: false
+                  description: |
+                    This can be used to force or prevent stopping ongoing actions
+                    on the output (such as blinking or running a scene script).
+                    By default, starting to dim does not stop ongoing actions,
+                    but stopping dimming does.
+                force:
+                  type: boolean
+                  default: false
+                  description: |
+                    This can be used to force dimming lights even when target
+                    device is switched off. By default, light devices that are
+                    in off state do not participate in dimming.
+            examples:
+              room:
+                summary: |
+                  start dimming down all lights in zone/room towards minimum
+                value:
+                  notification: dimChannel
+                  channel: 0
+                  mode: -1
+                  zone_id: 22000
+                  group: 1
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+
+
+
+  /api/json/vdc?notification=Identify:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: make device identify itself
+      description: |
+        Specified device will make itself physically identifiable
+        when possible. This might be by blinking a light output,
+        or small movements of a roller motor. Some devices might
+        have extra LEDs that can be blinked.
+        Note: technically, addressing devices
+        by zone and group is possible in this call as with other
+        notifications, but self-identification
+        of multiple devices at the same time does not make sense.
+      operationId: Identify
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, dSUID]
+              properties:
+                notification:
+                  type: string
+                  default: Identify
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                duration:
+                  type: double
+                  description: |
+                    This can be set to request a duration for the identification
+                    action. Note that not all devices can actually do non-default
+                    duration identification.
+            examples:
+              single:
+                summary: |
+                  make device identify itself
+                value:
+                  notification: Identify
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=ping:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: trigger presence check
+      description: |
+        Specified device will update the physical presence and/or
+        reachability (when remote) status of the device hardware
+        as far as it is possible for the device type.
+        The currently known presence status can be read
+        from the `active` property of each device.
+
+        Notes:
+        - ping might trigger lengthy communication on slow
+          buses, depending on device type. Do not fast-poll
+          devices with `ping`.
+        - via the bidirectional TCP socket version of this API,
+          a device that is present will respond to the `ping`
+          notification by sending a `pong` notification back
+          when presence has been successfully confirmed, eventually.
+          Via the http version of the API there is no netification
+          backchannel for `pong`, but the `active` property will get
+          updated eventually and can be read a few seconds after
+          `ping` to confirm presence.
+        - technically, addressing devices
+          by zone and group is possible in this call as with other
+          notifications, but usually does not make sense.
+      operationId: ping
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, dSUID]
+              properties:
+                notification:
+                  type: string
+                  default: ping
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+            examples:
+              single:
+                summary: |
+                  trigger presence check in device
+                value:
+                  notification: ping
+                  dSUID: 657356B2BEE75F5B80A8F75CABD56D4700
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?notification=setControlValue:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: provide control value to device(s)
+      description: |
+        Send a control value (such as room target or current temperature, heating level, ...)
+        to specified device(s), or all devices in specified group or zone.
+
+        Notes:
+        - this is relevant only for devices in special groups like heating and ventilation,
+          and only for devices with specific functionality in these groups (heating valves).
+      operationId: setControlValue
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [notification, name, value]
+              properties:
+                notification:
+                  type: string
+                  default: setControlValue
+                dSUID:
+                  $ref: '#/components/schemas/notification_dSUID'
+                zone_id:
+                  $ref: '#/components/schemas/notification_zone_id'
+                group:
+                  $ref: '#/components/schemas/notification_group'
+                name:
+                  type: string
+                  description: |
+                    The name of the control value
+                  example: TemperatureZone
+                value:
+                  type: double
+                  description: |
+                    The control value
+            examples:
+              room:
+                summary: |
+                  provide room temperature to devices in climate-control group
+                value:
+                  notification: setControlValue
+                  name: TemperatureZone
+                  value: 21.5
+                  zone_id: 22000
+                  group: 48
+      responses:
+        '200':
+          $ref: '#/components/schemas/NotificationResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=loglevel:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: set global log level
+      description: |
+        This method can be invoked on any device, vdc or the vdchost (root) to
+        set the log level. Log levels are:
+        - 0: 🚫 LOG_EMERG, system is unusable
+        - 1: ‼️ LOG_ALERT, action must be taken immediately
+        - 2: ⁉️ LOG_CRIT, critical conditions
+        - 3: 🔴 LOG_ERR, error conditions
+        - 4: ⚠️ LOG_WARNING, warning conditions
+        - 5: ✅ LOG_NOTICE, normal but significant condition
+        - 6: ℹ️ LOG_INFO, informational
+        - 7: 🛠️ LOG_DEBUG, debug-level messages
+        - 8: not a permanent loglevel, but using `loglevel` with `value`=8 triggers one-time logging
+             of some statistics.
+        Useful log level during normal operation is 5, for troubleshooting usually
+        6 is sufficient, in rare cases 7 may be needed (but gives a lot of output and
+        can slow down the system noticeably).
+      operationId: loglevel
+      tags: [Logging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID, value]
+              properties:
+                method:
+                  type: string
+                  default: loglevel
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                value:
+                  type: integer
+                  description: |
+                    new log level 0..7, or 8 to trigger statistics output
+            examples:
+              level:
+                summary: |
+                  set loglevel to 6 (more verbose, good for problem analysis)
+                value:
+                  method: loglevel
+                  dSUID: "root"
+                  value: 6
+              stats:
+                summary: |
+                  trigger log output of some internal statistics (one-time)
+                value:
+                  method: loglevel
+                  dSUID: "root"
+                  value: 8
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+  /api/json/vdc?method=logleveloffset:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: set context-specific log level offset
+      description: |
+        This method can be used to increase or decrease the log level of the
+        addressed context (device, vdc, vdchost or named "topic"). This allows
+        silencing or highlighting log output by context, depending on debugging needs.
+      operationId: logleveloffset
+      tags: [Logging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID, value]
+              properties:
+                method:
+                  type: string
+                  default: logleveloffset
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                value:
+                  type: integer
+                  example: -1
+                  description: |
+                    log level offset (-2..2 to adjust verbosity, -3 to totally silence or 3 to unconditionally enable) logging in this context
+                topic:
+                  type: string
+                  example: p44script
+                  description: |
+                    This optional string can be used to address a specific subsystem
+                    that has no dSUID of its own.
+                    At this time, available topics are:
+                    app, vdsmapi, localcontroller, p44script, mainscript, cfgapi, bridgeapi, ubusapi, scriptmanager, lvgl,
+                    wbfcomm, ds485comm, dalicomm, eldatcomm, enoceancomm, huecomm, ledarrangement, zfcomm
+            examples:
+              device:
+                summary: |
+                  increase the log level (verbosity) of the specified device
+                value:
+                  method: logleveloffset
+                  dSUID: "657356B2BEE75F5B80A8F75CABD56D4700"
+                  value: 1
+              topic:
+                summary: |
+                  reduce the log output (verbosity) of the p44script subsystem
+                value:
+                  method: logleveloffset
+                  dSUID: "root"
+                  topic: "p44script"
+                  value: -2
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=setConfiguration:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: switch device configuration
+      description: |
+        Switch configuration for devices that have multiple, such as buttons
+        which can be used as one two-way-rocker or two independet buttons.
+        See property `configurationDescriptions` in the device for a list
+        of available configurations, and (read-only) `configurationId` for
+        the currently active configuration.
+      operationId: setConfiguration
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: setConfiguration
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                configurationId:
+                  type: string
+                  description: |
+                    The ID of the configuration to activate
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=x-p44-teachInSignal:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: send teach-in Signal
+      description: |
+        Some devices need to be paired (taught in) into other devices to
+        be functional. This teach-in process sometimes needs a signal from
+        the device implementation, which can be triggered by this method.
+      operationId: x-p44-teachInSignal
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: x-p44-teachInSignal
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                variant:
+                  type: integer
+                  description: |
+                    teach-in signal variant, device type dependent meaning.
+                  default: 0
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=x-p44-removeDevice:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: remove device
+      description: |
+        This can be used to removes devices that were created via UI (scriptable, evaluator, simpleio, ...)
+        or were learned-in/paired indivdually (EnOcean devices, ...). Devices that are part of a
+        subsystem such as DALI, hue, dS485, wiser cannot be removed.
+      operationId: x-p44-removeDevice
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: x-p44-removeDevice
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=x-p44-learn:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: start device-wide learn-in/out mode
+      description: |
+        Starts device-wide learn mode. All device classes that have a learn mode
+        will activate it, the first device that delivers a learn action will
+        terminate the call.
+      operationId: x-p44-learn
+      tags: [Various]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: x-p44-learn
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                disableProximityCheck:
+                  type: boolean
+                  default: false
+                  description: |
+                    if set, proximity check is disabled for pairing that normally does require proximity
+                    (e.g. based on RSSI in EnOcean).
+                seconds:
+                  type: integer
+                  default: 30
+                  description: |
+                    Timeout in seconds. After this time and no learn-in or learn-out event detected, pairing terminates.
+                    Setting seconds to 0 means cancelling a running learn.
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+
+
+  /api/json/vdc?method=scanDevices:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: scan for devices in this vdc (device class)
+      description: |
+        (re)-enumerate the devices available in this device class, which
+        usually means scanning a bus or querying an external API.
+
+        Notes:
+        - this can be a long running call, it does not return a response before
+          scanning is complete, which might take several minutes depending
+          on the hardware bus and the number of devices (DALI is particularily slow).
+      operationId: scanDevices
+      tags: [Device class (vdc)]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: scanDevices
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                incremental:
+                  type: boolean
+                  default: true
+                  description: |
+                    if set, only new devices will be added, already known ones will not be re-registered
+                exhaustive:
+                  type: boolean
+                  default: false
+                  description: |
+                    if set, possibly more time consuming but also more thourough scanning of hardware
+                    buses (such as DALI) will be performed. All devices will be re-registered.
+                reenumerate:
+                  type: boolean
+                  default: false
+                  description: |
+                    if set, and the device class has non-permanent addresses, reenumerate the addresses.
+                    In DALI, this leads to re-assigning short addresses.
+                    Note: in poorly implemented gear w/o a factory serial number, this might lead to
+                    devices' dSUID changing for existing devices. Use with care!
+                clearconfig:
+                  type: boolean
+                  default: false
+                  description: |
+                    if set, all persistent settings of the devices will be deleted before scanning
+                    for devices. You normally don't want to do that!
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/json/vdc?method=pair:
+    parameters:
+      - $ref: '#/components/parameters/CsrfToken'
+    post:
+      summary: start pairing
+      description: |
+        Starts pairing (learn-in) with this vdc.
+        Terminates when pairing or unpairing is successful, or a timeout occurs.
+      operationId: pair
+      tags: [Device class (vdc)]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, dSUID]
+              properties:
+                method:
+                  type: string
+                  default: pair
+                dSUID:
+                  $ref: '#/components/schemas/dSUID'
+                establish:
+                  type: boolean
+                  description: |
+                    can be set to true to only allow pairing, or set to false to only allow un-pairing.
+                    If not set, new devices will be paired, already paired ones unpaired.
+                disableProximityCheck:
+                  type: boolean
+                  default: false
+                  description: |
+                    if set, proximity check is disabled for pairing that normally does require proximity
+                    (e.g. based on RSSI in EnOcean).
+                timeout:
+                  type: integer
+                  default: 30
+                  description: |
+                    Timeout in seconds. After this time and no pairing event detected, pairing terminates.
+      responses:
+        '200':
+          $ref: '#/components/schemas/MethodOKResponse'
+        default:
+          $ref: '#/components/schemas/ErrorResponse'
+
+
+
+
+components:
+
+  parameters:
+
+    CsrfToken:
+      name: rqvaltok
+      in: query
+      description: CSRF token required for API access (get it from `/tok/json`)
+      required: true
+      schema:
+        type: string
+
+
+  schemas:
+
+    dSUID:
+      type: string
+      minLength: 4
+      maxLength: 34
+      description: |
+        the 17-byte / 34 hex digit dSUID (unique device identifier) addressing a device
+        class (vdc) or a device by ID. To address the root node (vdchost) you can use
+        its dSUID, or just pass the string "root" so knowledge of the vdchost dSUID
+        is not required to enumerate the system (vdhcost -> vdcs -> devices -> properties)
+      example: 657356B2BEE75F5B80A8F75CABD56D4700
+
+    scene_no:
+      type: integer
+      description: |
+        the number/id of the scene (DS scene number).
+        Note that many scene numbers have predefined semantics, so please
+        consult the scenes list (property `x-p44-scenesList` on the device
+        root level, see `getProperty` examples) to find the suitable scene number.
+        Often used scene numbers are 0 (off), 5 (preset1), 17..19 (preset2..4).
+        There are more presets, area scenes, and various event-related scenes
+        such as doorbell, alarm etc.
+      example: 5
+
+    channel:
+      type: integer
+      description: |
+        the DS channel type ID. 0 means default or main channel of the device.
+        This parameter mainly exists for backwards compatibility.
+        In most cases, you should use `channelId` instead with named channel types.
+        However for just accessing the default channel without knowing the type,
+        `channel:0` is useful.
+      example: 0
+
+    channelId:
+      type: string
+      description: |
+        the DS channel type as a (case sensitive!) string. This is an alternative
+        Common channel types are 'brightness', 'hue', 'saturation', 'colortemp', 'x', 'y', 'hPos', 'vPos'.
+      example: brightness
+
+    notification_dSUID:
+      oneOf:
+        - $ref: '#/components/schemas/dSUID'
+        - type: array
+          items:
+            $ref: '#/components/schemas/dSUID'
+
+    notification_zone_id:
+      type: integer
+      description: |
+        id of the zone (room) to select devices to receive the notification in.
+
+    notification_group:
+      type: integer
+      description: |
+        group number (1=light, 2=shadow, ... 8=joker) to select devices to receive the notification.
+
+
+    NotificationResponse:
+      description: |
+        Notification "ok" response. Note that in the underlying TCP socket API, notifications
+        by definition do have a response. In fact, that is the differentiation between *method*
+        (= unicast request with response from an addressed entity) and *notification*
+        (= information that is possibly broadcast to more than one entity, without any feedback).
+        As http requires a response for every requst, the http version of the API does
+        return this dummy response for notifications.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                default: null
+
+
+    MethodOKResponse:
+      description: |
+        OK response for methods that do not have a specific return value
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                default: null
+
+
+    ErrorResponse:
+      description: |
+        Generic error response object. Does not contain a "result" field, but "error" instead
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                description: |
+                  The error code within the error domain. Some domains have http-aligned error codes, but some
+                  have their own, domain-specific error codes.
+                  The only common reserved error code is 0, which means no error.
+                example: 404
+              errormessage:
+                type: string
+                description: |
+                  a message describing the error and possibly some context where and why it occurred.
+                example: "not found"
+              errordomain:
+                type: string
+                description: |
+                  a unique identifier to specify the originating domain of the error.
+                example: "VdcApi"
+              errortype:
+                type: integer
+                description: |
+                  Some error domains have additional types to classify errors further.
+              userfacingmessage:
+                type: string
+                description: |
+                  Some errors might carry a user facing message, that is possibly even localized
+                  according to device-level settings. Such a text will be returned here.
+            example: { "error":404, "errordomain":"VdcApi", "errormessage":"not found" }
+

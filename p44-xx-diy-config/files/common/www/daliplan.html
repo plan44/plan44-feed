@@ -153,8 +153,7 @@
               '<td class="vers">' + dispStr(daliDev.version_102) + '</td>' +
               '<td class="DT6">' + boolStr(daliDev.DT6) + '</td>' +
               '<td class="DT8">' + boolStr(daliDev.DT8) + '</td>' +
-              '<td class="LUN">' + dispStr(daliDev.lunIndex) + '</td>' +
-              '<td class="gtin">' + dispStr(daliDev.GTIN) + '</td>'
+              '<td class="LUN">' + dispStr(daliDev.lunIndex) + '</td>';
             // GTIN with link to DALI DB
             daliHtml += '<td class="gtin">';
             if (daliDev.GTIN!==undefined) {
@@ -164,6 +163,10 @@
               daliHtml += dispStr(daliDev.GTIN);
             }
             daliHtml += '</td>';
+            // Serial
+            daliHtml +=
+              '<td class="serial">' + dispStr(daliDev.serialNo) + '</td>' +
+              '</tr>';
           }
           daliHtml += '</tbody></table>';
           daliHtml += '<p><a id="reload" href="javascript:getDALISummary();">Reload</a></p>';
