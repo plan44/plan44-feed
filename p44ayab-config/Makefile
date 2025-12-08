@@ -59,11 +59,9 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/www
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DIR) $(1)/etc/config_p44defaults
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
 	$(CP) $(PKG_BUILD_DIR)/etc/* $(1)/etc
-	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
 	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
