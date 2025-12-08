@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2023 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2016-2025 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,11 +7,23 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44-xx-diy-config
 # version of what we are downloading
-PKG_VERSION:=1.8.2.0
+PKG_VERSION:=1.8.2.40
 # version of this makefile
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+# derive P44 platform identifier
+ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_plan44_p44dsbomega2),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=p44xx-omega2
+endif
+ifeq ($(CONFIG_TARGET_bcm27xx_bcm2708_DEVICE_rpi),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
+endif
+ifeq ($(CONFIG_TARGET_bcm27xx_bcm2709_DEVICE_rpi-2),y)
+  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-2
+endif
+
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)-$(P44_CONFIG_PLATFORM_IDENTIFIER)
 PKG_CHECK_FORMAT_SECURITY:=0
 
 PKG_CONFIG_DEPENDS := \
@@ -42,30 +54,17 @@ define Package/$(PKG_NAME)/config
 endef
 
 
-# derive P44 platform identifier
-ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_plan44_p44dsbomega2),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=omega2
-endif
-ifeq ($(CONFIG_TARGET_bcm27xx_bcm2708_DEVICE_rpi),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-1
-endif
-ifeq ($(CONFIG_TARGET_bcm27xx_bcm2709_DEVICE_rpi-2),y)
-  P44_CONFIG_PLATFORM_IDENTIFIER:=raspberry-pi-2
-endif
-
-
 define Build/Prepare
-	mkdir -p $(PKG_BUILD_DIR)/etc
-	$(CP) ./files/* $(PKG_BUILD_DIR)/
-	# copy main platform definition file (more platform defs might be loaded dynamically)
-	$(CP) ./platform_defs/$(P44_CONFIG_PLATFORM_IDENTIFIER).defs $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# - append identifier
+	# copy makefile into build dir
+	$(CP) ./files/Makefile $(PKG_BUILD_DIR)/
+	# copy common files for all P44 platforms
+	$(CP) ./files/common/* $(PKG_BUILD_DIR)/
+	# copy files specific to this P44 platform
+	$(CP) ./files/$(P44_CONFIG_PLATFORM_IDENTIFIER)/* $(PKG_BUILD_DIR)/
+	# append identifier to main platform definition
 	echo "PLATFORM_IDENTIFIER=\"$(P44_CONFIG_PLATFORM_IDENTIFIER)\"" >> $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# - append operating system
+	# append operating system
 	echo "PLATFORM_OS_IDENTIFIER=\"openwrt\"" >> $(PKG_BUILD_DIR)/etc/p44platform.defs
-	# copy all platform and product definitions that might be dynamically loaded depending on uboot env settings
-	$(CP) ./platform_defs/p44* $(PKG_BUILD_DIR)/etc
-	$(CP) ./product_defs/p44* $(PKG_BUILD_DIR)/etc
 	# create version file
 	echo $(CONFIG_VERSION_NUMBER) > $(PKG_BUILD_DIR)/etc/p44version
 	# create feed name file
@@ -77,20 +76,16 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/flash
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_DIR) $(1)/etc/config_p44defaults
 	$(INSTALL_DIR) $(1)/usr/share/p44xx
 	$(INSTALL_DIR) $(1)/www
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(CP) $(PKG_BUILD_DIR)/etc/* $(1)/etc
-	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config_p44defaults
-	$(CP) $(PKG_BUILD_DIR)/config_p44defaults_${P44_CONFIG_PLATFORM_IDENTIFIER}/* $(1)/etc/config
-	$(CP) $(PKG_BUILD_DIR)/resources/* $(1)/usr/share/p44xx
+	$(CP) $(PKG_BUILD_DIR)/usr/* $(1)/usr
+	$(CP) $(PKG_BUILD_DIR)/lib/* $(1)/lib
 	$(CP) $(PKG_BUILD_DIR)/www/* $(1)/www
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/sbin/* $(1)/sbin
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/keep-p44xx_${P44_CONFIG_PLATFORM_IDENTIFIER} $(1)/lib/upgrade/keep.d/p44xx
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/ubus-acls/* $(1)/usr/share/rpcd/acl.d
 endef
 
 

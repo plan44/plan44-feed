@@ -4,17 +4,27 @@
 p44maintd --defs >/tmp/p44defs
 source /tmp/p44defs
 
+# make sure we don't start with empty defs
+if [ -z "${PRODUCT_MODEL}" ]; then
+  echo "could not read product defs yet, retry again in 5 seconds"
+  sleep 5
+  exit 1
+fi
+
+
 # default features
 APPNAME=vdcd
 EXECUTABLE=${APPNAME}
-WITHHUE=${PRODUCT_HAS_HUE}
-WITHOLA=${PRODUCT_HAS_OLA}
-WITHDMX=${PRODUCT_HAS_DMX}
-WITHSTATIC=${PRODUCT_HAS_TINKER}
-WITHEXTERNAL=${PRODUCT_HAS_TINKER}
-WITHLEDCHAIN=${PRODUCT_HAS_LEDCHAIN}
+WITHHUE=${PRODUCT_HAS_HUE-0}
+WITHOLA=${PRODUCT_HAS_OLA-0}
+WITHDMX=${PRODUCT_HAS_DMX-0}
+WITHSTATIC=${PRODUCT_HAS_TINKER-0}
+WITHEXTERNAL=${PRODUCT_HAS_TINKER-0}
+WITHLEDCHAIN=${PRODUCT_HAS_LEDCHAIN-0}
+WITHLVGL=${PRODUCT_HAS_DISPLAY-0}
 LOGLEVEL=5
 LOGOPTS="--logsymbols"
+WEBUIPATH="/index.html"
 EXTRAOPTS=
 
 INITSCRIPT=
@@ -72,8 +82,12 @@ if [ "${WITHEXTERNAL}" = '1' ]; then
   EXTERNALDEVICES='--externaldevices 8999 --externalnonlocal'
 fi
 LEDCHAINDEVICES=
-if [ "${WITHLEDCHAIN}" = '1'  -a -n "${PLATFORM_LEDCHAIN_TYPE}" ]; then
+if [ "${WITHLEDCHAIN}" = '1' ]; then
+  if [ -n "${PLATFORM_LEDCHAIN_TYPE}" ]; then
   LEDCHAINDEVICES="--ledchain ${PLATFORM_LEDCHAIN_TYPE}:${PLATFORM_LEDCHAIN_DEVICE}:${PLATFORM_LEDCHAIN_NUMLEDS}"
+  else
+    LEDCHAINDEVICES="--ledchain none"
+  fi
 fi
 OLADEVICES=
 if [ "${WITHOLA}" = '1' ]; then
@@ -84,6 +98,10 @@ fi
 DMXDEVICES=
 if [ "${WITHDMX}" = '1' -a -n "${PLATFORM_DMXUART}" ]; then
   DMXDEVICES="--dmx ${PLATFORM_DMXUART}"
+fi
+LVGLDISPLAY=
+if [ "${WITHLVGL}" = '1' -a -n "${PLATFORM_LVGL_SPEC}" ]; then
+  LVGLDISPLAY="--lvgl ${PLATFORM_LVGL_SPEC}"
 fi
 
 
@@ -103,7 +121,7 @@ exec ${EXECUTABLE} \
   --cfgapiport 8090 \
   --ubusapi \
   --webuiport 80 \
-  --webuipath "/index.html" \
+  --webuipath "${WEBUIPATH}" \
   --sshport 22 \
   --sqlitedir /flash \
   --datapath /flash \
@@ -116,6 +134,7 @@ exec ${EXECUTABLE} \
   --novdcapi \
   ${SETUPSCRIPT} \
   ${INITSCRIPT} \
+  ${LVGLDISPLAY} \
   ${HUEDEVICES} \
   ${STATICDEVICES} \
   ${EXTERNALDEVICES} \

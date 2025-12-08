@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# reset commissioning without clearing EP to device mapping
+sv stop p44mbrd; sleep 10; sv stop p44mbrd
+rm /flash/p44mbrd_kvs.orig
+mv /flash/p44mbrd_kvs /flash/p44mbrd_kvs.orig
+sed -n '/ch.plan44.p44mbrd/p' /flash/p44mbrd_kvs.orig | awk '!seen[$0]++' >/flash/p44mbrd_kvs
+sv start p44mbrd

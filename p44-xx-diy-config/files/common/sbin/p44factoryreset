@@ -12,8 +12,8 @@ fi
 # reset network settings?
 if [ "$1" -eq 2 -o "$1" -eq 3 ]; then
   # copy network settings template from rom
-  cp -f /etc/config_p44defaults/network /etc/config/network
-  cp -f /etc/config_p44defaults/wireless /etc/config/wireless
+  cp -f /rom/etc/config/network /etc/config/network
+  cp -f /rom/etc/config/wireless /etc/config/wireless
 fi
 
 # reset other settings?
@@ -25,7 +25,7 @@ elif [ "$1" -eq 1 -o "$1" -eq 3 ]; then
   # network setup must be kept, so do only "soft" reset
   rm -rf /flash/*
   # also reset time zone and ntp
-  cp -f /etc/config_p44defaults/system /etc/config/system
+  cp -f /rom/etc/config/system /etc/config/system
 fi
 
 # anyway

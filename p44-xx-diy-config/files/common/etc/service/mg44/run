@@ -7,6 +7,13 @@ EXECUTABLE=${APPNAME}
 p44maintd --defs >/tmp/p44defs
 source /tmp/p44defs
 
+# make sure we don't start with empty defs
+if [ -z "${PRODUCT_MODEL}" ]; then
+  echo "could not read product defs yet, retry again in 5 seconds"
+  sleep 5
+  exit 1
+fi
+
 # mg44's dynamic SSL loader needs basic library names
 cd /usr/lib
 if [ ! -e libssl.so ]; then

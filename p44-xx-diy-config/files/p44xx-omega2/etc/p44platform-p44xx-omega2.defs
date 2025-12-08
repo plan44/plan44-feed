@@ -12,7 +12,7 @@ PLATFORM_GREEN_LED="gpio.19"
 PLATFORM_BUTTON="gpio.38"
 
 # default product and producer
-PRODUCT_IDENTIFIER="p44-xx-diy_omega2"
+PRODUCT_IDENTIFIER="p44-xx-diy_p44xx-omega2"
 PRODUCER="DIY"
 
 # ubootenv might have dynamic overrides for PRODUCT_IDENTIFIER and PRODUCER
