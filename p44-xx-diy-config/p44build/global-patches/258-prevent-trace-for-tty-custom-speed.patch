@@ -1,5 +1,5 @@
 --- /dev/null
-+++ b/target/linux/generic/hack-5.10/999-spi-nor-prevent-trace-for-tty-custom-speed.patch
++++ b/target/linux/generic/hack-5.10/999-prevent-trace-for-tty-custom-speed.patch
 @@ -0,0 +1,22 @@
 +--- a/drivers/tty/serial/serial_core.c
 ++++ b/drivers/tty/serial/serial_core.c
