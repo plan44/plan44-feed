@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=vdcd
 # version of what we are downloading
-PKG_VERSION:=2.8.2.41
+PKG_VERSION:=2.8.2.42
 # version of this makefile
-PKG_RELEASE:=267
+PKG_RELEASE:=268
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=3a73a90b10f10a569d9149eee1436fb823114ac1
+PKG_SOURCE_VERSION:=96e5eef707ebe460badfd23ff601b0ef11efe610
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git
@@ -55,9 +55,10 @@ define Package/$(PKG_NAME)
 endef
 
 define Package/$(PKG_NAME)/description
- vdcd is a free (opensource, GPLv3) virtual device connector (vdc) implementation
- for Digital Strom systems. A vdc integrates third-party automation hardware as
- virtual devices into a Digital Strom system.
+ vdcd is a free (opensource, GPLv3) smarthome device connector (vdc) implementation,
+ for standalone operation or as companion in a Digital Strom system.
+ A vdc integrates third-party automation hardware under a common device model that
+ can also be bridged into matter smarthomes via the p44mbrd matter bridge daemon.
 endef
 
 define Package/$(PKG_NAME)/config
@@ -78,6 +79,7 @@ CONFIGURE_ARGS += \
 	$(call autoconf_bool,CONFIG_VDCD_P44FEATURES,p44features) \
 	$(call autoconf_bool,CONFIG_VDCD_EV,ev) \
 	$(call autoconf_bool,CONFIG_VDCD_UWSC,uwsc) \
+	$(call autoconf_bool,CONFIG_PACKAGE_libgpiod,gpiod) \
 	$(call autoconf_bool,CONFIG_VDCD_LVGL,lvgl) \
 	$(call autoconf_bool,CONFIG_VDCD_LVGLDRM,lvgldrm) \
 	$(call autoconf_bool,CONFIG_VDCD_DS485,ds485) \
