@@ -12,7 +12,7 @@ PKG_VERSION:=2.8.2.42
 PKG_RELEASE:=270
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=96e5eef707ebe460badfd23ff601b0ef11efe610
+PKG_SOURCE_VERSION:=784b9e31d589475a7580a6f1bc6edeb9ffbe2b6d
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/vdcd.git

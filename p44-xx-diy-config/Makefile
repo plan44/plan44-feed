@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44-xx-diy-config
 # version of what we are downloading
-PKG_VERSION:=1.8.2.40
+PKG_VERSION:=1.8.2.42
 # version of this makefile
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 # derive P44 platform identifier
 ifeq ($(CONFIG_TARGET_ramips_mt76x8_DEVICE_plan44_p44dsbomega2),y)
