@@ -79,6 +79,13 @@ PLATFORM=${P##*/}
 
 #echo "version=${NEWVERSION}, feed=${NEWFEED}"
 
+if [[ "${NEWVERSION}" = "status" ]]; then
+  # always show everything on status
+  UPDATE_CONFIGS=1;
+  UPDATE_VDCD=1;
+  UPDATE_P44MBRD=1;
+fi
+
 # configs
 if [[ ${UPDATE_CONFIGS} -ne 0 ]]; then
   # p44build diffconfigs and, optionally, .config
@@ -91,7 +98,7 @@ if [[ ${UPDATE_CONFIGS} -ne 0 ]]; then
   fi
   # iterate through diffconfigs and currently loaded config
   for CFG in ${CONFIGS}; do
-    info "- ${CFG}:"
+    plain "- ${CFG##*/}"
     VERSION=$(sed -E -n -e "/CONFIG_VERSION_NUMBER=/s/CONFIG_VERSION_NUMBER=\"(.*)\"/\\1/p" "${CFG}")
     FEED=$(sed -E -n -e "/CONFIG_P44_FEED_NAME=/s/CONFIG_P44_FEED_NAME=\"(.*)\"/\\1/p" "${CFG}")
     if [[ "${NEWVERSION}" = "status" ]]; then
@@ -114,6 +121,7 @@ if [[ ${UPDATE_CONFIGS} -ne 0 ]]; then
         echo "  config feed stays at ${FEED}"
       fi
     fi
+    info "  in config file: ${CFG}:"
   done
 fi
 
@@ -146,7 +154,9 @@ if [[ ${UPDATE_P44MBRD} -ne 0 ]]; then
 fi
 # iterate through makefiles
 for MKF in ${MAKEFILES[@]}; do
-  info "- ${MKF}:"
+  MKPATH="${MKF%%/Makefile}"
+  MKPATH="${MKPATH%%/p44build/..}"
+  plain "- ${MKPATH##*/}"
   PKGVERSION=$(sed -E -n -e "/PKG_VERSION:=/s/PKG_VERSION:=//p" "${MKF}")
   PKGRELEASE=$(sed -E -n -e "/PKG_RELEASE:=/s/PKG_RELEASE:=//p" "${MKF}")
   if [[ "${NEWVERSION}" = "status" ]]; then
@@ -159,6 +169,7 @@ for MKF in ${MAKEFILES[@]}; do
   else
     echo "  package version is already ${NEWVERSION} -> not incrementing package release"
   fi
+  info "  in Makefile: ${MKF}:"
 done
 
 exit 0
