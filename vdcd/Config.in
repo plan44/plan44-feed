@@ -41,7 +41,25 @@ config VDCD_LVGL
 	default n
   help
     Enabling this includes support for creating lvgl based interactive UIs
-    in p44script. Works for linux /dev/fb0 and /dev/input/event0
+    in p44script. Works for linux fb or drm and /dev/input/event0
+
+config VDCD_LVGLDRM
+  depends on VDCD_LVGL
+	bool "Use DRM (Direct Rendering Manager) on Linux"
+	default n
+  help
+    Enabling this builds lvgl with DRM hardware driver (rather than fbdev)
+
+config VDCD_LVGLCOLORDEPTH
+  depends on VDCD_LVGL
+	int "Color Depth to support in lvgl"
+	range 1 32
+	default 32
+  help
+    Allows to set color depth. Default is 32 which also works on displays
+    with fewer colors in modern drm environments. But for simple memory
+    constrained setups with reducing lvgl depth to that of the display
+    (1 for monochrome OLEDs for example) might be useful.
 
 config VDCD_RRDB
 	bool "Include rrd(tool) support for logging sensor data"
