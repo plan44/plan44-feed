@@ -50,6 +50,17 @@ config VDCD_LVGLDRM
   help
     Enabling this builds lvgl with DRM hardware driver (rather than fbdev)
 
+config VDCD_LVGLCOLORDEPTH
+  depends on VDCD_LVGL
+	int "Color Depth to support in lvgl"
+	range 1 32
+	default 32
+  help
+    Allows to set color depth. Default is 32 which also works on displays
+    with fewer colors in modern drm environments. But for simple memory
+    constrained setups with reducing lvgl depth to that of the display
+    (1 for monochrome OLEDs for example) might be useful.
+
 config VDCD_RRDB
 	bool "Include rrd(tool) support for logging sensor data"
 	default n
