@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44maintd
 # version of what we are downloading
-PKG_VERSION:=4.5.1
+PKG_VERSION:=4.5.2
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=530f722e1c9f5297054815aa6f91ab46427c3e5f
+PKG_SOURCE_VERSION:=02e4b5442fab728a6a47c4e0c8edc792526c96f1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44maintd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
