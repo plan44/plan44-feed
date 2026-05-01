@@ -538,24 +538,28 @@ int main(int argc, char **argv) {
             else {
               // check args
               proto = proto_b;
-              if (!proto || lport==0 || pport==0 || secret==0) {
-                fprintf(stderr, "Warning: incomplete kite parameters -> kite not installed\n");
+              if (!proto || lport==0 || pport==0) {
+                fprintf(stderr, "Warning: incomplete/invalid service parameters '%s' -> kite not installed\n", val);
+              }
+              else if (secret==0 || *secret==0) {
+                fprintf(stderr, "Warning: missing secret -> kite not installed\n");
               }
               else if (kite_expires && time(NULL)>=kite_expires) {
                 fprintf(stderr, "Warning: kite already expired -> ignored\n");
               }
               else {
                 // construct full kite name
-                if (kitename) {
-                  // just use specified name
+                buf[0] = 0;
+                if (kitename && *kitename) {
+                  // just use specified name (if not empty)
                   strncpy(buf, kitename, buf_maxlen);
                 }
                 else {
                   // autogenerate it
                   snprintf(buf, buf_maxlen, "%llx", getMAC() ^ macdisguise);
                 }
-                if (kite_domain) {
-                  // append domain
+                if (kite_domain && *kite_domain) {
+                  // append domain (if not empty)
                   strcat(buf, ".");
                   strcat(buf, kite_domain);
                 }
@@ -563,30 +567,35 @@ int main(int argc, char **argv) {
                   // just use kitename, must include domain in this case
                   strncpy(buf, kitename, buf_maxlen);
                 }
-                // install it
-                if (
-                  (pagekite_add_kite(
-                    m,
-                    proto,
-                    buf, // constructed kitename
-                    pport,
-                    secret,
-                    localhost,
-                    lport
-                  ) < 0) ||
-                  (use_current && (pagekite_add_frontend(m, kitename, pport)<0))
-                ) {
-                  // failed
-                  fprintf(stderr, "Warning: kite could not be added\n");
-                  pagekite_perror(m, argv[0]);
+                if (*buf==0) {
+                  fprintf(stderr, "Warning: no usable kite name -> cannot install kite\n");
                 }
                 else {
-                  // kite successfully installed
-                  fprintf(stderr, "Successfully installed kite named '%s' for protocol '%s' on port %d\n", buf, proto, lport);
-                  installedkites++;
-                  // update time when first kite should expire
-                  if (kite_expires && (first_kite_expires==0 || kite_expires<first_kite_expires)) {
-                    first_kite_expires = kite_expires;
+                  // install it
+                  if (
+                    (pagekite_add_kite(
+                      m,
+                      proto,
+                      buf, // constructed kitename
+                      pport,
+                      secret,
+                      localhost,
+                      lport
+                    ) < 0) ||
+                    (use_current && (pagekite_add_frontend(m, kitename, pport)<0))
+                  ) {
+                    // failed
+                    fprintf(stderr, "Warning: kite could not be added\n");
+                    pagekite_perror(m, argv[0]);
+                  }
+                  else {
+                    // kite successfully installed
+                    fprintf(stderr, "Successfully installed kite named '%s' for protocol '%s' on port %d\n", buf, proto, lport);
+                    installedkites++;
+                    // update time when first kite should expire
+                    if (kite_expires && (first_kite_expires==0 || kite_expires<first_kite_expires)) {
+                      first_kite_expires = kite_expires;
+                    }
                   }
                 }
               } // have all params
