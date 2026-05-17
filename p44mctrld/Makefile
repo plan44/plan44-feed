@@ -48,11 +48,6 @@ define Package/$(PKG_NAME)/description
 endef
 
 
-define Package/$(PKG_NAME)/config
-	source "$(SOURCE)/Config.in"
-endef
-
-
 # https://github.com/project-chip/matter-openwrt/issues/2
 ifeq ($(DUMP)$(filter SUBMODULES:=,$(Download/Defaults)),)
 $(error PKG_SOURCE_SUBMODULES is not supported, ensure https://github.com/openwrt/openwrt/pull/13000 is included in your OpenWrt buildroot)
