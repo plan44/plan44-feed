@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# obtain system information vars
+p44maintd --defs >/tmp/p44defs
+source /tmp/p44defs
+
+# default features
+APPNAME=p44mctrld
+EXECUTABLE=${APPNAME}
+KVSPATH=/flash/${APPNAME}_kvs
+LOGLEVEL=5
+CHIPLOGLEVEL=1
+LOGOPTS="--logsymbols"
+EXTRAOPTS=
+
+# make sure the executable exists
+EXECUTABLEFILE=$(which ${APPNAME})
+if [ ! -x ${EXECUTABLEFILE} ]; then
+  # wait a week
+  echo "[`date`] no executable file found for ${APPNAME} -> sleeping a week"
+  sleep 7d
+  exit 1
+fi
+
+# Allow overriding and adding options
+# - config override from flash
+if [ -f /flash/${APPNAME}_runcfg ]; then
+  source /flash/${APPNAME}_runcfg
+fi
+# - config override from tmp
+if [ -f /tmp/${APPNAME}_runcfg ]; then
+  source /tmp/${APPNAME}_runcfg
+fi
+# - debug override from flash
+if [ -f /flash/${APPNAME}_debug ]; then
+  source /flash/${APPNAME}_debug
+fi
+# - debug override from tmp
+if [ -f /tmp/${APPNAME}_debug ]; then
+  source /tmp/${APPNAME}_debug
+fi
+
+# run the executable
+exec ${EXECUTABLE} \
+  --p44apihost localhost \
+  --datapath /flash \
+  --resourcepath /usr/share/p44mctrld \
+  --KVS ${KVSPATH} \
+  --chiploglevel ${CHIPLOGLEVEL} \
+  ${LOGOPTS} \
+  --loglevel ${LOGLEVEL} \
+  --dontlogerrors \
+  ${EXTRAOPTS} \
+  2>&1 </dev/null
