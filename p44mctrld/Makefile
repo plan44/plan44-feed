@@ -29,6 +29,14 @@ PKG_CHECK_FORMAT_SECURITY:=0
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_DEPENDS:=gn/host
 
+# Development builder setup: when the local checkout is mounted into the
+# dockerized OpenWrt tree, use it as the package source without affecting
+# dependencies. Normal builds keep using PKG_SOURCE_URL.
+P44MCTRLD_SOURCE_DIR ?= /work/p44mctrld
+ifneq ($(wildcard $(P44MCTRLD_SOURCE_DIR)/src/p44mctrld_main.cpp),)
+USE_SOURCE_DIR:=$(P44MCTRLD_SOURCE_DIR)
+endif
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
