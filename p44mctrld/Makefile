@@ -27,7 +27,7 @@ PKG_LICENSE_FILES:=COPYING
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_CHECK_FORMAT_SECURITY:=0
 PKG_BUILD_PARALLEL:=1
-PKG_BUILD_DEPENDS:=gn/host
+PKG_BUILD_DEPENDS:=gn/host glib2/host
 
 # Development builder setup: when the local checkout is mounted into the
 # dockerized OpenWrt tree, use it as the package source without affecting
@@ -40,7 +40,7 @@ endif
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+libstdcpp +boost +libjson-c +libopenssl +libavahi-client +librt +libev +libatomic $(CXX_DEPENDS)
+	DEPENDS:=+libstdcpp +boost +libjson-c +libopenssl +libavahi-client +librt +libev +libatomic +glib2 +dbus $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=products
@@ -83,7 +83,6 @@ define Build/Configure
 			--target=$(GNU_TARGET_NAME) \
 			--enable-wifi=no \
 			--enable-openthread=no \
-			--enable-network-layer-ble=no \
 			--enable-tracing-support=no \
 			--p44-application-version="$(PKG_VERSION)" \
 			--p44-debug-attr-access=0
