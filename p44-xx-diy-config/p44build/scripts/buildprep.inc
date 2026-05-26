@@ -6,8 +6,9 @@ popd  >/dev/null
 
 # set defaults for some env vars
 if [ -z ${P44B_BUILD_ARGS+x} ]; then
-  P44B_BUILD_ARGS="-j$(($(nproc)-1))"
-	#P44B_BUILD_ARGS=
+  # Note: parallel builds are prone to fail in complicated packages and leave hard to clean debris, so rather don't...
+  #P44B_BUILD_ARGS="-j$(($(nproc)-1))"
+	P44B_BUILD_ARGS=
 fi
 if [ -z ${P44B_PACKAGE_ARGS+x} ]; then
 	P44B_PACKAGE_ARGS=
