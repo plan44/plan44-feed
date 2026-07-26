@@ -4,7 +4,7 @@ APPNAME=p44mbrd
 KVSPATH=/flash/${APPNAME}_kvs
 
 echo ""
-echo "**************** p44mbrd exited with status $1, waitpid status $2 ********************"
+echo "**************** ${APPNAME} exited with status $1, waitpid status $2 ********************"
 ps -ww
 echo ""
 
@@ -19,4 +19,3 @@ fi
 
 # just to damp possible crashloops
 sleep 10
-
