@@ -1,0 +1,58 @@
+--- a/package/kernel/linux/modules/input.mk
++++ b/package/kernel/linux/modules/input.mk
+@@ -226,3 +226,55 @@ define KernelPackage/input-uinput/descri
+ endef
+ 
+ $(eval $(call KernelPackage,input-uinput))
++
++
++
++define KernelPackage/of-touchscreen
++  SUBMENU:=$(INPUT_MODULES_MENU)
++  TITLE:=touchscreen DT properties helper lib
++  DEPENDS:=+kmod-input-core
++  KCONFIG:=CONFIG_TOUCHSCREEN_PROPERTIES
++  FILES:=$(LINUX_DIR)/drivers/input/touchscreen/of_touchscreen.ko
++endef
++
++define KernelPackage/of-touchscreen/description
++  helper functions for touchscreen and device tree
++endef
++
++$(eval $(call KernelPackage,of-touchscreen))
++
++
++define KernelPackage/touchscreen-ads7846
++  SUBMENU:=$(INPUT_MODULES_MENU)
++  TITLE:=ADS7846/TSC2046/AD7873/AD(S)7843 touchscreens
++  DEPENDS:=+kmod-input-core +kmod-i2c-core
++  KCONFIG:= \
++    CONFIG_INPUT_TOUCHSCREEN=y \
++    CONFIG_TOUCHSCREEN_ADS7846
++  FILES:=$(LINUX_DIR)/drivers/input/touchscreen/ads7846.ko
++#  AUTOLOAD:=$(call AutoProbe,ads7846)
++endef
++
++define KernelPackage/touchscreen-ads7846/description
++  ADS7846/TSC2046/AD7873 and AD(S)7843 based touchscreens
++endef
++
++$(eval $(call KernelPackage,touchscreen-ads7846))
++
++
++define KernelPackage/touchscreen-goodix
++  SUBMENU:=$(INPUT_MODULES_MENU)
++  TITLE:=Goodix I2C touchscreen
++  DEPENDS:=+kmod-input-core +kmod-i2c-core +kmod-of-touchscreen
++  KCONFIG:=CONFIG_TOUCHSCREEN_GOODIX
++  FILES:=$(LINUX_DIR)/drivers/input/touchscreen/goodix.ko
++#  AUTOLOAD:=$(call AutoProbe,goodix)
++endef
++
++define KernelPackage/touchscreen-goodix/description
++  Goodix gt911, gt9110, gt912, gt927, gt9271, gt928, gt967
++  based i2c connected touchscreens
++endef
++
++$(eval $(call KernelPackage,touchscreen-goodix))
++
