@@ -40,9 +40,10 @@ if [ -f /tmp/${APPNAME}_debug ]; then
   source /tmp/${APPNAME}_debug
 fi
 
+
 # run the executable
 exec ${EXECUTABLE} \
-  --p44apihost localhost \
+  --vdcdhost 127.0.0.1 --vdcdport 8977 \
   --datapath /flash \
   --resourcepath /usr/share/p44mctrld \
   --KVS ${KVSPATH} \

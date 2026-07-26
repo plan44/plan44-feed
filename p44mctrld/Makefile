@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44mctrld
 # version of what we are downloading
-PKG_VERSION:=0.1
+PKG_VERSION:=0.1.3
 # version of this makefile
-PKG_RELEASE:=1
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=6534db1a65308f651879bbacb60a5feb7e51ea04
+PKG_SOURCE_VERSION:=e14b7690dd17b2eeeb96d57d54595b3cb3d26405
 # Hash can be regenerated with make package/${PKG_NAME}/check FIXUP=1
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44mctrld.git
