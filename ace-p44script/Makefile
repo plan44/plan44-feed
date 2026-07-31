@@ -1,4 +1,4 @@
-# Copyright (c) 2020 plan44.ch / Lukas Zeller, Zurich, Switzerland
+# Copyright (c) 2020-2026 plan44.ch / Lukas Zeller, Zurich, Switzerland
 #
 # Author: Lukas Zeller <luz@plan44.ch>
 
@@ -7,9 +7,9 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=ace-p44script
 # version of what we are downloading, last digit is p44 changes version
-PKG_VERSION:=1.35.4.4
+PKG_VERSION:=1.35.4.5
 # version of this makefile
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=main
