@@ -102,6 +102,12 @@ config VDCD_WBF
   help
     Enabling this includes support for Wiser-by-Feller via uGateway
 
+config VDCD_MCTRL
+	bool "Include matter controller support"
+	default n
+  help
+    Enabling this includes support for matter controller via p44mctrld
+
 config VDCD_PLATFORM_SHORTBREAK
 	bool "platform can do short (2mS) UART break"
 	default n
