@@ -7,12 +7,12 @@ include $(TOPDIR)/rules.mk
 # name
 PKG_NAME:=p44maintd
 # version of what we are downloading
-PKG_VERSION:=4.5.2
+PKG_VERSION:=4.7.2
 # version of this makefile
-PKG_RELEASE:=2
+PKG_RELEASE:=5
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=02e4b5442fab728a6a47c4e0c8edc792526c96f1
+PKG_SOURCE_VERSION:=d3b6065cb45fb2e1bc76c3de2ec51d76b47f7352
 PKG_MIRROR_HASH:=skip
 PKG_SOURCE_URL:=https://github.com/plan44/p44maintd.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
@@ -29,7 +29,7 @@ PKG_USE_MIPS16:=0
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	DEPENDS:=+libstdcpp  +libpthread +librt +boost +libjson-c $(CXX_DEPENDS)
+	DEPENDS:=+libstdcpp  +libpthread +librt +boost +libjson-c +libubox +libubus $(CXX_DEPENDS)
 	SECTION:=plan44
 	CATEGORY:=plan44
 	SUBMENU:=Utilities
